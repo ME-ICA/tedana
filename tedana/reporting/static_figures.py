@@ -914,19 +914,17 @@ def plot_gscontrol(
 
 def plot_heatmap(
     *,
-    mixing: pd.DataFrame,
-    external_regressors: pd.DataFrame,
+    correlation_df: pd.DataFrame,
     component_table: pd.DataFrame,
     out_file: str,
 ):
-    """Plot a heatmap of the mixing matrix and external regressors.
+    """Plot a heatmap of correlations between external regressors and ICA components.
 
     Parameters
     ----------
-    mixing : (C x T) :obj:`numpy.ndarray`
-        Mixing matrix.
-    external_regressors : (E x T) :obj:`numpy.ndarray`
-        External regressors.
+    correlation_df : (E x C) :obj:`pandas.DataFrame`
+        A DataFrame where rows are external regressor names, columns are component names,
+        and values are the Pearson correlation coefficients.
     component_table : pandas.DataFrame
         Component table.
     out_file : str
@@ -937,8 +935,7 @@ def plot_heatmap(
     import scipy.cluster.hierarchy as spc
     import seaborn as sns
 
-    # Plot the heatmap of the external regressors and mixing matrix
-    corr_df = _correlate_dataframes(external_regressors, mixing)
+    corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
     # Perform hierarchical clustering on rows

@@ -581,3 +581,58 @@ def fit_model_with_stats(
     print(y.shape)
 
     return betas_full, f_vals, p_vals, r2_vals
+
+
+def compute_external_regressor_correlations(
+    external_regressors: pd.DataFrame,
+    mixing: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute correlations between external regressors and ICA component time series.
+
+    Parameters
+    ----------
+    external_regressors : (T x E) :obj:`pandas.DataFrame`
+        External regressors, where T is the number of time points
+        and E is the number of external regressors.
+    mixing : (T x C) :obj:`pandas.DataFrame`
+        ICA mixing matrix, where T is the number of time points
+        and C is the number of components.
+
+    Returns
+    -------
+    correlation_df : (E x C) :obj:`pandas.DataFrame`
+        A DataFrame where rows are external regressor names, columns are component names,
+        and values are the Pearson correlation coefficients.
+    """
+    if not isinstance(external_regressors, pd.DataFrame) or not isinstance(mixing, pd.DataFrame):
+        raise ValueError("Both inputs must be pandas DataFrames.")
+
+    if external_regressors.shape[0] != mixing.shape[0]:
+        raise ValueError("DataFrames must have the same number of rows (time points).")
+
+    # Convert DataFrames to numpy arrays
+    arr_regressors = external_regressors.values
+    arr_mixing = mixing.values
+
+    # Concatenate arrays column-wise
+    # This creates an array where the first external_regressors.shape[1] columns
+    # are from external_regressors and the subsequent columns are from mixing.
+    combined_arr = np.hstack((arr_regressors, arr_mixing))
+
+    # Calculate the full correlation matrix.
+    # np.corrcoef expects variables as rows, so we transpose combined_arr.
+    full_corr_matrix = np.corrcoef(combined_arr.T)
+
+    # Extract the part of the matrix that corresponds to correlations
+    # between columns of external_regressors and columns of mixing.
+    num_regressors = external_regressors.shape[1]
+    cross_corr_matrix = full_corr_matrix[:num_regressors, num_regressors:]
+
+    # Convert the result back to a DataFrame with appropriate labels
+    correlation_df = pd.DataFrame(
+        cross_corr_matrix,
+        index=external_regressors.columns,
+        columns=mixing.columns,
+    )
+
+    return correlation_df

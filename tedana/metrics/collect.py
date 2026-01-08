@@ -697,6 +697,19 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Units": "percent",
         }
 
+    # Add metadata for external regressor correlation columns
+    for col in component_table.columns:
+        if col.startswith("external regressor correlation "):
+            regressor_name = col.replace("external regressor correlation ", "")
+            metric_metadata[col] = {
+                "LongName": f"External regressor correlation ({regressor_name})",
+                "Description": (
+                    f"Pearson correlation coefficient between the component time series "
+                    f"and the external regressor '{regressor_name}'."
+                ),
+                "Units": "Pearson correlation coefficient",
+            }
+
     # There are always components in the component_table, definitionally
     metric_metadata["Component"] = {
         "LongName": "Component identifier",
