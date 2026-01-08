@@ -700,7 +700,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                     f"Pearson correlation coefficient between the component time series "
                     f"and the external regressor '{regressor_name}'."
                 ),
-                "Units": "arbitrary",
+                "Units": "Pearson correlation coefficient",
             }
 
     # There are always components in the component_table, definitionally
