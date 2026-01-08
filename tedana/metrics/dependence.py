@@ -696,3 +696,25 @@ def generate_decision_table_score(
     ).T
     d_table_score = d_table_rank.mean(axis=1)
     return d_table_score
+
+
+def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.ndarray:
+    """Compute the proportion of pseudo-F-statistics that is dominated by either kappa or rho.
+
+    Parameters
+    ----------
+    kappa : (C) array_like
+        Kappa values.
+    rho : (C) array_like
+        Rho values.
+
+    Returns
+    -------
+    kappa_rho_difference : (C) array_like
+        Proportion of pseudo-F-statistics that is dominated by either kappa or rho.
+        Higher values indicate that either kappa or rho is dominating the component.
+        Lower values indicate that both kappa and rho are contributing to the component.
+    """
+    assert kappa.shape == rho.shape
+
+    return np.abs(kappa - rho) / (kappa + rho)
