@@ -1189,17 +1189,22 @@ def tedana_workflow(
             # Add external regressor correlations to component_table
             # Transpose so components are rows (to match component_table structure)
             corr_df_transposed = corr_df.T
-            # Add prefix to distinguish these columns
-            corr_df_transposed.columns = [
-                f"external regressor correlation {col}" for col in corr_df_transposed.columns
-            ]
-            # Merge with component_table by index (component number)
+            # Ensure the index represents the component identifier
+            corr_df_transposed.index.name = "Component"
+            # Align by component name rather than relying on positional alignment
+            component_table = component_table.set_index("Component")
             for col in corr_df_transposed.columns:
-                component_table[col] = corr_df_transposed[col].values
+                prefixed_col = f"external regressor correlation {col}"
+                component_table[prefixed_col] = corr_df_transposed[col]
+            component_table = component_table.reset_index()
             # Re-save the updated metrics file and metadata
+            # Temporarily allow overwrite since we're updating the same file
+            original_overwrite = io_generator.overwrite
+            io_generator.overwrite = True
             io_generator.save_file(component_table, "ICA metrics tsv")
             metric_metadata = metrics.collect.get_metadata(component_table)
             io_generator.save_file(metric_metadata, "ICA metrics json")
+            io_generator.overwrite = original_overwrite
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
