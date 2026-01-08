@@ -9,7 +9,6 @@ import matplotlib
 import nibabel as nb
 import numpy as np
 import pandas as pd
-import scipy.stats as sstats
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
