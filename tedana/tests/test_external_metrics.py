@@ -691,3 +691,57 @@ def test_build_fstat_regressor_models(caplog):
         "Regressors in full model for task: ['Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
         in caplog.text
     )
+
+
+# compute_external_regressor_correlations
+# ---------------------------------------
+
+
+def test_compute_external_regressor_correlations():
+    """Test compute_external_regressor_correlations works as expected."""
+    external_regressors, n_vols = sample_external_regressors()
+    mixing = sample_mixing_matrix()
+    mixing_df = pd.DataFrame(
+        mixing, columns=[f"ICA_{str(i).zfill(2)}" for i in range(mixing.shape[1])]
+    )
+
+    # Compute correlations
+    corr_df = external.compute_external_regressor_correlations(
+        external_regressors=external_regressors,
+        mixing=mixing_df,
+    )
+
+    # Check output shape: rows = external regressors, columns = ICA components
+    assert corr_df.shape == (external_regressors.shape[1], mixing.shape[1])
+
+    # Check output column names match mixing column names
+    assert list(corr_df.columns) == list(mixing_df.columns)
+
+    # Check output row names match external regressor column names
+    assert list(corr_df.index) == list(external_regressors.columns)
+
+    # Check correlation values are in valid range [-1, 1]
+    assert (corr_df.values >= -1).all() and (corr_df.values <= 1).all()
+
+    # Check that self-correlation is 1 when a component perfectly matches a regressor
+    # Based on test data, Mot_X is component 8 + noise, so correlation should be high
+    assert corr_df.loc["Mot_X", "ICA_08"] > 0.5
+
+
+def test_compute_external_regressor_correlations_validation():
+    """Test compute_external_regressor_correlations input validation."""
+    import numpy as np
+
+    # Test with non-DataFrame inputs (using numpy array)
+    with pytest.raises(ValueError, match="Both inputs must be pandas DataFrames"):
+        external.compute_external_regressor_correlations(
+            external_regressors=np.array([[1, 2], [3, 4]]),
+            mixing=pd.DataFrame({"a": [1, 2], "b": [3, 4]}),
+        )
+
+    # Test with mismatched number of rows
+    with pytest.raises(ValueError, match="must have the same number of rows"):
+        external.compute_external_regressor_correlations(
+            external_regressors=pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}),
+            mixing=pd.DataFrame({"c": [1, 2], "d": [3, 4]}),
+        )

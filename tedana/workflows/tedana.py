@@ -1169,9 +1169,15 @@ def tedana_workflow(
             )
 
         if external_regressors is not None:
-            reporting.static_figures.plot_heatmap(
-                mixing=mixing_df,
+            # Compute correlations between external regressors and ICA components
+            corr_df = metrics.external.compute_external_regressor_correlations(
                 external_regressors=external_regressors,
+                mixing=mixing_df,
+            )
+
+            # Plot the heatmap
+            reporting.static_figures.plot_heatmap(
+                correlation_df=corr_df,
                 component_table=component_table,
                 out_file=os.path.join(
                     io_generator.out_dir,
@@ -1179,6 +1185,21 @@ def tedana_workflow(
                     f"{io_generator.prefix}confound_correlations.svg",
                 ),
             )
+
+            # Add external regressor correlations to component_table
+            # Transpose so components are rows (to match component_table structure)
+            corr_df_transposed = corr_df.T
+            # Add prefix to distinguish these columns
+            corr_df_transposed.columns = [
+                f"external regressor correlation {col}" for col in corr_df_transposed.columns
+            ]
+            # Merge with component_table by index (component number)
+            for col in corr_df_transposed.columns:
+                component_table[col] = corr_df_transposed[col].values
+            # Re-save the updated metrics file and metadata
+            io_generator.save_file(component_table, "ICA metrics tsv")
+            metric_metadata = metrics.collect.get_metadata(component_table)
+            io_generator.save_file(metric_metadata, "ICA metrics json")
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)

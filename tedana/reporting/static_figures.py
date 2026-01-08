@@ -909,19 +909,17 @@ def plot_gscontrol(
 
 def plot_heatmap(
     *,
-    mixing: pd.DataFrame,
-    external_regressors: pd.DataFrame,
+    correlation_df: pd.DataFrame,
     component_table: pd.DataFrame,
     out_file: str,
 ):
-    """Plot a heatmap of the mixing matrix and external regressors.
+    """Plot a heatmap of correlations between external regressors and ICA components.
 
     Parameters
     ----------
-    mixing : (C x T) :obj:`numpy.ndarray`
-        Mixing matrix.
-    external_regressors : (E x T) :obj:`numpy.ndarray`
-        External regressors.
+    correlation_df : (E x C) :obj:`pandas.DataFrame`
+        A DataFrame where rows are external regressor names, columns are component names,
+        and values are the Pearson correlation coefficients.
     component_table : pandas.DataFrame
         Component table.
     out_file : str
@@ -932,8 +930,7 @@ def plot_heatmap(
     import scipy.cluster.hierarchy as spc
     import seaborn as sns
 
-    # Plot the heatmap of the external regressors and mixing matrix
-    corr_df = _correlate_dataframes(external_regressors, mixing)
+    corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
     # Perform hierarchical clustering on rows
@@ -1008,52 +1005,3 @@ def plot_heatmap(
     axes[1].set_xlabel("Component", fontsize=16)
 
     fig.savefig(out_file, bbox_inches="tight")
-
-
-def _correlate_dataframes(df1, df2):
-    """Correlate each column in two DataFrames using numpy.corrcoef.
-
-    Parameters
-    ----------
-    df1 : pandas.DataFrame of shape (T, C)
-        The first DataFrame.
-    df2 : pandas.DataFrame of shape (T, E)
-        The second DataFrame. Rows must align with df1.
-
-    Returns
-    -------
-    correlation_df : pandas.DataFrame of shape (C, E)
-        A DataFrame where rows are columns from df1, columns are columns from df2,
-        and values are the Pearson correlation coefficients.
-    """
-    if not isinstance(df1, pd.DataFrame) or not isinstance(df2, pd.DataFrame):
-        raise ValueError("Both inputs must be pandas DataFrames.")
-
-    if df1.shape[0] != df2.shape[0]:
-        raise ValueError("DataFrames must have the same number of rows.")
-
-    # Convert DataFrames to numpy arrays
-    arr1 = df1.values
-    arr2 = df2.values
-
-    # Concatenate arrays column-wise
-    # This creates an array where the first df1.shape[1] columns are from df1
-    # and the subsequent columns are from df2.
-    combined_arr = np.hstack((arr1, arr2))
-
-    # Calculate the full correlation matrix.
-    # np.corrcoef expects variables as rows, so we transpose combined_arr.
-    # If df1 has m columns and df2 has n columns, combined_arr.T has m+n rows.
-    # full_corr_matrix will be an (m+n) x (m+n) matrix.
-    full_corr_matrix = np.corrcoef(combined_arr.T)
-
-    # Extract the part of the matrix that corresponds to correlations
-    # between columns of df1 and columns of df2.
-    # This is the block from row 0 to df1.shape[1]-1,
-    # and from column df1.shape[1] to the end.
-    num_cols_df1 = df1.shape[1]
-    cross_corr_matrix = full_corr_matrix[:num_cols_df1, num_cols_df1:]
-
-    # Convert the result back to a DataFrame with appropriate labels
-    correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
-    return correlation_df
