@@ -170,12 +170,18 @@ def _update_template_bokeh(
     t2star_histogram_filename = f"{prefix}t2star_histogram.svg"
     t2star_brain = f"./figures/{t2star_brain_filename}"
     t2star_histogram = f"./figures/{t2star_histogram_filename}"
+    t2star_variance_filename = f"{prefix}stat-variance_desc-t2star_statmap.svg"
+    t2star_variance = f"./figures/{t2star_variance_filename}"
 
     # Check for S0 images
     s0_brain_filename = f"{prefix}s0_brain.svg"
     s0_histogram_filename = f"{prefix}s0_histogram.svg"
     s0_brain = f"./figures/{s0_brain_filename}"
     s0_histogram = f"./figures/{s0_histogram_filename}"
+    s0_variance_filename = f"{prefix}stat-variance_desc-s0_statmap.svg"
+    s0_variance = f"./figures/{s0_variance_filename}"
+    t2s_s0_covariance_filename = f"{prefix}stat-covariance_desc-t2star+s0_statmap.svg"
+    t2s_s0_covariance = f"./figures/{t2s_s0_covariance_filename}"
 
     # Check for RMSE images
     rmse_brain_filename = f"{prefix}rmse_brain.svg"
@@ -205,6 +211,13 @@ def _update_template_bokeh(
     LGR.info(f"S0 files exist: {s0_exists}")
     LGR.info(f"RMSE files exist: {rmse_exists}")
 
+    variance_exists = (
+        t2star_variance_filename in files_in_figures
+        and s0_variance_filename in files_in_figures
+        and t2s_s0_covariance_filename in files_in_figures
+    )
+    LGR.info(f"Variance files exist: {variance_exists}")
+
     # Check for external regressors
     erc_filename = f"{prefix}confound_correlations.svg"
     external_regressors_exist = erc_filename in files_in_figures
@@ -231,9 +244,13 @@ def _update_template_bokeh(
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
         t2starExists=t2star_exists,
+        t2starVariancePlot=t2star_variance,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
         s0Exists=s0_exists,
+        s0VariancePlot=s0_variance,
+        t2sS0CovariancePlot=t2s_s0_covariance,
+        varianceExists=variance_exists,
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
         rmseExists=rmse_exists,
