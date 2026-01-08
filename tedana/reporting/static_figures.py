@@ -863,7 +863,7 @@ def plot_gscontrol(
             tr=tr,
             classification_color="red",
             png_cmap=png_cmap,
-            title="Global Signal",
+            title="Global Signal Regression",
             out_file=plot_name,
         )
 
@@ -872,7 +872,7 @@ def plot_gscontrol(
 
         # Get fft and freqs for this component
         # adapted from @dangom
-        timeseries = confounds_df["global_signal"].values
+        timeseries = confounds_df["mir_global_signal"].values
         spectrum, freqs = utils.get_spectrum(timeseries, tr)
 
         plot_name = f"{io_generator.prefix}mir_boldmap.svg"
@@ -886,7 +886,7 @@ def plot_gscontrol(
             tr=tr,
             classification_color="red",
             png_cmap=png_cmap,
-            title="Global Signal",
+            title="Minimum Image Regression",
             out_file=plot_name,
         )
 
