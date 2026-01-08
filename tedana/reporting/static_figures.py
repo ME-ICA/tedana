@@ -850,7 +850,7 @@ def plot_gscontrol(
         timeseries = confounds_df["global_signal"].values
         spectrum, freqs = utils.get_spectrum(timeseries, tr)
 
-        plot_name =  f"{io_generator.prefix}gsr_boldmap.svg"
+        plot_name = f"{io_generator.prefix}gsr_boldmap.svg"
         plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
 
         plot_component(
@@ -873,7 +873,7 @@ def plot_gscontrol(
         timeseries = confounds_df["global_signal"].values
         spectrum, freqs = utils.get_spectrum(timeseries, tr)
 
-        plot_name =  f"{io_generator.prefix}mir_boldmap.svg"
+        plot_name = f"{io_generator.prefix}mir_boldmap.svg"
         plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
 
         plot_component(
