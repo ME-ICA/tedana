@@ -845,7 +845,7 @@ def plot_gscontrol(
         tr = io_generator.reference_img.header.get_zooms()[-1]
 
     if "gsr" in gscontrol:
-        gsr_img = io_generator.get_name("gs img")
+        gsr_img = nb.load(io_generator.get_name("gs img"))
 
         # Get fft and freqs for this component
         # adapted from @dangom
@@ -868,7 +868,7 @@ def plot_gscontrol(
         )
 
     if "mir" in gscontrol:
-        mir_img = io_generator.get_name("t1 like img")
+        mir_img = nb.load(io_generator.get_name("t1 like img"))
 
         # Get fft and freqs for this component
         # adapted from @dangom
