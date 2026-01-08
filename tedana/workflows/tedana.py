@@ -1211,6 +1211,7 @@ def tedana_workflow(
             reporting.static_figures.plot_gscontrol(
                 io_generator=io_generator,
                 gscontrol=gscontrol,
+                png_cmap=png_cmap,
             )
 
         if external_regressors is not None:
