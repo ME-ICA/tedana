@@ -232,7 +232,9 @@ def minimum_image_regression(
 
         # Select rows where the 'classification_tags' column contains any of the ignore tags
         ign = component_table[
-            component_table.classification_tags.str.lower().contains(pattern, na=False, regex=True)
+            component_table.classification_tags.str.lower().str.contains(
+                pattern, na=False, regex=True
+            )
         ].index.values
 
     acc = component_table[component_table.classification == "accepted"].index.values
