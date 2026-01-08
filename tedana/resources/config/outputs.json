@@ -15,6 +15,18 @@
         "orig": "fit_failures",
         "bidsv1.5.0": "desc-decayFitFailures_mask"
     },
+    "t2star variance img": {
+        "orig": "t2s_var",
+        "bidsv1.5.0": "stat-variance_desc-t2star_statmap"
+    },
+    "s0 variance img": {
+        "orig": "s0_var",
+        "bidsv1.5.0": "stat-variance_desc-s0_statmap"
+    },
+    "t2star-s0 covariance img": {
+        "orig": "t2s_s0_covar",
+        "bidsv1.5.0": "stat-covariance_desc-t2star+s0_statmap"
+    },
     "combined img": {
         "orig": "ts_OC",
         "bidsv1.5.0": "desc-optcom_bold"

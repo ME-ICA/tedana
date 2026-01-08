@@ -626,6 +626,7 @@ def plot_t2star_and_s0(
             vmax=t2s_p98,
             annotate=False,
             output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+            resampling_interpolation="nearest",
         )
 
     # Only plot S0 map if the file exists
@@ -646,6 +647,7 @@ def plot_t2star_and_s0(
                 vmax=s0_p98,
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+                resampling_interpolation="nearest",
             )
 
 
@@ -734,6 +736,7 @@ def plot_rmse(
             vmax=rmse_p98,
             annotate=False,
             output_file=rmse_brain_plot,
+            resampling_interpolation="nearest",
         )
 
 
@@ -852,6 +855,7 @@ def plot_gscontrol(
                 cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
+                resampling_interpolation="nearest",
             )
 
     if "mir" in gscontrol:
@@ -872,6 +876,7 @@ def plot_gscontrol(
                 cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
+                resampling_interpolation="nearest",
             )
 
     if "gsr" in gscontrol or "mir" in gscontrol:
@@ -1005,3 +1010,104 @@ def plot_heatmap(
     axes[1].set_xlabel("Component", fontsize=16)
 
     fig.savefig(out_file, bbox_inches="tight")
+
+
+def _correlate_dataframes(df1, df2):
+    """Correlate each column in two DataFrames using numpy.corrcoef.
+
+    Parameters
+    ----------
+    df1 : pandas.DataFrame of shape (T, C)
+        The first DataFrame.
+    df2 : pandas.DataFrame of shape (T, E)
+        The second DataFrame. Rows must align with df1.
+
+    Returns
+    -------
+    correlation_df : pandas.DataFrame of shape (C, E)
+        A DataFrame where rows are columns from df1, columns are columns from df2,
+        and values are the Pearson correlation coefficients.
+    """
+    if not isinstance(df1, pd.DataFrame) or not isinstance(df2, pd.DataFrame):
+        raise ValueError("Both inputs must be pandas DataFrames.")
+
+    if df1.shape[0] != df2.shape[0]:
+        raise ValueError("DataFrames must have the same number of rows.")
+
+    # Convert DataFrames to numpy arrays
+    arr1 = df1.values
+    arr2 = df2.values
+
+    # Concatenate arrays column-wise
+    # This creates an array where the first df1.shape[1] columns are from df1
+    # and the subsequent columns are from df2.
+    combined_arr = np.hstack((arr1, arr2))
+
+    # Calculate the full correlation matrix.
+    # np.corrcoef expects variables as rows, so we transpose combined_arr.
+    # If df1 has m columns and df2 has n columns, combined_arr.T has m+n rows.
+    # full_corr_matrix will be an (m+n) x (m+n) matrix.
+    full_corr_matrix = np.corrcoef(combined_arr.T)
+
+    # Extract the part of the matrix that corresponds to correlations
+    # between columns of df1 and columns of df2.
+    # This is the block from row 0 to df1.shape[1]-1,
+    # and from column df1.shape[1] to the end.
+    num_cols_df1 = df1.shape[1]
+    cross_corr_matrix = full_corr_matrix[:num_cols_df1, num_cols_df1:]
+
+    # Convert the result back to a DataFrame with appropriate labels
+    correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
+    return correlation_df
+
+
+def plot_decay_variance(
+    *,
+    io_generator: io.OutputGenerator,
+    adaptive_mask: np.ndarray,
+):
+    """Plot the variance of the T2* and S0 estimates.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    """
+    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
+    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+
+    names = [
+        "stat-variance_desc-t2star_statmap",
+        "stat-variance_desc-s0_statmap",
+        "stat-covariance_desc-t2star+s0_statmap",
+    ]
+    imgs = ["t2star variance img", "s0 variance img", "t2star-s0 covariance img"]
+    for name, img in zip(names, imgs):
+        in_file = io_generator.get_name(img)
+        data = masking.apply_mask(in_file, mask_img)
+        data_p02, data_p98 = np.percentile(data, [2, 98])
+        plot_name = f"{io_generator.prefix}{name}.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="A non-diagonal affine.*",
+                category=UserWarning,
+            )
+            plotting.plot_stat_map(
+                in_file,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="Reds",
+                vmin=data_p02,
+                vmax=data_p98,
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+                resampling_interpolation="nearest",
+            )
