@@ -386,6 +386,13 @@ def generate_metrics(
             countsig_ft2=component_table["countsigFT2"],
         )
 
+    if "kappa_rho_difference" in required_metrics:
+        LGR.info("Calculating kappa-rho difference")
+        component_table["kappa_rho_difference"] = dependence.compute_kappa_rho_difference(
+            kappa=component_table["kappa"],
+            rho=component_table["rho"],
+        )
+
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
