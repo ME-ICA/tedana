@@ -626,6 +626,7 @@ def plot_t2star_and_s0(
             vmax=t2s_p98,
             annotate=False,
             output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+            resampling_interpolation="nearest",
         )
 
     # Only plot S0 map if the file exists
@@ -646,6 +647,7 @@ def plot_t2star_and_s0(
                 vmax=s0_p98,
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+                resampling_interpolation="nearest",
             )
 
 
@@ -734,6 +736,7 @@ def plot_rmse(
             vmax=rmse_p98,
             annotate=False,
             output_file=rmse_brain_plot,
+            resampling_interpolation="nearest",
         )
 
 
@@ -852,6 +855,7 @@ def plot_gscontrol(
                 cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
+                resampling_interpolation="nearest",
             )
 
     if "mir" in gscontrol:
@@ -872,6 +876,7 @@ def plot_gscontrol(
                 cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
+                resampling_interpolation="nearest",
             )
 
     if "gsr" in gscontrol or "mir" in gscontrol:
@@ -1107,4 +1112,5 @@ def plot_decay_variance(
                 vmax=data_p98,
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+                resampling_interpolation="nearest",
             )
