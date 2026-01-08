@@ -8,7 +8,6 @@ import sys
 
 import numpy as np
 from nilearn.masking import compute_epi_mask
-from scipy import stats
 from threadpoolctl import threadpool_limits
 
 from tedana import __version__, combine, decay, io, utils
@@ -426,29 +425,45 @@ def t2smap_workflow(
         threshold=1,
         methods=masktype,
     )
+    data_without_excluded_vols_masked = data_without_excluded_vols[mask, ...]
+    masksum_masked = masksum[mask]
 
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    (t2s_limited, s0_limited, t2s_full, s0_full, failures) = decay_function(
-        data=data_without_excluded_vols,
+    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+        data=data_without_excluded_vols_masked,
         tes=tes,
-        mask=mask,
-        adaptive_mask=masksum,
+        adaptive_mask=masksum_masked,
         fittype=fittype,
         n_threads=n_threads,
     )
+    del data_without_excluded_vols_masked
+
     if fittype == "curvefit":
-        io_generator.save_file(failures.astype(np.uint8), "fit failures img")
+        io_generator.save_file(utils.unmask(failures, mask).astype(np.uint8), "fit failures img")
+        if verbose:
+            io_generator.save_file(utils.unmask(t2s_var, mask), "t2star variance img")
+            io_generator.save_file(utils.unmask(s0_var, mask), "s0 variance img")
+            io_generator.save_file(utils.unmask(t2s_s0_covar, mask), "t2star-s0 covariance img")
 
     # Delete unused variables
-    del data_without_excluded_vols, failures
+    del data_without_excluded_vols, failures, t2s_var, s0_var, t2s_s0_covar
 
-    # set a hard cap for the T2* map/timeseries
-    # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
-    cap_t2s_sec = utils.millisec2sec(cap_t2s * 10.0)
-    LGR.debug(f"Setting cap on T2* map at {cap_t2s_sec:.5f}s")
-    t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+    t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
+        t2s=t2s_full,
+        s0=s0_full,
+        adaptive_mask=masksum_masked,
+        tes=tes,
+    )
+    del masksum_masked
+
+    t2s_full = utils.unmask(t2s_full, mask)
+    s0_full = utils.unmask(s0_full, mask)
+    t2s_limited = utils.unmask(t2s_limited, mask)
+    s0_limited = utils.unmask(s0_limited, mask)
+
+    io_generator.save_file(s0_full, "s0 img")
+    del s0_full
 
     LGR.info("Calculating model fit quality metrics")
     rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
@@ -461,30 +476,24 @@ def t2smap_workflow(
     )
     io_generator.save_file(rmse_map, "rmse img")
     io_generator.save_file(rmse_df, "confounds tsv")
+    io_generator.save_file(
+        s0_limited,
+        "limited s0 img",
+    )
+    del s0_limited
+    io_generator.save_file(
+        utils.millisec2sec(t2s_limited),
+        "limited t2star img",
+    )
+    del t2s_limited
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
     data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
 
-    # clean up numerical errors
-    for arr in (data_optcom, s0_full, t2s_full):
-        np.nan_to_num(arr, copy=False)
-
-    s0_full[s0_full < 0] = 0
-    t2s_full[t2s_full < 0] = 0
-
     io_generator.save_file(
         utils.millisec2sec(t2s_full),
         "t2star img",
-    )
-    io_generator.save_file(s0_full, "s0 img")
-    io_generator.save_file(
-        utils.millisec2sec(t2s_limited),
-        "limited t2star img",
-    )
-    io_generator.save_file(
-        s0_limited,
-        "limited s0 img",
     )
     io_generator.save_file(data_optcom, "combined img")
 
