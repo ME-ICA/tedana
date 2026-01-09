@@ -350,7 +350,7 @@ def generate_metrics(
     if "signal-noise_z" in required_metrics:
         LGR.info("Calculating signal-noise z-statistics")
         RepLGR.info(
-            "A t-test was performed between the distributions of T2*-model F-statistics "
+            "A z-test was performed between the distributions of T2*-model F-statistics "
             "associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to "
             "generate a z-statistic (metric signal-noise_z) and p-value (metric signal-noise_p) "
             "measuring relative association of the component to signal over noise."
