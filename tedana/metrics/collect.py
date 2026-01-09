@@ -236,7 +236,6 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -246,7 +245,6 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
@@ -457,6 +455,7 @@ def generate_metrics(
         "dice_FS0",
         "countnoise",
         "signal-noise_t",
+        "signal-noise_z",
         "signal-noise_p",
         "d_table_score",
         "kappa ratio",
