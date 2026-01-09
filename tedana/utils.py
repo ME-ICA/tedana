@@ -391,16 +391,16 @@ def get_spectrum(data: np.array, tr: float = 1.0):
 
     Parameters
     ----------
-    data : (S, ) array_like
-            A timeseries S, on which you would like to perform an fft.
+    data : (S x P) array_like
+        A timeseries S, on which you would like to perform an fft.
     tr : :obj:`float`
-            Reptition time (TR) of the data
+        Reptition time (TR) of the data
     """
     # adapted from @dangom
-    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
-    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+    power_spectrum = np.abs(np.fft.rfft(data, axis=0)) ** 2
+    freqs = np.fft.rfftfreq(power_spectrum.shape[0] * 2 - 1, tr)
     idx = np.argsort(freqs)
-    return power_spectrum[idx], freqs[idx]
+    return power_spectrum[idx, :], freqs[idx]
 
 
 def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=True, sided="bi"):

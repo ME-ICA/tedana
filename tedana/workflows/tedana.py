@@ -1187,6 +1187,19 @@ def tedana_workflow(
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
+        other_mixing = None
+        if ("mir" in gscontrol) or tedort:
+            other_mixing = {}
+            if tedort:
+                ort_mixing_file = io_generator.get_name("ICA orthogonalized mixing tsv")
+                ort_mixing = pd.read_table(ort_mixing_file).values
+                other_mixing["tedort"] = ort_mixing
+
+            if "mir" in gscontrol:
+                mir_mixing_file = io_generator.get_name("ICA MIR mixing tsv")
+                mir_mixing = pd.read_table(mir_mixing_file).values
+                other_mixing["mir"] = mir_mixing
+
         reporting.static_figures.comp_figures(
             data_optcom,
             mask=mask_denoise,
@@ -1194,6 +1207,7 @@ def tedana_workflow(
             mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
+            other_mixing=other_mixing,
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
         if t2smap is None:

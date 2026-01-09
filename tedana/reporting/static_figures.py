@@ -191,6 +191,7 @@ def plot_component(
     stat_img,
     component_timeseries,
     power_spectrum,
+    labels,
     frequencies,
     tr,
     classification_color,
@@ -204,14 +205,21 @@ def plot_component(
     ----------
     stat_img : :obj:`nibabel.Nifti1Image`
         Image of the component's spatial map
-    component_timeseries : (T,) array_like
-        Time series of the component
-    power_spectrum : (T,) array_like
-        Power spectrum of the component's time series
+    component_timeseries : (T x P) array_like
+        Time series of the component. P is the number of processing steps applied to the component.
+        The first column is the original time series,
+        the remaining columns are the time series after each processing step.
+    power_spectrum : (T x P) array_like
+        Power spectrum of the component's time series.
+        P is the number of processing steps applied to the component.
+        The first column is the original power spectrum,
+        the remaining columns are the power spectra after each processing step.
+    labels : (P,) array_like
+        Labels for the processing steps.
     frequencies : (T,) array_like
-        Frequencies for the power spectrum
+        Frequencies for the power spectrum.
     tr : float
-        Repetition time of the time series
+        Repetition time of the time series.
     classification_color : str
         Color to use for the time series and power spectrum
     png_cmap : str
@@ -274,9 +282,23 @@ def plot_component(
     # Create three subplots
     # First is the time series of the component
     ax_ts = fig.add_subplot(gs[0])
-    ax_ts.plot(component_timeseries, color=classification_color)
-    ax_ts.set_xlim(0, len(component_timeseries) - 1)
+    n_procs = component_timeseries.shape[1]
+    classification_rgb = np.array(matplotlib.colors.to_rgb(classification_color))
+    blue_rgb = np.array(matplotlib.colors.to_rgb("blue"))
+    palette = np.linspace(classification_rgb, blue_rgb, n_procs)
+    for i in range(n_procs):
+        color = palette[i, :]
+        kwargs = {"color": color, "alpha": 1.0 if i == 0 else 0.5}
+
+        ax_ts.plot(
+            component_timeseries[:, i],
+            label=f"{labels[i]}",
+            **kwargs,
+        )
+
+    ax_ts.set_xlim(0, component_timeseries.shape[0] - 1)
     ax_ts.set_yticks([])
+    ax_ts.legend()
 
     max_xticks = 10
     xloc = plt.MaxNLocator(max_xticks)
@@ -303,7 +325,11 @@ def plot_component(
 
     # Third is the power spectrum of the component's time series
     ax_fft = fig.add_subplot(gs[2])
-    ax_fft.plot(frequencies, power_spectrum, color=classification_color)
+    for i in range(n_procs):
+        color = palette[i, :]
+        kwargs = {"color": color, "alpha": 1.0 if i == 0 else 0.5}
+        ax_fft.plot(frequencies, power_spectrum[:, i], **kwargs)
+
     ax_fft.set_title("One-Sided FFT")
     ax_fft.set_xlabel("Frequency (Hz)")
     ax_fft.set_xlim(0, frequencies.max())
@@ -321,7 +347,7 @@ def plot_component(
     plt.close(fig)
 
 
-def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
+def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap, other_mixing=None):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -341,6 +367,13 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
         is components and `T` is the same as in `data`
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
+    png_cmap : str
+        Colormap to use for the spatial map
+    other_mixing : dict, optional
+        Dictionary of mixing matrices for converting input data to component space for other
+        processing steps.
+        The keys are the processing labels, and the values are the mixing matrices.
+        Default is None.
     """
     # regenerate the beta images
     component_maps_arr = stats.get_coeffs(ts, mixing, mask)
@@ -393,7 +426,18 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
             header=io_generator.reference_img.header,
         )
 
-        component_timeseries = mixing[:, compnum]
+        component_timeseries = mixing[:, compnum][:, None]
+        if other_mixing is not None:
+            labels = ["base", *other_mixing.keys()]
+            component_timeseries = np.concatenate(
+                [
+                    component_timeseries,
+                    *[other_mixing[key][:, compnum][:, None] for key in other_mixing.keys()],
+                ],
+                axis=1,
+            )
+        else:
+            labels = None
 
         # Get fft and freqs for this component
         # adapted from @dangom
@@ -406,6 +450,7 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
             stat_img=component_img,
             component_timeseries=component_timeseries,
             power_spectrum=spectrum,
+            labels=labels,
             frequencies=freqs,
             tr=tr,
             classification_color=line_color,
