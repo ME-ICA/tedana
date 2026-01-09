@@ -10,9 +10,10 @@ import shutil
 import sys
 from glob import glob
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
-from nilearn.masking import compute_epi_mask
+from nilearn.masking import apply_mask, compute_epi_mask
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -640,8 +641,75 @@ def tedana_workflow(
     LGR.info("Initializing and validating component selection tree")
     selector = ComponentSelector(tree, out_dir)
 
+    # Initialize OutputGenerator with reference image
+    # XXX: This doesn't support z-cat data yet.
+    ref_img = nb.load(data[0])
+    io_generator = io.OutputGenerator(
+        ref_img,
+        convention=convention,
+        out_dir=out_dir,
+        prefix=prefix,
+        config="auto",
+        overwrite=overwrite,
+        verbose=verbose,
+    )
+
+    if t2smap is not None and op.isfile(t2smap):
+        t2smap_file = io_generator.get_name("t2star img")
+        t2smap = op.abspath(t2smap)
+        # Allow users to re-run on same folder
+        if t2smap != t2smap_file:
+            shutil.copyfile(t2smap, t2smap_file)
+    elif t2smap is not None:
+        raise OSError("Argument 't2smap' must be an existing file.")
+
+    RepLGR.info(
+        "TE-dependence analysis was performed on input data using the tedana workflow "
+        "\\citep{dupre2021te}."
+    )
+
+    if mask and not t2smap:
+        # TODO: add affine check
+        LGR.info("Using user-defined mask")
+        RepLGR.info("A user-defined mask was applied to the data.")
+        mask_img = nb.load(mask)
+        mask = utils.reshape_niimg(mask).astype(int)
+    elif t2smap and not mask:
+        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        mask = (t2s_loaded != 0).astype(int)
+        mask_img = io.new_nii_like(io_generator.reference_img, mask)
+        t2s_limited = apply_mask(t2smap, mask_img)
+        t2s_limited = utils.check_t2s_values(t2s_limited)
+        t2s_full = t2s_limited.copy()
+    elif t2smap and mask:
+        LGR.info("Combining user-defined mask and T2* map to generate mask")
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        mask = utils.reshape_niimg(mask).astype(int)
+        mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
+        mask_img = io.new_nii_like(io_generator.reference_img, mask)
+        t2s_limited = apply_mask(t2smap, mask_img)
+        t2s_limited = utils.check_t2s_values(t2s_limited)
+        t2s_full = t2s_limited.copy()
+    else:
+        LGR.warning(
+            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
+            "Most external pipelines include more reliable masking functions. "
+            "It is strongly recommended to provide an external mask, "
+            "and to visually confirm that mask accurately conforms to data boundaries."
+        )
+        first_echo_img = io.new_nii_like(io_generator.reference_img, data[0])
+        mask_img = compute_epi_mask(first_echo_img)
+        mask = utils.reshape_niimg(mask_img.get_fdata()).astype(int)
+        RepLGR.info(
+            "An initial mask was generated from the first echo using "
+            "nilearn's compute_epi_mask function."
+        )
+
+    io_generator.register_mask(mask_img)
+
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat, ref_img = io.load_data(data, n_echos=n_echos, dummy_scans=dummy_scans)
+    data_cat = np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
@@ -658,16 +726,6 @@ def tedana_workflow(
                 dummy_scans=dummy_scans,
             )
         )
-
-    io_generator = io.OutputGenerator(
-        ref_img,
-        convention=convention,
-        out_dir=out_dir,
-        prefix=prefix,
-        config="auto",
-        overwrite=overwrite,
-        verbose=verbose,
-    )
 
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
@@ -712,57 +770,9 @@ def tedana_workflow(
     elif mixing_file is not None:
         raise OSError("Argument '--mix' must be an existing file.")
 
-    if t2smap is not None and op.isfile(t2smap):
-        t2smap_file = io_generator.get_name("t2star img")
-        t2smap = op.abspath(t2smap)
-        # Allow users to re-run on same folder
-        if t2smap != t2smap_file:
-            shutil.copyfile(t2smap, t2smap_file)
-    elif t2smap is not None:
-        raise OSError("Argument 't2smap' must be an existing file.")
-
-    RepLGR.info(
-        "TE-dependence analysis was performed on input data using the tedana workflow "
-        "\\citep{dupre2021te}."
-    )
-
-    if mask and not t2smap:
-        # TODO: add affine check
-        LGR.info("Using user-defined mask")
-        RepLGR.info("A user-defined mask was applied to the data.")
-        mask = utils.reshape_niimg(mask).astype(int)
-    elif t2smap and not mask:
-        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.check_t2s_values(t2s_loaded)
-        t2s_full = t2s_limited.copy()
-        mask = (t2s_limited != 0).astype(int)
-    elif t2smap and mask:
-        LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.check_t2s_values(t2s_loaded)
-        t2s_full = t2s_limited.copy()
-        mask = utils.reshape_niimg(mask).astype(int)
-        mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
-    else:
-        LGR.warning(
-            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
-            "Most external pipelines include more reliable masking functions. "
-            "It is strongly recommended to provide an external mask, "
-            "and to visually confirm that mask accurately conforms to data boundaries."
-        )
-        first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
-        mask = compute_epi_mask(first_echo_img).get_fdata()
-        mask = utils.reshape_niimg(mask).astype(int)
-        RepLGR.info(
-            "An initial mask was generated from the first echo using "
-            "nilearn's compute_epi_mask function."
-        )
-
     # Create an adaptive mask with at least 1 good echo, for denoising
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_cat,
-        mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,

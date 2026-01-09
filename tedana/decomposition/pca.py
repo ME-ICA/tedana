@@ -6,6 +6,7 @@ from numbers import Number
 import numpy as np
 import pandas as pd
 from mapca import MovingAveragePCA
+from nilearn import masking
 from scipy import stats
 from sklearn.decomposition import PCA
 
@@ -65,13 +66,14 @@ def tedpca(
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
+    data_cat : (M x E x T) array_like
         Input functional data
-    data_optcom : (S x T) array_like
+    data_optcom : (M x T) array_like
         Optimally combined time series data
-    mask : (S,) array_like
-        Boolean mask array
-    adaptive_mask : (S,) array_like
+    mask : (M,) array_like
+        Boolean mask array. This is more restrictive than the base mask (M), so
+        additional masking and unmasking will take place within the function.
+    adaptive_mask : (M,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -214,8 +216,8 @@ def tedpca(
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ["mdl", "aic", "kic"]:
-        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
-        mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+        data_img = masking.unmask(utils.unmask(data, mask).T, io_generator.mask)
+        mask_img = io_generator.mask
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
         _ = ma_pca.fit_transform(data_img, mask_img)
 

@@ -108,16 +108,16 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
 
     Parameters
     ----------
-    data : (S x E x T) :obj:`numpy.ndarray`
+    data : (M x E x T) :obj:`numpy.ndarray`
         Concatenated BOLD data.
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (M,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
-    t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
+    t2s : (M [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
     combmode : {'t2s', 'paid'}, optional
@@ -185,6 +185,12 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
             "inhomogeneity desensitized (PAID) method"
         )
     else:
+        if t2s.shape[0] != data.shape[0]:
+            raise ValueError(
+                "T2* estimates and data do not have same number of "
+                f"voxels/samples: {t2s.shape[0]} != {data.shape[0]}"
+            )
+
         if t2s.ndim == 1:
             msg = "Optimally combining data with voxel-wise T2* estimates"
         else:

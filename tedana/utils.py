@@ -54,18 +54,13 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, methods=["dropout"]):
+def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
-    data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
-    mask : :obj:`str` or img_like
-        Binary mask for voxels to consider in TE Dependent ANAlysis.
-        This must be provided, as the mask is used to identify exemplar voxels.
-        Without a mask limiting the voxels to consider,
-        the adaptive mask will generally select voxels outside the brain as exemplars.
+    data : (M x E x T) array_like
+        Multi-echo data array, where `M` is samples in mask, `E` is echos, and `T` is time.
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
@@ -79,9 +74,10 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
 
     Returns
     -------
-    mask : (S,) :obj:`numpy.ndarray`
-        Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    mask : (M,) :obj:`numpy.ndarray`
+        Boolean array of samples in mask that have sufficient signal in at least ``threshold``
+        echos.
+    adaptive_mask : (M,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a given voxel.
 
     Notes
@@ -138,8 +134,6 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
         f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
-    mask = reshape_niimg(mask).astype(bool)
-    data = data[mask, :, :]
 
     if (methods is None) or (len(methods) == 1 and methods[0].lower() == "none"):
         LGR.warning(
@@ -268,8 +262,6 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
                 f"even if there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
-    adaptive_mask = unmask(adaptive_mask, mask)
-    modified_mask = unmask(modified_mask, mask)
 
     return modified_mask, adaptive_mask
 

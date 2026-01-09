@@ -17,6 +17,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 import requests
+from nilearn import masking
 from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image import new_img_like
 
@@ -131,6 +132,7 @@ class OutputGenerator:
 
         self.config = cfg
         self.reference_img = check_niimg(reference_img)
+        self.mask = None
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
@@ -205,6 +207,16 @@ class OutputGenerator:
             The list of filenames being input as multi-echo volumes.
         """
         self.registry["input img"] = [op.relpath(name, start=self.out_dir) for name in names]
+
+    def register_mask(self, mask):
+        """Register mask image.
+
+        Parameters
+        ----------
+        mask : img_like
+            The mask image to register.
+        """
+        self.mask = mask
 
     def get_name(self, description, **kwargs):
         """Generate a file full path to simplify file output.
@@ -317,7 +329,11 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        img = new_nii_like(self.reference_img, data)
+        img = masking.unmask(data.T, self.mask)
+        if img.ndim == 4:
+            # Only set the TR for 4D images.
+            img.header.set_zooms(self.reference_img.header.get_zooms())
+
         img.to_filename(name)
 
     def save_json(self, data, name):
