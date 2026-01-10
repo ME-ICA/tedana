@@ -709,6 +709,136 @@ The launcher script automatically finds an available port if the default (8000) 
     Once cached, Rica can be used offline.
 
 
+Using a Local Rica Bundle (Advanced)
+------------------------------------
+
+For advanced users and developers who need to use a custom Rica build or work offline,
+you can point tedana to a local Rica installation using the ``TEDANA_RICA_PATH``
+environment variable.
+
+The path should point to a directory containing the required Rica files:
+
+- ``index.html`` - The Rica web application
+- ``rica_server.py`` - HTTP server with CORS support
+- ``favicon.ico`` - Rica favicon (optional)
+
+**Setting the environment variable:**
+
+.. code-block:: bash
+
+    # Set for current session
+    export TEDANA_RICA_PATH=/path/to/rica/build
+
+    # Then run tedana as usual
+    tedana -d echo1.nii.gz echo2.nii.gz echo3.nii.gz \
+           -e 14.5 29.0 43.5 \
+           --out-dir output \
+           --rica-report
+
+To make this permanent, add the export line to your shell configuration file
+(e.g., ``~/.bashrc``, ``~/.zshrc``, or ``~/.bash_profile``).
+
+.. note::
+
+    If ``TEDANA_RICA_PATH`` is not set, tedana will automatically download Rica
+    from GitHub and cache it locally.
+
+**For Rica developers:**
+
+If you are developing Rica and have a local build, you can point tedana to your
+build output directory:
+
+.. code-block:: bash
+
+    # Build Rica locally
+    cd ~/GitHub/rica
+    npm run build
+
+    # Set the environment variable to use the local build
+    export TEDANA_RICA_PATH=~/GitHub/rica/build
+
+    # Run tedana with Rica report
+    tedana -d data/*.nii.gz -e 14.5 29.0 43.5 --out-dir output --rica-report
+
+
+Troubleshooting Rica
+--------------------
+
+**Rica download fails:**
+
+If Rica fails to download from GitHub, you may see an error like:
+
+.. code-block:: text
+
+    Failed to download Rica: <urlopen error ...>
+
+Possible solutions:
+
+1. **Check your internet connection** - Ensure you can access GitHub.
+
+2. **Use a local Rica bundle** - Download Rica manually and set ``TEDANA_RICA_PATH``:
+
+   .. code-block:: bash
+
+       # Download Rica release manually
+       wget https://github.com/ME-ICA/rica/releases/latest/download/index.html
+       wget https://github.com/ME-ICA/rica/releases/latest/download/rica_server.py
+       wget https://github.com/ME-ICA/rica/releases/latest/download/favicon.ico
+
+       # Place files in a directory and set the environment variable
+       mkdir ~/rica-bundle
+       mv index.html rica_server.py favicon.ico ~/rica-bundle/
+       export TEDANA_RICA_PATH=~/rica-bundle
+       tedana ... --rica-report
+
+3. **Run without Rica** - Remove the ``--rica-report`` flag. The standard HTML
+   report will still be generated.
+
+**Clearing the Rica cache:**
+
+If Rica files become corrupted or you want to force a fresh download:
+
+.. code-block:: bash
+
+    # Linux
+    rm -rf ~/.cache/tedana/rica
+
+    # macOS
+    rm -rf ~/Library/Caches/tedana/rica
+
+    # Windows (PowerShell)
+    Remove-Item -Recurse -Force "$env:LOCALAPPDATA\tedana\rica"
+
+The next time you run tedana with ``--rica-report``, Rica will be re-downloaded.
+
+**Port conflicts:**
+
+When opening Rica, if port 8000 is already in use, the launcher script
+automatically tries the next available port (8001, 8002, etc.). If you see:
+
+.. code-block:: text
+
+    Error: Could not find free port starting from 8000
+
+This means ports 8000-8009 are all in use. You can specify a different starting port:
+
+.. code-block:: bash
+
+    python open_rica_report.py --port 9000
+
+**Browser does not open automatically:**
+
+If the browser doesn't open, you can:
+
+1. Open the URL manually (displayed in the terminal output)
+2. Use the ``--no-open`` flag and open the URL yourself:
+
+   .. code-block:: bash
+
+       python open_rica_report.py --no-open
+       # Then open http://localhost:8000/rica/index.html in your browser
+
+
 **************************
 Citable workflow summaries
 **************************
