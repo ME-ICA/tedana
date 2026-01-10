@@ -5,6 +5,8 @@ import stat
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from tedana import rica
 
 
@@ -204,3 +206,115 @@ class TestGetRicaVersion:
         with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
             result = rica.get_rica_version()
             assert result is None
+
+
+class TestLocalRicaPath:
+    """Tests for local Rica path support."""
+
+    def _create_mock_rica_files(self, rica_dir):
+        """Create mock Rica files in a directory.
+
+        Parameters
+        ----------
+        rica_dir : Path
+            Directory to create mock Rica files in.
+        """
+        rica_dir.mkdir(parents=True, exist_ok=True)
+        for filename in rica.RICA_FILES:
+            (rica_dir / filename).write_text(f"mock content for {filename}")
+
+    def test_validate_rica_path_valid(self, tmp_path):
+        """Test that validation passes when all required files exist."""
+        rica_dir = tmp_path / "rica"
+        self._create_mock_rica_files(rica_dir)
+
+        result = rica.validate_rica_path(rica_dir)
+
+        assert result is True
+
+    def test_validate_rica_path_missing_files(self, tmp_path):
+        """Test that validation fails when files are missing."""
+        rica_dir = tmp_path / "rica"
+        rica_dir.mkdir()
+        # Only create one file, not all required files
+        (rica_dir / rica.RICA_FILES[0]).write_text("mock content")
+
+        result = rica.validate_rica_path(rica_dir)
+
+        assert result is False
+
+    def test_validate_rica_path_not_directory(self, tmp_path):
+        """Test that validation fails for non-existent or file paths."""
+        # Test non-existent path
+        non_existent = tmp_path / "does_not_exist"
+        result = rica.validate_rica_path(non_existent)
+        assert result is False
+
+        # Test path that is a file, not a directory
+        file_path = tmp_path / "not_a_dir.txt"
+        file_path.write_text("I am a file")
+        result = rica.validate_rica_path(file_path)
+        assert result is False
+
+    def test_get_rica_from_local_valid(self, tmp_path):
+        """Test getting Rica from a valid local path."""
+        rica_dir = tmp_path / "rica"
+        self._create_mock_rica_files(rica_dir)
+
+        result = rica.get_rica_from_local(rica_dir)
+
+        assert result == rica_dir
+        assert result.is_dir()
+
+    def test_get_rica_from_local_invalid(self, tmp_path):
+        """Test that an error is raised for invalid paths."""
+        # Test non-existent path
+        non_existent = tmp_path / "does_not_exist"
+        with pytest.raises(ValueError, match="does not exist"):
+            rica.get_rica_from_local(non_existent)
+
+        # Test path that is a file, not a directory
+        file_path = tmp_path / "not_a_dir.txt"
+        file_path.write_text("I am a file")
+        with pytest.raises(ValueError, match="is not a directory"):
+            rica.get_rica_from_local(file_path)
+
+        # Test directory missing required files
+        incomplete_dir = tmp_path / "incomplete"
+        incomplete_dir.mkdir()
+        (incomplete_dir / rica.RICA_FILES[0]).write_text("mock content")
+        with pytest.raises(ValueError, match="missing required files"):
+            rica.get_rica_from_local(incomplete_dir)
+
+    def test_setup_rica_report_env_variable(self, tmp_path, monkeypatch):
+        """Test setup using TEDANA_RICA_PATH environment variable."""
+        # Create mock local Rica bundle
+        local_rica = tmp_path / "env_rica"
+        self._create_mock_rica_files(local_rica)
+
+        # Create output directory
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        # Set environment variable
+        monkeypatch.setenv(rica.RICA_PATH_ENV_VAR, str(local_rica))
+
+        # Mock download_rica to raise an error (should not be called when env var is set)
+        def mock_download_rica():
+            raise RuntimeError("download_rica should not be called with env var set")
+
+        with patch.object(rica, "download_rica", side_effect=mock_download_rica):
+            # Call setup_rica_report without explicit rica_path
+            # It should use the environment variable
+            launcher_path = rica.setup_rica_report(output_dir)
+
+        # Verify Rica files were copied
+        rica_output_dir = output_dir / "rica"
+        assert rica_output_dir.exists()
+        for filename in rica.RICA_FILES:
+            assert (rica_output_dir / filename).exists()
+
+        # Verify launcher script was created
+        assert launcher_path is not None
+        assert launcher_path.exists()
+        assert launcher_path.name == "open_rica_report.py"

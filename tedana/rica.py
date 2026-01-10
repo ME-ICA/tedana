@@ -32,6 +32,90 @@ RICA_GITHUB_API = (
 # Files to download from Rica releases
 RICA_FILES = ["index.html", "rica_server.py", "favicon.ico"]
 
+# Environment variable for local Rica path
+RICA_PATH_ENV_VAR = "TEDANA_RICA_PATH"
+
+# Bundled Rica path (relative to tedana package)
+RICA_BUNDLED_PATH = Path(__file__).parent / "resources" / "rica"
+
+
+def validate_rica_path(rica_path: Union[str, Path]) -> bool:
+    """Check if a local path contains the required Rica files.
+
+    Parameters
+    ----------
+    rica_path : str or Path
+        Path to a local Rica directory to validate.
+
+    Returns
+    -------
+    bool
+        True if the path exists and contains all required Rica files,
+        False otherwise.
+    """
+    rica_path = Path(rica_path)
+
+    if not rica_path.exists():
+        LGR.debug(f"Rica path does not exist: {rica_path}")
+        return False
+
+    if not rica_path.is_dir():
+        LGR.debug(f"Rica path is not a directory: {rica_path}")
+        return False
+
+    missing_files = []
+    for filename in RICA_FILES:
+        if not (rica_path / filename).exists():
+            missing_files.append(filename)
+
+    if missing_files:
+        LGR.debug(f"Rica path {rica_path} is missing files: {missing_files}")
+        return False
+
+    return True
+
+
+def get_rica_from_local(rica_path: Union[str, Path]) -> Path:
+    """Validate and return the path to a local Rica directory.
+
+    Parameters
+    ----------
+    rica_path : str or Path
+        Path to a local Rica directory.
+
+    Returns
+    -------
+    Path
+        Validated path to the local Rica directory.
+
+    Raises
+    ------
+    ValueError
+        If the path does not exist, is not a directory, or is missing
+        required Rica files.
+    """
+    rica_path = Path(rica_path)
+
+    if not rica_path.exists():
+        raise ValueError(f"Local Rica path does not exist: {rica_path}")
+
+    if not rica_path.is_dir():
+        raise ValueError(f"Local Rica path is not a directory: {rica_path}")
+
+    missing_files = []
+    for filename in RICA_FILES:
+        if not (rica_path / filename).exists():
+            missing_files.append(filename)
+
+    if missing_files:
+        raise ValueError(
+            f"Local Rica path {rica_path} is missing required files: {missing_files}. "
+            f"Required files are: {RICA_FILES}"
+        )
+
+    LGR.debug(f"Validated local Rica path: {rica_path}")
+    return rica_path
+
 
 def get_rica_cache_dir() -> Path:
     """Get the platform-specific cache directory for Rica files.
@@ -439,9 +523,15 @@ def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
     """Set up Rica report files in a tedana output directory.
 
     This function:
-    1. Downloads Rica if not already cached
+    1. Gets Rica files from environment variable, bundled resources, or downloads
     2. Copies Rica files to the output directory
     3. Generates the launcher script
+
+    The priority order for obtaining Rica files is:
+    1. Check for TEDANA_RICA_PATH environment variable (for developers)
+    2. Check for bundled Rica in tedana/resources/rica/
+    3. Check for cached Rica
+    4. Fall back to downloading from GitHub
 
     Parameters
     ----------
@@ -454,10 +544,44 @@ def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
         Path to the launcher script if successful, None if Rica setup failed.
     """
     out_dir = Path(out_dir)
+    source_dir: Optional[Path] = None
+    source_description: str = ""
 
     try:
-        # Download Rica if needed
-        cache_dir = download_rica()
+        # Priority 1: Check TEDANA_RICA_PATH environment variable (for developers)
+        env_rica_path = os.environ.get(RICA_PATH_ENV_VAR)
+        if env_rica_path:
+            if validate_rica_path(env_rica_path):
+                source_dir = Path(env_rica_path)
+                source_description = f"environment variable ({RICA_PATH_ENV_VAR}): {source_dir}"
+                LGR.info(f"Using Rica from {source_description}")
+            else:
+                LGR.warning(
+                    f"{RICA_PATH_ENV_VAR} is set to '{env_rica_path}' but path is invalid "
+                    "or missing required files. Falling back to other sources."
+                )
+
+        # Priority 2: Check for bundled Rica in tedana/resources/rica/
+        if source_dir is None:
+            if validate_rica_path(RICA_BUNDLED_PATH):
+                source_dir = RICA_BUNDLED_PATH
+                source_description = f"bundled resources: {source_dir}"
+                LGR.info(f"Using Rica from {source_description}")
+
+        # Priority 3: Check for cached Rica
+        if source_dir is None:
+            cache_dir = get_rica_cache_dir()
+            if is_rica_cached(cache_dir):
+                source_dir = cache_dir
+                cached_version = get_cached_rica_version(cache_dir)
+                source_description = f"cached: {source_dir} (version {cached_version})"
+                LGR.info(f"Using Rica from {source_description}")
+
+        # Priority 4: Download from GitHub
+        if source_dir is None:
+            LGR.info("No local Rica found. Downloading from GitHub...")
+            source_dir = download_rica()
+            source_description = f"GitHub download (cached): {source_dir}"
 
         # Create rica subdirectory in output
         rica_dir = out_dir / "rica"
@@ -465,13 +589,13 @@ def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
 
         # Copy Rica files to output
         for filename in RICA_FILES:
-            src = cache_dir / filename
+            src = source_dir / filename
             dst = rica_dir / filename
             if src.exists():
                 shutil.copy2(src, dst)
                 LGR.debug(f"Copied {filename} to {rica_dir}")
             else:
-                LGR.warning(f"Rica file {filename} not found in cache")
+                LGR.warning(f"Rica file {filename} not found in {source_description}")
 
         # Generate launcher script
         launcher_path = generate_rica_launcher_script(out_dir)
