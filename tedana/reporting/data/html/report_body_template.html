@@ -216,6 +216,15 @@
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
+  {% endif %} {% if varianceExists %}
+  <h3>T2* Estimate Variance</h3>
+  <div class="carpet-plots-image">
+    <img
+      id="t2starVariancePlot"
+      src="{{ t2starVariancePlot }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
+  </div>
   {% endif %} {% if s0Exists %}
   <h2>S0</h2>
   <div class="carpet-plots-image">
@@ -229,6 +238,23 @@
     <img
       id="s0Histogram"
       src="{{ s0Histogram }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
+  </div>
+  {% endif %} {% if varianceExists %}
+  <h3>S0 Estimate Variance</h3>
+  <div class="carpet-plots-image">
+    <img
+      id="s0VariancePlot"
+      src="{{ s0VariancePlot }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
+  </div>
+  <h3>T2* and S0 Estimate Covariance</h3>
+  <div class="carpet-plots-image">
+    <img
+      id="t2sS0CovariancePlot"
+      src="{{ t2sS0CovariancePlot }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>

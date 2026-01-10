@@ -13,7 +13,6 @@ from glob import glob
 import numpy as np
 import pandas as pd
 from nilearn.masking import compute_epi_mask
-from scipy import stats
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -85,7 +84,10 @@ def _get_parser():
         nargs="+",
         metavar="TE",
         type=float,
-        help="Echo times (in ms). E.g., 15.0 39.0 63.0",
+        help=(
+            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
+        ),
         required=True,
     )
     optional.add_argument(
@@ -371,7 +373,11 @@ def _get_parser():
         dest="t2smap",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
-        help=("Precalculated T2* map in the same space as the input data."),
+        help=(
+            "Precalculated T2* map in the same space as the input data. "
+            "Values should be in seconds (per BIDS convention). Maps in milliseconds "
+            "are auto-detected and handled with a warning."
+        ),
         default=None,
     )
     optional.add_argument(
@@ -458,7 +464,8 @@ def tedana_workflow(
         Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
-        List of echo times associated with data in milliseconds.
+        List of echo times associated with data. Values should be in seconds
+        per BIDS convention. Millisecond values are still accepted but deprecated.
 
     Other Parameters
     ----------------
@@ -565,8 +572,9 @@ def tedana_workflow(
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data. Values in
-        the map must be in seconds.
+        Precalculated T2* map in the same space as the input data. Values should
+        be in seconds per BIDS convention. Maps in milliseconds are auto-detected
+        and handled with a warning.
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -744,15 +752,15 @@ def tedana_workflow(
         RepLGR.info("A user-defined mask was applied to the data.")
         mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
-        LGR.info("Assuming user=defined T2* map is masked and using it to generate mask")
-        t2s_limited_sec = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.sec2millisec(t2s_limited_sec)
+        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        t2s_limited = utils.check_t2s_values(t2s_loaded)
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_limited_sec = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.sec2millisec(t2s_limited_sec)
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        t2s_limited = utils.check_t2s_values(t2s_loaded)
         t2s_full = t2s_limited.copy()
         mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
@@ -797,22 +805,51 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-            data=data_cat,
+        data_masked = data_cat[mask_denoise, ...]
+        masksum_masked = masksum_denoise[mask_denoise]
+        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
+            data=data_masked,
             tes=tes,
-            mask=mask_denoise,
-            adaptive_mask=masksum_denoise,
+            adaptive_mask=masksum_masked,
             fittype=fittype,
             n_threads=n_threads,
         )
+        del data_masked
 
-        # set a hard cap for the T2* map
-        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-        cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
-        LGR.debug(f"Setting cap on T2* map at {utils.millisec2sec(cap_t2s):.5f}s")
-        t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+        if fittype == "curvefit":
+            io_generator.save_file(
+                utils.unmask(failures, mask_denoise).astype(np.uint8),
+                "fit failures img",
+            )
+            if verbose:
+                io_generator.save_file(
+                    utils.unmask(t2s_var, mask_denoise),
+                    "t2star variance img",
+                )
+                io_generator.save_file(utils.unmask(s0_var, mask_denoise), "s0 variance img")
+                io_generator.save_file(
+                    utils.unmask(t2s_s0_covar, mask_denoise),
+                    "t2star-s0 covariance img",
+                )
+
+        del failures, t2s_var, s0_var, t2s_s0_covar
+
+        t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
+            t2s=t2s_full,
+            s0=s0_full,
+            adaptive_mask=masksum_masked,
+            tes=tes,
+        )
+        del masksum_masked
+
+        t2s_full = utils.unmask(t2s_full, mask_denoise)
+        s0_full = utils.unmask(s0_full, mask_denoise)
+        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_limited = utils.unmask(s0_limited, mask_denoise)
+
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
+        del s0_full
 
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
@@ -830,6 +867,8 @@ def tedana_workflow(
         io_generator.save_file(rmse_map, "rmse img")
         io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
+        del s0_limited, t2s_limited
+
     # optimally combine data
     data_optcom = combine.make_optcom(
         data_cat,
@@ -838,6 +877,7 @@ def tedana_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
+    del t2s_full
 
     if "gsr" in gscontrol:
         # regress out global signal
@@ -1181,6 +1221,11 @@ def tedana_workflow(
                 io_generator=io_generator,
                 adaptive_mask=masksum_denoise,
             )
+            if fittype == "curvefit" and verbose:
+                reporting.static_figures.plot_decay_variance(
+                    io_generator=io_generator,
+                    adaptive_mask=masksum_denoise,
+                )
 
         if gscontrol:
             reporting.static_figures.plot_gscontrol(
@@ -1189,9 +1234,15 @@ def tedana_workflow(
             )
 
         if external_regressors is not None:
-            reporting.static_figures.plot_heatmap(
-                mixing=mixing_df,
+            # Compute correlations between external regressors and ICA components
+            corr_df = metrics.external.compute_external_regressor_correlations(
                 external_regressors=external_regressors,
+                mixing=mixing_df,
+            )
+
+            # Plot the heatmap
+            reporting.static_figures.plot_heatmap(
+                correlation_df=corr_df,
                 component_table=component_table,
                 out_file=os.path.join(
                     io_generator.out_dir,
@@ -1199,6 +1250,21 @@ def tedana_workflow(
                     f"{io_generator.prefix}confound_correlations.svg",
                 ),
             )
+
+            # Add external regressor correlations to the metrics file
+            # Transpose so components are rows (to match component_table structure)
+            corr_df_transposed = corr_df.T
+            # Add prefix to column names
+            corr_df_transposed.columns = [
+                f"external regressor correlation {col}" for col in corr_df_transposed.columns
+            ]
+            # Reset index to match the component_table's row order when read from TSV
+            corr_df_transposed = corr_df_transposed.reset_index(drop=True)
+            # Add correlation columns to the metrics TSV file
+            io_generator.add_df_to_file(corr_df_transposed, "ICA metrics tsv")
+            # Add metadata for the new columns to the metrics JSON file
+            corr_metadata = metrics.collect.get_metadata(corr_df_transposed)
+            io_generator.add_dict_to_file(corr_metadata, "ICA metrics json")
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)

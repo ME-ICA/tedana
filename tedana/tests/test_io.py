@@ -285,7 +285,7 @@ def test_fname_to_component_list():
 
 
 def test_fname_to_component_list_empty_file():
-    """Test for testing empty files in fname_to_component_list function"""
+    """Test for testing empty files in fname_to_component_list function."""
     temp_csv_fname = os.path.join(data_dir, "test.csv")
     with open(temp_csv_fname, "w"):
         pass
@@ -331,7 +331,7 @@ def test_custom_encoder():
 @mock.patch("tedana.io.requests.get")
 @mock.patch("tedana.io.op.isfile")
 def test_download_json_file_not_found(mock_isfile, mock_requests_get):
-    """Test case when file doesn't exist locally or on figshare"""
+    """Test case when file doesn't exist locally or on figshare."""
     mock_isfile.return_value = False
 
     mock_response = mock.Mock()
@@ -348,7 +348,7 @@ def test_download_json_file_not_found(mock_isfile, mock_requests_get):
 @mock.patch("tedana.io.requests.get")
 @mock.patch("tedana.io.op.isfile")
 def test_download_json_skips_if_exists(mock_isfile, mock_requests_get):
-    """Test case when file already exists locally"""
+    """Test case when file already exists locally."""
     mock_isfile.return_value = True
 
     result = me.download_json("my_tree", "some_dir")
@@ -359,7 +359,7 @@ def test_download_json_skips_if_exists(mock_isfile, mock_requests_get):
 
 @mock.patch("tedana.io.requests.get")
 def test_download_json_doesnt_connect_to_url(mock_requests_get, caplog: pytest.LogCaptureFixture):
-    """Tests that the correct log message appears when URL not connected"""
+    """Tests that the correct log message appears when URL not connected."""
     mock_requests_get.side_effect = requests.exceptions.ConnectionError(
         "Simulated connection error"
     )
@@ -372,7 +372,7 @@ def test_download_json_doesnt_connect_to_url(mock_requests_get, caplog: pytest.L
 @mock.patch("tedana.io.requests.get")
 @mock.patch("tedana.io.op.isfile")
 def test_download_json_file_is_downloaded(mock_isfile, mock_requests_get):
-    """Test json is downloaded if it exists on figshare"""
+    """Test json is downloaded if it exists on figshare."""
     mock_isfile.return_value = False
 
     metadata_response = mock.Mock()
@@ -398,3 +398,42 @@ def test_download_json_file_is_downloaded(mock_isfile, mock_requests_get):
         content = json.load(f)
     assert content == file_content
     os.remove(result)
+
+
+def test_add_dict_to_file():
+    """Test add_dict_to_file method for merging dictionaries into JSON files."""
+    ref_img = os.path.join(data_dir, "mask.nii.gz")
+    io_generator = me.OutputGenerator(ref_img, overwrite=True)
+
+    # Test 1: Create a new file when none exists
+    initial_data = {"key1": "value1", "key2": 42}
+    fname = io_generator.add_dict_to_file(initial_data, "ICA metrics json")
+    assert os.path.exists(fname)
+
+    with open(fname, "r") as f:
+        saved_data = json.load(f)
+    assert saved_data == initial_data
+
+    # Test 2: Merge new data into existing file
+    additional_data = {"key3": "value3", "key4": [1, 2, 3]}
+    fname = io_generator.add_dict_to_file(additional_data, "ICA metrics json")
+
+    with open(fname, "r") as f:
+        merged_data = json.load(f)
+    assert "key1" in merged_data
+    assert "key3" in merged_data
+    assert merged_data["key1"] == "value1"
+    assert merged_data["key3"] == "value3"
+    assert merged_data["key4"] == [1, 2, 3]
+
+    # Test 3: Update existing keys
+    update_data = {"key1": "updated_value"}
+    fname = io_generator.add_dict_to_file(update_data, "ICA metrics json")
+
+    with open(fname, "r") as f:
+        updated_data = json.load(f)
+    assert updated_data["key1"] == "updated_value"
+    assert updated_data["key3"] == "value3"  # Other keys preserved
+
+    # Cleanup
+    os.remove(fname)
