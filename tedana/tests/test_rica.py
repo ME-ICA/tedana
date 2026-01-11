@@ -1,9 +1,11 @@
 """Tests for tedana.rica module."""
 
+import json
 import platform
 import stat
+import urllib.error
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,6 +37,30 @@ class TestGetRicaCacheDir:
             with patch("platform.system", return_value="Darwin"):
                 cache_dir = rica.get_rica_cache_dir()
                 assert "Library" in str(cache_dir) or "Caches" in str(cache_dir)
+
+    def test_windows_with_localappdata(self, tmp_path, monkeypatch):
+        """Test Windows path using LOCALAPPDATA environment variable."""
+        local_app_data = tmp_path / "AppData" / "Local"
+        local_app_data.mkdir(parents=True)
+
+        with patch("platform.system", return_value="Windows"):
+            monkeypatch.setenv("LOCALAPPDATA", str(local_app_data))
+            cache_dir = rica.get_rica_cache_dir()
+
+            assert cache_dir.exists()
+            assert "tedana" in str(cache_dir)
+            assert "rica" in str(cache_dir)
+            assert str(local_app_data) in str(cache_dir)
+
+    def test_windows_without_localappdata(self, tmp_path, monkeypatch):
+        """Test Windows fallback when LOCALAPPDATA is not set."""
+        with patch.object(Path, "home", return_value=tmp_path):
+            with patch("platform.system", return_value="Windows"):
+                monkeypatch.delenv("LOCALAPPDATA", raising=False)
+                cache_dir = rica.get_rica_cache_dir()
+
+                assert cache_dir.exists()
+                assert "AppData" in str(cache_dir) and "Local" in str(cache_dir)
 
 
 class TestGenerateRicaLauncherScript:
@@ -132,8 +158,9 @@ class TestSetupRicaReport:
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-            rica.setup_rica_report(output_dir)
+        with patch.object(rica, "is_rica_cached", return_value=False):
+            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
+                rica.setup_rica_report(output_dir)
 
         rica_dir = output_dir / "rica"
         assert rica_dir.exists()
@@ -151,8 +178,9 @@ class TestSetupRicaReport:
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-            rica.setup_rica_report(output_dir)
+        with patch.object(rica, "is_rica_cached", return_value=False):
+            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
+                rica.setup_rica_report(output_dir)
 
         rica_dir = output_dir / "rica"
         for filename in rica.RICA_FILES:
@@ -171,8 +199,9 @@ class TestSetupRicaReport:
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-            launcher_path = rica.setup_rica_report(output_dir)
+        with patch.object(rica, "is_rica_cached", return_value=False):
+            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
+                launcher_path = rica.setup_rica_report(output_dir)
 
         assert launcher_path is not None
         assert launcher_path.exists()
@@ -184,8 +213,9 @@ class TestSetupRicaReport:
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "download_rica", side_effect=RuntimeError("Download failed")):
-            result = rica.setup_rica_report(output_dir)
+        with patch.object(rica, "is_rica_cached", return_value=False):
+            with patch.object(rica, "download_rica", side_effect=RuntimeError("Download failed")):
+                result = rica.setup_rica_report(output_dir)
 
         assert result is None
 
@@ -206,6 +236,339 @@ class TestGetRicaVersion:
         with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
             result = rica.get_rica_version()
             assert result is None
+
+
+class TestGetLatestRicaVersion:
+    """Tests for get_latest_rica_version function."""
+
+    def test_successful_api_response_with_valid_assets(self):
+        """Test successful API response with valid assets."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps(
+            {
+                "tag_name": "v2.0.0",
+                "assets": [
+                    {
+                        "name": "index.html",
+                        "browser_download_url": "http://example.com/index.html",
+                    },
+                    {
+                        "name": "rica_server.py",
+                        "browser_download_url": "http://example.com/rica_server.py",
+                    },
+                ],
+            }
+        ).encode("utf-8")
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            version, assets = rica.get_latest_rica_version()
+
+            assert version == "v2.0.0"
+            assert "index.html" in assets
+            assert "rica_server.py" in assets
+            assert assets["index.html"] == "http://example.com/index.html"
+            assert assets["rica_server.py"] == "http://example.com/rica_server.py"
+
+    def test_filters_non_rica_assets(self):
+        """Test that only Rica files are included in assets dict."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps(
+            {
+                "tag_name": "v2.1.0",
+                "assets": [
+                    {
+                        "name": "index.html",
+                        "browser_download_url": "http://example.com/index.html",
+                    },
+                    {
+                        "name": "rica_server.py",
+                        "browser_download_url": "http://example.com/rica_server.py",
+                    },
+                    {
+                        "name": "some_other_file.txt",
+                        "browser_download_url": "http://example.com/other.txt",
+                    },
+                ],
+            }
+        ).encode("utf-8")
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            version, assets = rica.get_latest_rica_version()
+
+            assert version == "v2.1.0"
+            assert len(assets) == 2
+            assert "some_other_file.txt" not in assets
+
+    def test_value_error_when_no_assets_found(self):
+        """Test ValueError when no assets found in release."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({"tag_name": "v2.0.0", "assets": []}).encode(
+            "utf-8"
+        )
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            with pytest.raises(ValueError, match="No Rica assets found"):
+                rica.get_latest_rica_version()
+
+    def test_value_error_when_no_matching_assets(self):
+        """Test ValueError when release has assets but none match Rica files."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps(
+            {
+                "tag_name": "v2.0.0",
+                "assets": [
+                    {
+                        "name": "other_file.txt",
+                        "browser_download_url": "http://example.com/other.txt",
+                    }
+                ],
+            }
+        ).encode("utf-8")
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            with pytest.raises(ValueError, match="No Rica assets found"):
+                rica.get_latest_rica_version()
+
+    def test_url_error_when_network_fails(self):
+        """Test URLError when network fails."""
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")):
+            with pytest.raises(urllib.error.URLError):
+                rica.get_latest_rica_version()
+
+    def test_timeout_error(self):
+        """Test URLError on timeout."""
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("Timeout")):
+            with pytest.raises(urllib.error.URLError):
+                rica.get_latest_rica_version()
+
+
+class TestDownloadRicaFile:
+    """Tests for download_rica_file function."""
+
+    def test_successful_file_download(self, tmp_path):
+        """Test successful file download."""
+        file_content = b"This is mock Rica file content"
+        dest_path = tmp_path / "test_file.html"
+
+        mock_response = MagicMock()
+        mock_response.read.return_value = file_content
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            rica.download_rica_file("http://example.com/file.html", dest_path)
+
+            assert dest_path.exists()
+            assert dest_path.read_bytes() == file_content
+
+    def test_url_error_on_download_failure(self, tmp_path):
+        """Test URLError on download failure."""
+        dest_path = tmp_path / "test_file.html"
+
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.URLError("Download failed"),
+        ):
+            with pytest.raises(urllib.error.URLError):
+                rica.download_rica_file("http://example.com/file.html", dest_path)
+
+        # File should not be created
+        assert not dest_path.exists()
+
+    def test_http_error_on_404(self, tmp_path):
+        """Test HTTPError on 404 response."""
+        dest_path = tmp_path / "test_file.html"
+
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.HTTPError(
+                "http://example.com/file.html", 404, "Not Found", {}, None
+            ),
+        ):
+            with pytest.raises(urllib.error.HTTPError):
+                rica.download_rica_file("http://example.com/file.html", dest_path)
+
+        assert not dest_path.exists()
+
+
+class TestDownloadRica:
+    """Tests for download_rica function."""
+
+    def test_uses_cached_version_when_up_to_date(self, tmp_path):
+        """Test using cached version when already cached and up-to-date."""
+        # Set up cache with all files and version
+        for filename in rica.RICA_FILES:
+            (tmp_path / filename).write_text(f"content of {filename}")
+        (tmp_path / "VERSION").write_text("v2.0.0")
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            # Mock get_latest_rica_version to not be called (since we shouldn't check)
+            with patch.object(
+                rica,
+                "get_latest_rica_version",
+                side_effect=RuntimeError("Should not be called"),
+            ):
+                result = rica.download_rica()
+
+                assert result == tmp_path
+                assert (tmp_path / "VERSION").read_text() == "v2.0.0"
+
+    def test_fallback_to_cache_when_network_fails(self, tmp_path):
+        """Test fallback to cache when network fails."""
+        # Set up cache with all files and version
+        for filename in rica.RICA_FILES:
+            (tmp_path / filename).write_text(f"content of {filename}")
+        (tmp_path / "VERSION").write_text("v1.5.0")
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica,
+                "get_latest_rica_version",
+                side_effect=urllib.error.URLError("Network error"),
+            ):
+                result = rica.download_rica()
+
+                assert result == tmp_path
+                # Should still have old version
+                assert (tmp_path / "VERSION").read_text() == "v1.5.0"
+
+    def test_skips_download_when_already_have_latest_version(self, tmp_path):
+        """Test skipping download when already have latest version."""
+        # Set up cache with all files and version
+        for filename in rica.RICA_FILES:
+            (tmp_path / filename).write_text(f"content of {filename}")
+        (tmp_path / "VERSION").write_text("v2.0.0")
+
+        mock_assets = {
+            "index.html": "http://example.com/index.html",
+            "rica_server.py": "http://example.com/rica_server.py",
+        }
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica, "get_latest_rica_version", return_value=("v2.0.0", mock_assets)
+            ):
+                # Mock download_rica_file to fail if called
+                with patch.object(
+                    rica,
+                    "download_rica_file",
+                    side_effect=RuntimeError("Should not download"),
+                ):
+                    result = rica.download_rica()
+
+                    assert result == tmp_path
+                    assert (tmp_path / "VERSION").read_text() == "v2.0.0"
+
+    def test_successful_download_flow(self, tmp_path):
+        """Test successful download flow."""
+        mock_assets = {
+            "index.html": "http://example.com/index.html",
+            "rica_server.py": "http://example.com/rica_server.py",
+        }
+
+        def mock_download_file(_url, dest_path):
+            """Mock download that creates files with content."""
+            dest_path.write_text(f"Downloaded from {_url}")
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica, "get_latest_rica_version", return_value=("v2.1.0", mock_assets)
+            ):
+                with patch.object(rica, "download_rica_file", side_effect=mock_download_file):
+                    result = rica.download_rica()
+
+                    assert result == tmp_path
+                    assert (tmp_path / "VERSION").read_text() == "v2.1.0"
+                    for filename in rica.RICA_FILES:
+                        assert (tmp_path / filename).exists()
+
+    def test_warning_when_asset_missing_from_release(self, tmp_path):
+        """Test warning when asset missing from release."""
+        # Only provide one of the two required assets
+        mock_assets = {"index.html": "http://example.com/index.html"}
+
+        def mock_download_file(_url, dest_path):
+            """Mock download that creates files with content."""
+            dest_path.write_text(f"Downloaded from {_url}")
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica, "get_latest_rica_version", return_value=("v2.1.0", mock_assets)
+            ):
+                with patch.object(rica, "download_rica_file", side_effect=mock_download_file):
+                    result = rica.download_rica()
+
+                    assert result == tmp_path
+                    # Only index.html should be downloaded
+                    assert (tmp_path / "index.html").exists()
+                    # rica_server.py should not be downloaded
+                    assert not (tmp_path / "rica_server.py").exists()
+
+    def test_runtime_error_when_download_fails(self, tmp_path):
+        """Test RuntimeError when download fails."""
+        mock_assets = {
+            "index.html": "http://example.com/index.html",
+            "rica_server.py": "http://example.com/rica_server.py",
+        }
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica, "get_latest_rica_version", return_value=("v2.1.0", mock_assets)
+            ):
+                with patch.object(
+                    rica,
+                    "download_rica_file",
+                    side_effect=urllib.error.URLError("Download failed"),
+                ):
+                    with pytest.raises(RuntimeError, match="Failed to download"):
+                        rica.download_rica()
+
+    def test_force_redownloads_when_cached(self, tmp_path):
+        """Test force=True re-downloads even when cached."""
+        # Set up cache with all files and version
+        for filename in rica.RICA_FILES:
+            (tmp_path / filename).write_text("old content")
+        (tmp_path / "VERSION").write_text("v2.0.0")
+
+        mock_assets = {
+            "index.html": "http://example.com/index.html",
+            "rica_server.py": "http://example.com/rica_server.py",
+        }
+
+        def mock_download_file(_url, dest_path):  # noqa: U101
+            """Mock download that creates files with new content."""
+            dest_path.write_text("new content")
+
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica, "get_latest_rica_version", return_value=("v2.0.0", mock_assets)
+            ):
+                with patch.object(rica, "download_rica_file", side_effect=mock_download_file):
+                    result = rica.download_rica(force=True)
+
+                    assert result == tmp_path
+                    # Files should have new content
+                    for filename in rica.RICA_FILES:
+                        assert (tmp_path / filename).read_text() == "new content"
+
+    def test_runtime_error_when_network_fails_and_no_cache(self, tmp_path):
+        """Test RuntimeError when network fails and nothing is cached."""
+        with patch.object(rica, "get_rica_cache_dir", return_value=tmp_path):
+            with patch.object(
+                rica,
+                "get_latest_rica_version",
+                side_effect=urllib.error.URLError("Network error"),
+            ):
+                with pytest.raises(RuntimeError, match="Failed to download Rica"):
+                    rica.download_rica()
 
 
 class TestLocalRicaPath:
