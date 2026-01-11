@@ -401,7 +401,7 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
         for f in cwd.rglob("*"):
             if f.is_file():
                 if any(pattern in f.name for pattern in RICA_FILE_PATTERNS):
-                    rel_path = str(f.relative_to(cwd)).replace("\\\\", "/")
+                    rel_path = str(f.relative_to(cwd)).replace("\\", "/")
                     files.append(rel_path)
 
         response_data = {
