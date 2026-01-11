@@ -689,7 +689,6 @@ File                                Description
 ``open_rica_report.py``             Cross-platform launcher script to start Rica
 ``rica/index.html``                 Rica web application (single-file bundle)
 ``rica/rica_server.py``             HTTP server with CORS support for serving files
-``rica/favicon.ico``                Rica favicon
 ==================================  ===========================================================
 
 Platform Support
@@ -720,7 +719,6 @@ The path should point to a directory containing the required Rica files:
 
 - ``index.html`` - The Rica web application
 - ``rica_server.py`` - HTTP server with CORS support
-- ``favicon.ico`` - Rica favicon (optional)
 
 **Setting the environment variable:**
 
@@ -783,11 +781,10 @@ Possible solutions:
        # Download Rica release manually
        wget https://github.com/ME-ICA/rica/releases/latest/download/index.html
        wget https://github.com/ME-ICA/rica/releases/latest/download/rica_server.py
-       wget https://github.com/ME-ICA/rica/releases/latest/download/favicon.ico
 
        # Place files in a directory and set the environment variable
        mkdir ~/rica-bundle
-       mv index.html rica_server.py favicon.ico ~/rica-bundle/
+       mv index.html rica_server.py ~/rica-bundle/
        export TEDANA_RICA_PATH=~/rica-bundle
        tedana ... --rica-report
 
