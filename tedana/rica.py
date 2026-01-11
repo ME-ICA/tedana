@@ -30,7 +30,7 @@ RICA_GITHUB_API = (
 )
 
 # Files to download from Rica releases
-RICA_FILES = ["index.html", "rica_server.py", "favicon.ico"]
+RICA_FILES = ["index.html", "rica_server.py"]
 
 # Environment variable for local Rica path
 RICA_PATH_ENV_VAR = "TEDANA_RICA_PATH"
