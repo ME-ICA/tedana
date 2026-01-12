@@ -698,7 +698,7 @@ def tedana_workflow(
             "It is strongly recommended to provide an external mask, "
             "and to visually confirm that mask accurately conforms to data boundaries."
         )
-        first_echo_img = io.new_nii_like(io_generator.reference_img, data[0])
+        first_echo_img = nb.load(data[0])
         mask_img = compute_epi_mask(first_echo_img)
         mask = utils.reshape_niimg(mask_img.get_fdata()).astype(int)
         RepLGR.info(
