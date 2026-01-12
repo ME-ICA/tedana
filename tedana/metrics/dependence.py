@@ -273,18 +273,18 @@ def threshold_map(
     strict_mask_img = masking.unmask(mask, mask_img)
 
     # Cluster-extent threshold and binarize F-maps
-
     img = masking.unmask(utils.unmask(maps, mask).T, mask_img)
-    thresh_img = image.threshold_img(
-        img,
-        threshold=threshold,
-        cluster_threshold=csize,
-        two_sided=True,
-        copy=False,
-        copy_header=True,
-    )
-    thresh_img = image.binarize_img(thresh_img, two_sided=True, copy_header=True)
-    maps_thresh = masking.apply_mask(thresh_img, strict_mask_img).T
+    for i_comp in range(n_components):
+        comp_img = image.index_img(img, i_comp)
+        thresh_arr = utils.threshold_map(
+            comp_img,
+            min_cluster_size=csize,
+            threshold=threshold,
+            binarize=True,
+            sided="bi",
+        )
+        thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
+        maps_thresh[:, i_comp] = masking.apply_mask(thresh_img, strict_mask_img)
     return maps_thresh
 
 
@@ -342,14 +342,14 @@ def threshold_to_match(
         rank_thresh = n_voxels - n_sig_voxels[i_comp]
 
         while True:
-            thresh_img = image.threshold_img(
+            thresh_arr = utils.threshold_map(
                 ccimg,
+                min_cluster_size=csize,
                 threshold=rank_thresh,
-                cluster_threshold=csize,
-                two_sided=True,
-                copy_header=True,
+                binarize=True,
+                sided="bi",
             )
-            thresh_img = image.binarize_img(thresh_img, two_sided=True, copy_header=True)
+            thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
             if rank_thresh <= 0:  # all voxels significant
                 break
 
@@ -357,14 +357,14 @@ def threshold_to_match(
             diff = n_sig_voxels[i_comp] - clmap.sum()
             if diff < 0 or clmap.sum() == 0:
                 rank_thresh += step
-                thresh_img = image.threshold_img(
+                thresh_arr = utils.threshold_map(
                     ccimg,
+                    min_cluster_size=csize,
                     threshold=rank_thresh,
-                    cluster_threshold=csize,
-                    two_sided=True,
-                    copy_header=True,
+                    binarize=True,
+                    sided="bi",
                 )
-                thresh_img = image.binarize_img(thresh_img, two_sided=True, copy_header=True)
+                thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
                 clmap = masking.apply_mask(thresh_img, strict_mask_img)
                 break
             else:

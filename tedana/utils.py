@@ -472,7 +472,6 @@ def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="b
                 else:
                     clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
 
-    clust_thresholded
     return clust_thresholded
 
 

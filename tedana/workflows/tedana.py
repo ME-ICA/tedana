@@ -13,7 +13,7 @@ from glob import glob
 import nibabel as nb
 import numpy as np
 import pandas as pd
-from nilearn.masking import apply_mask, compute_epi_mask
+from nilearn.masking import apply_mask, compute_epi_mask, unmask
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -1176,6 +1176,7 @@ def tedana_workflow(
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
+        mask_denoise_img = unmask(mask_denoise, io_generator.mask)
         data_denoised, data_accepted, data_rejected = io.denoise_ts(
             data_optcom,
             mixing,
@@ -1185,7 +1186,6 @@ def tedana_workflow(
 
         reporting.static_figures.plot_adaptive_mask(
             optcom=data_optcom,
-            base_mask=mask,
             io_generator=io_generator,
         )
         reporting.static_figures.carpet_plot(
@@ -1193,7 +1193,7 @@ def tedana_workflow(
             denoised_ts=data_denoised,
             hikts=data_accepted,
             lowkts=data_rejected,
-            mask=mask_denoise,
+            mask=mask_denoise_img,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
@@ -1205,16 +1205,17 @@ def tedana_workflow(
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
-        reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
+        reporting.static_figures.plot_t2star_and_s0(
+            io_generator=io_generator,
+            mask=mask_denoise_img,
+        )
         if t2smap is None:
             reporting.static_figures.plot_rmse(
                 io_generator=io_generator,
-                adaptive_mask=masksum_denoise,
             )
             if fittype == "curvefit" and verbose:
                 reporting.static_figures.plot_decay_variance(
                     io_generator=io_generator,
-                    adaptive_mask=masksum_denoise,
                 )
 
         if gscontrol:
