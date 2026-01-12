@@ -133,8 +133,8 @@ def generate_metrics(
     # to calculate the threshold for f tests
     f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
 
-    # Get reference image from io_generator
-    ref_img = io_generator.reference_img
+    # Get mask image from io_generator
+    mask_img = io_generator.mask
 
     required_metrics = dependency_resolver(
         dependency_config["dependencies"],
@@ -230,27 +230,27 @@ def generate_metrics(
         metric_maps["map Z clusterized"] = dependence.threshold_map(
             maps=metric_maps["map Z"],
             mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             threshold=z_thresh,
         )
 
     if "map FT2 clusterized" in required_metrics:
-        LGR.info("Calculating T2* F-statistic maps")
+        LGR.info("Thresholding T2* F-statistic maps")
 
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             threshold=f_thresh,
         )
 
     if "map FS0 clusterized" in required_metrics:
-        LGR.info("Calculating S0 F-statistic maps")
+        LGR.info("Thresholding S0 F-statistic maps")
 
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             threshold=f_thresh,
         )
 
@@ -274,7 +274,7 @@ def generate_metrics(
             maps=metric_maps["map optcom betas"],
             n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
         )
 
     if "map beta S0 clusterized" in required_metrics:
@@ -283,7 +283,7 @@ def generate_metrics(
             maps=metric_maps["map optcom betas"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
         )
 
     # Dependence metrics

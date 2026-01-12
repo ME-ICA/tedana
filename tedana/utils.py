@@ -395,7 +395,7 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     return power_spectrum[idx], freqs[idx]
 
 
-def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=True, sided="bi"):
+def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="bi"):
     """
     Cluster-extent threshold and binarize image.
 
@@ -408,8 +408,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
     threshold : float or None, optional
         Cluster-defining threshold for img. If None (default), assume img is
         already thresholded.
-    mask : (S,) array_like or None, optional
-        Boolean array for masking resultant data array. Default is None.
     binarize : bool, optional
         Default is True.
     sided : {'bi', 'two', 'one'}, optional
@@ -426,10 +424,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
         arr = img.get_fdata()
     else:
         arr = img.copy()
-
-    if mask is not None:
-        mask = mask.astype(bool)
-        arr *= mask.reshape(arr.shape)
 
     if binarize:
         clust_thresholded = np.zeros(arr.shape, bool)
@@ -478,13 +472,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
                 else:
                     clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
 
-    # reshape to (S,)
-    clust_thresholded = clust_thresholded.ravel()
-
-    # if mask provided, mask output
-    if mask is not None:
-        clust_thresholded = clust_thresholded[mask]
-
+    clust_thresholded
     return clust_thresholded
 
 
