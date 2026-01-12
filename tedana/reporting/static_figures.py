@@ -29,13 +29,13 @@ def _trim_edge_zeros(arr):
 
     Parameters
     ----------
-    ndarray : (S x T) array_like
-        an array with signal, surrounded by slices that contain only zeros
-        that should be removed.
+    ndarray : (Mb x T) array_like
+        an array with signal, surrounded by slices that contain only zeros that should be removed,
+        where `Mb` is samples in base mask, and `T` is time.
 
     Returns
     -------
-    ndarray : (S x T) array_like
+    ndarray : (Mb x T) array_like
         an array with reduced dimensions, such that the array contains only
         non_zero values from edge to edge.
     """
@@ -57,9 +57,9 @@ def carpet_plot(
 
     Parameters
     ----------
-    optcom_ts, denoised_ts, hikts, lowkts : (M x T) array_like
-        Different types of data to plot.
-    mask : img
+    optcom_ts, denoised_ts, hikts, lowkts : (Mb x T) array_like
+        Different types of data to plot, where `Mb` is samples in base mask, and `T` is time.
+    mask : (Mb,) array_like
         Binary mask image used to apply to the data.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generator for this workflow
@@ -328,11 +328,12 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
 
     Parameters
     ----------
-    ts : (S x T) array_like
-        Time series from which to derive ICA betas
-    mask : (S,) array_like
+    ts : (Mb x T) array_like
+        Time series from which to derive ICA betas, where `Mb` is samples in base mask,
+        and `T` is time
+    mask : (Mb,) array_like
         Boolean mask array
-    component_table : (C x M) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     mixing : (C x T) array_like
@@ -745,8 +746,8 @@ def plot_adaptive_mask(
 
     Parameters
     ----------
-    optcom : (S x T) :obj:`numpy.ndarray`
-        Optimal combination of components.
+    optcom : (Mb x T) :obj:`numpy.ndarray`
+        Optimal combination of components, where `Mb` is samples in base mask, and `T` is time.
         The mean image over time is used as the underlay for the figure.
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.

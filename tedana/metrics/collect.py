@@ -40,14 +40,14 @@ def generate_metrics(
 
     Parameters
     ----------
-    data_cat : (M x E x T) array_like
-        Input data, where `M` is samples in base mask, `E` is echos, and `T` is time
-    data_optcom : (M x T) array_like
+    data_cat : (Mb x E x T) array_like
+        Input data, where `Mb` is samples in base mask, `E` is echos, and `T` is time
+    data_optcom : (Mb x T) array_like
         Optimally combined data
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data_cat`
-    adaptive_mask : (M) array_like
+    adaptive_mask : (Mb) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel.
         This mask may be thresholded; for example, with values less than 3 set to 0.

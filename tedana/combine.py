@@ -17,18 +17,18 @@ def _combine_t2s(data, tes, ft2s, report=True):
 
     Parameters
     ----------
-    data : (M x E x T) array_like
+    data : (Mb x E x T) array_like
         Masked data.
     tes : (1 x E) array_like
         Echo times in milliseconds.
-    ft2s : (M [x T] X 1) array_like
+    ft2s : (Mb [x T] X 1) array_like
         Either voxel-wise or voxel- and volume-wise estimates of T2*.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
-    combined : (M x T) :obj:`numpy.ndarray`
+    combined : (Mb x T) :obj:`numpy.ndarray`
         Data combined across echoes according to T2* estimates.
 
     References
@@ -67,8 +67,8 @@ def _combine_paid(data, tes, report=True):
 
     Parameters
     ----------
-    data : (M x E x T) array_like
-        Masked data.
+    data : (Mb x E x T) array_like
+        Masked data, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     tes : (1 x E) array_like
         Echo times in milliseconds.
     report : bool, optional
@@ -76,7 +76,7 @@ def _combine_paid(data, tes, report=True):
 
     Returns
     -------
-    combined : (M x T) :obj:`numpy.ndarray`
+    combined : (Mb x T) :obj:`numpy.ndarray`
         Data combined across echoes according to SNR/signal.
 
     References
@@ -108,16 +108,16 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
 
     Parameters
     ----------
-    data : (M x E x T) :obj:`numpy.ndarray`
-        Concatenated BOLD data.
+    data : (Mb x E x T) :obj:`numpy.ndarray`
+        Concatenated BOLD data, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
-    adaptive_mask : (M,) :obj:`numpy.ndarray`
+    adaptive_mask : (Mb,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
-    t2s : (M [x T]) :obj:`numpy.ndarray` or None, optional
+    t2s : (Mb [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
     combmode : {'t2s', 'paid'}, optional
@@ -126,7 +126,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
 
     Returns
     -------
-    combined : (S x T) :obj:`numpy.ndarray`
+    combined : (Mb x T) :obj:`numpy.ndarray`
         Optimally combined data.
 
     Notes

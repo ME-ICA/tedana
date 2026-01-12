@@ -59,8 +59,8 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
 
     Parameters
     ----------
-    data : (M x E x T) array_like
-        Multi-echo data array, where `M` is samples in mask, `E` is echos, and `T` is time.
+    data : (Mb x E x T) array_like
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
@@ -74,10 +74,10 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
 
     Returns
     -------
-    mask : (M,) :obj:`numpy.ndarray`
+    mask : (Mb,) :obj:`numpy.ndarray`
         Boolean array of samples in mask that have sufficient signal in at least ``threshold``
         echos.
-    adaptive_mask : (M,) :obj:`numpy.ndarray`
+    adaptive_mask : (Mb,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a given voxel.
 
     Notes

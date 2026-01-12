@@ -623,12 +623,12 @@ def denoise_ts(data, mixing, mask, component_table):
 
     Parameters
     ----------
-    data : (S x T) array_like
+    data : (Mb x T) array_like
         Input time series
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -636,11 +636,11 @@ def denoise_ts(data, mixing, mask, component_table):
 
     Returns
     -------
-    dnts : (S x T) array_like
+    dnts : (Mb x T) array_like
         Denoised data (i.e., data with rejected components removed).
-    hikts : (S x T) array_like
+    hikts : (Mb x T) array_like
         High-Kappa data (i.e., data composed only of accepted components).
-    lowkts : (S x T) array_like
+    lowkts : (Mb x T) array_like
         Low-Kappa data (i.e., data composed only of rejected components).
     """
     acc = component_table[component_table.classification == "accepted"].index.values
@@ -668,12 +668,12 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
 
     Parameters
     ----------
-    data : (S x T) array_like
+    data : (Mb x T) array_like
         Input time series
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
@@ -748,9 +748,9 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
 
     Parameters
     ----------
-    ts : (S x T) array_like
+    ts : (Mb x T) array_like
         Time series to denoise and save to disk
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -807,13 +807,13 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
-        Input data time series
+    data_cat : (Mb x E x T) array_like
+        Input data time series, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
+    mask : (Mb,) array_like
+        Boolean mask array, where `Mb` is samples in base mask.
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
@@ -853,6 +853,8 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
 # File Loading Functions
 def load_data(data, n_echos=None, dummy_scans=0):
     """Coerce input `data` files to required 3D array output.
+
+    TODO: Remove in favor of applying base mask to files with Nilearn.
 
     Parameters
     ----------
@@ -956,12 +958,12 @@ def split_ts(data, mixing, mask, component_table):
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data, where `S` is samples and `T` is time
+    data : (Mb x T) array_like
+        Input data, where `Mb` is samples in base mask, and `T` is time
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -970,9 +972,9 @@ def split_ts(data, mixing, mask, component_table):
 
     Returns
     -------
-    hikts : (S x T) :obj:`numpy.ndarray`
+    hikts : (Mb x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    resid : (S x T) :obj:`numpy.ndarray`
+    resid : (Mb x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
     acc = component_table[component_table.classification == "accepted"].index.values

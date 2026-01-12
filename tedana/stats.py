@@ -40,19 +40,19 @@ def computefeats2(data, mixing, mask=None, normalize=True):
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data
+    data : (Mb x T) array_like
+        Input data, where `Mb` is samples in base mask, and `T` is time
     mixing : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like or None, optional
+    mask : (Mb,) array_like or None, optional
         Boolean mask array. Default: None
     normalize : bool, optional
         Whether to z-score output. Default: True
 
     Returns
     -------
-    data_z : (S x C) :obj:`numpy.ndarray`
+    data_z : (Mb x C) :obj:`numpy.ndarray`
         Data in component space
     """
     if data.ndim != 2:

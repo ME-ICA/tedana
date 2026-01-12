@@ -24,8 +24,9 @@ def calculate_weights(
 
     Parameters
     ----------
-    data_optcom : (M x T) array_like
-        Optimally combined data, already masked.
+    data_optcom : (Mb x T) array_like
+        Optimally combined data, already masked, where `Mb` is samples in base mask,
+        and `T` is time.
     mixing : (T x C) array_like
         Mixing matrix
 
@@ -86,9 +87,10 @@ def calculate_psc(
 
     Parameters
     ----------
-    data_optcom : (M x T) array_like
-        Optimally combined data, already masked.
-    optcom_betas : (M x C) array_like
+    data_optcom : (Mb x T) array_like
+        Optimally combined data, already masked, where `Mb` is samples in base mask,
+        and `T` is time.
+    optcom_betas : (Mb x C) array_like
         Component-wise, unstandardized parameter estimates from the regression
         of the optimally combined data against component time series.
 
@@ -144,13 +146,14 @@ def calculate_f_maps(
 
     Parameters
     ----------
-    data_cat : (M x E x T) array_like
-        Multi-echo data, already masked.
-    z_maps : (M x C) array_like
+    data_cat : (Mb x E x T) array_like
+        Multi-echo data, already masked, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
+    z_maps : (Mb x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     mixing : (T x C) array_like
         Mixing matrix
-    adaptive_mask : (M) array_like
+    adaptive_mask : (Mb) array_like
         Adaptive mask, where each voxel's value is the number of echoes with
         "good signal". Limited to masked voxels.
     tes : (E) array_like
@@ -165,7 +168,7 @@ def calculate_f_maps(
 
     Returns
     -------
-    f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps : (M x C) array_like
+    f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps : (Mb x C) array_like
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """

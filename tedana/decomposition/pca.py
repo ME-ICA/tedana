@@ -24,12 +24,13 @@ def low_mem_pca(data):
 
     Parameters
     ----------
-    data : (S [*E] x T) array_like
-        Optimally combined (S x T) or full multi-echo (S*E x T) data.
+    data : (Mc [*E] x T) array_like
+        Optimally combined (Mc x T) or full multi-echo (Mc*E x T) data, where `Mc` is
+        samples in classification mask, `E` is echos, and `T` is time
 
     Returns
     -------
-    u : (S [*E] x C) array_like
+    u : (Mc [*E] x C) array_like
         Component weight map for each component.
     s : (C,) array_like
         Variance explained for each component.
@@ -66,14 +67,14 @@ def tedpca(
 
     Parameters
     ----------
-    data_cat : (M x E x T) array_like
+    data_cat : (Mb x E x T) array_like
         Input functional data
-    data_optcom : (M x T) array_like
+    data_optcom : (Mb x T) array_like
         Optimally combined time series data
-    mask : (M,) array_like
+    mask : (Mb,) array_like
         Boolean mask array. This is more restrictive than the base mask (M), so
         additional masking and unmasking will take place within the function.
-    adaptive_mask : (M,) array_like
+    adaptive_mask : (Mb,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -109,8 +110,9 @@ def tedpca(
 
     Returns
     -------
-    kept_data : (S x T) :obj:`numpy.ndarray`
-        Dimensionally reduced optimally combined functional data
+    kept_data : (Mc x T) :obj:`numpy.ndarray`
+        Dimensionally reduced optimally combined functional data,
+        where `Mc` is samples in classification mask, `T` is time.
     n_components : :obj:`int`
         Number of components retained from PCA decomposition
 
@@ -216,10 +218,10 @@ def tedpca(
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ["mdl", "aic", "kic"]:
+        # Use un-normalized data for maPCA to match GIFT results
         data_img = masking.unmask(utils.unmask(data, mask).T, io_generator.mask)
-        mask_img = io_generator.mask
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
-        _ = ma_pca.fit_transform(data_img, mask_img)
+        _ = ma_pca.fit_transform(data_img, io_generator.mask)
 
         # Extract results from maPCA
         voxel_comp_weights = ma_pca.u_

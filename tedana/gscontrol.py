@@ -30,9 +30,10 @@ def gscontrol_raw(
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
-        Input functional data
-    data_optcom : (S x T) array_like
+    data_cat : (Mb x E x T) array_like
+        Input functional data, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
+    data_optcom : (Mb x T) array_like
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
         Number of echos in data. Should be the same as ``E`` dimension of ``data_cat``
@@ -44,9 +45,9 @@ def gscontrol_raw(
 
     Returns
     -------
-    data_cat_nogs : (S x E x T) array_like
+    data_cat_nogs : (Mb x E x T) array_like
         Input ``data_cat`` with global signal removed from time series.
-    data_optcom_nogs : (S x T) array_like
+    data_optcom_nogs : (Mb x T) array_like
         Input ``data_optcom`` with global signal removed from time series.
 
     Notes
@@ -162,12 +163,12 @@ def minimum_image_regression(
 
     Parameters
     ----------
-    data_optcom : (S x T) array_like
+    data_optcom : (Mb x T) array_like
         Optimally combined time series data
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where ``C``
         is components and ``T`` is the same as in ``data_optcom``
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
