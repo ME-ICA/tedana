@@ -461,7 +461,7 @@ def calculate_varex_raw(
     """
     assert data_optcom.shape[1] == mixing.shape[0]
     data_optcom_z = stats.zscore(data_optcom, axis=1)
-    total_var = (data_optcom_z ** 2).sum()
+    total_var = (data_optcom_z**2).sum()
 
     varex = np.zeros(mixing.shape[1])
     for i_comp in range(mixing.shape[1]):
