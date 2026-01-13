@@ -384,7 +384,7 @@ def tedpca(
     component_table["normalized variance explained"] = varex_norm
 
     # write component maps to 4D image
-    comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts, mask), mask)
+    comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts), mask)
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree

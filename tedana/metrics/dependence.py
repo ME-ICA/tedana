@@ -177,8 +177,7 @@ def calculate_f_maps(
     assert data_cat.shape[2] == mixing.shape[0]
     assert z_maps.shape[1] == mixing.shape[1]
 
-    # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
+    me_betas = get_coeffs(data_cat, mixing, add_const=True)
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))

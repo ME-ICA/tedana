@@ -651,7 +651,7 @@ def denoise_ts(data, mixing, mask, component_table):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing, mask=None)
+    betas = get_coeffs(dmdata.T, mixing)
     varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
@@ -787,7 +787,7 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
     acc = component_table[component_table.classification == "accepted"].index.values
     write_split_ts(ts, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(ts, mixing, mask)
+    ts_pes = get_coeffs(ts, mixing)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
@@ -796,8 +796,7 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
-        feats = computefeats2(split_ts(ts, mixing, mask, component_table)[0], mixing[:, acc], mask)
-        feats = utils.unmask(feats, mask)
+        feats = computefeats2(split_ts(ts, mixing, component_table)[0], mixing[:, acc])
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
         LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
 
@@ -979,7 +978,7 @@ def split_ts(data, mixing, mask, component_table):
     """
     acc = component_table[component_table.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing, mask)
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)

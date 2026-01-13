@@ -1036,7 +1036,7 @@ def tedana_workflow(
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
 
-    betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
+    betas_oc = utils.unmask(computefeats2(data_optcom[mask_denoise, :], mixing), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # calculate the fit of rejected to accepted components to use as a quality measure

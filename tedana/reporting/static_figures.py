@@ -343,7 +343,7 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
         Output Generator object to use for this workflow
     """
     # regenerate the beta images
-    component_maps_arr = stats.get_coeffs(ts, mixing, mask)
+    component_maps_arr = stats.get_coeffs(ts, mixing)
     component_maps_arr = masking.unmask(component_maps_arr.T, io_generator.mask)
     component_maps_arr = component_maps_arr.get_fdata()
 
