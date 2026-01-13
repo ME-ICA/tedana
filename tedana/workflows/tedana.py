@@ -673,21 +673,20 @@ def tedana_workflow(
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = nb.load(mask)
-        mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
         LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
+        t2s_loaded = nb.load(t2smap).get_fdata()
         mask = (t2s_loaded != 0).astype(int)
-        mask_img = io.new_nii_like(io_generator.reference_img, mask)
+        mask_img = nb.Nifti1Image(mask, ref_img.affine, ref_img.header)
         t2s_limited = apply_mask(t2smap, mask_img)
         t2s_limited = utils.check_t2s_values(t2s_limited)
         t2s_full = t2s_limited.copy()
     elif t2smap and mask:
         LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
-        mask = utils.reshape_niimg(mask).astype(int)
+        t2s_loaded = nb.load(t2smap).get_fdata()
+        mask = nb.load(mask).get_fdata().astype(int)
         mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
-        mask_img = io.new_nii_like(io_generator.reference_img, mask)
+        mask_img = nb.Nifti1Image(mask, ref_img.affine, ref_img.header)
         t2s_limited = apply_mask(t2smap, mask_img)
         t2s_limited = utils.check_t2s_values(t2s_limited)
         t2s_full = t2s_limited.copy()
@@ -700,7 +699,6 @@ def tedana_workflow(
         )
         first_echo_img = nb.load(data[0])
         mask_img = compute_epi_mask(first_echo_img)
-        mask = utils.reshape_niimg(mask_img.get_fdata()).astype(int)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."

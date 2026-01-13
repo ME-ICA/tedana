@@ -34,6 +34,8 @@ RepLGR = logging.getLogger("REPORT")
 def reshape_niimg(data):
     """Take input `data` and return a sample x time array.
 
+    TODO: Remove this function in favor of working with nibabel images directly.
+
     Parameters
     ----------
     data : (X x Y x Z [x T]) array_like or img_like object
@@ -283,6 +285,12 @@ def unmask(data, mask):
     out : (S [x E [x T]]) :obj:`numpy.ndarray`
         Unmasked `data` array
     """
+    if data.shape[0] != mask.sum():
+        raise ValueError(
+            f"Number of data samples ({data.shape[0]}) does not match number of mask samples "
+            f"({mask.sum()})."
+        )
+
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
