@@ -282,8 +282,8 @@ def test_smoke_calculate_f_maps():
 def test_smoke_calculate_varex():
     """Smoke test for tedana.metrics.dependence.calculate_varex."""
     n_voxels, n_components = 1000, 50
-    optcom_betas = np.random.random((n_voxels, n_components))
-    varex = dependence.calculate_varex(optcom_betas=optcom_betas)
+    component_maps = np.random.random((n_voxels, n_components))
+    varex = dependence.calculate_varex(component_maps=component_maps)
     assert varex.shape == (n_components,)
 
 
