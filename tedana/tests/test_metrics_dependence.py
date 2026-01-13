@@ -32,31 +32,6 @@ def test_calculate_varex_correctness():
     assert np.isclose(varex_single[0], 100.0)
 
 
-def test_calculate_varex_norm_correctness():
-    """Test numerical correctness of calculate_varex_norm."""
-    # Create simple test case
-    weights = np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]])
-
-    # Calculate expected values
-    # compvar = [1^2+2^2+3^2, 2^2+3^2+4^2] = [14, 29]
-    # total = 43
-    # varex_norm = [14/43, 29/43]
-
-    varex_norm = dependence.calculate_varex_norm(weights=weights)
-
-    expected = np.array([14.0, 29.0]) / 43.0
-    assert np.allclose(varex_norm, expected)
-
-    # Test that normalized variance explained sums to 1
-    assert np.isclose(varex_norm.sum(), 1.0)
-
-    # Test with single component
-    weights_single = np.array([[1.0], [2.0]])
-    varex_norm_single = dependence.calculate_varex_norm(weights=weights_single)
-    assert varex_norm_single.shape == (1,)
-    assert np.isclose(varex_norm_single[0], 1.0)
-
-
 def test_calculate_z_maps_correctness():
     """Test numerical correctness of calculate_z_maps."""
     # Create weights with known mean and std

@@ -412,32 +412,11 @@ def calculate_varex(
     Returns
     -------
     varex : (C) array_like
-        Unnormalized variance explained for each component.
+        Variance explained for each component.
     """
     compvar = (optcom_betas**2).sum(axis=0)
     varex = 100 * (compvar / compvar.sum())
     return varex
-
-
-def calculate_varex_norm(
-    *,
-    weights: np.ndarray,
-) -> np.ndarray:
-    """Calculate normalized variance explained from standardized parameter estimate maps.
-
-    Parameters
-    ----------
-    weights : (S x C) array_like
-        Standardized parameter estimate maps for components.
-
-    Returns
-    -------
-    varex_norm : (C) array_like
-        Normalized variance explained scaled from 0 to 1.
-    """
-    compvar = (weights**2).sum(axis=0)
-    varex_norm = compvar / compvar.sum()
-    return varex_norm
 
 
 def compute_dice(

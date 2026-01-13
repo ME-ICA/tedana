@@ -287,14 +287,6 @@ def test_smoke_calculate_varex():
     assert varex.shape == (n_components,)
 
 
-def test_smoke_calculate_varex_norm():
-    """Smoke test for tedana.metrics.dependence.calculate_varex_norm."""
-    n_voxels, n_components = 1000, 50
-    weights = np.random.random((n_voxels, n_components))
-    varex_norm = dependence.calculate_varex_norm(weights=weights)
-    assert varex_norm.shape == (n_components,)
-
-
 def test_smoke_compute_dice():
     """Smoke test for tedana.metrics.dependence.compute_dice."""
     n_voxels, n_components = 1000, 50
