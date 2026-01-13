@@ -399,22 +399,22 @@ def calculate_dependence_metrics(
 
 def calculate_varex(
     *,
-    optcom_betas: np.ndarray,
+    component_maps: np.ndarray,
 ) -> np.ndarray:
-    """Calculate unnormalized(?) variance explained from unstandardized parameter estimate maps.
+    """Calculate variance explained from parameter estimate maps.
 
     Parameters
     ----------
-    optcom_betas : (S x C) array_like
-        Component-wise, unstandardized parameter estimates from the regression
+    component_maps : (S x C) array_like
+        Component-wise parameter estimates from the regression
         of the optimally combined data against component time series.
 
     Returns
     -------
     varex : (C) array_like
-        Variance explained for each component.
+        Variance explained for each component, on a scale from 0 to 100.
     """
-    compvar = (optcom_betas**2).sum(axis=0)
+    compvar = (component_maps**2).sum(axis=0)
     varex = 100 * (compvar / compvar.sum())
     return varex
 

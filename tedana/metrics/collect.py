@@ -299,13 +299,13 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            optcom_betas=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
         component_table["normalized variance explained"] = dependence.calculate_varex(
-            optcom_betas=metric_maps["map weight"],
+            component_maps=metric_maps["map weight"],
         )
 
     # Spatial metrics
@@ -525,7 +525,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "LongName": "Normalized variance explained",
             "Description": (
                 "Normalized variance explained in the optimally combined "
-                "data of each component."
+                "data of each component. "
                 "On a scale from 0 to 100."
             ),
             "Units": "arbitrary",

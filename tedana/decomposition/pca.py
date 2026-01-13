@@ -411,7 +411,7 @@ def tedpca(
             alg_str = algorithm
         LGR.info(
             f"Selected {component_table.shape[0]} components with "
-            f"{round(varex_norm.sum(), 2)}% "
+            f"{round(varex_norm.sum() * 100, 2)}% "
             f"normalized variance explained using {alg_str} dimensionality estimate"
         )
         component_table["classification"] = "accepted"
