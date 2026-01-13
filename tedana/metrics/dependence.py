@@ -440,6 +440,37 @@ def calculate_varex_norm(
     return varex_norm
 
 
+def calculate_varex_raw(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate variance explained by the mixing matrix from the optimally combined data.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    varex : (C) array_like
+        Variance explained for each component in 0 - 100 range.
+    """
+    assert data_optcom.shape[1] == mixing.shape[0]
+    data_optcom_z = stats.zscore(data_optcom, axis=1)
+    total_var = (data_optcom_z ** 2).sum()
+
+    varex = np.zeros(mixing.shape[1])
+    for i_comp in range(mixing.shape[1]):
+        ts = mixing[:, i_comp][:, None]
+        beta = get_coeffs(data_optcom_z, ts)
+        varex[i_comp] = (1 - ((data_optcom_z - beta.dot(ts.T)) ** 2.0).sum() / total_var) * 100
+    return varex
+
+
 def compute_dice(
     *,
     clmaps1: np.ndarray,

@@ -308,6 +308,13 @@ def generate_metrics(
             weights=metric_maps["map weight"],
         )
 
+    if "raw variance explained" in required_metrics:
+        LGR.info("Calculating raw variance explained")
+        component_table["raw variance explained"] = dependence.calculate_varex_raw(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
     # Spatial metrics
     if "dice_FT2" in required_metrics:
         LGR.info(
@@ -451,6 +458,7 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
+        "raw variance explained",
         "countsigFT2",
         "countsigFS0",
         "dice_FT2",

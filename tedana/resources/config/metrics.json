@@ -46,6 +46,10 @@
         "normalized variance explained": [
             "map weight"
         ],
+        "raw variance explained": [
+            "data_optcom",
+            "mixing"
+        ],
         "kappa_rho_difference": [
             "kappa",
             "rho"
