@@ -459,7 +459,12 @@ def calculate_varex_raw(
     varex : (C) array_like
         Variance explained for each component in 0 - 100 range.
     """
-    assert data_optcom.shape[1] == mixing.shape[0]
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError(
+            f"Second dimensions (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"and mixing ({mixing.shape[0]}) do not match."
+        )
+
     data_optcom_z = stats.zscore(data_optcom, axis=1)
     total_var = (data_optcom_z**2).sum()
 

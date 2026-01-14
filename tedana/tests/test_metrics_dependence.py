@@ -1,6 +1,7 @@
 """Tests for tedana.metrics.dependence."""
 
 import numpy as np
+import pytest
 from scipy import stats
 
 from tedana.metrics import dependence
@@ -77,6 +78,9 @@ def test_calculate_varex_raw_correctness():
     assert np.isclose(varex.sum(), 150.0, atol=5)
     # they contribute equally to the variance explained, so 75% each
     assert np.isclose(varex[0], varex[1])
+
+    with pytest.raises(ValueError):
+        dependence.calculate_varex_raw(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
 def test_calculate_z_maps_correctness():
