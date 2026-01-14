@@ -58,7 +58,6 @@ def test_smoke_generate_metrics(testdata1):
         "dice_FT2",
         "dice_FS0",
         "signal-noise_t",
-        "signal-noise_z",
         "variance explained",
         "normalized variance explained",
         "raw variance explained",
