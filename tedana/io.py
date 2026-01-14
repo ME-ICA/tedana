@@ -1131,3 +1131,13 @@ def _infer_prefix(prefix):
     """Determine the appropriate prefix for output files."""
     prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
     return prefix
+
+
+def load_data_nilearn(data, mask_img, n_echos):
+    """Load data using nilearn's apply_mask function."""
+    if len(data) == 1:
+        # z-cat data
+        data_img = nb.load(data[0])
+
+
+    return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)

@@ -171,6 +171,8 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
 
     if ("dropout" in methods) or ("decay" in methods):
         echo_means = data.mean(axis=-1)  # temporal mean of echos
+        LGR.info(f"data shape: {data.shape}")
+        LGR.info(f"echo_means shape: {echo_means.shape}")
 
     if "dropout" in methods:
         # take temporal mean of echos and extract non-zero values in first echo
