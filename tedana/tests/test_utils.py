@@ -76,9 +76,11 @@ def test_reshape_niimg():
 
 def test_make_adaptive_mask(caplog):
     """Test tedana.utils.make_adaptive_mask with different methods."""
+    from nilearn.masking import apply_mask
+
     # load data make masks
     mask_file = pjoin(datadir, "mask.nii.gz")
-    data = io.load_data(fnames, n_echos=len(tes))[0]
+    data = np.stack([apply_mask(f, mask_file).T for f in fnames], axis=1)
 
     # Add in simulated values
     base_val = np.mean(data[:, 0, :])  # mean value of first echo
@@ -115,7 +117,6 @@ def test_make_adaptive_mask(caplog):
     # Just dropout method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout"],
     )
@@ -137,7 +138,6 @@ def test_make_adaptive_mask(caplog):
     # Just decay method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["decay"],
     )
@@ -158,7 +158,6 @@ def test_make_adaptive_mask(caplog):
     # Dropout and decay methods combined
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout", "decay"],
     )
@@ -179,7 +178,6 @@ def test_make_adaptive_mask(caplog):
     # Adding "none" should have no effect
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout", "decay", "none"],
     )
@@ -200,7 +198,6 @@ def test_make_adaptive_mask(caplog):
     # Just "none"
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["none"],
     )
@@ -223,7 +220,10 @@ def test_make_adaptive_mask(caplog):
     # This should match "decay" from above, except all voxels with 3 good echoes should now have 5
     # since two echoes were added that should not have caused more decay
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=3
+        data5,
+        threshold=1,
+        methods=["decay"],
+        n_independent_echos=3,
     )
 
     assert mask.shape == adaptive_mask.shape == (64350,)
@@ -246,7 +246,10 @@ def test_make_adaptive_mask(caplog):
     ) in caplog.text
 
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=4
+        data5,
+        threshold=1,
+        methods=["decay"],
+        n_independent_echos=4,
     )
 
     assert (
@@ -290,9 +293,8 @@ def test_smoke_make_adaptive_mask():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data, mask=mask, methods=["dropout", "decay"]) is not None
+    assert utils.make_adaptive_mask(data, methods=["dropout", "decay"]) is not None
 
 
 def test_smoke_unmask():
@@ -302,10 +304,11 @@ def test_smoke_unmask():
 
     Note: unmask could take in 1D or 2D or 3D arrays.
     """
-    data_1d = np.random.random(100)
-    data_2d = np.random.random((100, 5))
-    data_3d = np.random.random((100, 5, 20))
     mask = np.random.randint(2, size=100)
+    n_samples_in_mask = mask.sum()
+    data_1d = np.random.random(n_samples_in_mask)
+    data_2d = np.random.random((n_samples_in_mask, 5))
+    data_3d = np.random.random((n_samples_in_mask, 5, 20))
 
     assert utils.unmask(data_1d, mask) is not None
     assert utils.unmask(data_2d, mask) is not None

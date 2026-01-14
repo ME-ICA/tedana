@@ -112,9 +112,10 @@ def test_smoke_split_ts():
     n_samples = 100
     n_times = 20
     n_components = 6
-    data = np.random.random((n_samples, n_times))
     mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
+    n_samples_in_mask = mask.sum()
+    data = np.random.random((n_samples_in_mask, n_times))
 
     # creating the component table with component as random floats,
     # a "metric," and random classification
@@ -124,7 +125,12 @@ def test_smoke_split_ts():
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
 
-    hikts, resid = me.split_ts(data, mixing, mask, component_table)
+    hikts, resid = me.split_ts(
+        data=data,
+        mixing=mixing,
+        mask=mask,
+        component_table=component_table,
+    )
 
     assert hikts is not None
     assert resid is not None
@@ -137,9 +143,10 @@ def test_smoke_write_split_ts():
     """
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
-    data = np.random.random((n_samples, n_times))
     mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
+    n_samples_in_mask = mask.sum()
+    data = np.random.random((n_samples_in_mask, n_times))
     ref_img = os.path.join(data_dir, "mask.nii.gz")
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
@@ -151,8 +158,15 @@ def test_smoke_write_split_ts():
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
     io_generator.verbose = True
+    io_generator.register_mask(ref_img)
 
-    me.write_split_ts(data, mixing, mask, component_table, io_generator)
+    me.write_split_ts(
+        data=data,
+        mixing=mixing,
+        mask=mask,
+        component_table=component_table,
+        io_generator=io_generator,
+    )
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
@@ -164,7 +178,13 @@ def test_smoke_write_split_ts():
 
     io_generator.verbose = False
 
-    me.write_split_ts(data, mixing, mask, component_table, io_generator)
+    me.write_split_ts(
+        data=data,
+        mixing=mixing,
+        mask=mask,
+        component_table=component_table,
+        io_generator=io_generator,
+    )
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
@@ -184,6 +204,7 @@ def test_smoke_filewrite():
     data_1d = np.random.random(n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
     io_generator = me.OutputGenerator(ref_img)
+    io_generator.register_mask(ref_img)
 
     with pytest.raises(KeyError):
         io_generator.save_file(data_1d, "")

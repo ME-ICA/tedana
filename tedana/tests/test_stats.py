@@ -16,21 +16,16 @@ def test_break_computefeats2():
     mixing = np.empty((n_vols, n_comps))
 
     data = np.empty(n_samples)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Parameter data should be 2d"):
         computefeats2(data, mixing, normalize=True)
 
     data = np.empty((n_samples, n_vols))
     mixing = np.empty(n_vols)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Parameter mixing should be 2d"):
         computefeats2(data, mixing, normalize=True)
 
-    mixing = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError):
-        computefeats2(data, mixing, normalize=True)
-
-    data.shape[1] != mixing.shape[0]
     mixing = np.empty((n_vols + 1, n_comps))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Second dimensions \(number of volumes\) of data"):
         computefeats2(data, mixing, normalize=True)
 
 
