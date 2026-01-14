@@ -177,8 +177,12 @@ def calculate_f_maps(
     assert data_cat.shape[2] == mixing.shape[0]
     assert z_maps.shape[1] == mixing.shape[1]
 
-    me_betas = get_coeffs(data_cat, mixing, add_const=True)
-    n_voxels, n_echos, n_components = me_betas.shape
+    n_voxels, n_echos, _ = data_cat.shape
+    n_components = mixing.shape[1]
+    me_betas = np.zeros([n_voxels, n_echos, n_components])
+    for i_echo in range(n_echos):
+        me_betas[:, i_echo, :] = get_coeffs(data_cat[:, i_echo, :], mixing, add_const=True)
+
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
 
