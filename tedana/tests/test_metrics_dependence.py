@@ -69,7 +69,7 @@ def test_calculate_varex_raw_correctness():
     # corr = np.corrcoef(mixing)[0, 1]
     #shared_variance = 100 * (corr**2)  # 25% of variance is shared
 
-    data_optcom = np.sum(mixing, axis=0)[None, :]
+    data_optcom = np.sum(mixing, axis=1)[None, :]
     data_optcom = stats.zscore(data_optcom, axis=1)
 
     varex = dependence.calculate_varex_raw(data_optcom=data_optcom, mixing=mixing)
