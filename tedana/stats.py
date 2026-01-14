@@ -5,8 +5,6 @@ import logging
 import numpy as np
 from scipy import linalg, stats
 
-from tedana import utils
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 

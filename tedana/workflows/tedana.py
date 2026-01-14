@@ -1197,7 +1197,6 @@ def tedana_workflow(
         )
         reporting.static_figures.comp_figures(
             data_optcom,
-            mask=mask_denoise,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,

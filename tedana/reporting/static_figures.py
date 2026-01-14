@@ -320,7 +320,7 @@ def plot_component(
     plt.close(fig)
 
 
-def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
+def comp_figures(ts, component_table, mixing, io_generator, png_cmap):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -331,8 +331,6 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     ts : (Mb x T) array_like
         Time series from which to derive ICA betas, where `Mb` is samples in base mask,
         and `T` is time
-    mask : (Mb,) array_like
-        Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
