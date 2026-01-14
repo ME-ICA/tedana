@@ -190,14 +190,12 @@ def _update_template_bokeh(
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
     # Check for gscontrol images
-    gsr_brain_filename = f"{prefix}gsr_boldmap.svg"
-    mir_brain_filename = f"{prefix}T1likeEffect_boldmap.svg"
-    gsr_timeseries_filename = f"{prefix}gscontrol_bold.svg"
-    gsr_brain = f"./figures/{gsr_brain_filename}"
-    mir_brain = f"./figures/{mir_brain_filename}"
-    gsr_timeseries = f"./figures/{gsr_timeseries_filename}"
-    gsr = gsr_brain_filename in files_in_figures and gsr_timeseries_filename in files_in_figures
-    mir = mir_brain_filename in files_in_figures and gsr_timeseries_filename in files_in_figures
+    gsr_filename = f"{prefix}gsr_boldmap.svg"
+    mir_filename = f"{prefix}mir_boldmap.svg"
+    gsr_file = f"./figures/{gsr_filename}"
+    mir_file = f"./figures/{mir_filename}"
+    gsr = gsr_filename in files_in_figures
+    mir = mir_filename in files_in_figures
 
     # Check if each set of images exists
     t2star_exists = (
@@ -256,9 +254,8 @@ def _update_template_bokeh(
         rmseExists=rmse_exists,
         gsr=gsr,
         mir=mir,
-        gsrBrainPlot=gsr_brain,
-        mirBrainPlot=mir_brain,
-        gsrTimeseries=gsr_timeseries,
+        gsrPlot=gsr_file,
+        mirPlot=mir_file,
         externalRegressorsExist=external_regressors_exist,
         externalRegressorCorrelations=external_regressor_correlations,
         references=references,
