@@ -447,6 +447,11 @@ def calculate_varex_raw(
 ) -> np.ndarray:
     """Calculate variance explained by the mixing matrix from the optimally combined data.
 
+    Variance explained is calculated separately for each component, so that shared variance
+    between components is counted toward each component's variance explained instead of being
+    split between the components. This means that the sum of variance explained may be greater
+    than 100%.
+
     Parameters
     ----------
     data_optcom : (S x T) array_like
@@ -470,6 +475,8 @@ def calculate_varex_raw(
 
     varex = np.zeros(mixing.shape[1])
     for i_comp in range(mixing.shape[1]):
+        # Separate out each component's time series from the mixing matrix and calculate the
+        # variance explained for that component.
         ts = mixing[:, i_comp][:, None]
         beta = get_coeffs(data_optcom_z, ts)
         varex[i_comp] = (1 - ((data_optcom_z - beta.dot(ts.T)) ** 2.0).sum() / total_var) * 100
