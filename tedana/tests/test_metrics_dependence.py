@@ -1,6 +1,7 @@
 """Tests for tedana.metrics.dependence."""
 
 import numpy as np
+from scipy import stats
 
 from tedana.metrics import dependence
 
@@ -55,6 +56,27 @@ def test_calculate_varex_norm_correctness():
     varex_norm_single = dependence.calculate_varex_norm(weights=weights_single)
     assert varex_norm_single.shape == (1,)
     assert np.isclose(varex_norm_single[0], 1.0)
+
+
+def test_calculate_varex_raw_correctness():
+    """Test numerical correctness of calculate_varex_raw."""
+    # Create simple test case with known values
+    rng = np.random.default_rng(0)
+    mean = [0, 0]
+    cov = [[1, 0.5], [0.5, 1]]  # corr at about r = 0.5
+    mixing = rng.multivariate_normal(mean, cov, size=100000)
+    mixing = stats.zscore(mixing, axis=0)
+    # corr = np.corrcoef(mixing)[0, 1]
+    #shared_variance = 100 * (corr**2)  # 25% of variance is shared
+
+    data_optcom = np.sum(mixing, axis=0)[None, :]
+    data_optcom = stats.zscore(data_optcom, axis=1)
+
+    varex = dependence.calculate_varex_raw(data_optcom=data_optcom, mixing=mixing)
+    # 100% + (2 * 25%) = 150%
+    assert np.isclose(varex.sum(), 150.0, atol=5)
+    # they contribute equally to the variance explained, so 75% each
+    assert np.isclose(varex[0], varex[1])
 
 
 def test_calculate_z_maps_correctness():
