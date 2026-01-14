@@ -67,7 +67,7 @@ def test_calculate_varex_raw_correctness():
     mixing = rng.multivariate_normal(mean, cov, size=100000)
     mixing = stats.zscore(mixing, axis=0)
     # corr = np.corrcoef(mixing)[0, 1]
-    #shared_variance = 100 * (corr**2)  # 25% of variance is shared
+    # shared_variance = 100 * (corr**2)  # 25% of variance is shared
 
     data_optcom = np.sum(mixing, axis=1)[None, :]
     data_optcom = stats.zscore(data_optcom, axis=1)
