@@ -538,6 +538,19 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
+    if "raw variance explained" in component_table:
+        metric_metadata["raw variance explained"] = {
+            "LongName": "Raw variance explained",
+            "Description": (
+                "Raw variance explained in the optimally combined data of each component. "
+                "This is calculated separately for each component, so that shared variance "
+                "between components is counted toward each component's variance explained "
+                "instead of being split between the components. This means that the sum of "
+                "variance explained may be greater than 100%."
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
     if "countsigFT2" in component_table:
         metric_metadata["countsigFT2"] = {
             "LongName": "T2 model F-statistic map significant voxel count",
