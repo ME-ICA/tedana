@@ -283,33 +283,25 @@
 <div class="carpet-plots">
   <h2>Global Signal Control</h2>
     {% if gsr %}
-      <h3>Global Signal Regression Weights</h3>
+      <h3>Global Signal Regression</h3>
       <div class="carpet-plots-image">
         <img
-          id="gsrBrainPlot"
-          src="{{ gsrBrainPlot }}"
+          id="gsrPlot"
+          src="{{ gsrPlot }}"
           style="width: 95%; max-width: 1200px; height: auto"
         />
       </div>
     {% endif %}
     {% if mir %}
-      <h3>Minimum Image Regression Weights</h3>
+      <h3>Minimum Image Regression</h3>
       <div class="carpet-plots-image">
         <img
-          id="mirBrainPlot"
-          src="{{ mirBrainPlot }}"
+          id="mirPlot"
+          src="{{ mirPlot }}"
           style="width: 95%; max-width: 1200px; height: auto"
         />
       </div>
     {% endif %}
-    <h3>Global Signal Timeseries</h3>
-    <div class="carpet-plots-image">
-      <img
-        id="gsrTimeseries"
-        src="{{ gsrTimeseries }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
 </div>
 {% endif %}
 {% if externalRegressorsExist %}
