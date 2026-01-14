@@ -476,10 +476,10 @@ def t2smap_workflow(
     )
     del masksum_masked
 
-    t2s_full = utils.unmask(t2s_full, mask)
-    s0_full = utils.unmask(s0_full, mask)
-    t2s_limited = utils.unmask(t2s_limited, mask)
-    s0_limited = utils.unmask(s0_limited, mask)
+    t2s_full = utils.unmask(t2s_full, mask_denoise)
+    s0_full = utils.unmask(s0_full, mask_denoise)
+    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+    s0_limited = utils.unmask(s0_limited, mask_denoise)
 
     io_generator.save_file(s0_full, "s0 img")
     del s0_full
