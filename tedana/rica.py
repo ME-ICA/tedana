@@ -13,7 +13,6 @@ import json
 import logging
 import os
 import platform
-import shutil
 import stat
 import urllib.error
 import urllib.request
@@ -364,7 +363,9 @@ from urllib.parse import unquote
 # Rica configuration
 RICA_REPO_OWNER = "ME-ICA"
 RICA_REPO_NAME = "rica"
-RICA_GITHUB_API = f"https://api.github.com/repos/{RICA_REPO_OWNER}/{RICA_REPO_NAME}/releases/latest"
+RICA_GITHUB_API = (
+    f"https://api.github.com/repos/{RICA_REPO_OWNER}/{RICA_REPO_NAME}/releases/latest"
+)
 RICA_FILES = ["index.html", "rica_server.py"]
 RICA_PATH_ENV_VAR = "TEDANA_RICA_PATH"
 
@@ -430,7 +431,10 @@ def download_rica(force=False):
     try:
         req = urllib.request.Request(
             RICA_GITHUB_API,
-            headers={"Accept": "application/vnd.github.v3+json", "User-Agent": "tedana-rica-launcher"}
+            headers={
+                "Accept": "application/vnd.github.v3+json",
+                "User-Agent": "tedana-rica-launcher",
+            },
         )
         with urllib.request.urlopen(req, timeout=30) as response:
             release_info = json.loads(response.read().decode("utf-8"))
