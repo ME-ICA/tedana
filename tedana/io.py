@@ -873,7 +873,7 @@ def load_data(data, n_echos=None, dummy_scans=0):
             LGR.warning(
                 "DEPRECATION WARNING: We are planning to deprecate supplying a single "
                 "z-concatenated data file at the end of 2026. "
-                "If you are using this option, contact the tedana developers ASAP."
+                "If you are using this option, please comment on https://github.com/ME-ICA/tedana/issues/1313."
             )
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
