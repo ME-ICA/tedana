@@ -69,11 +69,10 @@ def _get_parser():
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Multi-echo dataset for analysis. May be a "
-            "single file with spatially concatenated data "
-            "or a set of echo-specific files, in the same "
-            "order as the TEs are listed in the -e "
-            "argument."
+            "Multi-echo dataset for analysis. "
+            "A set of echo-specific files in ascending order. "
+            "The TEs of the data should match "
+            "the TEs listed in the -e argument."
         ),
         required=True,
     )
@@ -84,7 +83,7 @@ def _get_parser():
         metavar="TE",
         type=float,
         help=(
-            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
             "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
         ),
         required=True,
