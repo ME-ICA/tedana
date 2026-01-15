@@ -570,7 +570,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         metric_metadata["relative variance explained"] = {
             "LongName": "Relative variance explained",
             "Description": (
-                "Relative variance explained by each component relative to the optimally combined data. "
+                "Relative variance explained by each component relative to the optimally "
+                "combined data. "
                 "This is calculated by fitting a multivariate least-squares model to the "
                 "optimally combined data and computing the variance of each regressor's fitted "
                 "contribution to the signal. "
