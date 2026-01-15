@@ -553,7 +553,7 @@ def calculate_partial_r2(
 
     r2_partial = np.zeros(n_components)
     for i_comp in range(n_components):
-        X_others = np.delete(mixing, i_comp, axis=1)
+        x_others = np.delete(mixing, i_comp, axis=1)
         x_r = mixing[:, i_comp]
 
         r2_vox = np.zeros(n_voxels)
@@ -561,8 +561,8 @@ def calculate_partial_r2(
         for j_voxel in range(n_voxels):
             y = data_optcom[j_voxel]
 
-            y_res = _residualize(y, X_others)
-            x_res = _residualize(x_r, X_others)
+            y_res = _residualize(y, x_others)
+            x_res = _residualize(x_r, x_others)
 
             beta = np.dot(x_res, y_res) / np.dot(x_res, x_res)
             resid = y_res - beta * x_res
@@ -616,9 +616,9 @@ def calculate_semi_partial_r2(
     r2_semi = np.zeros(n_components)
 
     for i_comp in range(n_components):
-        X_red = np.delete(mixing, i_comp, axis=1)
-        beta_red, *_ = np.linalg.lstsq(X_red, data_optcom.T, rcond=None)
-        resid_red = data_optcom.T - X_red @ beta_red
+        x_red = np.delete(mixing, i_comp, axis=1)
+        beta_red, *_ = np.linalg.lstsq(x_red, data_optcom.T, rcond=None)
+        resid_red = data_optcom.T - x_red @ beta_red
         rss_red = np.sum(resid_red**2, axis=0)
 
         r2_vox = (rss_red - rss_full) / tss
@@ -907,21 +907,21 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     return np.abs(kappa - rho) / (kappa + rho)
 
 
-def _residualize(y, X):
+def _residualize(y, x):
     """
-    Residualize y with respect to X.
+    Residualize y with respect to x.
 
     Parameters
     ----------
     y : (T,) array
         Dependent variable.
-    X : (T, K) array
+    x : (T, K) array
         Independent variables.
 
     Returns
     -------
     y_res : (T,) array
-        Residuals of y with respect to X.
+        Residuals of y with respect to x.
     """
-    beta, *_ = np.linalg.lstsq(X, y, rcond=None)
-    return y - X @ beta
+    beta, *_ = np.linalg.lstsq(x, y, rcond=None)
+    return y - x @ beta
