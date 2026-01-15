@@ -68,8 +68,8 @@ def computefeats2(data, mixing, mask=None, normalize=True):
         )
     elif data.shape[1] != mixing.shape[0]:
         raise ValueError(
-            f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
-            f"and mixing ({mixing.shape[0]}) do not match."
+            f"Second dimension (number of volumes) of data ({data.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
         )
 
     # demean masked data
