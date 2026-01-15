@@ -548,26 +548,31 @@ def calculate_partial_r2(
             f"does not match first dimension of mixing ({mixing.shape[0]})."
         )
 
-    n_voxels = data_optcom.shape[0]
     n_components = mixing.shape[1]
 
     r2_partial = np.zeros(n_components)
+    data_optcom_t = data_optcom.T  # shape (T, S)
+
     for i_comp in range(n_components):
         x_others = np.delete(mixing, i_comp, axis=1)
         x_r = mixing[:, i_comp]
 
-        r2_vox = np.zeros(n_voxels)
+        # Residualize all voxel time series with respect to the other components at once.
+        beta_others, *_ = np.linalg.lstsq(x_others, data_optcom_t, rcond=None)
+        y_res_all = data_optcom_t - x_others @ beta_others  # (T, S)
 
-        for j_voxel in range(n_voxels):
-            y = data_optcom[j_voxel]
+        # Residualize the target regressor with respect to the other components.
+        x_res = _residualize(x_r, x_others)  # (T,)
 
-            y_res = _residualize(y, x_others)
-            x_res = _residualize(x_r, x_others)
+        denom = np.dot(x_res, x_res)
+        numer = x_res @ y_res_all  # (S,)
+        beta = numer / denom  # (S,)
 
-            beta = np.dot(x_res, y_res) / np.dot(x_res, x_res)
-            resid = y_res - beta * x_res
+        resid = y_res_all - x_res[:, None] * beta  # (T, S)
 
-            r2_vox[j_voxel] = 1 - np.sum(resid**2) / np.sum(y_res**2)
+        rss = np.sum(resid**2, axis=0)
+        tss = np.sum(y_res_all**2, axis=0)
+        r2_vox = 1 - rss / tss
 
         r2_partial[i_comp] = r2_vox.mean()
 
