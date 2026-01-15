@@ -632,64 +632,60 @@ These plots show the voxel-wise global signal weights and the global signal time
 
 .. _rica-reports:
 
-***********************************
-Rica Interactive Reports (Optional)
-***********************************
+**************************
+Rica Interactive Reports
+**************************
 
-In addition to the standard HTML report, ``tedana`` can generate files for
+In addition to the standard HTML report, ``tedana`` generates a launcher script for
 `Rica <https://github.com/ME-ICA/rica>`_, an interactive web-based visualization
 tool for exploring ICA components. Rica provides a more detailed and interactive
 way to inspect individual components, including 3D brain visualization using NiiVue.
 
-Generating Rica Reports
------------------------
+The Rica Launcher Script
+------------------------
 
-To generate Rica report files, use the ``--rica-report`` flag:
+Every ``tedana`` run creates a launcher script ``open_rica_report.py`` in the output
+directory. When you run this script, it will:
 
-.. code-block:: bash
+1. Check for Rica files (from environment variable, cache, or download)
+2. Download Rica from the `ME-ICA/rica GitHub releases <https://github.com/ME-ICA/rica/releases>`_
+   if not already available (cached locally for future use)
+3. Copy Rica files to ``output/rica/``
+4. Start a local HTTP server
+5. Open Rica in your default web browser
 
-    tedana -d echo1.nii.gz echo2.nii.gz echo3.nii.gz \
-           -e 14.5 29.0 43.5 \
-           --out-dir output \
-           --rica-report
-
-This will:
-
-1. Download Rica from the `ME-ICA/rica GitHub releases <https://github.com/ME-ICA/rica/releases>`_
-   (cached locally for future use)
-2. Copy Rica files to ``output/rica/``
-3. Generate a launcher script ``open_rica_report.py`` in the output directory
+This approach keeps ``tedana`` execution fast (no network calls during analysis)
+while providing easy access to Rica visualization on demand.
 
 Opening Rica
 ------------
 
-After running ``tedana`` with ``--rica-report``, open the Rica visualization:
+After running ``tedana``, open the Rica visualization:
 
 .. code-block:: bash
 
     cd output
     python open_rica_report.py
 
-This will:
-
-- Start a local HTTP server
-- Automatically open Rica in your default web browser
-- Load the tedana output files for visualization
-
 Press ``Ctrl+C`` in the terminal to stop the server when you're done.
 
 Rica Output Files
 -----------------
 
-When ``--rica-report`` is used, the following files are added to the output directory:
+The following files are created in the output directory:
 
 ==================================  ===========================================================
 File                                Description
 ==================================  ===========================================================
-``open_rica_report.py``             Cross-platform launcher script to start Rica
-``rica/index.html``                 Rica web application (single-file bundle)
-``rica/rica_server.py``             HTTP server with CORS support for serving files
+``open_rica_report.py``             Cross-platform launcher script (created by tedana)
+``rica/index.html``                 Rica web application (created when launcher is run)
+``rica/rica_server.py``             HTTP server script (created when launcher is run)
 ==================================  ===========================================================
+
+.. note::
+
+    The ``rica/`` directory is created when you run ``open_rica_report.py``, not
+    during the tedana analysis. This keeps tedana fast and network-independent.
 
 Platform Support
 ----------------
@@ -704,15 +700,15 @@ The launcher script automatically finds an available port if the default (8000) 
 
 .. note::
 
-    Rica reports require an internet connection for the initial download.
-    Once cached, Rica can be used offline.
+    Rica requires an internet connection for the initial download when you first run
+    ``open_rica_report.py``. Once cached, Rica can be used offline.
 
 
 Using a Local Rica Bundle (Advanced)
 ------------------------------------
 
 For advanced users and developers who need to use a custom Rica build or work offline,
-you can point tedana to a local Rica installation using the ``TEDANA_RICA_PATH``
+you can point the launcher script to a local Rica installation using the ``TEDANA_RICA_PATH``
 environment variable.
 
 The path should point to a directory containing the required Rica files:
@@ -727,23 +723,20 @@ The path should point to a directory containing the required Rica files:
     # Set for current session
     export TEDANA_RICA_PATH=/path/to/rica/build
 
-    # Then run tedana as usual
-    tedana -d echo1.nii.gz echo2.nii.gz echo3.nii.gz \
-           -e 14.5 29.0 43.5 \
-           --out-dir output \
-           --rica-report
+    # Then run the launcher script
+    python open_rica_report.py
 
 To make this permanent, add the export line to your shell configuration file
 (e.g., ``~/.bashrc``, ``~/.zshrc``, or ``~/.bash_profile``).
 
 .. note::
 
-    If ``TEDANA_RICA_PATH`` is not set, tedana will automatically download Rica
-    from GitHub and cache it locally.
+    If ``TEDANA_RICA_PATH`` is not set, the launcher script will automatically download
+    Rica from GitHub and cache it locally.
 
 **For Rica developers:**
 
-If you are developing Rica and have a local build, you can point tedana to your
+If you are developing Rica and have a local build, you can point the launcher to your
 build output directory:
 
 .. code-block:: bash
@@ -755,8 +748,8 @@ build output directory:
     # Set the environment variable to use the local build
     export TEDANA_RICA_PATH=~/GitHub/rica/build
 
-    # Run tedana with Rica report
-    tedana -d data/*.nii.gz -e 14.5 29.0 43.5 --out-dir output --rica-report
+    # Run the launcher script
+    python open_rica_report.py
 
 
 Troubleshooting Rica
@@ -764,7 +757,8 @@ Troubleshooting Rica
 
 **Rica download fails:**
 
-If Rica fails to download from GitHub, you may see an error like:
+If Rica fails to download from GitHub when running ``open_rica_report.py``,
+you may see an error like:
 
 .. code-block:: text
 
@@ -786,14 +780,24 @@ Possible solutions:
        mkdir ~/rica-bundle
        mv index.html rica_server.py ~/rica-bundle/
        export TEDANA_RICA_PATH=~/rica-bundle
-       tedana ... --rica-report
 
-3. **Run without Rica** - Remove the ``--rica-report`` flag. The standard HTML
-   report will still be generated.
+       # Run the launcher
+       python open_rica_report.py
+
+3. **Use the standard HTML report** - The standard HTML report in the output
+   directory provides similar functionality without requiring Rica.
+
+**Force re-downloading Rica:**
+
+To force a fresh download of Rica (e.g., to get a newer version):
+
+.. code-block:: bash
+
+    python open_rica_report.py --force-download
 
 **Clearing the Rica cache:**
 
-If Rica files become corrupted or you want to force a fresh download:
+If Rica files become corrupted and you want to clear the cache:
 
 .. code-block:: bash
 
@@ -806,7 +810,7 @@ If Rica files become corrupted or you want to force a fresh download:
     # Windows (PowerShell)
     Remove-Item -Recurse -Force "$env:LOCALAPPDATA\tedana\rica"
 
-The next time you run tedana with ``--rica-report``, Rica will be re-downloaded.
+The next time you run ``open_rica_report.py``, Rica will be re-downloaded.
 
 **Port conflicts:**
 

@@ -155,18 +155,6 @@ def _get_parser():
         default=False,
     )
     optional.add_argument(
-        "--rica-report",
-        dest="rica_report",
-        action="store_true",
-        help=(
-            "Generate Rica interactive report files. Rica is a web-based "
-            "visualization tool for exploring ICA components. When enabled, "
-            "a launcher script 'open_rica_report.py' will be created in the "
-            "output directory."
-        ),
-        default=False,
-    )
-    optional.add_argument(
         "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
     )
     optional.add_argument(
@@ -228,7 +216,6 @@ def _main(argv=None):
         tedort=args.tedort,
         gscontrol=args.gscontrol,
         no_reports=args.no_reports,
-        rica_report=args.rica_report,
         png_cmap=args.png_cmap,
         overwrite=args.overwrite,
         verbose=args.verbose,
@@ -252,7 +239,6 @@ def ica_reclassify_workflow(
     tedort=False,
     gscontrol=None,
     no_reports=False,
-    rica_report=False,
     png_cmap="coolwarm",
     verbose=False,
     overwrite=False,
@@ -292,9 +278,6 @@ def ica_reclassify_workflow(
     no_reports : obj:'bool', optional
         Do not generate .html reports and .png plots. Default is false such
         that reports are generated.
-    rica_report : obj:'bool', optional
-        Generate Rica interactive report files. Rica is a web-based visualization
-        tool for exploring ICA components. Default is False.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
@@ -621,12 +604,8 @@ def ica_reclassify_workflow(
 
     io_generator.save_self()
 
-    # Generate Rica report if requested
-    if rica_report:
-        LGR.info("Setting up Rica interactive report")
-        rica_launcher = rica.setup_rica_report(io_generator.out_dir)
-        if rica_launcher:
-            LGR.info(f"Rica report ready. Run 'python {rica_launcher.name}' to visualize results.")
+    # Generate Rica launcher script
+    rica.setup_rica_report(io_generator.out_dir)
 
     LGR.info("Workflow completed")
 

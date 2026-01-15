@@ -146,78 +146,55 @@ class TestIsCachedFunctions:
 class TestSetupRicaReport:
     """Tests for setup_rica_report function."""
 
-    def test_creates_rica_directory(self, tmp_path):
-        """Test that rica subdirectory is created."""
-        # Create mock cached files
-        mock_cache_dir = tmp_path / "cache"
-        mock_cache_dir.mkdir()
-        for filename in rica.RICA_FILES:
-            (mock_cache_dir / filename).write_text("dummy content")
-        (mock_cache_dir / "VERSION").write_text("v2.0.0")
-
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
-
-        with patch.object(rica, "is_rica_cached", return_value=False):
-            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-                rica.setup_rica_report(output_dir)
-
-        rica_dir = output_dir / "rica"
-        assert rica_dir.exists()
-        assert rica_dir.is_dir()
-
-    def test_copies_rica_files(self, tmp_path):
-        """Test that Rica files are copied to output directory."""
-        # Create mock cached files
-        mock_cache_dir = tmp_path / "cache"
-        mock_cache_dir.mkdir()
-        for filename in rica.RICA_FILES:
-            (mock_cache_dir / filename).write_text(f"content of {filename}")
-        (mock_cache_dir / "VERSION").write_text("v2.0.0")
-
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
-
-        with patch.object(rica, "is_rica_cached", return_value=False):
-            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-                rica.setup_rica_report(output_dir)
-
-        rica_dir = output_dir / "rica"
-        for filename in rica.RICA_FILES:
-            assert (rica_dir / filename).exists()
-            assert (rica_dir / filename).read_text() == f"content of {filename}"
-
     def test_creates_launcher_script(self, tmp_path):
         """Test that launcher script is created in output directory."""
-        # Create mock cached files
-        mock_cache_dir = tmp_path / "cache"
-        mock_cache_dir.mkdir()
-        for filename in rica.RICA_FILES:
-            (mock_cache_dir / filename).write_text("dummy content")
-        (mock_cache_dir / "VERSION").write_text("v2.0.0")
-
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "is_rica_cached", return_value=False):
-            with patch.object(rica, "download_rica", return_value=mock_cache_dir):
-                launcher_path = rica.setup_rica_report(output_dir)
+        launcher_path = rica.setup_rica_report(output_dir)
 
         assert launcher_path is not None
         assert launcher_path.exists()
         assert launcher_path.name == "open_rica_report.py"
         assert launcher_path.parent == output_dir
 
-    def test_returns_none_on_failure(self, tmp_path):
-        """Test that None is returned when setup fails."""
+    def test_launcher_script_contains_download_logic(self, tmp_path):
+        """Test that launcher script contains Rica download functionality."""
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch.object(rica, "is_rica_cached", return_value=False):
-            with patch.object(rica, "download_rica", side_effect=RuntimeError("Download failed")):
-                result = rica.setup_rica_report(output_dir)
+        launcher_path = rica.setup_rica_report(output_dir)
+        content = launcher_path.read_text()
 
-        assert result is None
+        # Check for download-related functions
+        assert "def download_rica" in content
+        assert "def setup_rica" in content
+        assert "def get_rica_cache_dir" in content
+        assert "RICA_GITHUB_API" in content
+
+    def test_launcher_script_contains_server_logic(self, tmp_path):
+        """Test that launcher script contains server functionality."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        launcher_path = rica.setup_rica_report(output_dir)
+        content = launcher_path.read_text()
+
+        # Check for server-related elements
+        assert "RicaHandler" in content
+        assert "http.server" in content
+        assert "webbrowser" in content
+        assert "def main():" in content
+
+    def test_launcher_script_has_force_download_option(self, tmp_path):
+        """Test that launcher script supports --force-download flag."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        launcher_path = rica.setup_rica_report(output_dir)
+        content = launcher_path.read_text()
+
+        assert "--force-download" in content
 
 
 class TestGetRicaVersion:
@@ -649,35 +626,22 @@ class TestLocalRicaPath:
         with pytest.raises(ValueError, match="missing required files"):
             rica.get_rica_from_local(incomplete_dir)
 
-    def test_setup_rica_report_env_variable(self, tmp_path, monkeypatch):
-        """Test setup using TEDANA_RICA_PATH environment variable."""
-        # Create mock local Rica bundle
-        local_rica = tmp_path / "env_rica"
-        self._create_mock_rica_files(local_rica)
+    def test_setup_rica_report_creates_launcher(self, tmp_path):
+        """Test that setup_rica_report creates launcher script.
 
-        # Create output directory
+        Note: The launcher script handles environment variable detection
+        and Rica file setup at runtime, not during tedana execution.
+        """
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        # Set environment variable
-        monkeypatch.setenv(rica.RICA_PATH_ENV_VAR, str(local_rica))
-
-        # Mock download_rica to raise an error (should not be called when env var is set)
-        def mock_download_rica():
-            raise RuntimeError("download_rica should not be called with env var set")
-
-        with patch.object(rica, "download_rica", side_effect=mock_download_rica):
-            # Call setup_rica_report without explicit rica_path
-            # It should use the environment variable
-            launcher_path = rica.setup_rica_report(output_dir)
-
-        # Verify Rica files were copied
-        rica_output_dir = output_dir / "rica"
-        assert rica_output_dir.exists()
-        for filename in rica.RICA_FILES:
-            assert (rica_output_dir / filename).exists()
+        launcher_path = rica.setup_rica_report(output_dir)
 
         # Verify launcher script was created
         assert launcher_path is not None
         assert launcher_path.exists()
         assert launcher_path.name == "open_rica_report.py"
+
+        # Verify launcher script contains env var detection logic
+        content = launcher_path.read_text()
+        assert "TEDANA_RICA_PATH" in content

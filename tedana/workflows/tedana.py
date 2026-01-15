@@ -309,19 +309,6 @@ def _get_parser():
         default=False,
     )
     optional.add_argument(
-        "--rica-report",
-        dest="rica_report",
-        action="store_true",
-        help=(
-            "Generate Rica interactive report files. Rica is a web-based "
-            "visualization tool for exploring ICA components. When enabled, "
-            "tedana will download Rica (if not cached) and generate a launcher "
-            "script 'open_rica_report.py' in the output directory. Run this "
-            "script to visualize your results in Rica."
-        ),
-        default=False,
-    )
-    optional.add_argument(
         "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
     )
     optional.add_argument(
@@ -441,7 +428,6 @@ def tedana_workflow(
     tedort=False,
     gscontrol=None,
     no_reports=False,
-    rica_report=False,
     png_cmap="coolwarm",
     verbose=False,
     low_mem=False,
@@ -555,11 +541,6 @@ def tedana_workflow(
     no_reports : obj:'bool', optional
         Do not generate .html reports and .png plots. Default is false such
         that reports are generated.
-    rica_report : obj:'bool', optional
-        Generate Rica interactive report files. Rica is a web-based visualization
-        tool for exploring ICA components. When enabled, tedana will download Rica
-        (if not cached) and create a launcher script in the output directory.
-        Default is False.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
@@ -1269,12 +1250,8 @@ def tedana_workflow(
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 
-    # Generate Rica report if requested
-    if rica_report:
-        LGR.info("Setting up Rica interactive report")
-        rica_launcher = rica.setup_rica_report(out_dir)
-        if rica_launcher:
-            LGR.info(f"Rica report ready. Run 'python {rica_launcher.name}' to visualize results.")
+    # Generate Rica launcher script
+    rica.setup_rica_report(out_dir)
 
     LGR.info("Workflow completed")
 

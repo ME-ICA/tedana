@@ -310,8 +310,10 @@ def download_rica(force: bool = False) -> Path:
 def generate_rica_launcher_script(out_dir: Union[str, Path], port: int = 8000) -> Path:
     """Generate the Rica launcher script for a tedana output directory.
 
-    This creates a Python script that, when executed, starts a local server
-    and opens Rica in the user's browser to visualize the tedana output.
+    This creates a Python script that, when executed:
+    1. Checks for Rica files (env var, bundled, cached, or downloads)
+    2. Copies Rica files to output directory if needed
+    3. Starts a local server and opens Rica in the browser
 
     Parameters
     ----------
@@ -328,17 +330,18 @@ def generate_rica_launcher_script(out_dir: Union[str, Path], port: int = 8000) -
     out_dir = Path(out_dir)
     script_path = out_dir / "open_rica_report.py"
 
-    # Cross-platform launcher script
+    # Cross-platform launcher script with embedded download logic
     script_content = (
         '''#!/usr/bin/env python3
 """
 Rica Report Launcher - Opens tedana output in Rica visualization
 
 Usage:
-    python open_rica_report.py [--port PORT] [--no-open]
+    python open_rica_report.py [--port PORT] [--no-open] [--force-download]
 
-This script starts a local server and opens Rica in your default browser
-to visualize the ICA component analysis from this tedana output directory.
+This script checks for Rica files, downloads them if necessary, and then
+starts a local server to visualize the ICA component analysis from this
+tedana output directory.
 
 Press Ctrl+C to stop the server when done.
 """
@@ -347,12 +350,25 @@ import argparse
 import http.server
 import json
 import mimetypes
+import os
+import platform
+import shutil
+import socket
 import sys
+import urllib.error
+import urllib.request
 import webbrowser
 from pathlib import Path
 from urllib.parse import unquote
 
-# File patterns that Rica needs
+# Rica configuration
+RICA_REPO_OWNER = "ME-ICA"
+RICA_REPO_NAME = "rica"
+RICA_GITHUB_API = f"https://api.github.com/repos/{RICA_REPO_OWNER}/{RICA_REPO_NAME}/releases/latest"
+RICA_FILES = ["index.html", "rica_server.py"]
+RICA_PATH_ENV_VAR = "TEDANA_RICA_PATH"
+
+# File patterns that Rica needs from tedana output
 RICA_FILE_PATTERNS = [
     "_metrics.tsv",
     "_mixing.tsv",
@@ -369,62 +385,170 @@ mimetypes.add_type("application/gzip", ".gz")
 mimetypes.add_type("text/tab-separated-values", ".tsv")
 
 
+def get_rica_cache_dir():
+    """Get platform-specific cache directory for Rica files."""
+    system = platform.system()
+    if system == "Linux":
+        base_cache = Path.home() / ".cache"
+    elif system == "Darwin":
+        base_cache = Path.home() / "Library" / "Caches"
+    elif system == "Windows":
+        base_cache = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    else:
+        base_cache = Path.home() / ".cache"
+    rica_cache = base_cache / "tedana" / "rica"
+    rica_cache.mkdir(parents=True, exist_ok=True)
+    return rica_cache
+
+
+def validate_rica_path(rica_path):
+    """Check if path contains required Rica files."""
+    rica_path = Path(rica_path)
+    if not rica_path.exists() or not rica_path.is_dir():
+        return False
+    return all((rica_path / f).exists() for f in RICA_FILES)
+
+
+def get_cached_rica_version(cache_dir):
+    """Get cached Rica version if available."""
+    version_file = cache_dir / "VERSION"
+    return version_file.read_text().strip() if version_file.exists() else None
+
+
+def download_rica(force=False):
+    """Download Rica from GitHub releases."""
+    cache_dir = get_rica_cache_dir()
+    cached_version = get_cached_rica_version(cache_dir)
+
+    # Check if already cached
+    if not force and validate_rica_path(cache_dir) and cached_version:
+        print(f"[Rica] Using cached version {cached_version}")
+        return cache_dir
+
+    print("[Rica] Downloading from GitHub...")
+
+    try:
+        req = urllib.request.Request(
+            RICA_GITHUB_API,
+            headers={"Accept": "application/vnd.github.v3+json", "User-Agent": "tedana-rica-launcher"}
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            release_info = json.loads(response.read().decode("utf-8"))
+
+        version = release_info["tag_name"]
+        assets = {}
+        for asset in release_info.get("assets", []):
+            if asset["name"] in RICA_FILES:
+                assets[asset["name"]] = asset["browser_download_url"]
+
+        if not assets:
+            raise ValueError(f"No Rica assets found in release {version}")
+
+        # Skip if already have latest
+        if not force and cached_version == version and validate_rica_path(cache_dir):
+            print(f"[Rica] Already have latest version {version}")
+            return cache_dir
+
+        print(f"[Rica] Downloading version {version}...")
+        for filename, url in assets.items():
+            dest_path = cache_dir / filename
+            req = urllib.request.Request(url, headers={"User-Agent": "tedana-rica-launcher"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                dest_path.write_bytes(resp.read())
+            print(f"[Rica] Downloaded {filename}")
+
+        (cache_dir / "VERSION").write_text(version)
+        print(f"[Rica] Successfully downloaded Rica {version}")
+        return cache_dir
+
+    except (urllib.error.URLError, ValueError) as e:
+        if validate_rica_path(cache_dir):
+            print(f"[Rica] Warning: Could not check for updates ({e})")
+            print(f"[Rica] Using cached version {cached_version}")
+            return cache_dir
+        raise RuntimeError(f"Failed to download Rica: {e}") from e
+
+
+def setup_rica(output_dir, force_download=False):
+    """Set up Rica files in the output directory."""
+    output_dir = Path(output_dir)
+    rica_dir = output_dir / "rica"
+
+    # Check if Rica already exists in output
+    if not force_download and validate_rica_path(rica_dir):
+        print("[Rica] Files already present in output directory")
+        return rica_dir
+
+    source_dir = None
+
+    # Priority 1: Environment variable
+    env_path = os.environ.get(RICA_PATH_ENV_VAR)
+    if env_path and validate_rica_path(env_path):
+        source_dir = Path(env_path)
+        print(f"[Rica] Using path from {RICA_PATH_ENV_VAR}: {source_dir}")
+
+    # Priority 2: Check cache
+    if source_dir is None:
+        cache_dir = get_rica_cache_dir()
+        if validate_rica_path(cache_dir):
+            source_dir = cache_dir
+            version = get_cached_rica_version(cache_dir)
+            print(f"[Rica] Using cached version {version}")
+
+    # Priority 3: Download
+    if source_dir is None or force_download:
+        source_dir = download_rica(force=force_download)
+
+    # Copy files to output
+    rica_dir.mkdir(exist_ok=True)
+    for filename in RICA_FILES:
+        src = source_dir / filename
+        if src.exists():
+            shutil.copy2(src, rica_dir / filename)
+
+    print(f"[Rica] Files ready in {rica_dir}")
+    return rica_dir
+
+
 class RicaHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with CORS support and file listing endpoint."""
 
     def end_headers(self):
-        """Add CORS headers to all responses."""
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         super().end_headers()
 
     def do_OPTIONS(self):
-        """Handle CORS preflight requests."""
         self.send_response(200)
         self.end_headers()
 
     def do_GET(self):
-        """Handle GET requests with special endpoint for file listing."""
         path = unquote(self.path)
-
         if path == "/api/files":
             self.send_file_list()
         else:
             super().do_GET()
 
     def send_file_list(self):
-        """Return JSON list of Rica-relevant files in current directory."""
         files = []
         cwd = Path.cwd()
-
         for f in cwd.rglob("*"):
-            if f.is_file():
-                if any(pattern in f.name for pattern in RICA_FILE_PATTERNS):
-                    rel_path = str(f.relative_to(cwd)).replace("\\", "/")
-                    files.append(rel_path)
-
-        response_data = {
-            "files": sorted(files),
-            "path": str(cwd),
-            "count": len(files),
-        }
-
+            if f.is_file() and any(p in f.name for p in RICA_FILE_PATTERNS):
+                files.append(str(f.relative_to(cwd)).replace("\\\\", "/"))
+        response_data = {"files": sorted(files), "path": str(cwd), "count": len(files)}
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(response_data, indent=2).encode("utf-8"))
 
     def log_message(self, format, *args):
-        """Custom log format - suppress noisy output."""
         try:
             msg = str(args[0]) if args else ""
             if "/api/files" in msg:
                 print("[Rica] File list requested")
-            elif "GET" in msg and len(args) > 1:
-                status = str(args[1])
-                if not status.startswith("2"):
-                    print(f"[Rica] {msg} - {status}")
+            elif "GET" in msg and len(args) > 1 and not str(args[1]).startswith("2"):
+                print(f"[Rica] {msg} - {args[1]}")
         except Exception:
             pass
 
@@ -433,35 +557,34 @@ def main():
     parser = argparse.ArgumentParser(
         description="Open Rica report to visualize tedana ICA components"
     )
-    parser.add_argument(
-        "--port", type=int, default='''
+    parser.add_argument("--port", type=int, default='''
         + str(port)
-        + """, help="Port to serve on"
-    )
-    parser.add_argument(
-        "--no-open", action="store_true", help="Don't auto-open browser"
-    )
+        + """, help="Port to serve on")
+    parser.add_argument("--no-open", action="store_true", help="Don't auto-open browser")
+    parser.add_argument("--force-download", action="store_true", help="Force re-download Rica")
     args = parser.parse_args()
 
-    # Change to script directory (tedana output folder)
     script_dir = Path(__file__).parent.resolve()
 
-    # Check for Rica files
+    # Set up Rica (download if needed)
+    try:
+        setup_rica(script_dir, force_download=args.force_download)
+    except RuntimeError as e:
+        print(f"Error: {e}")
+        print("Please check your internet connection and try again.")
+        sys.exit(1)
+
+    # Verify Rica is ready
     rica_index = script_dir / "rica" / "index.html"
     if not rica_index.exists():
         print(f"Error: Rica not found at {rica_index}")
-        print("Rica files may not have been downloaded during tedana execution.")
-        print("Try re-running tedana with --rica-report flag.")
         sys.exit(1)
 
-    # Change to output directory
-    import os
     os.chdir(script_dir)
 
-    # Find a free port if default is busy
+    # Find free port
     port = args.port
-    import socket
-    for attempt in range(10):
+    for _ in range(10):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(("", port))
@@ -519,19 +642,14 @@ if __name__ == "__main__":
     return script_path
 
 
-def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
-    """Set up Rica report files in a tedana output directory.
+def setup_rica_report(out_dir: Union[str, Path]) -> Path:
+    """Generate the Rica launcher script in a tedana output directory.
 
-    This function:
-    1. Gets Rica files from environment variable, bundled resources, or downloads
-    2. Copies Rica files to the output directory
-    3. Generates the launcher script
-
-    The priority order for obtaining Rica files is:
-    1. Check for TEDANA_RICA_PATH environment variable (for developers)
-    2. Check for bundled Rica in tedana/resources/rica/
-    3. Check for cached Rica
-    4. Fall back to downloading from GitHub
+    This function generates a launcher script (open_rica_report.py) that handles
+    all Rica setup when executed by the user, including:
+    - Checking for Rica files (environment variable, cache)
+    - Downloading Rica from GitHub if not available
+    - Starting a local server to visualize results
 
     Parameters
     ----------
@@ -540,74 +658,17 @@ def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
 
     Returns
     -------
-    Path or None
-        Path to the launcher script if successful, None if Rica setup failed.
+    Path
+        Path to the generated launcher script.
     """
     out_dir = Path(out_dir)
-    source_dir: Optional[Path] = None
-    source_description: str = ""
 
-    try:
-        # Priority 1: Check TEDANA_RICA_PATH environment variable (for developers)
-        env_rica_path = os.environ.get(RICA_PATH_ENV_VAR)
-        if env_rica_path:
-            if validate_rica_path(env_rica_path):
-                source_dir = Path(env_rica_path)
-                source_description = f"environment variable ({RICA_PATH_ENV_VAR}): {source_dir}"
-                LGR.info(f"Using Rica from {source_description}")
-            else:
-                LGR.warning(
-                    f"{RICA_PATH_ENV_VAR} is set to '{env_rica_path}' but path is invalid "
-                    "or missing required files. Falling back to other sources."
-                )
+    # Generate launcher script (all Rica setup happens when user runs the script)
+    launcher_path = generate_rica_launcher_script(out_dir)
 
-        # Priority 2: Check for bundled Rica in tedana/resources/rica/
-        if source_dir is None:
-            if validate_rica_path(RICA_BUNDLED_PATH):
-                source_dir = RICA_BUNDLED_PATH
-                source_description = f"bundled resources: {source_dir}"
-                LGR.info(f"Using Rica from {source_description}")
+    LGR.info(f"Rica launcher created. Run 'python {launcher_path.name}' to visualize results.")
 
-        # Priority 3: Check for cached Rica
-        if source_dir is None:
-            cache_dir = get_rica_cache_dir()
-            if is_rica_cached(cache_dir):
-                source_dir = cache_dir
-                cached_version = get_cached_rica_version(cache_dir)
-                source_description = f"cached: {source_dir} (version {cached_version})"
-                LGR.info(f"Using Rica from {source_description}")
-
-        # Priority 4: Download from GitHub
-        if source_dir is None:
-            LGR.info("No local Rica found. Downloading from GitHub...")
-            source_dir = download_rica()
-            source_description = f"GitHub download (cached): {source_dir}"
-
-        # Create rica subdirectory in output
-        rica_dir = out_dir / "rica"
-        rica_dir.mkdir(exist_ok=True)
-
-        # Copy Rica files to output
-        for filename in RICA_FILES:
-            src = source_dir / filename
-            dst = rica_dir / filename
-            if src.exists():
-                shutil.copy2(src, dst)
-                LGR.debug(f"Copied {filename} to {rica_dir}")
-            else:
-                LGR.warning(f"Rica file {filename} not found in {source_description}")
-
-        # Generate launcher script
-        launcher_path = generate_rica_launcher_script(out_dir)
-
-        LGR.info(f"Rica report setup complete. Run '{launcher_path.name}' to visualize results.")
-
-        return launcher_path
-
-    except Exception as e:
-        LGR.warning(f"Failed to set up Rica report: {e}")
-        LGR.warning("You can still view the standard HTML report.")
-        return None
+    return launcher_path
 
 
 def get_rica_version() -> Optional[str]:
