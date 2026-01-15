@@ -297,13 +297,13 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            optcom_betas=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
-        component_table["normalized variance explained"] = dependence.calculate_varex_norm(
-            weights=metric_maps["map weight"],
+        component_table["normalized variance explained"] = dependence.calculate_varex(
+            component_maps=metric_maps["map weight"],
         )
 
     # Spatial metrics
@@ -517,17 +517,21 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "Variance explained in the optimally combined data of "
                 "each component. On a scale from 0 to 100."
             ),
-            "Units": "arbitrary",
+            "Units": "percent",
         }
     if "normalized variance explained" in component_table:
         metric_metadata["normalized variance explained"] = {
             "LongName": "Normalized variance explained",
             "Description": (
-                "Normalized variance explained in the optimally combined "
-                "data of each component."
-                "On a scale from 0 to 1."
+                "'Normalized' variance explained by each component in the ICA weights maps. "
+                "This is calculated by z-scoring the mixing matrix and optimally combined data "
+                "over time, then fitting a GLM to calculate voxel-wise parameter estimates "
+                "for each component. These parameter estimates are then cropped to values between "
+                "-0.999 and 0.999, and then the Fisher's z-transform is applied to the parameter "
+                "estimates. This is then used to calculate the variance explained for each "
+                "component. On a scale from 0 to 100."
             ),
-            "Units": "arbitrary",
+            "Units": "percent",
         }
     if "countsigFT2" in component_table:
         metric_metadata["countsigFT2"] = {
