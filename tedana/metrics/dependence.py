@@ -515,9 +515,8 @@ def calculate_marginal_r2(
         # variance explained for that component.
         ts = mixing_z[:, i_comp][:, None]
         beta = get_coeffs(data_z, ts)
-        marginal_r2[i_comp] = 100 * (
-            1 - ((data_z - beta.dot(ts.T)) ** 2.0).sum() / total_var
-        )
+        marginal_r2[i_comp] = 100 * (1 - ((data_z - beta.dot(ts.T)) ** 2.0).sum() / total_var)
+
     return marginal_r2
 
 
