@@ -175,7 +175,7 @@ jobs:
           paths:
             - src/coverage/.coverage.three-echo
       - store_artifacts:
-          path: /tmp/src/.testing_data_cache/outputs/three-echo
+          path: /tmp/src/tedana/.testing_data_cache/outputs/three-echo
           destination: three-echo-outputs
 
   four-echo:
@@ -203,7 +203,7 @@ jobs:
           paths:
             - src/coverage/.coverage.four-echo
       - store_artifacts:
-          path: /tmp/src/.testing_data_cache/outputs/four-echo
+          path: /tmp/src/tedana/.testing_data_cache/outputs/four-echo
           destination: four-echo-outputs
 
   five-echo:
@@ -231,7 +231,7 @@ jobs:
           paths:
             - src/coverage/.coverage.five-echo
       - store_artifacts:
-          path: /tmp/src/.testing_data_cache/outputs/five-echo
+          path: /tmp/src/tedana/.testing_data_cache/outputs/five-echo
           destination: five-echo-outputs
 
   reclassify:
@@ -259,7 +259,7 @@ jobs:
           paths:
             - src/coverage/.coverage.reclassify
       - store_artifacts:
-          path: /tmp/src/.testing_data_cache/outputs/reclassify
+          path: /tmp/src/tedana/.testing_data_cache/outputs/reclassify
           destination: reclassify-outputs
 
   t2smap:
@@ -287,7 +287,7 @@ jobs:
           paths:
             - src/coverage/.coverage.t2smap
       - store_artifacts:
-          path: /tmp/src/.testing_data_cache/outputs/t2smap_five-echo
+          path: /tmp/src/tedana/.testing_data_cache/outputs/t2smap_five-echo
           destination: t2smap-outputs
 
   merge_coverage:
