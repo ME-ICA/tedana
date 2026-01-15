@@ -46,7 +46,19 @@
         "normalized variance explained": [
             "map weight"
         ],
-        "raw variance explained": [
+        "relative variance explained": [
+            "data_optcom",
+            "mixing"
+        ],
+        "marginal R-squared": [
+            "data_optcom",
+            "mixing"
+        ],
+        "partial R-squared": [
+            "data_optcom",
+            "mixing"
+        ],
+        "semi-partial R-squared": [
             "data_optcom",
             "mixing"
         ],

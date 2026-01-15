@@ -60,7 +60,10 @@ def test_smoke_generate_metrics(testdata1):
         "signal-noise_t",
         "variance explained",
         "normalized variance explained",
-        "raw variance explained",
+        "relative variance explained",
+        "marginal R-squared",
+        "partial R-squared",
+        "semi-partial R-squared",
         "d_table_score",
         "kappa_rho_difference",
     ]

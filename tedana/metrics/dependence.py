@@ -401,7 +401,9 @@ def calculate_varex(
     *,
     component_maps: np.ndarray,
 ) -> np.ndarray:
-    """Calculate variance explained from parameter estimate maps.
+    """Calculate relative coefficient energy from parameter estimate maps.
+
+    This measure indicates the relative coefficient magnitude across voxels for each component.
 
     Parameters
     ----------
@@ -412,24 +414,28 @@ def calculate_varex(
     Returns
     -------
     varex : (C) array_like
-        Variance explained for each component, on a scale from 0 to 100.
+        Average (across voxels) relative coefficient energy for each component,
+        on a scale from 0 to 100.
     """
     compvar = (component_maps**2).sum(axis=0)
     varex = 100 * (compvar / compvar.sum())
     return varex
 
 
-def calculate_varex_raw(
+def calculate_relative_varex(
     *,
     data_optcom: np.ndarray,
     mixing: np.ndarray,
 ) -> np.ndarray:
-    """Calculate variance explained by the mixing matrix from the optimally combined data.
+    """Calculate relative variance explained for each component.
 
-    Variance explained is calculated separately for each component, so that shared variance
-    between components is counted toward each component's variance explained instead of being
-    split between the components. This means that the sum of variance explained may be greater
-    than 100%.
+    This estimates component-wise explained variance by fitting a single multivariate
+    least-squares model and computing the variance of each regressor's fitted contribution to the
+    signal. Because regressors may be correlated, these values reflect model-based variance
+    attribution rather than unique or partial explained variance.
+
+    This is not a common measure of variance explained, since any shared variance between
+    regressors will be split between them.
 
     Parameters
     ----------
@@ -440,8 +446,58 @@ def calculate_varex_raw(
 
     Returns
     -------
-    varex : (C) array_like
-        Variance explained for each component in 0 - 100 range.
+    relative_varex : (C) array_like
+        Average (across voxels) relative variance explained by each component,
+        on a scale from 0 to 100.
+    """
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError(
+            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
+        )
+
+    n_components = mixing.shape[1]
+
+    mixing_z = stats.zscore(mixing, axis=0)
+    data_z = stats.zscore(data_optcom, axis=1)
+
+    # Fit full multivariate model once
+    betas, *_ = np.linalg.lstsq(mixing_z, data_z.T, rcond=None)
+    comp_var = np.zeros(n_components)
+    for i_comp in range(n_components):
+        # fitted contribution of regressor r
+        fitted_r = np.outer(mixing_z[:, i_comp], betas[i_comp])  # (T, V)
+
+        # variance across time, then mean across voxels
+        comp_var[i_comp] = np.var(fitted_r, axis=0, ddof=1).mean()
+
+    # normalize to obtain relative attribution
+    varex_rel = 100 * (comp_var / comp_var.sum())
+    return varex_rel
+
+
+def calculate_marginal_r2(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate mean voxel-wise marginal R-squared for each component against the data.
+
+    This is equivalent to the variance explained by each component without controlling
+    for other components. Mathematically, it is equivalent to 100 * the squared correlation
+    between the component time series and the data, averaged over voxels.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    marginal_r2 : (C) array_like
+        Average (across voxels) marginal R-squared for each component, on a scale from 0 to 100.
     """
     if data_optcom.shape[1] != mixing.shape[0]:
         raise ValueError(
@@ -449,17 +505,127 @@ def calculate_varex_raw(
             f"and mixing ({mixing.shape[0]}) do not match."
         )
 
-    data_optcom_z = stats.zscore(data_optcom, axis=1)
-    total_var = (data_optcom_z**2).sum()
+    mixing_z = stats.zscore(mixing, axis=0)
+    data_z = stats.zscore(data_optcom, axis=1)
+    total_var = (data_z**2).sum()
 
-    varex = np.zeros(mixing.shape[1])
-    for i_comp in range(mixing.shape[1]):
+    marginal_r2 = np.zeros(mixing_z.shape[1])
+    for i_comp in range(mixing_z.shape[1]):
         # Separate out each component's time series from the mixing matrix and calculate the
         # variance explained for that component.
-        ts = mixing[:, i_comp][:, None]
-        beta = get_coeffs(data_optcom_z, ts)
-        varex[i_comp] = (1 - ((data_optcom_z - beta.dot(ts.T)) ** 2.0).sum() / total_var) * 100
-    return varex
+        ts = mixing_z[:, i_comp][:, None]
+        beta = get_coeffs(data_z, ts)
+        marginal_r2[i_comp] = 100 * (
+            1 - ((data_z - beta.dot(ts.T)) ** 2.0).sum() / total_var
+        )
+    return marginal_r2
+
+
+def calculate_partial_r2(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate mean voxelwise partial R-squared for each regressor.
+
+    This is equivalent to the variance explained by each component after regressing the other
+    components out of the data *and* the component itself. It is a conditional effect size.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    r2_partial : (C) array_like
+        Average (across voxels) partial R-squared for each regressor, on a scale from 0 to 100.
+    """
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError(
+            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
+        )
+
+    n_voxels = data_optcom.shape[0]
+    n_components = mixing.shape[1]
+
+    r2_partial = np.zeros(n_components)
+    for i_comp in range(n_components):
+        X_others = np.delete(mixing, i_comp, axis=1)
+        x_r = mixing[:, i_comp]
+
+        r2_vox = np.zeros(n_voxels)
+
+        for j_voxel in range(n_voxels):
+            y = data_optcom[j_voxel]
+
+            y_res = _residualize(y, X_others)
+            x_res = _residualize(x_r, X_others)
+
+            beta = np.dot(x_res, y_res) / np.dot(x_res, x_res)
+            resid = y_res - beta * x_res
+
+            r2_vox[j_voxel] = 1 - np.sum(resid**2) / np.sum(y_res**2)
+
+        r2_partial[i_comp] = r2_vox.mean()
+
+    return r2_partial
+
+
+def calculate_semi_partial_r2(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate mean voxelwise semi-partial R-squared for each regressor.
+
+    This is equivalent to the variance explained by each component after regressing out the other
+    components from the target component. It indicates the incremental increase in R-squared
+    when adding the target component to the model.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    semi_partial_r2 : (C) array_like
+        Average (across voxels) semi-partial R-squared for each regressor,
+        on a scale from 0 to 100.
+    """
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError(
+            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
+        )
+
+    n_components = mixing.shape[1]
+
+    # Full model
+    beta_full, *_ = np.linalg.lstsq(mixing, data_optcom.T, rcond=None)
+    resid_full = data_optcom.T - mixing @ beta_full
+    rss_full = np.sum(resid_full**2, axis=0)
+
+    tss = np.sum(data_optcom**2, axis=1)
+
+    r2_semi = np.zeros(n_components)
+
+    for i_comp in range(n_components):
+        X_red = np.delete(mixing, i_comp, axis=1)
+        beta_red, *_ = np.linalg.lstsq(X_red, data_optcom.T, rcond=None)
+        resid_red = data_optcom.T - X_red @ beta_red
+        rss_red = np.sum(resid_red**2, axis=0)
+
+        r2_vox = (rss_red - rss_full) / tss
+        r2_semi[i_comp] = r2_vox.mean()
+
+    return r2_semi
 
 
 def compute_dice(
@@ -740,3 +906,23 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     assert kappa.shape == rho.shape
 
     return np.abs(kappa - rho) / (kappa + rho)
+
+
+def _residualize(y, X):
+    """
+    Residualize y with respect to X.
+
+    Parameters
+    ----------
+    y : (T,) array
+        Dependent variable.
+    X : (T, K) array
+        Independent variables.
+
+    Returns
+    -------
+    y_res : (T,) array
+        Residuals of y with respect to X.
+    """
+    beta, *_ = np.linalg.lstsq(X, y, rcond=None)
+    return y - X @ beta

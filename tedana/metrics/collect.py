@@ -308,9 +308,30 @@ def generate_metrics(
             component_maps=metric_maps["map weight"],
         )
 
-    if "raw variance explained" in required_metrics:
-        LGR.info("Calculating raw variance explained")
-        component_table["raw variance explained"] = dependence.calculate_varex_raw(
+    if "marginal R-squared" in required_metrics:
+        LGR.info("Calculating marginal R-squared")
+        component_table["marginal R-squared"] = dependence.calculate_marginal_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "relative variance explained" in required_metrics:
+        LGR.info("Calculating relative variance explained")
+        component_table["relative variance explained"] = dependence.calculate_relative_varex(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "partial R-squared" in required_metrics:
+        LGR.info("Calculating partial R-squared")
+        component_table["partial R-squared"] = dependence.calculate_partial_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "semi-partial R-squared" in required_metrics:
+        LGR.info("Calculating semi-partial R-squared")
+        component_table["semi-partial R-squared"] = dependence.calculate_semi_partial_r2(
             data_optcom=data_optcom,
             mixing=mixing,
         )
@@ -458,7 +479,10 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
-        "raw variance explained",
+        "relative variance explained",
+        "marginal R-squared",
+        "partial R-squared",
+        "semi-partial R-squared",
         "countsigFT2",
         "countsigFS0",
         "dice_FT2",
@@ -542,15 +566,56 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "percent",
         }
-    if "raw variance explained" in component_table:
-        metric_metadata["raw variance explained"] = {
-            "LongName": "Raw variance explained",
+    if "relative variance explained" in component_table:
+        metric_metadata["relative variance explained"] = {
+            "LongName": "Relative variance explained",
             "Description": (
-                "Raw variance explained in the optimally combined data of each component. "
-                "This is calculated separately for each component, so that shared variance "
-                "between components is counted toward each component's variance explained "
-                "instead of being split between the components. This means that the sum of "
-                "variance explained may be greater than 100%."
+                "Relative variance explained by each component in the optimally combined data. "
+                "This is calculated by fitting a multivariate least-squares model to the "
+                "optimally combined data and computing the variance of each regressor's fitted "
+                "contribution to the signal. "
+                "Because regressors may be correlated, these values reflect model-based "
+                "variance attribution rather than unique or partial explained variance. "
+                "This is not a common measure of variance explained, "
+                "since any shared variance between regressors will be split between them. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "marginal R-squared" in component_table:
+        metric_metadata["marginal R-squared"] = {
+            "LongName": "Marginal R-squared",
+            "Description": (
+                "Marginal R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component without "
+                "controlling for other components. "
+                "Mathematically, it is equivalent to 100 * the squared correlation "
+                "between the component time series and the data, averaged over voxels. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "partial R-squared" in component_table:
+        metric_metadata["partial R-squared"] = {
+            "LongName": "Partial R-squared",
+            "Description": (
+                "Partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "the other components out of the data *and* the component itself. "
+                "It is a conditional effect size. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "semi-partial R-squared" in component_table:
+        metric_metadata["semi-partial R-squared"] = {
+            "LongName": "Semi-partial R-squared",
+            "Description": (
+                "Semi-partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "out the other components from the target component. "
+                "It indicates the incremental increase in R-squared when adding the target "
+                "component to the model. "
                 "On a scale from 0 to 100."
             ),
             "Units": "percent",

@@ -34,8 +34,8 @@ def test_calculate_varex_correctness():
     assert np.isclose(varex_single[0], 100.0)
 
 
-def test_calculate_varex_raw_correctness():
-    """Test numerical correctness of calculate_varex_raw."""
+def test_calculate_marginal_r2_correctness():
+    """Test numerical correctness of calculate_marginal_r2."""
     # Create simple test case with known values
     rng = np.random.default_rng(0)
     mean = [0, 0]
@@ -48,14 +48,41 @@ def test_calculate_varex_raw_correctness():
     data_optcom = np.sum(mixing, axis=1)[None, :]
     data_optcom = stats.zscore(data_optcom, axis=1)
 
-    varex = dependence.calculate_varex_raw(data_optcom=data_optcom, mixing=mixing)
+    varex = dependence.calculate_marginal_r2(data_optcom=data_optcom, mixing=mixing)
     # 100% + (2 * 25%) = 150%
     assert np.isclose(varex.sum(), 150.0, atol=5)
     # they contribute equally to the variance explained, so 75% each
     assert np.isclose(varex[0], varex[1])
 
     with pytest.raises(ValueError):
-        dependence.calculate_varex_raw(data_optcom=data_optcom[:, :-1], mixing=mixing)
+        dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
+
+def test_calculate_relative_varex_smoke():
+    """Test smoke test of calculate_relative_varex."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    relative_varex = dependence.calculate_relative_varex(data_optcom=data_optcom, mixing=mixing)
+    assert relative_varex.shape == (n_components,)
+
+
+def test_calculate_semi_partial_r2_smoke():
+    """Test smoke test of calculate_semi_partial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    relative_varex = dependence.calculate_semi_partial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert relative_varex.shape == (n_components,)
+
+
+def test_calculate_partial_r2_smoke():
+    """Test smoke test of calculate_partial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    relative_varex = dependence.calculate_partial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert relative_varex.shape == (n_components,)
 
 
 def test_calculate_z_maps_correctness():
