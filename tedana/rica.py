@@ -539,7 +539,7 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
         cwd = Path.cwd()
         for f in cwd.rglob("*"):
             if f.is_file() and any(p in f.name for p in RICA_FILE_PATTERNS):
-                files.append(str(f.relative_to(cwd)).replace("\\\\", "/"))
+                files.append(f.relative_to(cwd).as_posix())
         response_data = {"files": sorted(files), "path": str(cwd), "count": len(files)}
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -670,7 +670,7 @@ def setup_rica_report(out_dir: Union[str, Path]) -> Path:
     # Generate launcher script (all Rica setup happens when user runs the script)
     launcher_path = generate_rica_launcher_script(out_dir)
 
-    LGR.info(f"Rica launcher created. Run 'python {launcher_path.name}' to visualize results.")
+    LGR.info(f"Rica launcher created. Run 'python {launcher_path}' to visualize results.")
 
     return launcher_path
 
