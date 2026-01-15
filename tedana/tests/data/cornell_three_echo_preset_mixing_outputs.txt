@@ -103,3 +103,4 @@ figures/t2star_histogram.svg
 references.bib
 report.txt
 tedana_report.html
+open_rica_report.py
