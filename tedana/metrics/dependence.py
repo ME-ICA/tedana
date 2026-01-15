@@ -913,8 +913,7 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
 
 
 def _residualize(y, x):
-    """
-    Residualize y with respect to x.
+    """Residualize y with respect to x.
 
     Parameters
     ----------

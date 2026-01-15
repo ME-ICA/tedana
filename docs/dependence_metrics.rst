@@ -219,7 +219,7 @@ signal-noise_t
 ==============
 :func:`tedana.metrics.dependence.compute_signal_minus_noise_t`
 
-A t-test was performed between the distributions of T2*-model F-statistics
+A t-test is performed between the distributions of unique T2*-model F-statistics
 associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to
 generate a t-statistic (metric ``signal-noise_t``) and p-value (metric ``signal-noise_p``)
 measuring relative association of the component to signal over noise.
@@ -229,28 +229,100 @@ signal-noise_z
 ==============
 :func:`tedana.metrics.dependence.compute_signal_minus_noise_z`
 
-A z-test was performed between the distributions of T2*-model F-statistics
+A t-test is performed between the distributions of T2*-model F-statistics
 associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to
 generate a z-statistic (metric ``signal-noise_z``) and p-value (metric ``signal-noise_p``)
 measuring relative association of the component to signal over noise.
+
+This metric has not been used in the literature- the tedana developers created it
+to address statistical issues with ``signal-noise_t``
+(e.g., the fact that ``signal-noise_t`` limits inputs to unique F-statistics
+and it later applies thresholds appropriate for z-statistics to the t-statistics).
 
 
 variance explained
 ==================
 :func:`tedana.metrics.dependence.calculate_varex`
 
-The variance explained by each component is calculated as the square of the
-parameter estimates from the regression of the optimally combined data against the component time series,
-divided by the total variance in the data.
+The "variance explained" by each component is calculated as the square of the
+parameter estimates from the regression of the optimally combined data against
+the component time series, divided by the sum of the squares of the parameter
+estimates.
+
+This is not actually a measure of variance explained,
+since it does not account for the variance in the data that is not explained by
+the components.
 
 
 normalized variance explained
 ============================
 :func:`tedana.metrics.dependence.calculate_varex_norm`
 
-The normalized variance explained by each component is calculated as the square of the
-parameter estimates from the regression of the z-scored optimally combined data against the component time series,
-divided by the total variance in the data.
+The "normalized variance explained" by each component is calculated as the
+square of the parameter "weights" from the regression of the z-scored
+optimally combined data against the component time series,
+divided by the sum of the squares of the "weights".
+
+The "weights" are calculated by z-scoring the component time series and
+optimally combined data, and then fitting a GLM to calculate voxel-wise
+standardized parameter estimates for each component.
+The resulting arrays are then cropped to values between -0.999 and 0.999,
+and then the Fisher's z-transform is applied to the parameter estimates.
+
+This is then used to calculate the "normalized variance explained" for each
+component.
+
+This is not actually a measure of normalized variance explained.
+
+
+relative variance explained
+==========================
+:func:`tedana.metrics.dependence.calculate_relative_varex`
+
+The "relative variance explained" by each component is calculated as the
+variance of the fitted contribution of each regressor to the signal,
+divided by the sum of the variances of the fitted contributions.
+
+While this is a measure of variance explained, it is not a common measure,
+since any shared variance between regressors will be split between them.
+
+
+marginal R-squared
+==================
+:func:`tedana.metrics.dependence.calculate_marginal_r2`
+
+The "marginal R-squared" by each component is calculated as the variance of the
+fitted contribution of each regressor to the signal,
+divided by the sum of the variances of the fitted contributions.
+
+This is equivalent to the variance explained by each component without controlling
+for other components. Mathematically, it is equivalent to 100 * the squared correlation
+between the component time series and the data, averaged over voxels.
+
+
+partial R-squared
+=================
+:func:`tedana.metrics.dependence.calculate_partial_r2`
+
+The "partial R-squared" by each component is calculated as the variance of the
+fitted contribution of each regressor to the signal,
+divided by the sum of the variances of the fitted contributions.
+
+This is equivalent to the variance explained by each component after regressing the other
+components out of the data *and* the component itself. It is a conditional effect size.
+
+
+semi-partial R-squared
+======================
+:func:`tedana.metrics.dependence.calculate_semi_partial_r2`
+
+The "semi-partial R-squared" by each component is calculated as the variance of the
+fitted contribution of each regressor to the signal,
+divided by the sum of the variances of the fitted contributions.
+
+This is equivalent to the variance explained by each component after regressing out the other
+components from the target component. It indicates the incremental increase in R-squared
+when adding the target component to the model.
 
 
 kappa_rho_difference
