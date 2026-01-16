@@ -11,5 +11,6 @@ desc-tedana_metrics.json
 desc-tedana_metrics.tsv
 desc-tedana_registry.json
 figures
+open_rica_report.py
 references.bib
 report.txt
