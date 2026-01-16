@@ -417,16 +417,18 @@ def get_cached_rica_version(cache_dir):
 
 
 def download_rica(force=False):
-    """Download Rica from GitHub releases."""
+    """Download Rica from GitHub releases.
+
+    Always checks GitHub for the latest version and downloads if:
+    - force=True
+    - Rica is not cached
+    - Cached version is older than the latest release
+    """
     cache_dir = get_rica_cache_dir()
     cached_version = get_cached_rica_version(cache_dir)
 
-    # Check if already cached
-    if not force and validate_rica_path(cache_dir) and cached_version:
-        print(f"[Rica] Using cached version {cached_version}")
-        return cache_dir
-
-    print("[Rica] Downloading from GitHub...")
+    # Always check GitHub for the latest version (unless we have no network)
+    print("[Rica] Checking for latest version...")
 
     try:
         req = urllib.request.Request(
@@ -439,21 +441,26 @@ def download_rica(force=False):
         with urllib.request.urlopen(req, timeout=30) as response:
             release_info = json.loads(response.read().decode("utf-8"))
 
-        version = release_info["tag_name"]
+        latest_version = release_info["tag_name"]
         assets = {}
         for asset in release_info.get("assets", []):
             if asset["name"] in RICA_FILES:
                 assets[asset["name"]] = asset["browser_download_url"]
 
         if not assets:
-            raise ValueError(f"No Rica assets found in release {version}")
+            raise ValueError(f"No Rica assets found in release {latest_version}")
 
-        # Skip if already have latest
-        if not force and cached_version == version and validate_rica_path(cache_dir):
-            print(f"[Rica] Already have latest version {version}")
+        # Check if we need to download
+        if not force and cached_version == latest_version and validate_rica_path(cache_dir):
+            print(f"[Rica] Using cached version {cached_version} (up to date)")
             return cache_dir
 
-        print(f"[Rica] Downloading version {version}...")
+        # Download needed: either forced, new version available, or not cached
+        if cached_version and cached_version != latest_version:
+            print(f"[Rica] Updating from {cached_version} to {latest_version}...")
+        else:
+            print(f"[Rica] Downloading version {latest_version}...")
+
         for filename, url in assets.items():
             dest_path = cache_dir / filename
             req = urllib.request.Request(url, headers={"User-Agent": "tedana-rica-launcher"})
@@ -461,12 +468,13 @@ def download_rica(force=False):
                 dest_path.write_bytes(resp.read())
             print(f"[Rica] Downloaded {filename}")
 
-        (cache_dir / "VERSION").write_text(version)
-        print(f"[Rica] Successfully downloaded Rica {version}")
+        (cache_dir / "VERSION").write_text(latest_version)
+        print(f"[Rica] Successfully installed Rica {latest_version}")
         return cache_dir
 
     except (urllib.error.URLError, ValueError) as e:
-        if validate_rica_path(cache_dir):
+        # Network error - fall back to cached version if available
+        if validate_rica_path(cache_dir) and cached_version:
             print(f"[Rica] Warning: Could not check for updates ({e})")
             print(f"[Rica] Using cached version {cached_version}")
             return cache_dir
@@ -474,33 +482,29 @@ def download_rica(force=False):
 
 
 def setup_rica(output_dir, force_download=False):
-    """Set up Rica files in the output directory."""
+    """Set up Rica files in the output directory.
+
+    Always checks for the latest Rica version and downloads updates if available,
+    unless TEDANA_RICA_PATH environment variable is set (user's explicit choice).
+    """
     output_dir = Path(output_dir)
     rica_dir = output_dir / "rica"
 
-    # Check if Rica already exists in output
+    # Check if Rica already exists in output and we're not forcing download
     if not force_download and validate_rica_path(rica_dir):
         print("[Rica] Files already present in output directory")
         return rica_dir
 
     source_dir = None
 
-    # Priority 1: Environment variable
+    # Priority 1: Environment variable (user's explicit choice - no auto-update)
     env_path = os.environ.get(RICA_PATH_ENV_VAR)
     if env_path and validate_rica_path(env_path):
         source_dir = Path(env_path)
         print(f"[Rica] Using path from {RICA_PATH_ENV_VAR}: {source_dir}")
 
-    # Priority 2: Check cache
+    # Priority 2: Download/update from GitHub (always checks for latest version)
     if source_dir is None:
-        cache_dir = get_rica_cache_dir()
-        if validate_rica_path(cache_dir):
-            source_dir = cache_dir
-            version = get_cached_rica_version(cache_dir)
-            print(f"[Rica] Using cached version {version}")
-
-    # Priority 3: Download
-    if source_dir is None or force_download:
         source_dir = download_rica(force=force_download)
 
     # Copy files to output
