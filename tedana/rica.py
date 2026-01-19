@@ -489,11 +489,7 @@ def setup_rica(output_dir, force_download=False):
     """
     output_dir = Path(output_dir)
     rica_dir = output_dir / "rica"
-
-    # Check if Rica already exists in output and we're not forcing download
-    if not force_download and validate_rica_path(rica_dir):
-        print("[Rica] Files already present in output directory")
-        return rica_dir
+    output_version_file = rica_dir / "VERSION"
 
     source_dir = None
 
@@ -507,14 +503,25 @@ def setup_rica(output_dir, force_download=False):
     if source_dir is None:
         source_dir = download_rica(force=force_download)
 
-    # Copy files to output
+    # Check if we need to update the output directory
+    source_version = get_cached_rica_version(source_dir)
+    output_version = output_version_file.read_text().strip() if output_version_file.exists() else None
+
+    if not force_download and output_version and output_version == source_version and validate_rica_path(rica_dir):
+        print(f"[Rica] Using {output_version} from {rica_dir}")
+        return rica_dir
+
+    # Copy files to output (new install or update)
     rica_dir.mkdir(exist_ok=True)
-    for filename in RICA_FILES:
+    for filename in RICA_FILES + ["VERSION"]:
         src = source_dir / filename
         if src.exists():
             shutil.copy2(src, rica_dir / filename)
 
-    print(f"[Rica] Files ready in {rica_dir}")
+    if output_version and source_version and output_version != source_version:
+        print(f"[Rica] Updated from {output_version} to {source_version} in {rica_dir}")
+    else:
+        print(f"[Rica] Installed {source_version} to {rica_dir}")
     return rica_dir
 
 
