@@ -531,12 +531,19 @@ def setup_rica(output_dir, force_download=False):
 
 
 class RicaHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP handler with CORS support and file listing endpoint."""
+    """HTTP handler with CORS support, cache control, and file listing endpoint."""
 
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        # Add cache-control headers for Rica core files to prevent browser caching
+        # This ensures updated Rica versions are always served fresh
+        path = unquote(self.path) if hasattr(self, 'path') else ""
+        if "/rica/" in path and (path.endswith(".html") or path.endswith(".py")):
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
         super().end_headers()
 
     def do_OPTIONS(self):
