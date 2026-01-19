@@ -505,9 +505,14 @@ def setup_rica(output_dir, force_download=False):
 
     # Check if we need to update the output directory
     source_version = get_cached_rica_version(source_dir)
-    output_version = output_version_file.read_text().strip() if output_version_file.exists() else None
+    output_version = None
+    if output_version_file.exists():
+        output_version = output_version_file.read_text().strip()
 
-    if not force_download and output_version and output_version == source_version and validate_rica_path(rica_dir):
+    is_up_to_date = (
+        output_version and output_version == source_version and validate_rica_path(rica_dir)
+    )
+    if not force_download and is_up_to_date:
         print(f"[Rica] Using {output_version} from {rica_dir}")
         return rica_dir
 
