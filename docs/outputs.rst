@@ -839,6 +839,11 @@ If the browser doesn't open, you can:
        python open_rica_report.py --no-open
        # Then open http://localhost:8000/rica/index.html in your browser
 
+**Browser shows old version of Rica after update:**
+
+See the `Rica troubleshooting guide <https://me-ica.github.io/rica/troubleshooting/#browser-shows-old-version-after-update>`_
+for solutions to browser caching issues.
+
 
 **************************
 Citable workflow summaries
