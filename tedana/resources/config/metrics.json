@@ -53,7 +53,7 @@
         ],
         "relative variance explained": [
             "data_optcom",
-            "mixing"
+            "map optcom betas"
         ],
         "marginal R-squared": [
             "data_optcom",

@@ -425,9 +425,9 @@ def calculate_varex(
 def calculate_relative_varex(
     *,
     data_optcom: np.ndarray,
-    mixing: np.ndarray,
+    component_maps: np.ndarray,
 ) -> np.ndarray:
-    """Calculate relative variance explained for each component.
+    """Calculate relative component-wise contribution scaled by total DV variance.
 
     This estimates component-wise explained variance by fitting a single multivariate
     least-squares model and computing the variance of each regressor's fitted contribution to the
@@ -441,39 +441,28 @@ def calculate_relative_varex(
     ----------
     data_optcom : (S x T) array_like
         Optimally combined data.
-    mixing : (T x C) array_like
-        Mixing matrix.
+    component_maps : (S x C) array_like
+        Component-wise parameter estimates from the regression
+        of the optimally combined data against component time series.
 
     Returns
     -------
     relative_varex : (C) array_like
-        Average (across voxels) relative variance explained by each component,
-        on a scale from 0 to 100.
+        Component-wise contribution values, scaled by total DV variance.
+        These do not sum to 100 unless the model explains all variance.
     """
-    if data_optcom.shape[1] != mixing.shape[0]:
+    if data_optcom.shape[0] != component_maps.shape[0]:
         raise ValueError(
-            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
-            f"does not match first dimension of mixing ({mixing.shape[0]})."
+            f"First dimension (number of voxels) of data ({data_optcom.shape[0]}) "
+            f"does not match first dimension of component maps ({component_maps.shape[0]})."
         )
 
-    n_components = mixing.shape[1]
-
-    mixing_z = stats.zscore(mixing, axis=0)
-    data_z = stats.zscore(data_optcom, axis=1)
-
-    # Fit full multivariate model once
-    betas, *_ = np.linalg.lstsq(mixing_z, data_z.T, rcond=None)
-    comp_var = np.zeros(n_components)
-    for i_comp in range(n_components):
-        # fitted contribution of regressor r
-        fitted_r = np.outer(mixing_z[:, i_comp], betas[i_comp])  # (T, V)
-
-        # variance across time, then mean across voxels
-        comp_var[i_comp] = np.var(fitted_r, axis=0, ddof=1).mean()
-
-    # normalize to obtain relative attribution
-    varex_rel = 100 * (comp_var / comp_var.sum())
-    return varex_rel
+    # XXX: This requires the same scaling as used to calculate the component maps.
+    data_dm = data_optcom - data_optcom.mean(axis=0, keepdims=True)
+    coeff_energy = np.sum(component_maps**2, axis=0)
+    total_var = np.sum(data_dm**2)
+    relative_varex = 100 * (coeff_energy / total_var)
+    return relative_varex
 
 
 def calculate_marginal_r2(
@@ -586,9 +575,11 @@ def calculate_semi_partial_r2(
 ) -> np.ndarray:
     """Calculate mean voxelwise semi-partial R-squared for each regressor.
 
-    This is equivalent to the variance explained by each component after regressing out the other
-    components from the target component. It indicates the incremental increase in R-squared
-    when adding the target component to the model.
+    Semi-partial R^2 is the incremental variance explained by adding a
+    regressor to a model that already contains all other regressors.
+
+    TODO: Simplify this by (1) orthogonalizing each component w.r.t. the other components,
+    then (2) calculating the R-squared for each component against the data.
 
     Parameters
     ----------
@@ -609,19 +600,24 @@ def calculate_semi_partial_r2(
             f"does not match first dimension of mixing ({mixing.shape[0]})."
         )
 
-    n_components = mixing.shape[1]
+    # Z-score
+    mixing = stats.zscore(mixing, axis=0)
+    data_optcom = stats.zscore(data_optcom, axis=1)
 
     # Full model
     beta_full, *_ = np.linalg.lstsq(mixing, data_optcom.T, rcond=None)
     resid_full = data_optcom.T - mixing @ beta_full
-    rss_full = np.sum(resid_full**2, axis=0)
+    rss_full = np.sum(resid_full**2, axis=0)  # (S,)
 
-    tss = np.sum(data_optcom**2, axis=1)
+    # Total sum of squares (per voxel)
+    tss = np.sum(data_optcom**2, axis=1)  # (S,)
 
+    n_components = mixing.shape[1]
     r2_semi = np.zeros(n_components)
 
     for i_comp in range(n_components):
         x_red = np.delete(mixing, i_comp, axis=1)
+
         beta_red, *_ = np.linalg.lstsq(x_red, data_optcom.T, rcond=None)
         resid_red = data_optcom.T - x_red @ beta_red
         rss_red = np.sum(resid_red**2, axis=0)
@@ -629,7 +625,7 @@ def calculate_semi_partial_r2(
         r2_vox = (rss_red - rss_full) / tss
         r2_semi[i_comp] = r2_vox.mean()
 
-    return r2_semi
+    return 100 * r2_semi
 
 
 def compute_dice(

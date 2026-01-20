@@ -317,7 +317,7 @@ def generate_metrics(
         LGR.info("Calculating relative variance explained")
         component_table["relative variance explained"] = dependence.calculate_relative_varex(
             data_optcom=data_optcom,
-            mixing=mixing,
+            component_maps=metric_maps["map optcom betas"],
         )
 
     if "partial R-squared" in required_metrics:

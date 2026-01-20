@@ -62,8 +62,11 @@ def test_calculate_relative_varex_smoke():
     """Test smoke test of calculate_relative_varex."""
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
-    mixing = np.random.random((n_volumes, n_components))
-    relative_varex = dependence.calculate_relative_varex(data_optcom=data_optcom, mixing=mixing)
+    component_maps = np.random.random((n_voxels, n_components))
+    relative_varex = dependence.calculate_relative_varex(
+        data_optcom=data_optcom,
+        component_maps=component_maps,
+    )
     assert relative_varex.shape == (n_components,)
 
 
