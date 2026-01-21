@@ -58,12 +58,12 @@ def test_calculate_marginal_r2_correctness():
         dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
-def test_calculate_relative_varex_smoke():
-    """Test smoke test of calculate_relative_varex."""
+def test_calculate_coefficient_energy_scaled_by_total_variance_smoke():
+    """Test smoke test of calculate_coefficient_energy_scaled_by_total_variance."""
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
     component_maps = np.random.random((n_voxels, n_components))
-    relative_varex = dependence.calculate_relative_varex(
+    relative_varex = dependence.calculate_coefficient_energy_scaled_by_total_variance(
         data_optcom=data_optcom,
         component_maps=component_maps,
     )
@@ -89,8 +89,13 @@ def test_calculate_partial_r2_smoke():
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    relative_varex = dependence.calculate_partial_r2(data_optcom=data_optcom, mixing=mixing)
-    assert relative_varex.shape == (n_components,)
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    partial_r2 = dependence.calculate_partial_r2(
+        semipartial_r2=semipartial_r2,
+        total_r2=total_r2,
+    )
+    assert partial_r2.shape == (n_components,)
 
 
 def test_calculate_z_maps_correctness():
