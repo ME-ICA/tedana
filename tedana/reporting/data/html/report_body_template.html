@@ -307,16 +307,16 @@
 
 <!-- Rica Button -->
 <div class="rica-button-container">
-  <button type="button" class="rica-button" onclick="openRicaModal()">
+  <button type="button" class="rica-button" onclick="openRicaModal()" aria-haspopup="dialog">
     🔍 Open in Rica
   </button>
 </div>
 
 <!-- Rica Modal -->
-<div class="rica-modal-overlay" id="ricaModal">
+<div class="rica-modal-overlay" id="ricaModal" role="dialog" aria-modal="true" aria-labelledby="ricaModalTitle">
   <div class="rica-modal">
-    <button type="button" class="rica-modal-close" onclick="closeRicaModal()">×</button>
-    <h2>Open in Rica</h2>
+    <button type="button" class="rica-modal-close" onclick="closeRicaModal()" aria-label="Close modal">×</button>
+    <h2 id="ricaModalTitle">Open in Rica</h2>
     <p>
       <strong>Rica</strong> is an interactive web-based tool for exploring ICA components
       with 3D brain visualization and
@@ -525,13 +525,25 @@
     document.getElementById("imgCarpetPlot").src = carpetPlot;
   }
 
-  // Rica modal functions
+  // Rica modal functions with accessibility support
+  var ricaModalTrigger = null;
+
   function openRicaModal() {
-    document.getElementById("ricaModal").style.display = "flex";
+    ricaModalTrigger = document.activeElement;
+    var modal = document.getElementById("ricaModal");
+    modal.style.display = "flex";
+    // Focus the close button when modal opens
+    var closeBtn = modal.querySelector(".rica-modal-close");
+    if (closeBtn) closeBtn.focus();
   }
 
   function closeRicaModal() {
     document.getElementById("ricaModal").style.display = "none";
+    // Return focus to the element that opened the modal
+    if (ricaModalTrigger) {
+      ricaModalTrigger.focus();
+      ricaModalTrigger = null;
+    }
   }
 
   function openRicaWebsite() {
@@ -545,10 +557,29 @@
     }
   });
 
-  // Close modal with Escape key
+  // Close modal with Escape key and trap focus within modal
   document.addEventListener("keydown", function(event) {
+    var modal = document.getElementById("ricaModal");
+    if (modal.style.display !== "flex") return;
+
     if (event.key === "Escape") {
       closeRicaModal();
+      return;
+    }
+
+    // Trap focus within modal
+    if (event.key === "Tab") {
+      var focusable = modal.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   });
 </script>
