@@ -533,14 +533,27 @@ def setup_rica(output_dir, force_download=False):
 class RicaHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with CORS support, cache control, and file listing endpoint."""
 
+    # Data file extensions that should never be cached (fixes tedana#1323)
+    # These files have identical names across different datasets, so caching
+    # causes stale data to be served when switching between datasets
+    DATA_EXTENSIONS = (
+        ".tsv", ".png", ".svg", ".json", ".txt",
+        ".nii", ".nii.gz", ".gz",
+    )
+
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        # Add cache-control headers for Rica core files to prevent browser caching
-        # This ensures updated Rica versions are always served fresh
+        # Add cache-control headers to prevent browser caching
+        # This is critical for:
+        # 1. Rica core files (.html, .py) - ensures updated versions are served
+        # 2. Data files (.tsv, .png, .svg, etc.) - prevents stale data when
+        #    switching between different tedana output directories (#1323)
         path = unquote(self.path) if hasattr(self, 'path') else ""
-        if "/rica/" in path and (path.endswith(".html") or path.endswith(".py")):
+        is_rica_core = "/rica/" in path and (path.endswith(".html") or path.endswith(".py"))
+        is_data_file = any(path.endswith(ext) for ext in self.DATA_EXTENSIONS)
+        if is_rica_core or is_data_file:
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.send_header("Pragma", "no-cache")
             self.send_header("Expires", "0")
