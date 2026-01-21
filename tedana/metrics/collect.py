@@ -320,18 +320,19 @@ def generate_metrics(
             component_maps=metric_maps["map optcom betas"],
         )
 
-    if "partial R-squared" in required_metrics:
-        LGR.info("Calculating partial R-squared")
-        component_table["partial R-squared"] = dependence.calculate_partial_r2(
-            data_optcom=data_optcom,
-            mixing=mixing,
-        )
-
     if "semi-partial R-squared" in required_metrics:
         LGR.info("Calculating semi-partial R-squared")
         component_table["semi-partial R-squared"] = dependence.calculate_semi_partial_r2(
             data_optcom=data_optcom,
             mixing=mixing,
+        )
+
+    if "partial R-squared" in required_metrics:
+        LGR.info("Calculating partial R-squared")
+        total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+        component_table["partial R-squared"] = dependence.calculate_partial_r2(
+            semipartial_r2=component_table["semi-partial R-squared"],
+            total_r2=total_r2,
         )
 
     # Spatial metrics

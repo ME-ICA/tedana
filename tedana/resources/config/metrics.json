@@ -59,13 +59,14 @@
             "data_optcom",
             "mixing"
         ],
-        "partial R-squared": [
-            "data_optcom",
-            "mixing"
-        ],
         "semi-partial R-squared": [
             "data_optcom",
             "mixing"
+        ],
+        "partial R-squared": [
+            "data_optcom",
+            "mixing",
+            "semi-partial R-squared"
         ],
         "kappa_rho_difference": [
             "kappa",

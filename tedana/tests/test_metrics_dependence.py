@@ -57,9 +57,6 @@ def test_calculate_marginal_r2_correctness():
     with pytest.raises(ValueError):
         dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
-    varex_2 = dependence.calculate_marginal_r2_2(data_optcom=data_optcom, mixing=mixing)
-    assert np.allclose(varex, varex_2)
-
 
 def test_calculate_relative_varex_smoke():
     """Test smoke test of calculate_relative_varex."""
