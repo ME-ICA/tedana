@@ -70,12 +70,12 @@ def test_calculate_relative_varex_smoke():
     assert relative_varex.shape == (n_components,)
 
 
-def test_calculate_semi_partial_r2_smoke():
-    """Test smoke test of calculate_semi_partial_r2."""
+def test_calculate_semipartial_r2_smoke():
+    """Test smoke test of calculate_semipartial_r2."""
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    relative_varex = dependence.calculate_semi_partial_r2(data_optcom=data_optcom, mixing=mixing)
+    relative_varex = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
     assert relative_varex.shape == (n_components,)
 
     semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)

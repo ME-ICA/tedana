@@ -422,47 +422,103 @@ def calculate_varex(
     return varex
 
 
-def calculate_relative_varex(
+def calculate_relative_coefficient_energy(
     *,
     data_optcom: np.ndarray,
-    component_maps: np.ndarray,
+    mixing: np.ndarray,
 ) -> np.ndarray:
-    """Calculate relative component-wise contribution scaled by total DV variance.
+    """Calculate relative component-wise coefficient energy from a single multivariate regression.
 
-    This estimates component-wise explained variance by fitting a single multivariate
-    least-squares model and computing the variance of each regressor's fitted contribution to the
-    signal. Because regressors may be correlated, these values reflect model-based variance
-    attribution rather than unique or partial explained variance.
+    This metric is computed by fitting a single least-squares model using all
+    components simultaneously and aggregating the squared regression
+    coefficients across voxels for each component. The resulting values are
+    normalized to sum to 100%.
 
-    This is not a common measure of variance explained, since any shared variance between
-    regressors will be split between them.
+    IMPORTANT:
+    - This is NOT variance explained (R^2).
+    - Values sum to 100% by construction.
+    - Shared variance among correlated components is implicitly distributed
+      across coefficients in a model-dependent manner.
+    - This metric reflects relative participation in the fitted model,
+      not unique or marginal explanatory power.
+
+    This corresponds to the quantity historically referred to as "variance
+    explained" in tedana, but is more accurately described as relative
+    coefficient energy.
 
     Parameters
     ----------
-    data_optcom : (S x T) array_like
-        Optimally combined data.
-    component_maps : (S x C) array_like
-        Component-wise parameter estimates from the regression
-        of the optimally combined data against component time series.
+    data_optcom : (S, T) array
+        Optimally combined voxel-wise data.
+    mixing : (T, C) array
+        Component time series / mixing matrix.
 
     Returns
     -------
-    relative_varex : (C) array_like
-        Component-wise contribution values, scaled by total DV variance.
-        These do not sum to 100 unless the model explains all variance.
+    relative_coeff_energy : (C,) array
+        Relative coefficient energy per component, summing to 100%.
     """
-    if data_optcom.shape[0] != component_maps.shape[0]:
-        raise ValueError(
-            f"First dimension (number of voxels) of data ({data_optcom.shape[0]}) "
-            f"does not match first dimension of component maps ({component_maps.shape[0]})."
-        )
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError("Time dimension mismatch.")
 
-    # XXX: This requires the same scaling as used to calculate the component maps.
-    data_dm = data_optcom - data_optcom.mean(axis=0, keepdims=True)
-    coeff_energy = np.sum(component_maps**2, axis=0)
-    total_var = np.sum(data_dm**2)
-    relative_varex = 100 * (coeff_energy / total_var)
-    return relative_varex
+    mixing = stats.zscore(mixing, axis=0)
+    # This measure typically is done on mean-centered, not z-scored, data.
+    # data_optcom = stats.zscore(data_optcom, axis=1)
+    data_optcom = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
+
+    beta = np.linalg.lstsq(mixing, data_optcom.T, rcond=None)[0]
+    coeff_energy = np.sum(beta**2, axis=1)
+
+    return 100 * coeff_energy / coeff_energy.sum()
+
+
+def calculate_coefficient_energy_scaled_by_total_variance(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate component-wise coefficient energy scaled by total data variance.
+
+    This metric uses the same coefficient energy as
+    `calculate_relative_coefficient_energy`, but scales it by the total variance
+    of the dependent data rather than normalizing across components.
+
+    IMPORTANT:
+    - This is NOT variance explained (R^2).
+    - Values do NOT sum to 100%.
+    - Values do NOT sum to total R^2.
+    - Scaling reflects data variance, not fitted variance.
+
+    This metric is useful for comparing coefficient-based contributions across
+    datasets with different noise levels, but should not be interpreted as a
+    decomposition of explained variance.
+
+    Parameters
+    ----------
+    data_optcom : (S, T) array
+        Optimally combined voxel-wise data.
+    mixing : (T, C) array
+        Component time series / mixing matrix.
+
+    Returns
+    -------
+    coeff_energy_scaled : (C,) array
+        Coefficient energy scaled by total DV variance (percent units).
+    """
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError("Time dimension mismatch.")
+
+    mixing = stats.zscore(mixing, axis=0)
+    # This measure typically is done on mean-centered, not z-scored, data.
+    # data_optcom = stats.zscore(data_optcom, axis=1)
+    data_optcom = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
+
+    total_var = np.sum(data_optcom**2)
+
+    beta = np.linalg.lstsq(mixing, data_optcom.T, rcond=None)[0]
+    coeff_energy = np.sum(beta**2, axis=1)
+
+    return 100 * coeff_energy / total_var
 
 
 def calculate_total_r2(
@@ -497,7 +553,7 @@ def calculate_total_r2(
 
     beta = np.linalg.lstsq(mixing, data_optcom.T, rcond=None)[0]
     pred_data = mixing.dot(beta)
-    total_r2 = 100 * (pred_data ** 2.0).sum() / total_var
+    total_r2 = 100 * (pred_data**2.0).sum() / total_var
     return total_r2
 
 
@@ -536,7 +592,7 @@ def calculate_marginal_r2(
     # correlation = (1/(T-1)) * dat_z @ mix_z
     # NOTE: We use population scaling here to match the behavior of np.corrcoef.
     correlations = data_optcom @ mixing / n_vols
-    correlations = correlations ** 2
+    correlations = correlations**2
     return 100 * correlations.mean(axis=0)
 
 
@@ -585,7 +641,7 @@ def calculate_semipartial_r2(
     # correlation = (1/(T-1)) * dat_z @ mix_z
     # NOTE: We use population scaling here to match the behavior of np.corrcoef.
     correlations = data_optcom @ mixing / n_vols
-    correlations = correlations ** 2
+    correlations = correlations**2
     return 100 * correlations.mean(axis=0)
 
 

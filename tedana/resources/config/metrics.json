@@ -51,9 +51,9 @@
         "normalized variance explained": [
             "map weight"
         ],
-        "relative variance explained": [
+        "scaled coefficient energy": [
             "data_optcom",
-            "map optcom betas"
+            "mixing"
         ],
         "marginal R-squared": [
             "data_optcom",

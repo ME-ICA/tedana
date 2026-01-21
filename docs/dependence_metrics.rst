@@ -245,13 +245,22 @@ variance explained
 :func:`tedana.metrics.dependence.calculate_varex`
 
 The "variance explained" by each component is calculated as the square of the
-parameter estimates from the regression of the optimally combined data against
-the component time series, divided by the sum of the squares of the parameter
-estimates.
+parameter estimates from the regression of the mean-centered, but not z-scored,
+optimally combined data against the component time series,
+divided by the sum of the squares of the parameter estimates.
 
-This is not actually a measure of variance explained,
-since it does not account for the variance in the data that is not explained by
-the components.
+.. important::
+  Please note that:
+  - This is NOT variance explained (R^2).
+  - Values sum to 100% by construction.
+  - Shared variance among correlated components is implicitly distributed
+    across coefficients in a model-dependent manner.
+  - This metric reflects relative participation in the fitted model,
+    not unique or marginal explanatory power.
+
+  This corresponds to the quantity historically referred to as "variance
+  explained" in tedana, but is more accurately described as relative
+  coefficient energy.
 
 
 normalized variance explained
@@ -274,17 +283,30 @@ component.
 
 This is not actually a measure of normalized variance explained.
 
+In the tedpca metrics, "normalized variance explained" actually comes from
+the fitted PCA object's explained_variance_ratio_ attribute,
+and the TEDANA-calculated value is retained as "estimated normalized variance explained".
 
-relative variance explained
-==========================
-:func:`tedana.metrics.dependence.calculate_relative_varex`
 
-The "relative variance explained" by each component is calculated as the
-variance of the fitted contribution of each regressor to the signal,
-divided by the sum of the variances of the fitted contributions.
+scaled coefficient energy
+=========================
+:func:`tedana.metrics.dependence.calculate_coefficient_energy_scaled_by_total_variance`
 
-While this is a measure of variance explained, it is not a common measure,
-since any shared variance between regressors will be split between them.
+The "scaled coefficient energy" by each component is calculated as the
+sum of the squared regression coefficients of each component,
+divided by the total variance of the data.
+
+.. important::
+  Please note that:
+
+  - This is NOT variance explained (R^2).
+  - Values do NOT sum to 100%.
+  - Values do NOT sum to total R^2.
+  - Scaling reflects data variance, not fitted variance.
+
+  This metric is useful for comparing coefficient-based contributions across
+  datasets with different noise levels, but should not be interpreted as a
+  decomposition of explained variance.
 
 
 marginal R-squared
@@ -314,7 +336,7 @@ components out of the data *and* the component itself. It is a conditional effec
 
 semi-partial R-squared
 ======================
-:func:`tedana.metrics.dependence.calculate_semi_partial_r2`
+:func:`tedana.metrics.dependence.calculate_semipartial_r2`
 
 The "semi-partial R-squared" by each component is calculated as the variance of the
 fitted contribution of each regressor to the signal,

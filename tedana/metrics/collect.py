@@ -313,16 +313,18 @@ def generate_metrics(
             mixing=mixing,
         )
 
-    if "relative variance explained" in required_metrics:
-        LGR.info("Calculating relative variance explained")
-        component_table["relative variance explained"] = dependence.calculate_relative_varex(
-            data_optcom=data_optcom,
-            component_maps=metric_maps["map optcom betas"],
+    if "scaled coefficient energy" in required_metrics:
+        LGR.info("Calculating scaled coefficient energy")
+        component_table["scaled coefficient energy"] = (
+            dependence.calculate_coefficient_energy_scaled_by_total_variance(
+                data_optcom=data_optcom,
+                mixing=mixing,
+            )
         )
 
     if "semi-partial R-squared" in required_metrics:
         LGR.info("Calculating semi-partial R-squared")
-        component_table["semi-partial R-squared"] = dependence.calculate_semi_partial_r2(
+        component_table["semi-partial R-squared"] = dependence.calculate_semipartial_r2(
             data_optcom=data_optcom,
             mixing=mixing,
         )
@@ -478,7 +480,7 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
-        "relative variance explained",
+        "scaled coefficient energy",
         "marginal R-squared",
         "partial R-squared",
         "semi-partial R-squared",
@@ -566,8 +568,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "percent",
         }
-    if "relative variance explained" in component_table:
-        metric_metadata["relative variance explained"] = {
+    if "scaled coefficient energy" in component_table:
+        metric_metadata["scaled coefficient energy"] = {
             "LongName": "Relative variance explained",
             "Description": (
                 "Relative variance explained by each component relative to the optimally "
