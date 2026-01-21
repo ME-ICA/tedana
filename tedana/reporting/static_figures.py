@@ -919,8 +919,35 @@ def plot_heatmap(
 
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
+    if not np.isfinite(corr).all():
+        warnings.warn(
+            "Non-finite correlations detected when clustering regressors for the heatmap. "
+            "These values will be replaced with 0 (uncorrelated) to allow clustering to proceed.",
+            UserWarning,
+        )
+        corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+        np.fill_diagonal(corr, 1.0)
+
     pdist_uncondensed = 1.0 - corr
+    if not np.isfinite(pdist_uncondensed).all():
+        warnings.warn(
+            "Non-finite distances detected when clustering regressors for the heatmap. "
+            "These values will be replaced with 1 to allow clustering to proceed.",
+            UserWarning,
+        )
+        pdist_uncondensed = np.nan_to_num(pdist_uncondensed, nan=1.0, posinf=1.0, neginf=1.0)
+
     pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
+    if not np.isfinite(pdist_condensed).all():
+        warnings.warn(
+            "Non-finite condensed distances detected when clustering regressors for the heatmap. "
+            "These values will be replaced with the maximum finite distance to allow clustering to proceed.",
+            UserWarning,
+        )
+        finite_vals = pdist_condensed[np.isfinite(pdist_condensed)]
+        fill_val = float(finite_vals.max()) if finite_vals.size else 1.0
+        pdist_condensed = np.nan_to_num(pdist_condensed, nan=fill_val, posinf=fill_val, neginf=fill_val)
+
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)
