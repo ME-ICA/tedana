@@ -503,7 +503,7 @@ def calculate_marginal_r2(
         # Separate out each component's time series from the mixing matrix and calculate the
         # variance explained for that component.
         ts = mixing[:, i_comp][:, None]
-        beta = np.linalg.lstsq(ts, data_optcom, rcond=None)[0].T
+        beta = np.linalg.lstsq(ts.T, data_optcom, rcond=None)[0].T
         marginal_r2[i_comp] = 100 * (1 - ((data_optcom - beta.dot(ts.T)) ** 2.0).sum() / total_var)
 
     return marginal_r2
