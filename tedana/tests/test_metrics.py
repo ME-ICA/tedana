@@ -61,6 +61,7 @@ def test_smoke_generate_metrics(testdata1):
         "variance explained",
         "normalized variance explained",
         "d_table_score",
+        "kappa_rho_difference",
     ]
 
     external_regressors, _ = sample_external_regressors()
@@ -281,17 +282,9 @@ def test_smoke_calculate_f_maps():
 def test_smoke_calculate_varex():
     """Smoke test for tedana.metrics.dependence.calculate_varex."""
     n_voxels, n_components = 1000, 50
-    optcom_betas = np.random.random((n_voxels, n_components))
-    varex = dependence.calculate_varex(optcom_betas=optcom_betas)
+    component_maps = np.random.random((n_voxels, n_components))
+    varex = dependence.calculate_varex(component_maps=component_maps)
     assert varex.shape == (n_components,)
-
-
-def test_smoke_calculate_varex_norm():
-    """Smoke test for tedana.metrics.dependence.calculate_varex_norm."""
-    n_voxels, n_components = 1000, 50
-    weights = np.random.random((n_voxels, n_components))
-    varex_norm = dependence.calculate_varex_norm(weights=weights)
-    assert varex_norm.shape == (n_components,)
 
 
 def test_smoke_compute_dice():
@@ -386,6 +379,18 @@ def test_smoke_generate_decision_table_score():
         countsig_ft2=countsig_ft2,
     )
     assert decision_table_score.shape == (n_components,)
+
+
+def test_smoke_compute_kappa_rho_difference():
+    """Smoke test for tedana.metrics.dependence.compute_kappa_rho_difference."""
+    n_components = 50
+    kappa = np.random.random(n_components)
+    rho = np.random.random(n_components)
+    kappa_rho_difference = dependence.compute_kappa_rho_difference(
+        kappa=kappa,
+        rho=rho,
+    )
+    assert kappa_rho_difference.shape == (n_components,)
 
 
 def test_smoke_calculate_dependence_metrics():

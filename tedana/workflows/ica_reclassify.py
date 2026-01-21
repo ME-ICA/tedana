@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 import tedana.gscontrol as gsc
-from tedana import __version__, io, reporting, selection, utils
+from tedana import __version__, io, reporting, rica, selection, utils
 from tedana.bibtex import get_description_references
 from tedana.io import ALLOWED_COMPONENT_DELIMITERS
 from tedana.workflows.parser_utils import parse_manual_list_int, parse_manual_list_str
@@ -603,6 +603,10 @@ def ica_reclassify_workflow(
         reporting.generate_report(io_generator, cluster_labels=None, similarity_t_sne=None)
 
     io_generator.save_self()
+
+    # Generate Rica launcher script
+    rica.setup_rica_report(io_generator.out_dir)
+
     LGR.info("Workflow completed")
 
     # Add newsletter info to the log

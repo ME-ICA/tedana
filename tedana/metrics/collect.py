@@ -236,7 +236,6 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -246,7 +245,6 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
@@ -299,13 +297,13 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            optcom_betas=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
-        component_table["normalized variance explained"] = dependence.calculate_varex_norm(
-            weights=metric_maps["map weight"],
+        component_table["normalized variance explained"] = dependence.calculate_varex(
+            component_maps=metric_maps["map weight"],
         )
 
     # Spatial metrics
@@ -350,7 +348,7 @@ def generate_metrics(
     if "signal-noise_z" in required_metrics:
         LGR.info("Calculating signal-noise z-statistics")
         RepLGR.info(
-            "A t-test was performed between the distributions of T2*-model F-statistics "
+            "A z-test was performed between the distributions of T2*-model F-statistics "
             "associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to "
             "generate a z-statistic (metric signal-noise_z) and p-value (metric signal-noise_p) "
             "measuring relative association of the component to signal over noise."
@@ -384,6 +382,13 @@ def generate_metrics(
             signal_minus_noise_t=component_table["signal-noise_t"],
             countnoise=component_table["countnoise"],
             countsig_ft2=component_table["countsigFT2"],
+        )
+
+    if "kappa_rho_difference" in required_metrics:
+        LGR.info("Calculating kappa-rho difference")
+        component_table["kappa_rho_difference"] = dependence.compute_kappa_rho_difference(
+            kappa=component_table["kappa"],
+            rho=component_table["rho"],
         )
 
     # External regressor-based metrics
@@ -450,6 +455,7 @@ def generate_metrics(
         "dice_FS0",
         "countnoise",
         "signal-noise_t",
+        "signal-noise_z",
         "signal-noise_p",
         "d_table_score",
         "kappa ratio",
@@ -511,17 +517,21 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "Variance explained in the optimally combined data of "
                 "each component. On a scale from 0 to 100."
             ),
-            "Units": "arbitrary",
+            "Units": "percent",
         }
     if "normalized variance explained" in component_table:
         metric_metadata["normalized variance explained"] = {
             "LongName": "Normalized variance explained",
             "Description": (
-                "Normalized variance explained in the optimally combined "
-                "data of each component."
-                "On a scale from 0 to 1."
+                "'Normalized' variance explained by each component in the ICA weights maps. "
+                "This is calculated by z-scoring the mixing matrix and optimally combined data "
+                "over time, then fitting a GLM to calculate voxel-wise parameter estimates "
+                "for each component. These parameter estimates are then cropped to values between "
+                "-0.999 and 0.999, and then the Fisher's z-transform is applied to the parameter "
+                "estimates. This is then used to calculate the variance explained for each "
+                "component. On a scale from 0 to 100."
             ),
-            "Units": "arbitrary",
+            "Units": "percent",
         }
     if "countsigFT2" in component_table:
         metric_metadata["countsigFT2"] = {
@@ -689,6 +699,19 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "percent",
         }
+
+    # Add metadata for external regressor correlation columns
+    for col in component_table.columns:
+        if col.startswith("external regressor correlation "):
+            regressor_name = col.replace("external regressor correlation ", "")
+            metric_metadata[col] = {
+                "LongName": f"External regressor correlation ({regressor_name})",
+                "Description": (
+                    f"Pearson correlation coefficient between the component time series "
+                    f"and the external regressor '{regressor_name}'."
+                ),
+                "Units": "Pearson correlation coefficient",
+            }
 
     # There are always components in the component_table, definitionally
     metric_metadata["Component"] = {

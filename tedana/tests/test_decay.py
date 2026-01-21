@@ -35,32 +35,38 @@ def testdata1():
 
 def test_fit_decay(testdata1):
     """Fit_decay should return data in (samples,) shape."""
-    t2sv, s0v, t2svg, s0vg, _ = me.fit_decay(
-        testdata1["data"],
+    masked_data = testdata1["data"][testdata1["mask"], ...]
+    masked_adaptive_mask = testdata1["adaptive_mask"][testdata1["mask"]]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+        masked_data,
         testdata1["tes"],
-        testdata1["mask"],
-        testdata1["adaptive_mask"],
+        masked_adaptive_mask,
         testdata1["fittype"],
     )
-    assert t2sv.ndim == 1
-    assert s0v.ndim == 1
-    assert t2svg.ndim == 1
-    assert s0vg.ndim == 1
+    assert t2s.ndim == 1
+    assert s0.ndim == 1
+    assert failures is None
+    assert t2s_var is None
+    assert s0_var is None
+    assert t2s_s0_covar is None
 
 
 def test_fit_decay_ts(testdata1):
     """Fit_decay_ts should return data in samples x time shape."""
-    t2sv, s0v, t2svg, s0vg, _ = me.fit_decay_ts(
-        testdata1["data"],
+    masked_data = testdata1["data"][testdata1["mask"], ...]
+    masked_adaptive_mask = testdata1["adaptive_mask"][testdata1["mask"]]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+        masked_data,
         testdata1["tes"],
-        testdata1["mask"],
-        testdata1["adaptive_mask"],
+        masked_adaptive_mask,
         testdata1["fittype"],
     )
-    assert t2sv.ndim == 2
-    assert s0v.ndim == 2
-    assert t2svg.ndim == 2
-    assert s0vg.ndim == 2
+    assert t2s.ndim == 2
+    assert s0.ndim == 2
+    assert failures is None
+    assert t2s_var is None
+    assert s0_var is None
+    assert t2s_s0_covar is None
 
 
 def test__apply_t2s_floor():
@@ -110,13 +116,20 @@ def test_smoke_fit_decay():
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = "loglin"
-    t2s_limited, s0_limited, t2s_full, s0_full, _ = me.fit_decay(
-        data, tes, mask, adaptive_mask, fittype
+    masked_data = data[mask, ...]
+    masked_adaptive_mask = adaptive_mask[mask]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+        masked_data,
+        tes,
+        masked_adaptive_mask,
+        fittype,
     )
-    assert t2s_limited is not None
-    assert s0_limited is not None
-    assert t2s_full is not None
-    assert s0_full is not None
+    assert t2s.ndim == 1
+    assert s0.ndim == 1
+    assert failures is None
+    assert t2s_var is None
+    assert s0_var is None
+    assert t2s_s0_covar is None
 
 
 def test_smoke_fit_decay_curvefit():
@@ -124,7 +137,6 @@ def test_smoke_fit_decay_curvefit():
     Test_smoke_fit_decay tests that the function fit_decay returns reasonable.
 
     objects with random inputs in the correct format when using the direct.
-
     monoexponetial approach.
     """
     n_samples = 100
@@ -136,13 +148,20 @@ def test_smoke_fit_decay_curvefit():
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = "curvefit"
-    t2s_limited, s0_limited, t2s_full, s0_full, _ = me.fit_decay(
-        data, tes, mask, adaptive_mask, fittype
+    masked_data = data[mask, ...]
+    masked_adaptive_mask = adaptive_mask[mask]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+        masked_data,
+        tes,
+        masked_adaptive_mask,
+        fittype,
     )
-    assert t2s_limited is not None
-    assert s0_limited is not None
-    assert t2s_full is not None
-    assert s0_full is not None
+    assert t2s.ndim == 1
+    assert s0.ndim == 1
+    assert failures.ndim == 1
+    assert t2s_var.ndim == 1
+    assert s0_var.ndim == 1
+    assert t2s_s0_covar.ndim == 1
 
 
 def test_smoke_fit_decay_ts():
@@ -160,13 +179,20 @@ def test_smoke_fit_decay_ts():
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = "loglin"
-    t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts, _ = me.fit_decay_ts(
-        data, tes, mask, adaptive_mask, fittype
+    masked_data = data[mask, ...]
+    masked_adaptive_mask = adaptive_mask[mask]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+        masked_data,
+        tes,
+        masked_adaptive_mask,
+        fittype,
     )
-    assert t2s_limited_ts is not None
-    assert s0_limited_ts is not None
-    assert t2s_full_ts is not None
-    assert s0_full_ts is not None
+    assert t2s.ndim == 2
+    assert s0.ndim == 2
+    assert failures is None
+    assert t2s_var is None
+    assert s0_var is None
+    assert t2s_s0_covar is None
 
 
 def test_smoke_fit_decay_curvefit_ts():
@@ -174,7 +200,6 @@ def test_smoke_fit_decay_curvefit_ts():
     Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable.
 
     objects with random inputs in the correct format when using the direct.
-
     monoexponetial approach.
     """
     n_samples = 100
@@ -186,13 +211,20 @@ def test_smoke_fit_decay_curvefit_ts():
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = "curvefit"
-    t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts, _ = me.fit_decay_ts(
-        data, tes, mask, adaptive_mask, fittype
+    masked_data = data[mask, ...]
+    masked_adaptive_mask = adaptive_mask[mask]
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+        masked_data,
+        tes,
+        masked_adaptive_mask,
+        fittype,
     )
-    assert t2s_limited_ts is not None
-    assert s0_limited_ts is not None
-    assert t2s_full_ts is not None
-    assert s0_full_ts is not None
+    assert t2s.ndim == 2
+    assert s0.ndim == 2
+    assert failures.ndim == 2
+    assert t2s_var.ndim == 2
+    assert s0_var.ndim == 2
+    assert t2s_s0_covar.ndim == 2
 
 
 # TODO: BREAK AND UNIT TESTS

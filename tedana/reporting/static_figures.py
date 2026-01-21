@@ -9,7 +9,6 @@ import matplotlib
 import nibabel as nb
 import numpy as np
 import pandas as pd
-import scipy.stats as sstats
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
@@ -626,6 +625,7 @@ def plot_t2star_and_s0(
             vmax=t2s_p98,
             annotate=False,
             output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+            resampling_interpolation="nearest",
         )
 
     # Only plot S0 map if the file exists
@@ -646,6 +646,7 @@ def plot_t2star_and_s0(
                 vmax=s0_p98,
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+                resampling_interpolation="nearest",
             )
 
 
@@ -734,6 +735,7 @@ def plot_rmse(
             vmax=rmse_p98,
             annotate=False,
             output_file=rmse_brain_plot,
+            resampling_interpolation="nearest",
         )
 
 
@@ -822,6 +824,7 @@ def plot_gscontrol(
     *,
     io_generator: io.OutputGenerator,
     gscontrol: list,
+    png_cmap: str,
 ):
     """Plot the results of the gscontrol steps.
 
@@ -834,94 +837,73 @@ def plot_gscontrol(
     """
     import pandas as pd
 
-    if "gsr" in gscontrol:
-        gsr_img = io_generator.get_name("gs img")
-        gsr_plot = f"{io_generator.prefix}gsr_boldmap.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="A non-diagonal affine.*",
-                category=UserWarning,
-            )
-            plotting.plot_stat_map(
-                gsr_img,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=True,
-                black_bg=True,
-                cmap="coolwarm",
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
-            )
-
-    if "mir" in gscontrol:
-        mir_img = io_generator.get_name("t1 like img")
-        mir_plot = f"{io_generator.prefix}T1likeEffect_boldmap.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="A non-diagonal affine.*",
-                category=UserWarning,
-            )
-            plotting.plot_stat_map(
-                mir_img,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=True,
-                black_bg=True,
-                cmap="coolwarm",
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
-            )
-
     if "gsr" in gscontrol or "mir" in gscontrol:
         confounds_file = io_generator.get_name("confounds tsv")
         confounds_df = pd.read_table(confounds_file)
 
         # Get repetition time from reference image
         tr = io_generator.reference_img.header.get_zooms()[-1]
-        time_arr = np.arange(confounds_df.shape[0]) * tr
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        if "gsr" in gscontrol:
-            gs = confounds_df["global_signal"].values
-            gs_z = sstats.zscore(gs)
-            ax.plot(time_arr, gs_z, label="GSR", color="red")
+    if "gsr" in gscontrol:
+        gsr_img = nb.load(io_generator.get_name("gs img"))
 
-        if "mir" in gscontrol:
-            mir = confounds_df["mir_global_signal"].values
-            mir_z = sstats.zscore(mir)
-            ax.plot(time_arr, mir_z, label="MIR", color="blue")
+        # Get fft and freqs for this component
+        # adapted from @dangom
+        timeseries = confounds_df["global_signal"].values
+        spectrum, freqs = utils.get_spectrum(timeseries, tr)
 
-        ax.legend()
-        ax.set_title("Global Signals")
-        ax.set_xlabel("Time (s)")
-        ax.set_ylabel("Signal (z-scored)")
-        ax.set_xlim(0, time_arr[-1])
-        fig.savefig(
-            os.path.join(
-                io_generator.out_dir,
-                "figures",
-                f"{io_generator.prefix}gscontrol_bold.svg",
-            )
+        plot_name = f"{io_generator.prefix}gsr_boldmap.svg"
+        plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
+
+        plot_component(
+            stat_img=gsr_img,
+            component_timeseries=timeseries,
+            power_spectrum=spectrum,
+            frequencies=freqs,
+            tr=tr,
+            classification_color="red",
+            png_cmap=png_cmap,
+            title="Global Signal Regression",
+            out_file=plot_name,
+        )
+
+    if "mir" in gscontrol:
+        mir_img = nb.load(io_generator.get_name("t1 like img"))
+
+        # Get fft and freqs for this component
+        # adapted from @dangom
+        timeseries = confounds_df["mir_global_signal"].values
+        spectrum, freqs = utils.get_spectrum(timeseries, tr)
+
+        plot_name = f"{io_generator.prefix}mir_boldmap.svg"
+        plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
+
+        plot_component(
+            stat_img=mir_img,
+            component_timeseries=timeseries,
+            power_spectrum=spectrum,
+            frequencies=freqs,
+            tr=tr,
+            classification_color="red",
+            png_cmap=png_cmap,
+            title="Minimum Image Regression",
+            out_file=plot_name,
         )
 
 
 def plot_heatmap(
     *,
-    mixing: pd.DataFrame,
-    external_regressors: pd.DataFrame,
+    correlation_df: pd.DataFrame,
     component_table: pd.DataFrame,
     out_file: str,
 ):
-    """Plot a heatmap of the mixing matrix and external regressors.
+    """Plot a heatmap of correlations between external regressors and ICA components.
 
     Parameters
     ----------
-    mixing : (C x T) :obj:`numpy.ndarray`
-        Mixing matrix.
-    external_regressors : (E x T) :obj:`numpy.ndarray`
-        External regressors.
+    correlation_df : (E x C) :obj:`pandas.DataFrame`
+        A DataFrame where rows are external regressor names, columns are component names,
+        and values are the Pearson correlation coefficients.
     component_table : pandas.DataFrame
         Component table.
     out_file : str
@@ -932,8 +914,7 @@ def plot_heatmap(
     import scipy.cluster.hierarchy as spc
     import seaborn as sns
 
-    # Plot the heatmap of the external regressors and mixing matrix
-    corr_df = _correlate_dataframes(external_regressors, mixing)
+    corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
     # Perform hierarchical clustering on rows
@@ -1057,3 +1038,55 @@ def _correlate_dataframes(df1, df2):
     # Convert the result back to a DataFrame with appropriate labels
     correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
     return correlation_df
+
+
+def plot_decay_variance(
+    *,
+    io_generator: io.OutputGenerator,
+    adaptive_mask: np.ndarray,
+):
+    """Plot the variance of the T2* and S0 estimates.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    """
+    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
+    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+
+    names = [
+        "stat-variance_desc-t2star_statmap",
+        "stat-variance_desc-s0_statmap",
+        "stat-covariance_desc-t2star+s0_statmap",
+    ]
+    imgs = ["t2star variance img", "s0 variance img", "t2star-s0 covariance img"]
+    for name, img in zip(names, imgs):
+        in_file = io_generator.get_name(img)
+        data = masking.apply_mask(in_file, mask_img)
+        data_p02, data_p98 = np.percentile(data, [2, 98])
+        plot_name = f"{io_generator.prefix}{name}.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="A non-diagonal affine.*",
+                category=UserWarning,
+            )
+            plotting.plot_stat_map(
+                in_file,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="Reds",
+                vmin=data_p02,
+                vmax=data_p98,
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+                resampling_interpolation="nearest",
+            )

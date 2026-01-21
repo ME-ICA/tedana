@@ -40,11 +40,20 @@
             "map Z clusterized",
             "map FT2"
         ],
+        "signal-noise_z": [
+            "map Z",
+            "map Z clusterized",
+            "map FT2"
+        ],
         "variance explained": [
             "map optcom betas"
         ],
         "normalized variance explained": [
             "map weight"
+        ],
+        "kappa_rho_difference": [
+            "kappa",
+            "rho"
         ],
         "d_table_score": [
             "kappa",

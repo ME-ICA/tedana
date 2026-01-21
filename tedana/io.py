@@ -380,6 +380,33 @@ class OutputGenerator:
 
         return name
 
+    def add_dict_to_file(self, data, description, **kwargs):
+        """Add dictionary data to a JSON file, which may or may not exist.
+
+        Parameters
+        ----------
+        data : dict
+            Data to merge into the file.
+        description : str
+            Description of the data, used to determine the appropriate filename from
+            ``self.config``.
+
+        Returns
+        -------
+        name : str
+            The full file path of the saved file.
+        """
+        name = self.get_name(description, **kwargs)
+        if op.isfile(name):
+            old_data = load_json(name)
+            old_data.update(data)
+            data = old_data
+
+        prepped = prep_data_for_json(data)
+        self.save_json(prepped, name)
+
+        return name
+
     def save_self(self):
         """Save the registry to a json file.
 
@@ -843,6 +870,12 @@ def load_data(data, n_echos=None, dummy_scans=0):
                 raise TypeError(f"Unsupported type: {type(item)}")
 
         if len(data) == 1:  # a z-concatenated file was provided
+            LGR.warning(
+                "DEPRECATION WARNING: We are planning to deprecate supplying a single "
+                "z-concatenated data file at the end of 2026. "
+                "If you are using this option, "
+                "please comment on https://github.com/ME-ICA/tedana/issues/1313."
+            )
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError(f"Cannot run `tedana` with only two echos: {data}")

@@ -174,6 +174,12 @@ jobs:
           root: /tmp
           paths:
             - src/coverage/.coverage.three-echo
+      - run:
+          name: Remove NIfTI files to reduce artifact size
+          command: find /tmp/src/tedana/.testing_data_cache/outputs -name "*.nii*" -delete || true
+      - store_artifacts:
+          path: /tmp/src/tedana/.testing_data_cache/outputs/three-echo
+          destination: three-echo-outputs
 
   four-echo:
     docker:
@@ -199,6 +205,12 @@ jobs:
           root: /tmp
           paths:
             - src/coverage/.coverage.four-echo
+      - run:
+          name: Remove NIfTI files to reduce artifact size
+          command: find /tmp/src/tedana/.testing_data_cache/outputs -name "*.nii*" -delete || true
+      - store_artifacts:
+          path: /tmp/src/tedana/.testing_data_cache/outputs/four-echo
+          destination: four-echo-outputs
 
   five-echo:
     docker:
@@ -224,6 +236,12 @@ jobs:
           root: /tmp
           paths:
             - src/coverage/.coverage.five-echo
+      - run:
+          name: Remove NIfTI files to reduce artifact size
+          command: find /tmp/src/tedana/.testing_data_cache/outputs -name "*.nii*" -delete || true
+      - store_artifacts:
+          path: /tmp/src/tedana/.testing_data_cache/outputs/five-echo
+          destination: five-echo-outputs
 
   reclassify:
     docker:
@@ -249,6 +267,12 @@ jobs:
           root: /tmp
           paths:
             - src/coverage/.coverage.reclassify
+      - run:
+          name: Remove NIfTI files to reduce artifact size
+          command: find /tmp/src/tedana/.testing_data_cache/outputs -name "*.nii*" -delete || true
+      - store_artifacts:
+          path: /tmp/src/tedana/.testing_data_cache/outputs/reclassify
+          destination: reclassify-outputs
 
   t2smap:
     docker:
@@ -274,6 +298,12 @@ jobs:
           root: /tmp
           paths:
             - src/coverage/.coverage.t2smap
+      - run:
+          name: Remove NIfTI files to reduce artifact size
+          command: find /tmp/src/tedana/.testing_data_cache/outputs -name "*.nii*" -delete || true
+      - store_artifacts:
+          path: /tmp/src/tedana/.testing_data_cache/outputs/t2smap_five-echo
+          destination: t2smap-outputs
 
   merge_coverage:
     working_directory: /tmp/src/tedana
