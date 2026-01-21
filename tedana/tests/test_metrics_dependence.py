@@ -62,12 +62,12 @@ def test_calculate_coefficient_energy_scaled_by_total_variance_smoke():
     """Test smoke test of calculate_coefficient_energy_scaled_by_total_variance."""
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
-    component_maps = np.random.random((n_voxels, n_components))
-    relative_varex = dependence.calculate_coefficient_energy_scaled_by_total_variance(
+    mixing = np.random.random((n_volumes, n_components))
+    energy = dependence.calculate_coefficient_energy_scaled_by_total_variance(
         data_optcom=data_optcom,
-        component_maps=component_maps,
+        mixing=mixing,
     )
-    assert relative_varex.shape == (n_components,)
+    assert energy.shape == (n_components,)
 
 
 def test_calculate_semipartial_r2_smoke():
