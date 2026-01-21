@@ -277,7 +277,7 @@ This is not actually a measure of normalized variance explained.
 
 relative variance explained
 ==========================
-:func:`tedana.metrics.dependence.relative_componentwise_contribution_totalvar`
+:func:`tedana.metrics.dependence.calculate_relative_varex`
 
 The "relative variance explained" by each component is calculated as the
 variance of the fitted contribution of each regressor to the signal,

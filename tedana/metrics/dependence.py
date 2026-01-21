@@ -509,6 +509,40 @@ def calculate_marginal_r2(
     return marginal_r2
 
 
+def calculate_marginal_r2_2(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate mean voxel-wise marginal R-squared for each component against the data.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    marginal_r2 : (C) array_like
+        Average (across voxels) marginal R-squared for each component, on a scale from 0 to 100.
+    """
+    n_vols = mixing.shape[0]
+
+    # z-score voxels (timewise)
+    mixing = stats.zscore(mixing, axis=0)
+    data_optcom = stats.zscore(data_optcom, axis=1)
+
+    # S x C correlation matrix of each component with the data
+    # correlation = (1/(T-1)) * dat_z @ mix_z
+    # XXX: We use population scaling here to match the behavior of np.corrcoef.
+    correlations = data_optcom @ mixing / n_vols
+    correlations = correlations ** 2
+    marginal_r2 = correlations.mean(axis=0)
+    return 100 * marginal_r2
+
+
 def calculate_partial_r2(
     *,
     data_optcom: np.ndarray,
@@ -626,6 +660,80 @@ def calculate_semi_partial_r2(
         r2_semi[i_comp] = r2_vox.mean()
 
     return 100 * r2_semi
+
+
+def calculate_semipartial_r2(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate mean voxelwise semi-partial R-squared for each regressor.
+
+    Semi-partial R^2 is the incremental variance explained by adding a
+    regressor to a model that already contains all other regressors.
+
+    TODO: Simplify this by (1) orthogonalizing each component w.r.t. the other components,
+    then (2) calculating the R-squared for each component against the data.
+
+    Parameters
+    ----------
+    data_optcom : (S x T) array_like
+        Optimally combined data.
+    mixing : (T x C) array_like
+        Mixing matrix.
+
+    Returns
+    -------
+    semi_partial_r2 : (C) array_like
+        Average (across voxels) semi-partial R-squared for each regressor,
+        on a scale from 0 to 100.
+    """
+    if data_optcom.shape[1] != mixing.shape[0]:
+        raise ValueError(
+            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
+        )
+
+    # Z-score
+    mixing = stats.zscore(mixing, axis=0)
+    data_optcom = stats.zscore(data_optcom, axis=1)
+
+    # Orthogonalize each component with respect to the other components
+    mixing = orthogonalize_by_others(arr=mixing)
+
+    # S x C correlation matrix of each component with the data
+    correlations = np.corrcoef(mixing.T, data_optcom)[mixing.shape[1]:, :mixing.shape[1]]
+    correlations = correlations ** 2
+    r2_semi = correlations.mean(axis=0)
+
+    return 100 * r2_semi
+
+
+def orthogonalize_by_others(*, arr: np.ndarray) -> np.ndarray:
+    """Orthogonalize each column of the input array with respect to the other columns.
+
+    Parameters
+    ----------
+    arr : (T x C) array_like
+        Array to orthogonalize.
+
+    Returns
+    -------
+    out : (T x C) array_like
+        Orthogonalized array.
+    """
+    arr = np.asarray(arr, float)
+    n_components = arr.shape[1]
+    out = np.empty_like(arr)
+
+    for j_comp in range(n_components):
+        others = np.delete(arr, j_comp, axis=1)
+        # coefficients for projecting column j onto the span of the other columns
+        coef = np.linalg.lstsq(others, arr[:, j_comp], rcond=None)[0]
+        proj = others @ coef
+        out[:, j_comp] = arr[:, j_comp] - proj
+
+    return out
 
 
 def compute_dice(

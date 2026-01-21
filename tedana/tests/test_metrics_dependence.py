@@ -57,6 +57,9 @@ def test_calculate_marginal_r2_correctness():
     with pytest.raises(ValueError):
         dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
+    varex_2 = dependence.calculate_marginal_r2_2(data_optcom=data_optcom, mixing=mixing)
+    assert np.allclose(varex, varex_2)
+
 
 def test_calculate_relative_varex_smoke():
     """Test smoke test of calculate_relative_varex."""
@@ -77,6 +80,11 @@ def test_calculate_semi_partial_r2_smoke():
     mixing = np.random.random((n_volumes, n_components))
     relative_varex = dependence.calculate_semi_partial_r2(data_optcom=data_optcom, mixing=mixing)
     assert relative_varex.shape == (n_components,)
+
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert semipartial_r2.shape == (n_components,)
+
+    assert np.allclose(semipartial_r2, relative_varex)
 
 
 def test_calculate_partial_r2_smoke():
