@@ -37,7 +37,7 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.selection.component_selector import ComponentSelector
-from tedana.stats import computefeats2
+from tedana.stats import voxelwise_univariate_zstats
 from tedana.workflows.parser_utils import (
     check_n_robust_runs_value,
     check_tedpca_value,
@@ -1026,7 +1026,10 @@ def tedana_workflow(
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
 
-    betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
+    betas_oc = utils.unmask(
+        voxelwise_univariate_zstats(data_optcom[mask_denoise, :], mixing),
+        mask_denoise,
+    )
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # calculate the fit of rejected to accepted components to use as a quality measure

@@ -34,71 +34,50 @@ def getfbounds(n_independent_sources):
     return f05, f025, f01
 
 
-def computefeats2(data, mixing, mask=None, normalize=True):
-    """
-    Convert `data` to component space using `mixing`.
+def voxelwise_univariate_zstats(X, Y):
+    """Regress each voxel time series on each regressor separately and return z-statistics.
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data
-    mixing : (T [x C]) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    mask : (S,) array_like or None, optional
-        Boolean mask array. Default: None
-    normalize : bool, optional
-        Whether to z-score output. Default: True
+    X : array, shape (T, R)
+        Independent variables (time x regressors)
+    Y : array, shape (S, T)
+        Dependent variables (samples x time)
 
     Returns
     -------
-    data_z : (S x C) :obj:`numpy.ndarray`
-        Data in component space
+    zstat : array, shape (S, R)
+        Z-statistics for each sample/regressor
     """
-    if data.ndim != 2:
-        raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
-    elif mixing.ndim not in [2]:
-        raise ValueError(f"Parameter mixing should be 2d, not {mixing.ndim}d")
-    elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
-    elif (mask is not None) and (data.shape[0] != mask.shape[0]):
-        raise ValueError(
-            f"First dimensions (number of samples) of data ({data.shape[0]}) "
-            f"and mask ({mask.shape[0]}) do not match."
-        )
-    elif data.shape[1] != mixing.shape[0]:
-        raise ValueError(
-            f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
-            f"and mixing ({mixing.shape[0]}) do not match."
-        )
+    T, _ = X.shape
+    _, T2 = Y.shape
+    if T != T2:
+        raise ValueError("Time dimension mismatch between X and Y")
 
-    # demean masked data
-    if mask is not None:
-        data = data[mask, ...]
-    # normalize data (subtract mean and divide by standard deviation) in the last dimension
-    # so that least-squares estimates represent "approximate" correlation values (data_r)
-    # assuming mixing matrix (mixing) values are also normalized
-    data_vn = stats.zscore(data, axis=-1)
+    # Z-score variables
+    X = stats.zscore(X, axis=0)
+    Y = stats.zscore(Y, axis=1)
 
-    # get betas of `data`~`mixing` and limit to range [-0.999, 0.999]
-    data_r = get_coeffs(data_vn, mixing, mask=None)
-    # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
-    data_r[data_r < -0.999] = -0.999
-    data_r[data_r > 0.999] = 0.999
+    # Sum of squares of X for each regressor
+    Sxx = np.sum(X**2, axis=0)  # (R,)
 
-    # R-to-Z transform
-    data_z = np.arctanh(data_r)
-    if data_z.ndim == 1:
-        data_z = np.atleast_2d(data_z).T
+    # Beta estimates
+    beta = (Y @ X) / Sxx  # (V, R)
 
-    # normalize data (only division by std)
-    if normalize:
-        # subtract mean and dividing by standard deviation
-        data_zm = stats.zscore(data_z, axis=0)
-        # adding back the mean
-        data_z = data_zm + (data_z.mean(axis=0, keepdims=True) / data_z.std(axis=0, keepdims=True))
+    # Residuals
+    Y_hat = beta @ X.T  # (V, T)
+    resid = Y - Y_hat
 
-    return data_z
+    # Residual variance
+    sigma2 = np.sum(resid**2, axis=1) / (T - 2)  # (V,)
+
+    # Standard error of beta
+    se = np.sqrt(sigma2[:, None] / Sxx[None, :])  # (V, R)
+
+    # Z-statistics
+    zstat = beta / se
+
+    return zstat
 
 
 def get_coeffs(data, x, mask=None, add_const=False):

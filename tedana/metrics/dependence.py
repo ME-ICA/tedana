@@ -8,7 +8,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import computefeats2, get_coeffs, t_to_z
+from tedana.stats import get_coeffs, t_to_z, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -19,7 +19,7 @@ def calculate_weights(
     data_optcom: np.ndarray,
     mixing: np.ndarray,
 ) -> np.ndarray:
-    """Calculate standardized parameter estimates between data and mixing matrix.
+    """Calculate z-statistic maps for each component against the optimally combined data.
 
     Parameters
     ----------
@@ -31,13 +31,12 @@ def calculate_weights(
     Returns
     -------
     weights : (M x C) array_like
-        Standardized parameter estimates for optimally combined data against
-        the mixing matrix.
+        Z-statistic maps for each component against the optimally combined data.
     """
     assert data_optcom.shape[1] == mixing.shape[0]
-    mixing_z = stats.zscore(mixing, axis=0)
-    # compute un-normalized weight dataset (features)
-    weights = computefeats2(data_optcom, mixing_z, normalize=False)
+
+    # compute z-statistic map for each component
+    weights = voxelwise_univariate_zstats(data_optcom, mixing)
     return weights
 
 

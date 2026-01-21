@@ -21,7 +21,7 @@ from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, get_coeffs
+from tedana.stats import get_coeffs, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -780,7 +780,10 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
-        feats = computefeats2(split_ts(ts, mixing, mask, component_table)[0], mixing[:, acc], mask)
+        feats = voxelwise_univariate_zstats(
+            split_ts(ts, mixing, mask, component_table)[0][mask, :],
+            mixing[:, acc],
+        )
         feats = utils.unmask(feats, mask)
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
         LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
