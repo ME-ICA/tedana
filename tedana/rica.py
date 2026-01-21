@@ -286,21 +286,33 @@ def download_rica(force: bool = False) -> Path:
 
     LGR.info(f"Downloading Rica {latest_version}...")
 
-    # Download each file
-    for filename in RICA_FILES:
-        if filename not in assets:
-            LGR.warning(f"Rica asset {filename} not found in release")
-            continue
+    # Download each file to temporary paths first to avoid partial downloads
+    # corrupting the cache if something fails partway through
+    downloaded_files = []
+    try:
+        for filename in RICA_FILES:
+            if filename not in assets:
+                LGR.warning(f"Rica asset {filename} not found in release")
+                continue
 
-        dest_path = cache_dir / filename
-        try:
-            download_rica_file(assets[filename], dest_path)
+            temp_path = cache_dir / f".{filename}.tmp"
+            download_rica_file(assets[filename], temp_path)
+            downloaded_files.append((temp_path, cache_dir / filename))
             LGR.debug(f"Downloaded {filename}")
-        except urllib.error.URLError as e:
-            raise RuntimeError(f"Failed to download {filename}: {e}") from e
 
-    # Write version file
-    (cache_dir / "VERSION").write_text(latest_version)
+        # All downloads succeeded - move temp files to final locations
+        for temp_path, final_path in downloaded_files:
+            temp_path.rename(final_path)
+
+        # Write version file only after all files are in place
+        (cache_dir / "VERSION").write_text(latest_version)
+
+    except urllib.error.URLError as e:
+        # Clean up any temp files on failure
+        for temp_path, _ in downloaded_files:
+            if temp_path.exists():
+                temp_path.unlink()
+        raise RuntimeError(f"Failed to download Rica: {e}") from e
 
     LGR.info(f"Rica {latest_version} downloaded to {cache_dir}")
     return cache_dir
@@ -536,13 +548,23 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
     # Data file extensions that should never be cached (fixes tedana#1323)
     # These files have identical names across different datasets, so caching
     # causes stale data to be served when switching between datasets
+    # Note: .gz catches all gzip files including .nii.gz
     DATA_EXTENSIONS = (
         ".tsv", ".png", ".svg", ".json", ".txt",
-        ".nii", ".nii.gz", ".gz",
+        ".nii", ".gz",
     )
 
     def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        # Restrict CORS to localhost origins only for security
+        origin = self.headers.get("Origin")
+        if origin and (
+            origin.startswith("http://localhost")
+            or origin.startswith("http://127.0.0.1")
+            or origin.startswith("https://localhost")
+            or origin.startswith("https://127.0.0.1")
+        ):
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         # Add cache-control headers to prevent browser caching
@@ -573,10 +595,26 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
     def send_file_list(self):
         files = []
         cwd = Path.cwd()
-        for f in cwd.rglob("*"):
-            if f.is_file() and any(p in f.name for p in RICA_FILE_PATTERNS):
-                files.append(f.relative_to(cwd).as_posix())
-        response_data = {"files": sorted(files), "path": str(cwd), "count": len(files)}
+
+        # Limit traversal depth to avoid performance issues on large directories
+        max_depth = 3
+
+        for root, dirs, filenames in os.walk(cwd):
+            root_path = Path(root)
+            rel_root = root_path.relative_to(cwd)
+
+            # Stop descending once max depth is reached
+            if len(rel_root.parts) >= max_depth:
+                dirs[:] = []
+                continue
+
+            for name in filenames:
+                if any(p in name for p in RICA_FILE_PATTERNS):
+                    f = root_path / name
+                    files.append(f.relative_to(cwd).as_posix())
+
+        # Don't expose full path for security
+        response_data = {"files": sorted(files), "path": ".", "count": len(files)}
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
