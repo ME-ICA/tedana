@@ -170,7 +170,175 @@
     padding: 2em !important;
     border-radius: 5px;
   }
+
+  /* Rica button styles */
+  .rica-button-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .rica-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    float: none;
+    height: auto;
+  }
+
+  .rica-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    opacity: 1;
+  }
+
+  .rica-button:active {
+    transform: translateY(0);
+    float: none;
+    margin-top: 0;
+  }
+
+  /* Rica modal styles */
+  .rica-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .rica-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+
+  .rica-modal h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 24px;
+  }
+
+  .rica-modal p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+  }
+
+  .rica-modal code {
+    background: #f4f4f4;
+    padding: 10px 15px;
+    border-radius: 6px;
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #333;
+    margin: 15px 0;
+  }
+
+  .rica-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    float: none;
+  }
+
+  .rica-modal-close:hover {
+    color: #333;
+    opacity: 1;
+  }
+
+  .rica-modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .rica-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    float: none;
+    height: auto;
+  }
+
+  .rica-modal-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+  }
+
+  .rica-modal-btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+  }
 </style>
+
+<!-- Rica Button -->
+<div class="rica-button-container">
+  <button type="button" class="rica-button" onclick="openRicaModal()">
+    🔍 Open in Rica
+  </button>
+</div>
+
+<!-- Rica Modal -->
+<div class="rica-modal-overlay" id="ricaModal">
+  <div class="rica-modal">
+    <button type="button" class="rica-modal-close" onclick="closeRicaModal()">×</button>
+    <h2>Open in Rica</h2>
+    <p>
+      <strong>Rica</strong> is an interactive web-based tool for exploring ICA components
+      with 3D brain visualization and
+      can be used to manually change component classifications.
+    </p>
+    <p>
+      To view these results in Rica locally, run this command in your output directory:
+    </p>
+    <code>python open_rica_report.py</code>
+    <p style="font-size: 13px; color: #777;">
+      This will download Rica (if needed), start a local server, and open your browser.
+    </p>
+    <div class="rica-modal-buttons">
+      <button type="button" class="rica-modal-btn rica-modal-btn-secondary" onclick="closeRicaModal()">
+        Close
+      </button>
+      <button type="button" class="rica-modal-btn rica-modal-btn-primary" onclick="openRicaWebsite()">
+        Learn more about Rica →
+      </button>
+    </div>
+  </div>
+</div>
 <div class="content">
   <h1>ICA components</h1>
   {{ content }}
@@ -356,6 +524,33 @@
     // Update the image source
     document.getElementById("imgCarpetPlot").src = carpetPlot;
   }
+
+  // Rica modal functions
+  function openRicaModal() {
+    document.getElementById("ricaModal").style.display = "flex";
+  }
+
+  function closeRicaModal() {
+    document.getElementById("ricaModal").style.display = "none";
+  }
+
+  function openRicaWebsite() {
+    window.open("https://github.com/ME-ICA/rica", "_blank");
+  }
+
+  // Close modal when clicking outside
+  document.getElementById("ricaModal").addEventListener("click", function(event) {
+    if (event.target === this) {
+      closeRicaModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+      closeRicaModal();
+    }
+  });
 </script>
 
 {{ javascript }}

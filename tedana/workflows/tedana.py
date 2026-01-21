@@ -24,6 +24,7 @@ from tedana import (
     io,
     metrics,
     reporting,
+    rica,
     selection,
     utils,
 )
@@ -1248,6 +1249,9 @@ def tedana_workflow(
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
+
+    # Generate Rica launcher script
+    rica.setup_rica_report(out_dir)
 
     LGR.info("Workflow completed")
 
