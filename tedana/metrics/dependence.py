@@ -494,17 +494,17 @@ def calculate_marginal_r2(
             f"and mixing ({mixing.shape[0]}) do not match."
         )
 
-    mixing_z = stats.zscore(mixing, axis=0)
-    data_z = stats.zscore(data_optcom, axis=1)
-    total_var = (data_z**2).sum()
+    mixing = stats.zscore(mixing, axis=0)
+    data_optcom = stats.zscore(data_optcom, axis=1)
+    total_var = (data_optcom**2).sum()
 
-    marginal_r2 = np.zeros(mixing_z.shape[1])
-    for i_comp in range(mixing_z.shape[1]):
+    marginal_r2 = np.zeros(mixing.shape[1])
+    for i_comp in range(mixing.shape[1]):
         # Separate out each component's time series from the mixing matrix and calculate the
         # variance explained for that component.
-        ts = mixing_z[:, i_comp][:, None]
-        beta = get_coeffs(data_z, ts)
-        marginal_r2[i_comp] = 100 * (1 - ((data_z - beta.dot(ts.T)) ** 2.0).sum() / total_var)
+        ts = mixing[:, i_comp][:, None]
+        beta = np.linalg.lstsq(ts, data_optcom, rcond=None)[0].T
+        marginal_r2[i_comp] = 100 * (1 - ((data_optcom - beta.dot(ts.T)) ** 2.0).sum() / total_var)
 
     return marginal_r2
 
