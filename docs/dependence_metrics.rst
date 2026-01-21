@@ -251,6 +251,7 @@ divided by the sum of the squares of the parameter estimates.
 
 .. important::
   Please note that:
+
   - This is NOT variance explained (R^2).
   - Values sum to 100% by construction.
   - Shared variance among correlated components is implicitly distributed
