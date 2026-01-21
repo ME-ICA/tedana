@@ -87,6 +87,7 @@ sub-01_stat-covariance_desc-t2star+s0_statmap.nii.gz
 sub-01_stat-variance_desc-s0_statmap.nii.gz
 sub-01_stat-variance_desc-t2star_statmap.nii.gz
 sub-01_tedana_report.html
+open_rica_report.py
 figures
 figures/sub-01_adaptive_mask.svg
 figures/sub-01_carpet_optcom.svg
