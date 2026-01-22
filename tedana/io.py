@@ -781,8 +781,8 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
 
         # write feature versions of components
         feats = voxelwise_univariate_zstats(
-            split_ts(ts, mixing, mask, component_table)[0][mask, :],
-            mixing[:, acc],
+            data=split_ts(ts, mixing, mask, component_table)[0][mask, :],
+            mixing=mixing[:, acc],
         )
         feats = utils.unmask(feats, mask)
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")

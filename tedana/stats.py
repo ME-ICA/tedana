@@ -34,45 +34,45 @@ def getfbounds(n_independent_sources):
     return f05, f025, f01
 
 
-def voxelwise_univariate_zstats(X, Y):
-    """Regress each voxel time series on each regressor separately and return z-statistics.
+def voxelwise_univariate_zstats(data, mixing):
+    """Regress each voxel time series on each component separately and return z-statistics.
 
     Parameters
     ----------
-    X : array, shape (T, R)
-        Independent variables (time x regressors)
-    Y : array, shape (S, T)
-        Dependent variables (samples x time)
+    mixing : array, shape (n_vols, n_components)
+        Independent variables (time x components)
+    data : array, shape (n_voxels, n_vols)
+        Dependent variables (voxels x time)
 
     Returns
     -------
-    zstat : array, shape (S, R)
-        Z-statistics for each sample/regressor
+    zstat : array, shape (n_voxels, n_components)
+        Z-statistics for each voxel/component
     """
-    T, _ = X.shape
-    _, T2 = Y.shape
-    if T != T2:
-        raise ValueError("Time dimension mismatch between X and Y")
+    n_vols_mixing, _ = mixing.shape
+    _, n_vols_data = data.shape
+    if n_vols_mixing != n_vols_data:
+        raise ValueError("Time dimension mismatch between mixing and data")
 
     # Z-score variables
-    X = stats.zscore(X, axis=0)
-    Y = stats.zscore(Y, axis=1)
+    mixing = stats.zscore(mixing, axis=0)
+    data = stats.zscore(data, axis=1)
 
-    # Sum of squares of X for each regressor
-    Sxx = np.sum(X**2, axis=0)  # (R,)
+    # Sum of squares of mixing for each regressor
+    Sxx = np.sum(mixing**2, axis=0)  # (n_components,)
 
     # Beta estimates
-    beta = (Y @ X) / Sxx  # (V, R)
+    beta = (data @ mixing) / Sxx  # (n_voxels, n_components)
 
     # Residuals
-    Y_hat = beta @ X.T  # (V, T)
-    resid = Y - Y_hat
+    data_hat = beta @ mixing.T  # (n_voxels, n_vols_mixing)
+    resid = data - data_hat
 
     # Residual variance
-    sigma2 = np.sum(resid**2, axis=1) / (T - 2)  # (V,)
+    sigma2 = np.sum(resid**2, axis=1) / (n_vols_data - 2)  # (n_voxels,)
 
     # Standard error of beta
-    se = np.sqrt(sigma2[:, None] / Sxx[None, :])  # (V, R)
+    se = np.sqrt(sigma2[:, None] / Sxx[None, :])  # (n_voxels, n_components)
 
     # Z-statistics
     zstat = beta / se
