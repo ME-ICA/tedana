@@ -950,14 +950,19 @@ def plot_heatmap(
             items = items[:max_items]
         return " Problematic regressors: " + "; ".join(items) + extra + "."
 
+    warn_suffix = _format_problematic(problematic)
+
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
     if not np.isfinite(corr).all():
         warnings.warn(
-            "Non-finite correlations detected when clustering regressors for the heatmap. "
-            "These values will be replaced with 0 (uncorrelated) to allow clustering to proceed."
-            + _format_problematic(problematic),
+            (
+                "Non-finite correlations detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 0 (uncorrelated) to allow clustering "
+                "to proceed." + warn_suffix
+            ),
             UserWarning,
+            stacklevel=2,
         )
         corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
         np.fill_diagonal(corr, 1.0)
@@ -965,24 +970,37 @@ def plot_heatmap(
     pdist_uncondensed = 1.0 - corr
     if not np.isfinite(pdist_uncondensed).all():
         warnings.warn(
-            "Non-finite distances detected when clustering regressors for the heatmap. "
-            "These values will be replaced with 1 to allow clustering to proceed."
-            + _format_problematic(problematic),
+            (
+                "Non-finite distances detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 1 to allow clustering to proceed."
+                + warn_suffix
+            ),
             UserWarning,
+            stacklevel=2,
         )
         pdist_uncondensed = np.nan_to_num(pdist_uncondensed, nan=1.0, posinf=1.0, neginf=1.0)
 
     pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
     if not np.isfinite(pdist_condensed).all():
         warnings.warn(
-            "Non-finite condensed distances detected when clustering regressors for the heatmap. "
-            "These values will be replaced with the maximum finite distance to allow clustering to proceed."
-            + _format_problematic(problematic),
+            (
+                "Non-finite condensed distances detected when clustering regressors "
+                "for the heatmap. "
+                "These values will be replaced with the maximum finite distance to allow "
+                "clustering "
+                "to proceed." + warn_suffix
+            ),
             UserWarning,
+            stacklevel=2,
         )
         finite_vals = pdist_condensed[np.isfinite(pdist_condensed)]
         fill_val = float(finite_vals.max()) if finite_vals.size else 1.0
-        pdist_condensed = np.nan_to_num(pdist_condensed, nan=fill_val, posinf=fill_val, neginf=fill_val)
+        pdist_condensed = np.nan_to_num(
+            pdist_condensed,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
+        )
 
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
@@ -996,7 +1014,8 @@ def plot_heatmap(
     models = [search.group(1) for search in searches if search is not None]
     models_df = component_table[models]
     # Remove the R2stat string from the models_df column names
-    models_df.columns = models_df.columns.str.replace("R2stat ", "").str.replace(" model", "")
+    models_df.columns = models_df.columns.str.replace("R2stat ", "")
+    models_df.columns = models_df.columns.str.replace(" model", "")
     models_df = models_df.T  # transpose so components are columns
 
     n_regressors = corr_df.shape[0]
