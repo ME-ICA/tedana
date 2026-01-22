@@ -58,18 +58,6 @@ def test_calculate_marginal_r2_correctness():
         dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
-def test_calculate_coefficient_energy_scaled_by_total_variance_smoke():
-    """Test smoke test of calculate_coefficient_energy_scaled_by_total_variance."""
-    n_voxels, n_components, n_volumes = 1000, 10, 100
-    data_optcom = np.random.random((n_voxels, n_volumes))
-    mixing = np.random.random((n_volumes, n_components))
-    energy = dependence.calculate_coefficient_energy_scaled_by_total_variance(
-        data_optcom=data_optcom,
-        mixing=mixing,
-    )
-    assert energy.shape == (n_components,)
-
-
 def test_calculate_semipartial_r2_smoke():
     """Test smoke test of calculate_semipartial_r2."""
     n_voxels, n_components, n_volumes = 1000, 10, 100

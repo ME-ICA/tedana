@@ -313,15 +313,6 @@ def generate_metrics(
             mixing=mixing,
         )
 
-    if "scaled coefficient energy" in required_metrics:
-        LGR.info("Calculating scaled coefficient energy")
-        component_table["scaled coefficient energy"] = (
-            dependence.calculate_coefficient_energy_scaled_by_total_variance(
-                data_optcom=data_optcom,
-                mixing=mixing,
-            )
-        )
-
     if "semi-partial R-squared" in required_metrics:
         LGR.info("Calculating semi-partial R-squared")
         component_table["semi-partial R-squared"] = dependence.calculate_semipartial_r2(
@@ -480,7 +471,6 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
-        "scaled coefficient energy",
         "marginal R-squared",
         "partial R-squared",
         "semi-partial R-squared",
@@ -549,8 +539,12 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         metric_metadata["variance explained"] = {
             "LongName": "Variance explained",
             "Description": (
-                "Variance explained in the optimally combined data of "
-                "each component. On a scale from 0 to 100."
+                "The square of the parameter estimates from the regression of the mean-centered, "
+                "but not z-scored, optimally combined data against the component time series, "
+                "divided by the sum of the squares of the parameter estimates. "
+                "This metric reflects relative participation in the fitted model, "
+                "not unique or marginal explanatory power. "
+                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }
@@ -565,23 +559,6 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "-0.999 and 0.999, and then the Fisher's z-transform is applied to the parameter "
                 "estimates. This is then used to calculate the variance explained for each "
                 "component. On a scale from 0 to 100."
-            ),
-            "Units": "percent",
-        }
-    if "scaled coefficient energy" in component_table:
-        metric_metadata["scaled coefficient energy"] = {
-            "LongName": "Relative variance explained",
-            "Description": (
-                "Relative variance explained by each component relative to the optimally "
-                "combined data. "
-                "This is calculated by fitting a multivariate least-squares model to the "
-                "optimally combined data and computing the variance of each regressor's fitted "
-                "contribution to the signal. "
-                "Because regressors may be correlated, these values reflect model-based "
-                "variance attribution rather than unique or partial explained variance. "
-                "This is not a common measure of variance explained, "
-                "since any shared variance between regressors will be split between them. "
-                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }

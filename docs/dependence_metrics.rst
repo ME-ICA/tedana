@@ -289,27 +289,6 @@ the fitted PCA object's explained_variance_ratio_ attribute,
 and the TEDANA-calculated value is retained as "estimated normalized variance explained".
 
 
-scaled coefficient energy
-=========================
-:func:`tedana.metrics.dependence.calculate_coefficient_energy_scaled_by_total_variance`
-
-The "scaled coefficient energy" by each component is calculated as the
-sum of the squared regression coefficients of each component,
-divided by the total variance of the data.
-
-.. important::
-  Please note that:
-
-  - This is NOT variance explained (R^2).
-  - Values do NOT sum to 100%.
-  - Values do NOT sum to total R^2.
-  - Scaling reflects data variance, not fitted variance.
-
-  This metric is useful for comparing coefficient-based contributions across
-  datasets with different noise levels, but should not be interpreted as a
-  decomposition of explained variance.
-
-
 marginal R-squared
 ==================
 :func:`tedana.metrics.dependence.calculate_marginal_r2`
