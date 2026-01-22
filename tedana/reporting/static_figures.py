@@ -917,12 +917,46 @@ def plot_heatmap(
     corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
+    # Identify regressors that are likely to trigger non-finite correlations/distances.
+    # This typically happens when a regressor's correlation pattern across components
+    # is constant (zero variance) or contains non-finite values.
+    problematic: dict[str, set[str]] = {}
+    for reg_name in regressors:
+        row = corr_df.loc[reg_name].values
+        reasons: set[str] = set()
+        if not np.isfinite(row).all():
+            reasons.add("non-finite values")
+
+        finite_row = row[np.isfinite(row)]
+        if finite_row.size < 2:
+            reasons.add("insufficient finite values")
+        else:
+            if np.std(finite_row) == 0:
+                reasons.add("zero variance")
+
+        if reasons:
+            problematic[reg_name] = reasons
+
+    def _format_problematic(problematic_dict: dict[str, set[str]], max_items: int = 20) -> str:
+        if not problematic_dict:
+            return ""
+        items = []
+        for name in sorted(problematic_dict.keys()):
+            why = ", ".join(sorted(problematic_dict[name]))
+            items.append(f"{name} ({why})")
+        extra = ""
+        if len(items) > max_items:
+            extra = f" (+{len(items) - max_items} more)"
+            items = items[:max_items]
+        return " Problematic regressors: " + "; ".join(items) + extra + "."
+
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
     if not np.isfinite(corr).all():
         warnings.warn(
             "Non-finite correlations detected when clustering regressors for the heatmap. "
-            "These values will be replaced with 0 (uncorrelated) to allow clustering to proceed.",
+            "These values will be replaced with 0 (uncorrelated) to allow clustering to proceed."
+            + _format_problematic(problematic),
             UserWarning,
         )
         corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
@@ -932,7 +966,8 @@ def plot_heatmap(
     if not np.isfinite(pdist_uncondensed).all():
         warnings.warn(
             "Non-finite distances detected when clustering regressors for the heatmap. "
-            "These values will be replaced with 1 to allow clustering to proceed.",
+            "These values will be replaced with 1 to allow clustering to proceed."
+            + _format_problematic(problematic),
             UserWarning,
         )
         pdist_uncondensed = np.nan_to_num(pdist_uncondensed, nan=1.0, posinf=1.0, neginf=1.0)
@@ -941,7 +976,8 @@ def plot_heatmap(
     if not np.isfinite(pdist_condensed).all():
         warnings.warn(
             "Non-finite condensed distances detected when clustering regressors for the heatmap. "
-            "These values will be replaced with the maximum finite distance to allow clustering to proceed.",
+            "These values will be replaced with the maximum finite distance to allow clustering to proceed."
+            + _format_problematic(problematic),
             UserWarning,
         )
         finite_vals = pdist_condensed[np.isfinite(pdist_condensed)]
