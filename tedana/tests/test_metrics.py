@@ -96,7 +96,7 @@ def test_smoke_generate_metrics(testdata1):
     # multiplying by "optimal sign" will flip the signs back so it should match
     assert np.allclose(
         np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4),
-        np.round(testdata1["mixing"], 4)
+        np.round(testdata1["mixing"], 4),
     )
 
 
