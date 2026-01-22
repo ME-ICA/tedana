@@ -8,36 +8,10 @@ import numpy as np
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import get_coeffs, t_to_z, voxelwise_univariate_zstats
+from tedana.stats import get_coeffs, t_to_z
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-
-
-def calculate_weights(
-    *,
-    data_optcom: np.ndarray,
-    mixing: np.ndarray,
-) -> np.ndarray:
-    """Calculate z-statistic maps for each component against the optimally combined data.
-
-    Parameters
-    ----------
-    data_optcom : (M x T) array_like
-        Optimally combined data, already masked.
-    mixing : (T x C) array_like
-        Mixing matrix
-
-    Returns
-    -------
-    weights : (M x C) array_like
-        Z-statistic maps for each component against the optimally combined data.
-    """
-    assert data_optcom.shape[1] == mixing.shape[0]
-
-    # compute z-statistic map for each component
-    weights = voxelwise_univariate_zstats(data_optcom, mixing)
-    return weights
 
 
 def calculate_betas(

@@ -175,15 +175,6 @@ def test_generate_metrics_fails(testdata1):
         )
 
 
-def test_smoke_calculate_weights():
-    """Smoke test for tedana.metrics.dependence.calculate_weights."""
-    n_voxels, n_volumes, n_components = 1000, 100, 50
-    data_optcom = np.random.random((n_voxels, n_volumes))
-    mixing = np.random.random((n_volumes, n_components))
-    weights = dependence.calculate_weights(data_optcom=data_optcom, mixing=mixing)
-    assert weights.shape == (n_voxels, n_components)
-
-
 def test_smoke_calculate_betas():
     """Smoke test for tedana.metrics.dependence.calculate_betas."""
     n_voxels, n_volumes, n_components = 1000, 100, 50

@@ -16,7 +16,7 @@ from tedana.metrics._utils import (
     determine_signs,
     flip_components,
 )
-from tedana.stats import getfbounds
+from tedana.stats import getfbounds, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -159,10 +159,7 @@ def generate_metrics(
     metric_maps = {}
     if "map weight" in required_metrics:
         LGR.info("Calculating weight maps")
-        metric_maps["map weight"] = dependence.calculate_weights(
-            data_optcom=data_optcom,
-            mixing=mixing,
-        )
+        metric_maps["map weight"] = voxelwise_univariate_zstats(data_optcom, mixing)
         signs = determine_signs(metric_maps["map weight"], axis=0)
         component_table["optimal sign"] = signs
         metric_maps["map weight"], mixing = flip_components(

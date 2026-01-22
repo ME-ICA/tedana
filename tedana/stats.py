@@ -35,7 +35,7 @@ def getfbounds(n_independent_sources):
 
 
 def voxelwise_univariate_zstats(data, mixing):
-    """Regress each voxel time series on each component separately and return z-statistics.
+    """Compute univariate voxelwise z-statistics using correlations.
 
     Parameters
     ----------
@@ -49,35 +49,23 @@ def voxelwise_univariate_zstats(data, mixing):
     zstat : array, shape (n_voxels, n_components)
         Z-statistics for each voxel/component
     """
-    n_vols_mixing, _ = mixing.shape
-    _, n_vols_data = data.shape
+    n_vols_mixing, n_components = mixing.shape
+    n_voxels, n_vols_data = data.shape
     if n_vols_mixing != n_vols_data:
         raise ValueError("Time dimension mismatch between mixing and data")
 
-    # Z-score variables
+    # Z-score over time
     mixing = stats.zscore(mixing, axis=0)
     data = stats.zscore(data, axis=1)
 
-    # Sum of squares of mixing for each regressor
-    sum_squares_mixing = np.sum(mixing**2, axis=0)  # (n_components,)
+    # Pearson correlations (voxel x component)
+    r = (data @ mixing) / (n_vols_data - 1)
 
-    # Univariate beta estimates
-    beta = (data @ mixing) / sum_squares_mixing  # (n_voxels, n_components)
+    # Convert correlation to t-statistic
+    tstat = r * np.sqrt((n_vols_data - 2) / (1.0 - r**2))
 
-    # Predicted signal per voxel *per component*
-    data_hat = beta[:, :, None] * mixing.T[None, :, :]  # (n_voxels, n_components, n_vols)
-
-    # Residuals per voxel/component
-    resid = data[:, None, :] - data_hat  # (n_voxels, n_components, n_vols)
-
-    # Residual variance per voxel/component
-    sigma2 = np.sum(resid**2, axis=2) / (n_vols_data - 2)  # (n_voxels, n_components)
-
-    # Standard error of beta
-    se = np.sqrt(sigma2 / sum_squares_mixing[None, :])  # (n_voxels, n_components)
-
-    # Z-statistics
-    zstat = beta / se
+    # Treat t as z (large-sample approximation)
+    zstat = tstat
 
     return zstat
 
