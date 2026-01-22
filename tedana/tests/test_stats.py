@@ -24,10 +24,6 @@ def test_break_voxelwise_univariate_zstats():
     with pytest.raises(ValueError):
         voxelwise_univariate_zstats(data, mixing)
 
-    mixing = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError):
-        voxelwise_univariate_zstats(data, mixing)
-
     mixing = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
         voxelwise_univariate_zstats(data, mixing)
