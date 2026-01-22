@@ -61,18 +61,20 @@ def voxelwise_univariate_zstats(data, mixing):
     # Sum of squares of mixing for each regressor
     sum_squares_mixing = np.sum(mixing**2, axis=0)  # (n_components,)
 
-    # Beta estimates
+    # Univariate beta estimates
     beta = (data @ mixing) / sum_squares_mixing  # (n_voxels, n_components)
 
-    # Residuals
-    data_hat = beta @ mixing.T  # (n_voxels, n_vols_mixing)
-    resid = data - data_hat
+    # Predicted signal per voxel *per component*
+    data_hat = beta[:, :, None] * mixing.T[None, :, :]  # (n_voxels, n_components, n_vols)
 
-    # Residual variance
-    sigma2 = np.sum(resid**2, axis=1) / (n_vols_data - 2)  # (n_voxels,)
+    # Residuals per voxel/component
+    resid = data[:, None, :] - data_hat  # (n_voxels, n_components, n_vols)
+
+    # Residual variance per voxel/component
+    sigma2 = np.sum(resid**2, axis=2) / (n_vols_data - 2)  # (n_voxels, n_components)
 
     # Standard error of beta
-    se = np.sqrt(sigma2[:, None] / sum_squares_mixing[None, :])  # (n_voxels, n_components)
+    se = np.sqrt(sigma2 / sum_squares_mixing[None, :])  # (n_voxels, n_components)
 
     # Z-statistics
     zstat = beta / se
