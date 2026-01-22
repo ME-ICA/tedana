@@ -61,11 +61,9 @@ def voxelwise_univariate_zstats(data, mixing):
     # Pearson correlations (voxel x component)
     r = (data @ mixing) / n_vols_data
 
-    # Convert correlation to t-statistic
+    # Convert correlation to z-statistic
     tstat = r * np.sqrt((n_vols_data - 2) / (1.0 - r**2))
-
-    # Treat t as z (large-sample approximation)
-    zstat = tstat
+    zstat = t_to_z(t_values=tstat, dof=n_vols_data - 2)
 
     return zstat
 
