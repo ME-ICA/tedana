@@ -307,8 +307,8 @@ def download_rica(force: bool = False) -> Path:
         # Write version file only after all files are in place
         (cache_dir / "VERSION").write_text(latest_version)
 
-    except urllib.error.URLError as e:
-        # Clean up any temp files on failure
+    except (urllib.error.URLError, OSError) as e:
+        # Clean up any temp files on failure (catches download errors, rename errors, etc.)
         for temp_path, _ in downloaded_files:
             if temp_path.exists():
                 temp_path.unlink()
@@ -560,8 +560,10 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
         if origin and (
             origin.startswith("http://localhost")
             or origin.startswith("http://127.0.0.1")
+            or origin.startswith("http://[::1]")
             or origin.startswith("https://localhost")
             or origin.startswith("https://127.0.0.1")
+            or origin.startswith("https://[::1]")
         ):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
@@ -603,10 +605,9 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
             root_path = Path(root)
             rel_root = root_path.relative_to(cwd)
 
-            # Stop descending once max depth is reached
+            # Stop descending further once max depth is reached, but still process files
             if len(rel_root.parts) >= max_depth:
                 dirs[:] = []
-                continue
 
             for name in filenames:
                 if any(p in name for p in RICA_FILE_PATTERNS):
