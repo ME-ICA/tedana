@@ -319,7 +319,7 @@ def test_smoke_compute_signal_minus_noise_z():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        z_thresh=1.96,
     )
     assert signal_minus_noise_z.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -337,7 +337,7 @@ def test_smoke_compute_signal_minus_noise_t():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        z_thresh=1.96,
     )
     assert signal_minus_noise_t.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -358,7 +358,7 @@ def test_smoke_compute_countnoise():
     countnoise = dependence.compute_countnoise(
         stat_maps=stat_maps,
         stat_cl_maps=stat_cl_maps,
-        stat_thresh=1.95,
+        stat_thresh=1.96,
     )
     assert countnoise.shape == (n_components,)
 

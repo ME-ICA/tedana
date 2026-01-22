@@ -226,7 +226,7 @@ def generate_metrics(
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
-        z_thresh = 1.95
+        z_thresh = 1.96  # p < 0.05 two-sided
         metric_maps["map Z clusterized"] = dependence.threshold_map(
             maps=metric_maps["map Z"],
             mask=mask,

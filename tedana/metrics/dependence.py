@@ -453,7 +453,7 @@ def compute_signal_minus_noise_z(
     z_maps: np.ndarray,
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
-    z_thresh: float = 1.95,
+    z_thresh: float = 1.96,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
@@ -474,7 +474,7 @@ def compute_signal_minus_noise_z(
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     z_thresh : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is 1.95.
+        Z-statistic threshold for voxel-wise significance. Default is 1.96 (p < 0.05 two-sided).
 
     Returns
     -------
@@ -521,7 +521,7 @@ def compute_signal_minus_noise_t(
     z_maps: np.ndarray,
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
-    z_thresh: float = 1.95,
+    z_thresh: float = 1.96,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
@@ -541,7 +541,7 @@ def compute_signal_minus_noise_t(
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     z_thresh : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is 1.95.
+        Z-statistic threshold for voxel-wise significance. Default is 1.96 (p < 0.05 two-sided).
 
     Returns
     -------
@@ -593,7 +593,7 @@ def compute_countnoise(
     *,
     stat_maps: np.ndarray,
     stat_cl_maps: np.ndarray,
-    stat_thresh: float = 1.95,
+    stat_thresh: float = 1.96,
 ) -> np.ndarray:
     """Count the number of significant voxels from non-significant clusters.
 
@@ -607,8 +607,7 @@ def compute_countnoise(
     stat_cl_maps : (S x C) array_like
         Cluster-extent thresholded and binarized version of stat_maps.
     stat_thresh : float, optional
-        Statistical threshold. Default is 1.95 (Z-statistic threshold
-        corresponding to p<X one-sided).
+        Z-statistic threshold corresponding to p<X two-sided. Default is 1.96 (p < 0.05 two-sided).
 
     Returns
     -------
