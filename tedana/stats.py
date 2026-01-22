@@ -49,8 +49,8 @@ def voxelwise_univariate_zstats(data, mixing):
     zstat : array, shape (n_voxels, n_components)
         Z-statistics for each voxel/component
     """
-    n_vols_mixing, n_components = mixing.shape
-    n_voxels, n_vols_data = data.shape
+    n_vols_mixing, _ = mixing.shape
+    _, n_vols_data = data.shape
     if n_vols_mixing != n_vols_data:
         raise ValueError("Time dimension mismatch between mixing and data")
 
@@ -59,7 +59,7 @@ def voxelwise_univariate_zstats(data, mixing):
     data = stats.zscore(data, axis=1)
 
     # Pearson correlations (voxel x component)
-    r = (data @ mixing) / (n_vols_data - 1)
+    r = (data @ mixing) / n_vols_data
 
     # Convert correlation to t-statistic
     tstat = r * np.sqrt((n_vols_data - 2) / (1.0 - r**2))
