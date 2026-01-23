@@ -950,10 +950,16 @@ def plot_heatmap(
             items = items[:max_items]
         return " Problematic regressors: " + "; ".join(items) + extra + "."
 
-    warn_suffix = _format_problematic(problematic)
-
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
+    if not np.isfinite(corr).all():
+        nonfinite_rows = np.where(~np.isfinite(corr).all(axis=1))[0]
+        for row_idx in nonfinite_rows:
+            reg_name = regressors[row_idx]
+            problematic.setdefault(reg_name, set()).add("non-finite correlations")
+
+    warn_suffix = _format_problematic(problematic)
+
     if not np.isfinite(corr).all():
         warnings.warn(
             (
