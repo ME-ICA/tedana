@@ -159,7 +159,10 @@ def generate_metrics(
     metric_maps = {}
     if "map weight" in required_metrics:
         LGR.info("Calculating weight maps")
-        metric_maps["map weight"] = voxelwise_univariate_zstats(data_optcom, mixing)
+        metric_maps["map weight"] = dependence.calculate_weights(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
         signs = determine_signs(metric_maps["map weight"], axis=0)
         component_table["optimal sign"] = signs
         metric_maps["map weight"], mixing = flip_components(
@@ -195,6 +198,10 @@ def generate_metrics(
                 utils.unmask(metric_maps["map Z"] ** 2, mask),
                 f"{label} component weights img",
             )
+
+    if "map Z statistics" in required_metrics:
+        LGR.info("Calculating z-statistic maps")
+        metric_maps["map Z statistics"] = voxelwise_univariate_zstats(data_optcom, mixing)
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")

@@ -8,10 +8,35 @@ import numpy as np
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import get_coeffs, t_to_z
+from tedana.stats import computefeats2, get_coeffs, t_to_z
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
+
+
+def calculate_weights(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
+    """Calculate standardized parameter estimates between data and mixing matrix.
+    Parameters
+    ----------
+    data_optcom : (M x T) array_like
+        Optimally combined data, already masked.
+    mixing : (T x C) array_like
+        Mixing matrix
+    Returns
+    -------
+    weights : (M x C) array_like
+        Standardized parameter estimates for optimally combined data against
+        the mixing matrix.
+    """
+    assert data_optcom.shape[1] == mixing.shape[0]
+    mixing_z = stats.zscore(mixing, axis=0)
+    # compute un-normalized weight dataset (features)
+    weights = computefeats2(data_optcom, mixing_z, normalize=False)
+    return weights
 
 
 def calculate_betas(
