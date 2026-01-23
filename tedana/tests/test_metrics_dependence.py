@@ -227,7 +227,7 @@ def test_compute_countnoise_correctness():
     stat_thresh = 1.95
 
     countnoise = dependence.compute_countnoise(
-        stat_maps=stat_maps, stat_cl_maps=stat_cl_maps, stat_thresh=stat_thresh
+        stat_maps=stat_maps, stat_cl_maps=stat_cl_maps, value_threshold=stat_thresh
     )
 
     # For component 0: abs(stat_maps[:, 0]) = [3.0, 2.5, 1.0, 2.5]

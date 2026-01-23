@@ -373,6 +373,7 @@ def generate_metrics(
         component_table["countnoise"] = dependence.compute_countnoise(
             stat_maps=metric_maps["map Z"],
             stat_cl_maps=metric_maps["map Z clusterized"],
+            proportion_threshold=proportion_threshold,
         )
 
     # Composite metrics
