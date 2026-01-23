@@ -9,6 +9,7 @@ from scipy import stats
 
 from tedana import io, utils
 from tedana.stats import get_coeffs, t_to_z
+from tedana.metrics._utils import get_value_thresholds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -272,17 +273,11 @@ def threshold_map(
     else:
         csize = int(csize)
 
-    # One threshold must be provided, but not both
-    assert (value_threshold is None) != (proportion_threshold is None)
-    if proportion_threshold is not None:
-        value_threshold = np.percentile(
-            np.abs(maps),
-            proportion_threshold,
-            method="higher",
-            axis=0,
-        )
-    else:
-        value_threshold = np.full(n_components, value_threshold)
+    value_threshold = get_value_thresholds(
+        maps=maps,
+        proportion_threshold=proportion_threshold,
+        value_threshold=value_threshold,
+    )
 
     for i_comp in range(n_components):
         # Cluster-extent threshold and binarize F-maps
@@ -508,16 +503,12 @@ def compute_signal_minus_noise_z(
         P-values from component-wise signal > noise paired t-tests.
     """
     assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
-    # One threshold must be provided, but not both
-    assert (value_threshold is None) != (proportion_threshold is None)
 
-    if proportion_threshold is not None:
-        value_threshold = np.percentile(
-            np.abs(z_maps),
-            proportion_threshold,
-            method="higher",
-            axis=0,
-        )
+    value_threshold = get_value_thresholds(
+        maps=z_maps,
+        proportion_threshold=proportion_threshold,
+        value_threshold=value_threshold,
+    )
 
     n_components = z_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
@@ -589,16 +580,12 @@ def compute_signal_minus_noise_t(
         P-values from component-wise signal > noise paired t-tests.
     """
     assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
-    # One threshold must be provided, but not both
-    assert (value_threshold is None) != (proportion_threshold is None)
 
-    if proportion_threshold is not None:
-        value_threshold = np.percentile(
-            np.abs(z_maps),
-            proportion_threshold,
-            method="higher",
-            axis=0,
-        )
+    value_threshold = get_value_thresholds(
+        maps=z_maps,
+        proportion_threshold=proportion_threshold,
+        value_threshold=value_threshold,
+    )
 
     n_components = z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
@@ -665,16 +652,11 @@ def compute_countnoise(
         Numbers of significant non-cluster voxels from the statistical maps.
     """
     assert stat_maps.shape == stat_cl_maps.shape
-    # One threshold must be provided, but not both
-    assert (value_threshold is None) != (proportion_threshold is None)
-
-    if proportion_threshold is not None:
-        value_threshold = np.percentile(
-            np.abs(stat_maps),
-            proportion_threshold,
-            method="higher",
-            axis=0,
-        )
+    value_threshold = get_value_thresholds(
+        maps=stat_maps,
+        proportion_threshold=proportion_threshold,
+        value_threshold=value_threshold,
+    )
 
     noise_idx = (np.abs(stat_maps) > value_threshold) & (stat_cl_maps == 0)
     countnoise = noise_idx.sum(axis=0)
