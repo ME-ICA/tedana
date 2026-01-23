@@ -20,12 +20,14 @@ def calculate_weights(
     mixing: np.ndarray,
 ) -> np.ndarray:
     """Calculate standardized parameter estimates between data and mixing matrix.
+
     Parameters
     ----------
     data_optcom : (M x T) array_like
         Optimally combined data, already masked.
     mixing : (T x C) array_like
         Mixing matrix
+
     Returns
     -------
     weights : (M x C) array_like
