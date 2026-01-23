@@ -775,31 +775,47 @@ def plot_adaptive_mask(
     mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
     all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
     # Set values to 0.5 for probabilistic atlas plotting
-    all_masks = image.math_img("img * 0.5", img=all_masks)
-
-    labels = ["Base", "Optimal combination", "Classification"]
+    # all_masks = image.math_img("img * 0.5", img=all_masks)
+    mean_masks = image.mean_img(imgs=all_masks)
+    labels = ["Initial mask only", "Optimal combination & Initial", "Classification, OC & Initial"]
 
     color_dict = {
-        "Base": "#f73838",
-        "Optimal combination": "#f5ed11",
-        "Classification": "#5bbbff",
+        "Initial mask only": "#DC267F",
+        "Optimal combination & Initial": "#FFB000",
+        "Classification, OC & Initial": "#648FFF",
     }
     colors = [to_rgba(color_dict[label]) for label in labels]
     discrete_cmap = ListedColormap(colors)
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        ob = plotting.plot_prob_atlas(
-            maps_img=all_masks,
+        ob = plotting.plot_roi(
+            roi_img=mean_masks,
             bg_img=mean_optcom_img,
-            view_type="contours",
-            threshold=0.2,
-            annotate=False,
-            draw_cross=False,
             cmap=discrete_cmap,
+            threshold=0.2,
+            linewidths=1.5,
             display_mode="mosaic",
-            cut_coords=4,
+            cut_coords=5,
+            colorbar=False,
+            draw_cross=False,
+            annotate=False,
         )
+        #     view_type="continous",
+        # )
+        # ob = plotting.plot_prob_atlas(
+        #     maps_img=all_masks,
+        #     bg_img=mean_optcom_img,
+        #     view_type="contours",
+        #     linewidths=1.5,
+        #     threshold=0.2,
+        #     annotate=False,
+        #     draw_cross=False,
+        #     cmap=discrete_cmap,
+        #     display_mode="mosaic",
+        #     cut_coords=4,
+        #     colorbar=False,
+        # )
 
     legend_elements = []
     for k, v in color_dict.items():
