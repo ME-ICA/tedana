@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from tedana import io, metrics, utils
 from tedana.reporting import pca_results as plot_pca_results
 from tedana.selection import kundu_tedpca
-from tedana.stats import computefeats2
+from tedana.stats import get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -380,7 +380,10 @@ def tedpca(
     component_table["normalized variance explained"] = varex_norm * 100
 
     # write component maps to 4D image
-    comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts, mask), mask)
+    data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
+    comp_ts_z = stats.zscore(comp_ts, axis=0)
+    comp_maps = utils.unmask(get_coeffs(data_optcom_z, comp_ts_z), mask)
+    del data_optcom_z, comp_ts_z
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree

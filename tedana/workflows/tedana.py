@@ -13,6 +13,7 @@ from glob import glob
 import numpy as np
 import pandas as pd
 from nilearn.masking import compute_epi_mask
+from scipy import stats
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -37,7 +38,7 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.selection.component_selector import ComponentSelector
-from tedana.stats import computefeats2
+from tedana.stats import get_coeffs
 from tedana.workflows.parser_utils import (
     check_n_robust_runs_value,
     check_tedpca_value,
@@ -1026,8 +1027,11 @@ def tedana_workflow(
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
 
-    betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
+    data_optcom_z = stats.zscore(data_optcom[mask_denoise, :], axis=-1)
+    mixing_z = stats.zscore(mixing, axis=0)
+    betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
+    del data_optcom_z, mixing_z, betas_oc
 
     # calculate the fit of rejected to accepted components to use as a quality measure
     # Note: This adds a column to component_table & needs to run before the table is saved
