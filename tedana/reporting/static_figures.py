@@ -12,6 +12,7 @@ import pandas as pd
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap, to_rgba
 from nilearn import masking, plotting
 
 from tedana import io, stats, utils
@@ -246,7 +247,7 @@ def plot_component(
             resampling_interpolation="nearest",
         )
 
-    display.annotate(size=30)
+    display.annotate(size=20)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
@@ -776,13 +777,15 @@ def plot_adaptive_mask(
     # Set values to 0.5 for probabilistic atlas plotting
     all_masks = image.math_img("img * 0.5", img=all_masks)
 
-    cmap = plt.cm.gist_rainbow
-    discrete_cmap = cmap.resampled(3)  # colors matching the mask lines in the image
+    labels = ["Base", "Optimal combination", "Classification"]
+
     color_dict = {
-        "Base": discrete_cmap(0),
-        "Optimal combination": discrete_cmap(0.4),
-        "Classification": discrete_cmap(0.9),
+        "Base": "#f73838",
+        "Optimal combination": "#f5ed11",
+        "Classification": "#5bbbff",
     }
+    colors = [to_rgba(color_dict[label]) for label in labels]
+    discrete_cmap = ListedColormap(colors)
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
@@ -793,7 +796,7 @@ def plot_adaptive_mask(
             threshold=0.2,
             annotate=False,
             draw_cross=False,
-            cmap=cmap,
+            cmap=discrete_cmap,
             display_mode="mosaic",
             cut_coords=4,
         )
@@ -807,15 +810,21 @@ def plot_adaptive_mask(
     width = fig.get_size_inches()[0]
 
     ob.frame_axes.set_zorder(100)
-    ob.frame_axes.legend(
+    legend = ob.frame_axes.legend(
         handles=legend_elements,
-        facecolor="white",
+        facecolor="black",
         ncols=3,
-        loc="lower center",
+        loc="lower right",
         fancybox=True,
         shadow=True,
         fontsize=width,
     )
+
+    legend.get_frame().set_visible(False)
+
+    for text in legend.get_texts():
+        text.set_color("white")
+
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
 
