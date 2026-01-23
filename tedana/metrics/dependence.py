@@ -8,7 +8,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import computefeats2, get_coeffs, t_to_z
+from tedana.stats import get_coeffs, t_to_z
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
