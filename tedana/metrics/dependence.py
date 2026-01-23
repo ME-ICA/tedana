@@ -239,7 +239,7 @@ def threshold_map(
     maps: np.ndarray,
     mask: np.ndarray,
     ref_img: nb.Nifti1Image,
-    proportion_threshold: float,
+    proportion_threshold: float = None,
     value_threshold: float = None,
     csize: typing.Union[int, None] = None,
 ) -> np.ndarray:
