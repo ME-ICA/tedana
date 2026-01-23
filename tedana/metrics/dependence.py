@@ -35,9 +35,10 @@ def calculate_weights(
         the mixing matrix.
     """
     assert data_optcom.shape[1] == mixing.shape[0]
-    mixing_z = stats.zscore(mixing, axis=0)
-    # compute un-normalized weight dataset (features)
-    weights = computefeats2(data_optcom, mixing_z, normalize=False)
+    mixing = stats.zscore(mixing, axis=0)
+    data_optcom = stats.zscore(data_optcom, axis=-1)
+    # compute standardized parameter estimates
+    weights = get_coeffs(data_optcom, mixing)
     return weights
 
 
@@ -238,7 +239,8 @@ def threshold_map(
     maps: np.ndarray,
     mask: np.ndarray,
     ref_img: nb.Nifti1Image,
-    threshold: float,
+    proportion_threshold: float,
+    value_threshold: float = None,
     csize: typing.Union[int, None] = None,
 ) -> np.ndarray:
     """Perform cluster-extent thresholding.
@@ -251,8 +253,10 @@ def threshold_map(
         Binary mask.
     ref_img : img_like
         Reference image to convert to niimgs with.
-    threshold : :obj:`float`
-        Value threshold to apply to maps.
+    proportion_threshold : :obj:`float`
+        Proportion threshold to apply to maps. Values between 0 and 100.
+    value_threshold : float, optional
+        Value threshold to apply to maps. Default is None.
     csize : :obj:`int` or :obj:`None`, optional
         Minimum cluster size. If None, standard thresholding (non-cluster-extent) will be done.
         Default is None.
@@ -268,12 +272,28 @@ def threshold_map(
     else:
         csize = int(csize)
 
+    # One threshold must be provided, but not both
+    assert (value_threshold is None) != (proportion_threshold is None)
+    if proportion_threshold is not None:
+        value_threshold = np.percentile(
+            np.abs(maps),
+            proportion_threshold,
+            method="higher",
+            axis=0,
+        )
+    else:
+        value_threshold = np.full(n_components, value_threshold)
+
     for i_comp in range(n_components):
         # Cluster-extent threshold and binarize F-maps
         ccimg = io.new_nii_like(ref_img, np.squeeze(utils.unmask(maps[:, i_comp], mask)))
 
         maps_thresh[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize, threshold=threshold, mask=mask, binarize=True
+            ccimg,
+            min_cluster_size=csize,
+            threshold=value_threshold[i_comp],
+            mask=mask,
+            binarize=True,
         )
     return maps_thresh
 
@@ -453,7 +473,8 @@ def compute_signal_minus_noise_z(
     z_maps: np.ndarray,
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
-    z_thresh: float = 1.95,
+    value_threshold: float = None,
+    proportion_threshold: float = None,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
@@ -473,8 +494,11 @@ def compute_signal_minus_noise_z(
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
-    z_thresh : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is 1.95.
+    value_threshold : float, optional
+        Z-statistic threshold for voxel-wise significance. Default is None.
+    proportion_threshold : float, optional
+        Proportion threshold for voxel-wise significance. Values between 0 and 100.
+        Default is None.
 
     Returns
     -------
@@ -484,11 +508,21 @@ def compute_signal_minus_noise_z(
         P-values from component-wise signal > noise paired t-tests.
     """
     assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
+    # One threshold must be provided, but not both
+    assert (value_threshold is None) != (proportion_threshold is None)
+
+    if proportion_threshold is not None:
+        value_threshold = np.percentile(
+            np.abs(z_maps),
+            proportion_threshold,
+            method="higher",
+            axis=0,
+        )
 
     n_components = z_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > z_thresh) & (z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > value_threshold) & (z_clmaps == 0)
     countnoise = noise_idx.sum(axis=0)
     countsignal = z_clmaps.sum(axis=0)
     for i_comp in range(n_components):
@@ -521,7 +555,8 @@ def compute_signal_minus_noise_t(
     z_maps: np.ndarray,
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
-    z_thresh: float = 1.95,
+    value_threshold: float = None,
+    proportion_threshold: float = None,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
@@ -540,8 +575,11 @@ def compute_signal_minus_noise_t(
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
-    z_thresh : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is 1.95.
+    value_threshold : float, optional
+        Z-statistic threshold for voxel-wise significance. Default is None.
+    proportion_threshold : float, optional
+        Proportion threshold for voxel-wise significance. Values between 0 and 100.
+        Default is None.
 
     Returns
     -------
@@ -551,11 +589,21 @@ def compute_signal_minus_noise_t(
         P-values from component-wise signal > noise paired t-tests.
     """
     assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
+    # One threshold must be provided, but not both
+    assert (value_threshold is None) != (proportion_threshold is None)
+
+    if proportion_threshold is not None:
+        value_threshold = np.percentile(
+            np.abs(z_maps),
+            proportion_threshold,
+            method="higher",
+            axis=0,
+        )
 
     n_components = z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > z_thresh) & (z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > value_threshold) & (z_clmaps == 0)
     for i_comp in range(n_components):
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
@@ -593,7 +641,8 @@ def compute_countnoise(
     *,
     stat_maps: np.ndarray,
     stat_cl_maps: np.ndarray,
-    stat_thresh: float = 1.95,
+    value_threshold: float = None,
+    proportion_threshold: float = None,
 ) -> np.ndarray:
     """Count the number of significant voxels from non-significant clusters.
 
@@ -616,8 +665,18 @@ def compute_countnoise(
         Numbers of significant non-cluster voxels from the statistical maps.
     """
     assert stat_maps.shape == stat_cl_maps.shape
+    # One threshold must be provided, but not both
+    assert (value_threshold is None) != (proportion_threshold is None)
 
-    noise_idx = (np.abs(stat_maps) > stat_thresh) & (stat_cl_maps == 0)
+    if proportion_threshold is not None:
+        value_threshold = np.percentile(
+            np.abs(stat_maps),
+            proportion_threshold,
+            method="higher",
+            axis=0,
+        )
+
+    noise_idx = (np.abs(stat_maps) > value_threshold) & (stat_cl_maps == 0)
     countnoise = noise_idx.sum(axis=0)
     return countnoise
 

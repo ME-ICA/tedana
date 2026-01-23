@@ -191,7 +191,7 @@ def generate_metrics(
 
     if "map Z" in required_metrics:
         LGR.info("Calculating z-statistic maps")
-        metric_maps["map Z"] = dependence.calculate_z_maps(weights=metric_maps["map weight"])
+        metric_maps["map Z"] = metric_maps["map weight"].copy()
 
         if io_generator.verbose:
             io_generator.save_file(
@@ -226,12 +226,12 @@ def generate_metrics(
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
-        z_thresh = 1.95
+        proportion_threshold = 95  # top 5% of voxels
         metric_maps["map Z clusterized"] = dependence.threshold_map(
             maps=metric_maps["map Z"],
             mask=mask,
             ref_img=ref_img,
-            threshold=z_thresh,
+            proportion_threshold=proportion_threshold,
         )
 
     if "map FT2 clusterized" in required_metrics:
@@ -240,7 +240,7 @@ def generate_metrics(
             maps=metric_maps["map FT2"],
             mask=mask,
             ref_img=ref_img,
-            threshold=f_thresh,
+            value_threshold=f_thresh,
         )
 
     if "map FS0 clusterized" in required_metrics:
@@ -249,7 +249,7 @@ def generate_metrics(
             maps=metric_maps["map FS0"],
             mask=mask,
             ref_img=ref_img,
-            threshold=f_thresh,
+            value_threshold=f_thresh,
         )
 
     # Intermediate metrics
@@ -343,6 +343,7 @@ def generate_metrics(
             z_maps=metric_maps["map Z"],
             z_clmaps=metric_maps["map Z clusterized"],
             f_t2_maps=metric_maps["map FT2"],
+            proportion_threshold=proportion_threshold,
         )
 
     if "signal-noise_z" in required_metrics:
@@ -360,6 +361,7 @@ def generate_metrics(
             z_maps=metric_maps["map Z"],
             z_clmaps=metric_maps["map Z clusterized"],
             f_t2_maps=metric_maps["map FT2"],
+            proportion_threshold=proportion_threshold,
         )
 
     if "countnoise" in required_metrics:
