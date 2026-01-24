@@ -101,6 +101,40 @@ def computefeats2(data, mixing, mask=None, normalize=True):
     return data_z
 
 
+def voxelwise_univariate_zstats(data, mixing):
+    """Compute univariate voxelwise z-statistics using correlations.
+
+    Parameters
+    ----------
+    mixing : array, shape (n_vols, n_components)
+        Independent variables (time x components)
+    data : array, shape (n_voxels, n_vols)
+        Dependent variables (voxels x time)
+
+    Returns
+    -------
+    zstat : array, shape (n_voxels, n_components)
+        Z-statistics for each voxel/component
+    """
+    n_vols_mixing, _ = mixing.shape
+    _, n_vols_data = data.shape
+    if n_vols_mixing != n_vols_data:
+        raise ValueError("Time dimension mismatch between mixing and data")
+
+    # Z-score over time
+    mixing = stats.zscore(mixing, axis=0)
+    data = stats.zscore(data, axis=1)
+
+    # Pearson correlations (voxel x component)
+    r = (data @ mixing) / n_vols_data
+
+    # Convert correlation to z-statistic
+    tstat = r * np.sqrt((n_vols_data - 2) / (1.0 - r**2))
+    zstat = t_to_z(t_values=tstat, dof=n_vols_data - 2)
+
+    return zstat
+
+
 def get_coeffs(data, x, mask=None, add_const=False):
     """
     Perform least-squares fit of `x` against `data`.
