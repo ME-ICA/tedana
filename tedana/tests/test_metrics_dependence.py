@@ -63,13 +63,8 @@ def test_calculate_semipartial_r2_smoke():
     n_voxels, n_components, n_volumes = 1000, 10, 100
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    relative_varex = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
-    assert relative_varex.shape == (n_components,)
-
     semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
     assert semipartial_r2.shape == (n_components,)
-
-    assert np.allclose(semipartial_r2, relative_varex)
 
 
 def test_calculate_partial_r2_smoke():

@@ -856,25 +856,6 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     return np.abs(kappa - rho) / (kappa + rho)
 
 
-def _residualize(y, x):
-    """Residualize y with respect to x.
-
-    Parameters
-    ----------
-    y : (T,) array
-        Dependent variable.
-    x : (T, K) array
-        Independent variables.
-
-    Returns
-    -------
-    y_res : (T,) array
-        Residuals of y with respect to x.
-    """
-    beta, *_ = np.linalg.lstsq(x, y, rcond=None)
-    return y - x @ beta
-
-
 def _orthogonalize_by_others(*, arr: np.ndarray) -> np.ndarray:
     """Orthogonalize each column of the input array with respect to the other columns.
 
