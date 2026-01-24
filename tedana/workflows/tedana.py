@@ -707,7 +707,7 @@ def tedana_workflow(
     io_generator.register_mask(mask_img)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat = io.load_data_nilearn(data, mask_img)
+    data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
