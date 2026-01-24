@@ -239,6 +239,7 @@ API
 
    tedana.stats.get_coeffs
    tedana.stats.computefeats2
+   tedana.stats.voxelwise_univariate_zstats
    tedana.stats.getfbounds
 
 

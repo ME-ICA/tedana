@@ -3,6 +3,10 @@
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
+# These set a minimum dependency age (cooldown) to thwart supply-chain attacks
+# See https://blog.yossarian.net/2025/11/21/We-should-all-be-using-dependency-cooldowns
+# Also avoids churn when dependencies put out buggy releases followed shortly by fixes
+
 version: 2
 updates:
   - package-ecosystem: "github-actions" # See documentation for possible values
@@ -10,8 +14,12 @@ updates:
     labels: ["maintenance", "ignore-for-release"]
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: uv
     directory: "/"
     labels: ["maintenance", "ignore-for-release"]
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
