@@ -200,8 +200,16 @@ def generate_metrics(
             )
 
     if "map univariate Z statistics" in required_metrics:
-        LGR.info("Calculating z-statistic maps")
-        metric_maps["map univariate Z statistics"] = voxelwise_univariate_zstats(data_optcom, mixing)
+        LGR.info("Calculating univariate z-statistic maps")
+        # The univariate z-statistic maps are the result of a voxelwise univariate
+        # (i.e., one component at a time) regression of the optimally combined data on each
+        # component in the mixing matrix.
+        # This works around the fragility of z-statistics when there are many components and
+        # few degrees of freedom.
+        metric_maps["map univariate Z statistics"] = voxelwise_univariate_zstats(
+            data=data_optcom,
+            mixing=mixing,
+        )
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
