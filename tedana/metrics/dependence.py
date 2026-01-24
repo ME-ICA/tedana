@@ -572,7 +572,13 @@ def calculate_partial_r2(
         Average (across voxels) partial R-squared for each regressor, on a scale from 0 to 100.
     """
     unmodeled_r2 = 100 - total_r2
-    partial_r2 = semipartial_r2 / (semipartial_r2 + unmodeled_r2)
+    denominator = semipartial_r2 + unmodeled_r2
+    partial_r2 = np.divide(
+        semipartial_r2,
+        denominator,
+        out=np.zeros_like(semipartial_r2, dtype=float),
+        where=denominator != 0,
+    )
     return 100 * partial_r2
 
 

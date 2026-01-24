@@ -293,22 +293,19 @@ marginal R-squared
 ==================
 :func:`tedana.metrics.dependence.calculate_marginal_r2`
 
-The "marginal R-squared" by each component is calculated as the variance of the
-fitted contribution of each regressor to the signal,
-divided by the sum of the variances of the fitted contributions.
+The "marginal R-squared" by each component is calculated as 100 times the
+squared correlation between the component time series and the data,
+averaged over voxels.
 
-This is equivalent to the variance explained by each component without controlling
-for other components. Mathematically, it is equivalent to 100 * the squared correlation
-between the component time series and the data, averaged over voxels.
-
-
+This represents the variance in the data explained by each component
+without controlling for other components.
 partial R-squared
 =================
 :func:`tedana.metrics.dependence.calculate_partial_r2`
 
-The "partial R-squared" by each component is calculated as the variance of the
-fitted contribution of each regressor to the signal,
-divided by the sum of the variances of the fitted contributions.
+The "partial R-squared" by each component is calculated as the proportion (expressed
+as a percentage) of variance uniquely explained by that component relative to the sum
+of this uniquely explained variance and the variance that is not explained by the full model.
 
 This is equivalent to the variance explained by each component after regressing the other
 components out of the data *and* the component itself. It is a conditional effect size.
@@ -318,13 +315,16 @@ semi-partial R-squared
 ======================
 :func:`tedana.metrics.dependence.calculate_semipartial_r2`
 
-The "semi-partial R-squared" by each component is calculated as the variance of the
-fitted contribution of each regressor to the signal,
-divided by the sum of the variances of the fitted contributions.
+The "semi-partial R-squared" by each component is computed by first orthogonalizing that
+component with respect to all other components (i.e., regressing it onto the remaining
+components and taking the residuals). The squared Pearson correlation between this
+orthogonalized regressor and the data is then computed for each voxel, and the
+semi-partial R-squared for that component is the mean of these squared correlations
+across voxels.
 
-This is equivalent to the variance explained by each component after regressing out the other
-components from the target component. It indicates the incremental increase in R-squared
-when adding the target component to the model.
+This corresponds to the variance in the data that is uniquely explained by each component,
+after removing variance that is shared with the other components. It indicates the
+incremental increase in R-squared when adding the target component to the model.
 
 
 kappa_rho_difference
