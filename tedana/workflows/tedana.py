@@ -643,7 +643,7 @@ def tedana_workflow(
 
     # Initialize OutputGenerator with reference image
     # XXX: This doesn't support z-cat or AFNI data yet.
-    ref_img = io.load_ref_img(data, n_echos)
+    ref_img = io.load_ref_img(data=data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -697,8 +697,7 @@ def tedana_workflow(
             "It is strongly recommended to provide an external mask, "
             "and to visually confirm that mask accurately conforms to data boundaries."
         )
-        first_echo_img = nb.load(data[0])
-        mask_img = compute_epi_mask(first_echo_img)
+        mask_img = compute_epi_mask(ref_img)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."

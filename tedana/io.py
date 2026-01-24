@@ -1147,7 +1147,7 @@ def load_data_nilearn(data, mask_img, n_echos):
         n_z = data_img.shape[2] // n_echos
         imgs = []
         for i_echo in range(n_echos):
-            imgs.append(data_img.slicer[..., i_echo * n_z:(i_echo + 1) * n_z])
+            imgs.append(data_img.slicer[:, :, i_echo * n_z:(i_echo + 1) * n_z, :])
         data = imgs
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
