@@ -199,9 +199,9 @@ def generate_metrics(
                 f"{label} component weights img",
             )
 
-    if "map Z statistics" in required_metrics:
+    if "map univariate Z statistics" in required_metrics:
         LGR.info("Calculating z-statistic maps")
-        metric_maps["map Z statistics"] = voxelwise_univariate_zstats(data_optcom, mixing)
+        metric_maps["map univariate Z statistics"] = voxelwise_univariate_zstats(data_optcom, mixing)
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
