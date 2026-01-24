@@ -171,6 +171,20 @@ def get_value_thresholds(
     Parameters
     ----------
     maps : (M x C) array_like
+        Maps for which to calculate thresholds.
+    proportion_threshold : float, optional
+        Percentile threshold to determine from absolute values of maps. Values between 0 and 100.
+        Only one of value_threshold or proportion_threshold should be provided.
+        Default is None.
+    value_threshold : float, optional
+        Value threshold to convert into a component-length array of thresholds.
+        Only one of value_threshold or proportion_threshold should be provided.
+        Default is None.
+
+    Returns
+    -------
+    value_threshold : (C) array_like
+        Value thresholds for each map.
     """
     # One threshold must be provided, but not both
     assert (value_threshold is None) != (proportion_threshold is None)
