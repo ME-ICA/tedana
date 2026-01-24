@@ -1,5 +1,6 @@
 figures
 ica_reclassify_call.sh
+open_rica_report.py
 sub-testymctestface_references.bib
 sub-testymctestface_report.txt
 sub-testymctestface_betas_OC.nii.gz

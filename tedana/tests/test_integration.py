@@ -276,7 +276,7 @@ def test_integration_four_echo(skip_integration):
     }
 
 
-def test_integration_three_echo(skip_integration):
+def test_integration_three_echo(skip_integration, caplog):
     """Integration test of the full tedana workflow with the CLI using three-echo test data."""
 
     if skip_integration:
@@ -305,6 +305,9 @@ def test_integration_three_echo(skip_integration):
         "mdl",
     ]
     tedana_cli._main(args)
+
+    # Check that a deprecation warning about z-concatenated data is shown
+    assert "DEPRECATION WARNING" in caplog.text
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")

@@ -630,6 +630,221 @@ These plots show the voxel-wise global signal weights and the global signal time
   :height: 400px
 
 
+.. _rica-reports:
+
+**************************
+Rica Interactive Reports
+**************************
+
+In addition to the standard HTML report, ``tedana`` generates a launcher script for
+`Rica <https://github.com/ME-ICA/rica>`_, an interactive web-based visualization
+tool for exploring ICA components. Rica provides a more detailed and interactive
+way to inspect individual components, including 3D brain visualization using NiiVue.
+
+The Rica Launcher Script
+------------------------
+
+Every ``tedana`` run creates a launcher script ``open_rica_report.py`` in the output
+directory. When you run this script, it will:
+
+1. Check for Rica files (from environment variable, cache, or download)
+2. Download Rica from the `ME-ICA/rica GitHub releases <https://github.com/ME-ICA/rica/releases>`_
+   if not already available (cached locally for future use)
+3. Copy Rica files to ``output/rica/``
+4. Start a local HTTP server
+5. Open Rica in your default web browser
+
+This approach keeps ``tedana`` execution fast (no network calls during analysis)
+while providing easy access to Rica visualization on demand.
+
+Opening Rica
+------------
+
+After running ``tedana``, open the Rica visualization:
+
+.. code-block:: bash
+
+    cd output
+    python open_rica_report.py
+
+Press ``Ctrl+C`` in the terminal to stop the server when you're done.
+
+Rica Output Files
+-----------------
+
+The following files are created in the output directory:
+
+==================================  ===========================================================
+File                                Description
+==================================  ===========================================================
+``open_rica_report.py``             Cross-platform launcher script (created by tedana)
+``rica/index.html``                 Rica web application (created when launcher is run)
+``rica/rica_server.py``             HTTP server script (created when launcher is run)
+==================================  ===========================================================
+
+.. note::
+
+    The ``rica/`` directory is created when you run ``open_rica_report.py``, not
+    during the tedana analysis. This keeps tedana fast and network-independent.
+
+Platform Support
+----------------
+
+Rica reports work on all major platforms:
+
+- **Linux**: Cache stored in ``~/.cache/tedana/rica``
+- **macOS**: Cache stored in ``~/Library/Caches/tedana/rica``
+- **Windows**: Cache stored in ``%LOCALAPPDATA%/tedana/rica``
+
+The launcher script automatically finds an available port if the default (8000) is busy.
+
+.. note::
+
+    Rica requires an internet connection for the initial download when you first run
+    ``open_rica_report.py``. Once cached, Rica can be used offline.
+
+
+Using a Local Rica Bundle (Advanced)
+------------------------------------
+
+For advanced users and developers who need to use a custom Rica build or work offline,
+you can point the launcher script to a local Rica installation using the ``TEDANA_RICA_PATH``
+environment variable.
+
+The path should point to a directory containing the required Rica files:
+
+- ``index.html`` - The Rica web application
+- ``rica_server.py`` - HTTP server with CORS support
+
+**Setting the environment variable:**
+
+.. code-block:: bash
+
+    # Set for current session
+    export TEDANA_RICA_PATH=/path/to/rica/build
+
+    # Then run the launcher script
+    python open_rica_report.py
+
+To make this permanent, add the export line to your shell configuration file
+(e.g., ``~/.bashrc``, ``~/.zshrc``, or ``~/.bash_profile``).
+
+.. note::
+
+    If ``TEDANA_RICA_PATH`` is not set, the launcher script will automatically download
+    Rica from GitHub and cache it locally.
+
+**For Rica developers:**
+
+If you are developing Rica and have a local build, you can point the launcher to your
+build output directory:
+
+.. code-block:: bash
+
+    # Build Rica locally
+    cd ~/GitHub/rica
+    npm run build
+
+    # Set the environment variable to use the local build
+    export TEDANA_RICA_PATH=~/GitHub/rica/build
+
+    # Run the launcher script
+    python open_rica_report.py
+
+
+Troubleshooting Rica
+--------------------
+
+**Rica download fails:**
+
+If Rica fails to download from GitHub when running ``open_rica_report.py``,
+you may see an error like:
+
+.. code-block:: text
+
+    Failed to download Rica: <urlopen error ...>
+
+Possible solutions:
+
+1. **Check your internet connection** - Ensure you can access GitHub.
+
+2. **Use a local Rica bundle** - Download Rica manually and set ``TEDANA_RICA_PATH``:
+
+   .. code-block:: bash
+
+       # Download Rica release manually
+       wget https://github.com/ME-ICA/rica/releases/latest/download/index.html
+       wget https://github.com/ME-ICA/rica/releases/latest/download/rica_server.py
+
+       # Place files in a directory and set the environment variable
+       mkdir ~/rica-bundle
+       mv index.html rica_server.py ~/rica-bundle/
+       export TEDANA_RICA_PATH=~/rica-bundle
+
+       # Run the launcher
+       python open_rica_report.py
+
+3. **Use the standard HTML report** - The standard HTML report in the output
+   directory provides similar functionality without requiring Rica.
+
+**Force re-downloading Rica:**
+
+To force a fresh download of Rica (e.g., to get a newer version):
+
+.. code-block:: bash
+
+    python open_rica_report.py --force-download
+
+**Clearing the Rica cache:**
+
+If Rica files become corrupted and you want to clear the cache:
+
+.. code-block:: bash
+
+    # Linux
+    rm -rf ~/.cache/tedana/rica
+
+    # macOS
+    rm -rf ~/Library/Caches/tedana/rica
+
+    # Windows (PowerShell)
+    Remove-Item -Recurse -Force "$env:LOCALAPPDATA\tedana\rica"
+
+The next time you run ``open_rica_report.py``, Rica will be re-downloaded.
+
+**Port conflicts:**
+
+When opening Rica, if port 8000 is already in use, the launcher script
+automatically tries the next available port (8001, 8002, etc.). If you see:
+
+.. code-block:: text
+
+    Error: Could not find free port starting from 8000
+
+This means ports 8000-8009 are all in use. You can specify a different starting port:
+
+.. code-block:: bash
+
+    python open_rica_report.py --port 9000
+
+**Browser does not open automatically:**
+
+If the browser doesn't open, you can:
+
+1. Open the URL manually (displayed in the terminal output)
+2. Use the ``--no-open`` flag and open the URL yourself:
+
+   .. code-block:: bash
+
+       python open_rica_report.py --no-open
+       # Then open http://localhost:8000/rica/index.html in your browser
+
+**Browser shows old version of Rica after update:**
+
+See the `Rica troubleshooting guide <https://me-ica.github.io/rica/troubleshooting/#browser-shows-old-version-after-update>`_
+for solutions to browser caching issues.
+
+
 **************************
 Citable workflow summaries
 **************************

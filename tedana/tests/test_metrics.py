@@ -94,10 +94,10 @@ def test_smoke_generate_metrics(testdata1):
     assert isinstance(component_table, pd.DataFrame)
     # new_mixing should have flipped signs compared to mixing.
     # multiplying by "optimal sign" will flip the signs back so it should match
-    assert (
-        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4)
-        == np.round(testdata1["mixing"], 4)
-    ).all()
+    assert np.allclose(
+        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4),
+        np.round(testdata1["mixing"], 4),
+    )
 
 
 def test_generate_metrics_fails(testdata1):
@@ -282,17 +282,9 @@ def test_smoke_calculate_f_maps():
 def test_smoke_calculate_varex():
     """Smoke test for tedana.metrics.dependence.calculate_varex."""
     n_voxels, n_components = 1000, 50
-    optcom_betas = np.random.random((n_voxels, n_components))
-    varex = dependence.calculate_varex(optcom_betas=optcom_betas)
+    component_maps = np.random.random((n_voxels, n_components))
+    varex = dependence.calculate_varex(component_maps=component_maps)
     assert varex.shape == (n_components,)
-
-
-def test_smoke_calculate_varex_norm():
-    """Smoke test for tedana.metrics.dependence.calculate_varex_norm."""
-    n_voxels, n_components = 1000, 50
-    weights = np.random.random((n_voxels, n_components))
-    varex_norm = dependence.calculate_varex_norm(weights=weights)
-    assert varex_norm.shape == (n_components,)
 
 
 def test_smoke_compute_dice():

@@ -25,6 +25,7 @@ from tedana import (
     io,
     metrics,
     reporting,
+    rica,
     selection,
     utils,
 )
@@ -70,11 +71,10 @@ def _get_parser():
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Multi-echo dataset for analysis. May be a "
-            "single file with spatially concatenated data "
-            "or a set of echo-specific files, in the same "
-            "order as the TEs are listed in the -e "
-            "argument."
+            "Multi-echo dataset for analysis. "
+            "A set of echo-specific files in ascending order. "
+            "The TEs of the data should match "
+            "the TEs listed in the -e argument."
         ),
         required=True,
     )
@@ -85,7 +85,7 @@ def _get_parser():
         metavar="TE",
         type=float,
         help=(
-            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
             "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
         ),
         required=True,
@@ -1219,6 +1219,7 @@ def tedana_workflow(
             reporting.static_figures.plot_gscontrol(
                 io_generator=io_generator,
                 gscontrol=gscontrol,
+                png_cmap=png_cmap,
             )
 
         if external_regressors is not None:
@@ -1256,6 +1257,9 @@ def tedana_workflow(
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
+
+    # Generate Rica launcher script
+    rica.setup_rica_report(out_dir)
 
     LGR.info("Workflow completed")
 

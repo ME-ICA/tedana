@@ -40,6 +40,11 @@
             "map Z clusterized",
             "map FT2"
         ],
+        "signal-noise_z": [
+            "map Z",
+            "map Z clusterized",
+            "map FT2"
+        ],
         "variance explained": [
             "map optcom betas"
         ],
@@ -73,6 +78,10 @@
         ],
         "map Z": [
             "map weight"
+        ],
+        "map univariate Z statistics": [
+            "data_optcom",
+            "mixing"
         ],
         "map weight": [
             "data_optcom",

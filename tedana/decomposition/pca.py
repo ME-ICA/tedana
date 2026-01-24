@@ -381,7 +381,7 @@ def tedpca(
     component_table["estimated normalized variance explained"] = component_table[
         "normalized variance explained"
     ]
-    component_table["normalized variance explained"] = varex_norm
+    component_table["normalized variance explained"] = varex_norm * 100
 
     # write component maps to 4D image
     comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts), mask)
@@ -415,7 +415,7 @@ def tedpca(
             alg_str = algorithm
         LGR.info(
             f"Selected {component_table.shape[0]} components with "
-            f"{round(100 * varex_norm.sum(), 2)}% "
+            f"{round(varex_norm.sum() * 100, 2)}% "
             f"normalized variance explained using {alg_str} dimensionality estimate"
         )
         component_table["classification"] = "accepted"

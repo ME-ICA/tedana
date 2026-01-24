@@ -9,7 +9,6 @@ import matplotlib
 import nibabel as nb
 import numpy as np
 import pandas as pd
-import scipy.stats as sstats
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
@@ -810,6 +809,7 @@ def plot_gscontrol(
     *,
     io_generator: io.OutputGenerator,
     gscontrol: list,
+    png_cmap: str,
 ):
     """Plot the results of the gscontrol steps.
 
@@ -822,78 +822,57 @@ def plot_gscontrol(
     """
     import pandas as pd
 
-    if "gsr" in gscontrol:
-        gsr_img = io_generator.get_name("gs img")
-        gsr_plot = f"{io_generator.prefix}gsr_boldmap.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="A non-diagonal affine.*",
-                category=UserWarning,
-            )
-            plotting.plot_stat_map(
-                gsr_img,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=True,
-                black_bg=True,
-                cmap="coolwarm",
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
-                resampling_interpolation="nearest",
-            )
-
-    if "mir" in gscontrol:
-        mir_img = io_generator.get_name("t1 like img")
-        mir_plot = f"{io_generator.prefix}T1likeEffect_boldmap.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="A non-diagonal affine.*",
-                category=UserWarning,
-            )
-            plotting.plot_stat_map(
-                mir_img,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=True,
-                black_bg=True,
-                cmap="coolwarm",
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
-                resampling_interpolation="nearest",
-            )
-
     if "gsr" in gscontrol or "mir" in gscontrol:
         confounds_file = io_generator.get_name("confounds tsv")
         confounds_df = pd.read_table(confounds_file)
 
         # Get repetition time from reference image
         tr = io_generator.reference_img.header.get_zooms()[-1]
-        time_arr = np.arange(confounds_df.shape[0]) * tr
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        if "gsr" in gscontrol:
-            gs = confounds_df["global_signal"].values
-            gs_z = sstats.zscore(gs)
-            ax.plot(time_arr, gs_z, label="GSR", color="red")
+    if "gsr" in gscontrol:
+        gsr_img = nb.load(io_generator.get_name("gs img"))
 
-        if "mir" in gscontrol:
-            mir = confounds_df["mir_global_signal"].values
-            mir_z = sstats.zscore(mir)
-            ax.plot(time_arr, mir_z, label="MIR", color="blue")
+        # Get fft and freqs for this component
+        # adapted from @dangom
+        timeseries = confounds_df["global_signal"].values
+        spectrum, freqs = utils.get_spectrum(timeseries, tr)
 
-        ax.legend()
-        ax.set_title("Global Signals")
-        ax.set_xlabel("Time (s)")
-        ax.set_ylabel("Signal (z-scored)")
-        ax.set_xlim(0, time_arr[-1])
-        fig.savefig(
-            os.path.join(
-                io_generator.out_dir,
-                "figures",
-                f"{io_generator.prefix}gscontrol_bold.svg",
-            )
+        plot_name = f"{io_generator.prefix}gsr_boldmap.svg"
+        plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
+
+        plot_component(
+            stat_img=gsr_img,
+            component_timeseries=timeseries,
+            power_spectrum=spectrum,
+            frequencies=freqs,
+            tr=tr,
+            classification_color="red",
+            png_cmap=png_cmap,
+            title="Global Signal Regression",
+            out_file=plot_name,
+        )
+
+    if "mir" in gscontrol:
+        mir_img = nb.load(io_generator.get_name("t1 like img"))
+
+        # Get fft and freqs for this component
+        # adapted from @dangom
+        timeseries = confounds_df["mir_global_signal"].values
+        spectrum, freqs = utils.get_spectrum(timeseries, tr)
+
+        plot_name = f"{io_generator.prefix}mir_boldmap.svg"
+        plot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
+
+        plot_component(
+            stat_img=mir_img,
+            component_timeseries=timeseries,
+            power_spectrum=spectrum,
+            frequencies=freqs,
+            tr=tr,
+            classification_color="red",
+            png_cmap=png_cmap,
+            title="Minimum Image Regression",
+            out_file=plot_name,
         )
 
 
