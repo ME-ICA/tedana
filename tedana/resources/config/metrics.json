@@ -79,6 +79,10 @@
         "map Z": [
             "map weight"
         ],
+        "map univariate Z statistics": [
+            "data_optcom",
+            "mixing"
+        ],
         "map weight": [
             "data_optcom",
             "mixing"

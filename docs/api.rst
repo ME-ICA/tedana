@@ -238,6 +238,7 @@ API
    :template: function.rst
 
    tedana.stats.get_coeffs
+   tedana.stats.voxelwise_univariate_zstats
    tedana.stats.getfbounds
 
 
