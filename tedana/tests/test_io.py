@@ -128,12 +128,11 @@ def test_smoke_split_ts():
     hikts, resid = me.split_ts(
         data=data,
         mixing=mixing,
-        mask=mask,
         component_table=component_table,
     )
 
-    assert hikts is not None
-    assert resid is not None
+    assert hikts.shape == (n_samples_in_mask, n_times)
+    assert resid.shape == (n_samples_in_mask, n_times)
 
 
 def test_smoke_write_split_ts():

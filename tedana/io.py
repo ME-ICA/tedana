@@ -958,7 +958,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     return nii
 
 
-def split_ts(data, mixing, mask, component_table):
+def split_ts(data, mixing, component_table):
     """Split `data` time series into accepted component time series and remainder.
 
     Parameters
@@ -968,8 +968,6 @@ def split_ts(data, mixing, mask, component_table):
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (Mb,) array_like
-        Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
@@ -985,9 +983,8 @@ def split_ts(data, mixing, mask, component_table):
     acc = component_table[component_table.classification == "accepted"].index.values
 
     cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing)
-    betas = cbetas[mask]
     if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
+        hikts = cbetas[:, acc].dot(mixing.T[acc, :])
     else:
         hikts = None
 
@@ -1141,9 +1138,31 @@ def _infer_prefix(prefix):
 
 def load_data_nilearn(data, mask_img, n_echos):
     """Load data using nilearn's apply_mask function."""
+    import nibabel as nb
+    from nilearn.masking import apply_mask
+
     if len(data) == 1:
         # z-cat data
         data_img = nb.load(data[0])
-
+        n_z = data_img.shape[2] // n_echos
+        imgs = []
+        for i_echo in range(n_echos):
+            imgs.append(data_img.slicer[..., i_echo * n_z:(i_echo + 1) * n_z])
+        data = imgs
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
+
+
+def load_ref_img(data, n_echos):
+    """Load data using nibabel's load function."""
+    import nibabel as nb
+
+    if len(data) == 1:
+        # z-cat data
+        data_img = nb.load(data[0])
+        n_z = data_img.shape[2] // n_echos
+        ref_img = data_img.slicer[:, :, :n_z, :]
+    else:
+        ref_img = nb.load(data[0])
+
+    return ref_img
