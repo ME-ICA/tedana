@@ -490,8 +490,8 @@ def calculate_marginal_r2(
     data_optcom = stats.zscore(data_optcom, axis=1)
 
     # S x C correlation matrix of each component with the data
-    # correlation = (1/(T-1)) * dat_z @ mix_z
-    # NOTE: We use population scaling here to match the behavior of np.corrcoef.
+    # correlation = (1/T) * dat_z @ mix_z
+    # NOTE: We use population scaling here to match the output of np.corrcoef.
     correlations = data_optcom @ mixing / n_vols
     correlations = correlations**2
     return 100 * correlations.mean(axis=0)
@@ -539,8 +539,8 @@ def calculate_semipartial_r2(
     mixing = _orthogonalize_by_others(arr=mixing)
 
     # S x C correlation matrix of each component with the data
-    # correlation = (1/(T-1)) * dat_z @ mix_z
-    # NOTE: We use population scaling here to match the behavior of np.corrcoef.
+    # correlation = (1/T) * dat_z @ mix_z
+    # NOTE: We use population scaling here to match the output of np.corrcoef.
     correlations = data_optcom @ mixing / n_vols
     correlations = correlations**2
     return 100 * correlations.mean(axis=0)
