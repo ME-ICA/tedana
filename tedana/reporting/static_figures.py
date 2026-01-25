@@ -12,7 +12,6 @@ import pandas as pd
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap, to_rgba
 from nilearn import masking, plotting
 
 from tedana import io, stats, utils
@@ -773,49 +772,44 @@ def plot_adaptive_mask(
     base_mask = io.new_nii_like(io_generator.reference_img, base_mask)
     mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
     mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
-    all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
-    # Set values to 0.5 for probabilistic atlas plotting
-    # all_masks = image.math_img("img * 0.5", img=all_masks)
-    mean_masks = image.mean_img(imgs=all_masks)
-    labels = ["Initial mask only", "Optimal combination & Initial", "Classification, OC & Initial"]
 
     color_dict = {
         "Initial mask only": "#DC267F",
         "Optimal combination & Initial": "#FFB000",
         "Classification, OC & Initial": "#648FFF",
     }
-    colors = [to_rgba(color_dict[label]) for label in labels]
-    discrete_cmap = ListedColormap(colors)
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        ob = plotting.plot_roi(
-            roi_img=mean_masks,
-            bg_img=mean_optcom_img,
-            cmap=discrete_cmap,
-            threshold=0.2,
-            linewidths=1.5,
+        ob = plotting.plot_epi(
+            epi_img=mean_optcom_img,
+            annotate=False,
+            draw_cross=False,
+            colorbar=False,
             display_mode="mosaic",
             cut_coords=5,
-            colorbar=False,
-            draw_cross=False,
-            annotate=False,
         )
-        #     view_type="continous",
-        # )
-        # ob = plotting.plot_prob_atlas(
-        #     maps_img=all_masks,
-        #     bg_img=mean_optcom_img,
-        #     view_type="contours",
-        #     linewidths=1.5,
-        #     threshold=0.2,
-        #     annotate=False,
-        #     draw_cross=False,
-        #     cmap=discrete_cmap,
-        #     display_mode="mosaic",
-        #     cut_coords=4,
-        #     colorbar=False,
-        # )
+        ob.add_contours(
+            mask_clf,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Classification, OC & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            mask_denoise,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Optimal combination & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            base_mask,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Initial mask only"]],
+            linewidths=1.5,
+        )
 
     legend_elements = []
     for k, v in color_dict.items():
