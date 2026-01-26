@@ -1020,8 +1020,7 @@ def plot_heatmap(
     models = [search.group(1) for search in searches if search is not None]
     models_df = component_table[models]
     # Remove the R2stat string from the models_df column names
-    models_df.columns = models_df.columns.str.replace("R2stat ", "")
-    models_df.columns = models_df.columns.str.replace(" model", "")
+    models_df.columns = models_df.columns.str.replace("R2stat ", "").str.replace(" model", "")
     models_df = models_df.T  # transpose so components are columns
 
     n_regressors = corr_df.shape[0]
