@@ -359,10 +359,11 @@ def tedpca(
     ]
     # Even if user inputted, don't fit external_regressors to PCA components
     component_table, comp_ts = metrics.collect.generate_metrics(
-        data_cat=data_cat,
-        data_optcom=data_optcom,
+        data_cat=data,
+        data_optcom=data_optcom[mask, :],
         mixing=comp_ts,
-        adaptive_mask=adaptive_mask,
+        adaptive_mask=adaptive_mask[mask],
+        mask_img=masking.unmask(mask, io_generator.mask),
         tes=tes,
         n_independent_echos=n_independent_echos,
         io_generator=io_generator,
