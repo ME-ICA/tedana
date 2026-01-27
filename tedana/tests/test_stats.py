@@ -113,11 +113,11 @@ def test_break_get_coeffs():
 
     data = np.empty((n_samples, n_echos, n_vols + 1))
     x = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError, match='does not match first dimension of x'):
+    with pytest.raises(ValueError, match="does not match first dimension of x"):
         get_coeffs(data, x, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols))
-    with pytest.raises((LinAlgError, ValueError), match='3-dimensional array given'):
+    with pytest.raises((LinAlgError, ValueError), match="3-dimensional array given"):
         get_coeffs(data, x, add_const=False)
 
 
