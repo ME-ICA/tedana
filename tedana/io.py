@@ -1150,6 +1150,11 @@ def load_data_nilearn(data, mask_img, n_echos):
         imgs = []
         for i_echo in range(n_echos):
             imgs.append(data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :])
+
+        raise Exception(
+            f"data_img:\t{data_img.shape}\n{data_img.affine}\n"
+            f"imgs:\t{imgs[0].shape}\n{imgs[0].affine}"
+        )
         data = imgs
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
