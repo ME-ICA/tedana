@@ -339,6 +339,10 @@ def threshold_to_match(
 
     clmaps = np.zeros([n_voxels, n_components], bool)
     for i_comp in range(n_components):
+        if n_sig_voxels[i_comp] == 0:
+            clmaps[:, i_comp] = False
+            continue
+
         # Initial cluster-defining threshold is defined based on the number
         # of significant voxels from the F-statistic maps. This threshold
         # will be relaxed until the number of significant voxels from both
