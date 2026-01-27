@@ -1151,9 +1151,12 @@ def load_data_nilearn(data, mask_img, n_echos):
         imgs = []
         for i_echo in range(n_echos):
             # Using slicer to create the image messes up the affine, so we need to create the
-            # image manually.
+            # image manually. Use a header copy with dimensions updated to match each echo's
+            # array, since the original header describes the full z-concatenated volume.
             arr = data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :].get_fdata()
-            img = nb.Nifti1Image(arr, data_img.affine, data_img.header)
+            echo_header = data_img.header.copy()
+            echo_header.set_data_shape(arr.shape)
+            img = nb.Nifti1Image(arr, data_img.affine, echo_header)
             imgs.append(img)
 
         data = imgs
@@ -1171,8 +1174,11 @@ def load_ref_img(data, n_echos):
         n_z = data_img.shape[2] // n_echos
         arr = data_img.slicer[:, :, :n_z, :].get_fdata()
         # Using slicer to create the image messes up the affine, so we need to create the
-        # image manually.
-        ref_img = nb.Nifti1Image(arr, data_img.affine, data_img.header)
+        # image manually. Use a header copy with dimensions updated to match the ref array,
+        # since the original header describes the full z-concatenated volume.
+        ref_header = data_img.header.copy()
+        ref_header.set_data_shape(arr.shape)
+        ref_img = nb.Nifti1Image(arr, data_img.affine, ref_header)
 
     else:
         ref_img = nb.load(data[0])
