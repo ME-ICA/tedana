@@ -1149,13 +1149,12 @@ def load_data_nilearn(data, mask_img, n_echos):
         n_z = data_img.shape[2] // n_echos
         imgs = []
         for i_echo in range(n_echos):
-            imgs.append(data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :])
+            # Using slicer to create the image messes up the affine, so we need to create the
+            # image manually.
+            arr = data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :].get_fdata()
+            img = nb.Nifti1Image(arr, data_img.affine, data_img.header)
+            imgs.append(img)
 
-        raise Exception(
-            f"data_img:\t{data_img.shape}\n{data_img.affine}\n"
-            f"imgs:\t{imgs[-1].shape}\n{imgs[-1].affine}\n"
-            f"{np.allclose(data_img.affine, imgs[-1].affine)}"
-        )
         data = imgs
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
