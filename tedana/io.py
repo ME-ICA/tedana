@@ -248,15 +248,9 @@ class OutputGenerator:
         extension = self._determine_extension(description, name)
 
         name_variables = get_fields(name)
-        for key, value in kwargs.items():
-            if key not in name_variables:
-                raise ValueError(
-                    f"Argument {key} passed but has no match in format "
-                    f"string. Available format variables: "
-                    f"{name_variables} from {kwargs} and {name}."
-                )
+        name_kwargs = {k: v for k, v in kwargs.items() if k in name_variables}
 
-        name = name.format(**kwargs)
+        name = name.format(**name_kwargs)
         name = op.join(self.out_dir, self.prefix + name + extension)
         return name
 
