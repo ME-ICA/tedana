@@ -1153,7 +1153,8 @@ def load_data_nilearn(data, mask_img, n_echos):
 
         raise Exception(
             f"data_img:\t{data_img.shape}\n{data_img.affine}\n"
-            f"imgs:\t{imgs[0].shape}\n{imgs[0].affine}"
+            f"imgs:\t{imgs[-1].shape}\n{imgs[-1].affine}\n"
+            f"{np.allclose(data_img.affine, imgs[-1].affine)}"
         )
         data = imgs
 
