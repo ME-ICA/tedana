@@ -8,7 +8,7 @@ import sys
 
 import nibabel as nb
 import numpy as np
-from nilearn.masking import apply_mask, compute_epi_mask
+from nilearn.masking import compute_epi_mask
 from threadpoolctl import threadpool_limits
 
 from tedana import __version__, combine, decay, io, utils
