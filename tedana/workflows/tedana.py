@@ -937,10 +937,11 @@ def tedana_workflow(
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
             component_table, mixing = metrics.collect.generate_metrics(
-                data_cat=data_cat,
-                data_optcom=data_optcom,
+                data_cat=data_cat[mask_clf, ...],
+                data_optcom=data_optcom[mask_clf, :],
                 mixing=mixing,
-                adaptive_mask=masksum_clf,
+                adaptive_mask=masksum_clf[mask_clf],
+                mask_img=unmask(mask_clf, io_generator.mask),
                 tes=tes,
                 n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
@@ -996,10 +997,11 @@ def tedana_workflow(
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
         component_table, mixing = metrics.collect.generate_metrics(
-            data_cat=data_cat,
-            data_optcom=data_optcom,
+            data_cat=data_cat[mask_clf, ...],
+            data_optcom=data_optcom[mask_clf, :],
             mixing=mixing,
-            adaptive_mask=masksum_clf,
+            adaptive_mask=masksum_clf[mask_clf],
+            mask_img=unmask(mask_clf, io_generator.mask),
             tes=tes,
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
