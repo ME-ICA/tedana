@@ -204,9 +204,9 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
         LGR.info(f"echo_means shape: {echo_means.shape}")
         LGR.info(f"lthrs shape: {lthrs.shape}")
         for echo_idx in range(n_echos):
-            idx = (np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx])
+            idx = np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx]
             LGR.info(f"{echo_idx} idx shape: {idx.shape}")
-            dropout_adaptive_mask[idx] = (echo_idx + 1)
+            dropout_adaptive_mask[idx] = echo_idx + 1
 
         adaptive_masks.append(dropout_adaptive_mask)
 
