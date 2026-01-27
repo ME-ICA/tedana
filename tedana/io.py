@@ -216,6 +216,8 @@ class OutputGenerator:
         mask : img_like
             The mask image to register.
         """
+        if isinstance(mask, str):
+            mask = nib.load(mask)
         self.mask = mask
 
     def get_name(self, description, **kwargs):

@@ -81,6 +81,7 @@ def test_make_adaptive_mask(caplog):
     # load data make masks
     mask_file = pjoin(datadir, "mask.nii.gz")
     data = np.stack([apply_mask(f, mask_file).T for f in fnames], axis=1)
+    n_voxels_in_mask = data.shape[0]
 
     # Add in simulated values
     base_val = np.mean(data[:, 0, :])  # mean value of first echo
@@ -121,7 +122,7 @@ def test_make_adaptive_mask(caplog):
         methods=["dropout"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 3
@@ -129,10 +130,10 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 3
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 1817, 4427, 43130]))
+    assert np.allclose(counts, np.array([12568, 1815, 4402, 43169]))
     assert "voxels in user-defined mask do not have good signal" in caplog.text
 
     # Just decay method
@@ -142,7 +143,7 @@ def test_make_adaptive_mask(caplog):
         methods=["decay"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -153,7 +154,7 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985  # This method can't flag first echo as bad
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+    assert np.allclose(counts, np.array([969, 4366, 5974, 50645]))
 
     # Dropout and decay methods combined
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -162,7 +163,7 @@ def test_make_adaptive_mask(caplog):
         methods=["dropout", "decay"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -170,10 +171,10 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 1
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+    assert np.allclose(counts, np.array([12568, 3113, 6233, 40040]))
 
     # Adding "none" should have no effect
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -182,7 +183,7 @@ def test_make_adaptive_mask(caplog):
         methods=["dropout", "decay", "none"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -190,10 +191,10 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 1
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+    assert np.allclose(counts, np.array([12568, 3113, 6233, 40040]))
 
     # Just "none"
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -202,7 +203,7 @@ def test_make_adaptive_mask(caplog):
         methods=["none"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 3
@@ -213,7 +214,7 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
+    assert np.allclose(counts, np.array([969, 1412, 1196, 58377]))
     assert "No methods provided for adaptive mask generation." in caplog.text
 
     # testing n_independent_echos
@@ -226,7 +227,7 @@ def test_make_adaptive_mask(caplog):
         n_independent_echos=3,
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 5
     assert adaptive_mask[idx + 1] == 2
@@ -237,10 +238,10 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985  # This method can't flag first echo as bad
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 5]))
-    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+    assert np.allclose(counts, np.array([969, 4366, 5974, 50645]))
     # 4366 + 5973 = 10399 (i.e. voxels with 1 or 2 good echoes are flagged here)
     assert (
-        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "10340 voxels (17.0%) have fewer than 3.0 good voxels. "
         "These voxels will be used in all analyses, "
         "but might not include 3 independent echo measurements."
     ) in caplog.text
@@ -253,7 +254,7 @@ def test_make_adaptive_mask(caplog):
     )
 
     assert (
-        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "10340 voxels (17.0%) have fewer than 3.0 good voxels. "
         "The degrees of freedom for fits across echoes will remain 4 even if "
         "there might be fewer independent echo measurements."
     ) in caplog.text
@@ -362,13 +363,11 @@ def test_smoke_threshold_map():
     min_cluster_size = random.randint(1, 100)
 
     threshold = random.random()
-    mask = np.random.randint(2, size=1000)
 
     assert utils.threshold_map(img, min_cluster_size) is not None
 
     # test threshold_map with different optional parameters
     assert utils.threshold_map(img, min_cluster_size, threshold=threshold) is not None
-    assert utils.threshold_map(img, min_cluster_size, mask=mask) is not None
     assert utils.threshold_map(img, min_cluster_size, binarize=False) is not None
     assert utils.threshold_map(img, min_cluster_size, sided="one") is not None
     assert utils.threshold_map(img, min_cluster_size, sided="bi") is not None

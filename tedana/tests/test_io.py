@@ -141,16 +141,24 @@ def test_smoke_write_split_ts():
     random input and tear them down.
     """
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
-    n_samples, n_times, n_components = 64350, 10, 6
-    mixing = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
-    n_samples_in_mask = mask.sum()
-    data = np.random.random((n_samples_in_mask, n_times))
+
     ref_img = os.path.join(data_dir, "mask.nii.gz")
+    ref_img = nib.load(ref_img)
+    ref_img_4d = nib.Nifti1Image(ref_img.get_fdata()[..., None], ref_img.affine, ref_img.header)
+    ref_img_4d.header.set_zooms(ref_img.header.get_zooms() + (1,))
+    n_samples_in_mask = int(ref_img.get_fdata().sum())
+    n_times, n_components = 10, 6
+
+    mask = np.random.randint(2, size=n_samples_in_mask).astype(bool)
+    data = np.random.random((n_samples_in_mask, n_times))
+    mixing = np.random.random((n_times, n_components))
+
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
-    io_generator = me.OutputGenerator(ref_img)
+    io_generator = me.OutputGenerator(ref_img_4d)
+    io_generator.register_mask(ref_img)
+
     component = np.random.random(n_components)
     metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
@@ -199,12 +207,13 @@ def test_smoke_filewrite():
 
     in both bids and orig formats.
     """
-    n_samples, _, _ = 64350, 10, 6
-    data_1d = np.random.random(n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
+    ref_img = nib.load(ref_img)
+    n_samples_in_mask = int(ref_img.get_fdata().sum())
     io_generator = me.OutputGenerator(ref_img)
     io_generator.register_mask(ref_img)
 
+    data_1d = np.random.random(n_samples_in_mask)
     with pytest.raises(KeyError):
         io_generator.save_file(data_1d, "")
 

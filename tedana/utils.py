@@ -296,6 +296,7 @@ def unmask(data, mask):
             f"({mask.sum()})."
         )
 
+    mask = mask.astype(bool)
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
