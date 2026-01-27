@@ -1168,7 +1168,11 @@ def load_ref_img(data, n_echos):
         # z-cat data
         data_img = nb.load(data[0])
         n_z = data_img.shape[2] // n_echos
-        ref_img = data_img.slicer[:, :, :n_z, :]
+        arr = data_img.slicer[:, :, :n_z, :].get_fdata()
+        # Using slicer to create the image messes up the affine, so we need to create the
+        # image manually.
+        ref_img = nb.Nifti1Image(arr, data_img.affine, data_img.header)
+
     else:
         ref_img = nb.load(data[0])
 

@@ -382,8 +382,8 @@ def t2smap_workflow(
         data = [data]
 
     # Initialize OutputGenerator with reference image
-    # XXX: This doesn't support z-cat or AFNI data yet.
-    ref_img = nb.load(data[0])
+    # XXX: This doesn't support AFNI data yet.
+    ref_img = io.load_ref_img(data=data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -400,8 +400,7 @@ def t2smap_workflow(
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = nb.load(mask)
     else:
-        first_echo_img = nb.load(data[0])
-        mask_img = compute_epi_mask(first_echo_img)
+        mask_img = compute_epi_mask(ref_img)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."
@@ -410,7 +409,7 @@ def t2smap_workflow(
     io_generator.register_mask(mask_img)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat = np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
+    data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
 
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")

@@ -642,7 +642,7 @@ def tedana_workflow(
     selector = ComponentSelector(tree, out_dir)
 
     # Initialize OutputGenerator with reference image
-    # XXX: This doesn't support z-cat or AFNI data yet.
+    # XXX: This doesn't support AFNI data yet.
     ref_img = io.load_ref_img(data=data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,

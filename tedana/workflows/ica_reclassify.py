@@ -410,12 +410,6 @@ def ica_reclassify_workflow(
     else:
         data_optcom = ioh.get_file_contents("combined img")
 
-    if verbose:
-        LGR.debug("Loading input 4D data")
-        data_cat = ioh.get_file_contents("input img")
-        # Extract the data from the nibabel objects
-        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat), dummy_scans=dummy_scans)
-
     io_generator = io.OutputGenerator(
         data_optcom,
         convention=convention,
@@ -426,6 +420,18 @@ def ica_reclassify_workflow(
         out_dir=out_dir,
         old_registry=ioh.registry,
     )
+
+    if verbose:
+        LGR.debug("Loading input 4D data")
+        data_cat = ioh.get_file_contents("input img")
+        # Extract the data from the nibabel objects
+        data_cat = io.load_data_nilearn(
+            data_cat,
+            mask_img=io_generator.mask_img,
+            n_echos=len(data_cat),
+        )
+        if dummy_scans > 0:
+            data_cat = data_cat[:, :, dummy_scans:]
 
     # Make a new selector with the added files
     selector = selection.component_selector.ComponentSelector(previous_tree_fname)
