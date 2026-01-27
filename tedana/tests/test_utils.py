@@ -8,7 +8,7 @@ import nibabel as nib
 import numpy as np
 import pytest
 
-from tedana import io, utils
+from tedana import utils
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), "data")

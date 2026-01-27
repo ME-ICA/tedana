@@ -31,7 +31,7 @@ def test_break_computefeats2():
         computefeats2(data, mixing, normalize=True)
 
     mixing = np.empty((n_vols + 1, n_comps))
-    with pytest.raises(ValueError, match="Second dimensions \(number of volumes\) of data"):
+    with pytest.raises(ValueError, match="Second dimensions"):
         computefeats2(data, mixing, normalize=True)
 
 
