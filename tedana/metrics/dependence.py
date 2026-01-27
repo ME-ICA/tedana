@@ -243,7 +243,6 @@ def calculate_f_maps(
 def threshold_map(
     *,
     maps: np.ndarray,
-    mask: np.ndarray,
     mask_img: nb.Nifti1Image,
     threshold: float,
     csize: typing.Union[int, None] = None,
@@ -254,11 +253,8 @@ def threshold_map(
     ----------
     maps : (M_s x C) array_like
         Statistical maps to be thresholded. M_s is the number of voxels in the strict mask.
-    mask : (M) array_like with M_s non-zero elements
-        Strict binary mask. This is a mask of the voxels that are included in the analysis,
-        limited to voxels in the base mask.
     mask_img : img_like
-        Base mask image to convert to niimgs with.
+        Strict mask image to convert to niimgs with.
     threshold : :obj:`float`
         Value threshold to apply to maps.
     csize : :obj:`int` or :obj:`None`, optional
@@ -276,10 +272,8 @@ def threshold_map(
     else:
         csize = int(csize)
 
-    strict_mask_img = masking.unmask(mask, mask_img)
-
     # Cluster-extent threshold and binarize F-maps
-    img = masking.unmask(utils.unmask(maps, mask).T, mask_img)
+    img = masking.unmask(maps.T, mask_img)
     for i_comp in range(n_components):
         comp_img = image.index_img(img, i_comp)
         thresh_arr = utils.threshold_map(
@@ -290,7 +284,7 @@ def threshold_map(
             sided="bi",
         )
         thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
-        maps_thresh[:, i_comp] = masking.apply_mask(thresh_img, strict_mask_img)
+        maps_thresh[:, i_comp] = masking.apply_mask(thresh_img, mask_img)
     return maps_thresh
 
 
@@ -298,7 +292,6 @@ def threshold_to_match(
     *,
     maps: np.ndarray,
     n_sig_voxels: np.ndarray,
-    mask: np.ndarray,
     mask_img: nb.Nifti1Image,
     csize: typing.Union[int, None] = None,
 ) -> np.ndarray:
@@ -313,10 +306,8 @@ def threshold_to_match(
         Statistical maps to be thresholded.
     n_sig_voxels : (C) array_like
         Number of significant voxels to threshold to, for each map in maps.
-    mask : (S) array_like
-        Binary mask.
     mask_img : img_like
-        Reference image to convert to niimgs with.
+        Strict mask image to convert to niimgs with.
     csize : :obj:`int` or :obj:`None`, optional
         Minimum cluster size. If None, standard thresholding (non-cluster-extent) will be done.
         Default is None.
@@ -335,8 +326,6 @@ def threshold_to_match(
     else:
         csize = int(csize)
 
-    strict_mask_img = masking.unmask(mask, mask_img)
-
     clmaps = np.zeros([n_voxels, n_components], bool)
     for i_comp in range(n_components):
         if n_sig_voxels[i_comp] == 0:
@@ -347,7 +336,7 @@ def threshold_to_match(
         # of significant voxels from the F-statistic maps. This threshold
         # will be relaxed until the number of significant voxels from both
         # maps is roughly equal.
-        ccimg = masking.unmask(utils.unmask(stats.rankdata(abs_maps[:, i_comp]), mask), mask_img)
+        ccimg = masking.unmask(stats.rankdata(abs_maps[:, i_comp]), mask_img)
         step = int(n_sig_voxels[i_comp] / 10)
         rank_thresh = n_voxels - n_sig_voxels[i_comp]
 
@@ -363,7 +352,7 @@ def threshold_to_match(
             if rank_thresh <= 0:  # all voxels significant
                 break
 
-            clmap = masking.apply_mask(thresh_img, strict_mask_img)
+            clmap = masking.apply_mask(thresh_img, mask_img)
             diff = n_sig_voxels[i_comp] - clmap.sum()
             if diff < 0 or clmap.sum() == 0:
                 rank_thresh += step
@@ -375,7 +364,7 @@ def threshold_to_match(
                     sided="bi",
                 )
                 thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
-                clmap = masking.apply_mask(thresh_img, strict_mask_img)
+                clmap = masking.apply_mask(thresh_img, mask_img)
                 break
             else:
                 rank_thresh -= step

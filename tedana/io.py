@@ -285,7 +285,7 @@ class OutputGenerator:
             )
 
         if description.endswith("img"):
-            self.save_img(data, name)
+            self.save_img(data, name, mask=kwargs.get("mask", None))
         elif description.endswith("json"):
             prepped = prep_data_for_json(data)
             self.save_json(prepped, name)
@@ -298,7 +298,7 @@ class OutputGenerator:
 
         return name
 
-    def save_img(self, data, name):
+    def save_img(self, data, name, mask=None):
         """Save image data to a nifti file.
 
         Parameters
@@ -331,7 +331,8 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        img = masking.unmask(data.T, self.mask)
+        mask = mask or self.mask
+        img = masking.unmask(data.T, mask)
         if img.ndim == 4:
             # Only set the TR for 4D images.
             img.header.set_zooms(self.reference_img.header.get_zooms())
