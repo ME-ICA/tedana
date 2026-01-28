@@ -87,14 +87,14 @@ def generate_metrics(
     dependency_config = io.load_json(dependency_config)
 
     # Check for deprecated metrics and raise an error if they are used
-    DEPRECATED_METRICS = {
+    deprecated_metrics = {
         "map Z": "map weight",
         "map Z clusterized": "map weight clusterized",
     }
     msg = []
-    for metric in DEPRECATED_METRICS:
+    for metric in deprecated_metrics:
         if metric in metrics:
-            msg.append(f"{metric}: Use {DEPRECATED_METRICS[metric]} instead.")
+            msg.append(f"{metric}: Use {deprecated_metrics[metric]} instead.")
     if msg:
         msg = "\n\t- ".join(msg)
         raise ValueError(f"The following metrics are no longer supported:\n\t- {msg}")
