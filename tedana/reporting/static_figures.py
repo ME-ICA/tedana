@@ -246,7 +246,7 @@ def plot_component(
             resampling_interpolation="nearest",
         )
 
-    display.annotate(size=30)
+    display.annotate(size=20)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
@@ -772,30 +772,43 @@ def plot_adaptive_mask(
     base_mask = io.new_nii_like(io_generator.reference_img, base_mask)
     mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
     mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
-    all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
-    # Set values to 0.5 for probabilistic atlas plotting
-    all_masks = image.math_img("img * 0.5", img=all_masks)
 
-    cmap = plt.cm.gist_rainbow
-    discrete_cmap = cmap.resampled(3)  # colors matching the mask lines in the image
     color_dict = {
-        "Base": discrete_cmap(0),
-        "Optimal combination": discrete_cmap(0.4),
-        "Classification": discrete_cmap(0.9),
+        "Initial mask only": "#DC267F",
+        "Optimal combination & Initial": "#FFB000",
+        "Classification, OC & Initial": "#648FFF",
     }
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        ob = plotting.plot_prob_atlas(
-            maps_img=all_masks,
-            bg_img=mean_optcom_img,
-            view_type="contours",
-            threshold=0.2,
+        ob = plotting.plot_epi(
+            epi_img=mean_optcom_img,
             annotate=False,
             draw_cross=False,
-            cmap=cmap,
+            colorbar=False,
             display_mode="mosaic",
-            cut_coords=4,
+            cut_coords=5,
+        )
+        ob.add_contours(
+            mask_clf,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Classification, OC & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            mask_denoise,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Optimal combination & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            base_mask,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Initial mask only"]],
+            linewidths=1.5,
         )
 
     legend_elements = []
@@ -807,15 +820,21 @@ def plot_adaptive_mask(
     width = fig.get_size_inches()[0]
 
     ob.frame_axes.set_zorder(100)
-    ob.frame_axes.legend(
+    legend = ob.frame_axes.legend(
         handles=legend_elements,
-        facecolor="white",
+        facecolor="black",
         ncols=3,
-        loc="lower center",
+        loc="lower right",
         fancybox=True,
         shadow=True,
         fontsize=width,
     )
+
+    legend.get_frame().set_visible(False)
+
+    for text in legend.get_texts():
+        text.set_color("white")
+
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
 
