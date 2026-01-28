@@ -86,6 +86,19 @@ def generate_metrics(
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
     dependency_config = io.load_json(dependency_config)
 
+    # Check for deprecated metrics and raise an error if they are used
+    DEPRECATED_METRICS = {
+        "map Z": "map weight",
+        "map Z clusterized": "map weight clusterized",
+    }
+    msg = []
+    for metric in DEPRECATED_METRICS:
+        if metric in metrics:
+            msg.append(f"{metric}: Use {DEPRECATED_METRICS[metric]} instead.")
+    if msg:
+        msg = "\n\t- ".join(msg)
+        raise ValueError(f"The following metrics are no longer supported:\n\t- {msg}")
+
     if metrics is None:
         metrics = ["map weight"]
 
@@ -158,7 +171,7 @@ def generate_metrics(
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
     if "map weight" in required_metrics:
-        LGR.info("Calculating weight maps")
+        LGR.info("Calculating standardized parameter estimate maps for optimally combined data")
         metric_maps["map weight"] = dependence.calculate_weights(
             data_optcom=data_optcom,
             mixing=mixing,
@@ -168,9 +181,14 @@ def generate_metrics(
         metric_maps["map weight"], mixing = flip_components(
             metric_maps["map weight"], mixing, signs=signs
         )
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map weight"] ** 2, mask),
+                f"{label} component weights img",
+            )
 
     if "map optcom betas" in required_metrics:
-        LGR.info("Calculating parameter estimate maps for optimally combined data")
+        LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")
         metric_maps["map optcom betas"] = dependence.calculate_betas(
             data=data_optcom,
             mixing=mixing,
@@ -189,16 +207,6 @@ def generate_metrics(
             optcom_betas=metric_maps["map optcom betas"],
         )
 
-    if "map Z" in required_metrics:
-        LGR.info("Calculating z-statistic maps")
-        metric_maps["map Z"] = metric_maps["map weight"].copy()
-
-        if io_generator.verbose:
-            io_generator.save_file(
-                utils.unmask(metric_maps["map Z"] ** 2, mask),
-                f"{label} component weights img",
-            )
-
     if "map univariate Z statistics" in required_metrics:
         LGR.info("Calculating univariate z-statistic maps")
         # The univariate z-statistic maps are the result of a voxelwise univariate
@@ -215,7 +223,7 @@ def generate_metrics(
         LGR.info("Calculating F-statistic maps")
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat=data_cat,
-            z_maps=metric_maps["map Z"],
+            z_maps=metric_maps["map weight"],
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
@@ -236,18 +244,18 @@ def generate_metrics(
                 f"{label} component F-S0 img",
             )
 
-    if "map Z clusterized" in required_metrics:
-        LGR.info("Thresholding z-statistic maps")
+    if "map weight clusterized" in required_metrics:
+        LGR.info("Thresholding standardized parameter estimate maps")
         proportion_threshold = 95  # top 5% of voxels
-        metric_maps["map Z clusterized"] = dependence.threshold_map(
-            maps=metric_maps["map Z"],
+        metric_maps["map weight clusterized"] = dependence.threshold_map(
+            maps=metric_maps["map weight"],
             mask=mask,
             ref_img=ref_img,
             proportion_threshold=proportion_threshold,
         )
 
     if "map FT2 clusterized" in required_metrics:
-        LGR.info("Calculating T2* F-statistic maps")
+        LGR.info("Thresholding T2* F-statistic maps")
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -256,7 +264,7 @@ def generate_metrics(
         )
 
     if "map FS0 clusterized" in required_metrics:
-        LGR.info("Calculating S0 F-statistic maps")
+        LGR.info("Thresholding S0 F-statistic maps")
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
@@ -302,7 +310,7 @@ def generate_metrics(
         component_table["kappa"], component_table["rho"] = dependence.calculate_dependence_metrics(
             f_t2_maps=metric_maps["map FT2"],
             f_s0_maps=metric_maps["map FS0"],
-            z_maps=metric_maps["map Z"],
+            z_maps=metric_maps["map weight"],
         )
 
     # Generic metrics
@@ -352,8 +360,8 @@ def generate_metrics(
             component_table["signal-noise_t"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_t(
-            z_maps=metric_maps["map Z"],
-            z_clmaps=metric_maps["map Z clusterized"],
+            z_maps=metric_maps["map weight"],
+            z_clmaps=metric_maps["map weight clusterized"],
             f_t2_maps=metric_maps["map FT2"],
             proportion_threshold=proportion_threshold,
         )
@@ -370,8 +378,8 @@ def generate_metrics(
             component_table["signal-noise_z"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_z(
-            z_maps=metric_maps["map Z"],
-            z_clmaps=metric_maps["map Z clusterized"],
+            z_maps=metric_maps["map weight"],
+            z_clmaps=metric_maps["map weight clusterized"],
             f_t2_maps=metric_maps["map FT2"],
             proportion_threshold=proportion_threshold,
         )
@@ -383,8 +391,8 @@ def generate_metrics(
             "calculated for each component."
         )
         component_table["countnoise"] = dependence.compute_countnoise(
-            stat_maps=metric_maps["map Z"],
-            stat_cl_maps=metric_maps["map Z clusterized"],
+            stat_maps=metric_maps["map weight"],
+            stat_cl_maps=metric_maps["map weight clusterized"],
             proportion_threshold=proportion_threshold,
         )
 
