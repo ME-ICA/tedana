@@ -46,7 +46,7 @@
             "map FT2"
         ],
         "variance explained": [
-            "map optcom betas"
+            "map weight"
         ],
         "normalized variance explained": [
             "map weight"
@@ -115,7 +115,7 @@
         ],
         "map beta T2 clusterized": [
             "map FT2 clusterized",
-            "map optcom betas",
+            "map weight",
             "countsigFT2",
             "mask",
             "ref_img",
@@ -123,7 +123,7 @@
         ],
         "map beta S0 clusterized": [
             "map FS0 clusterized",
-            "map optcom betas",
+            "map weight",
             "countsigFS0",
             "mask",
             "ref_img",

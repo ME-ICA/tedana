@@ -170,7 +170,7 @@ def generate_metrics(
         )
 
     if "map optcom betas" in required_metrics:
-        LGR.info("Calculating parameter estimate maps for optimally combined data")
+        LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")
         metric_maps["map optcom betas"] = dependence.calculate_betas(
             data=data_optcom,
             mixing=mixing,
@@ -279,18 +279,18 @@ def generate_metrics(
 
     # Back to maps
     if "map beta T2 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
+        LGR.info("Thresholding standardized parameter estimate maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map weight"],
             n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
             ref_img=ref_img,
         )
 
     if "map beta S0 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
+        LGR.info("Thresholding standardized parameter estimate maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map weight"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
             ref_img=ref_img,
@@ -309,7 +309,7 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            component_maps=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map weight"],
         )
 
     if "normalized variance explained" in required_metrics:
