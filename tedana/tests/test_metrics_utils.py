@@ -8,6 +8,7 @@ from tedana.metrics._utils import (
     dependency_resolver,
     determine_signs,
     flip_components,
+    get_value_thresholds,
 )
 
 
@@ -78,6 +79,7 @@ def test_dependency_resolver():
         "metric_a": ["input1"],
         "metric_b": ["metric_a", "input2"],
         "metric_c": ["metric_b"],
+        "map Z": ["input1"],
     }
     base_inputs = ["input1", "input2"]
 
@@ -108,6 +110,9 @@ def test_dependency_resolver():
     assert "metric_a" in required
     assert "metric_c" in required
     assert "metric_b" in required
+
+    with pytest.raises(ValueError, match="The following metrics are no longer supported:"):
+        dependency_resolver(dependencies, ["map Z"], base_inputs)
 
 
 def test_add_external_dependencies():
@@ -160,3 +165,129 @@ def test_add_external_dependencies():
     # Check partial model dependencies
     assert "Fstat physio cardiac partial model" in updated_config_partial["dependencies"]
     assert "Fstat physio respiratory partial model" in updated_config_partial["dependencies"]
+
+
+def test_get_value_thresholds_value_threshold_single_component():
+    """value_threshold with one component returns length-1 array."""
+    maps = np.array([[1.0], [2.0], [3.0]])
+    result = get_value_thresholds(maps=maps, value_threshold=2.5)
+    assert result.shape == (1,)
+    assert result.dtype == np.float64
+    np.testing.assert_array_almost_equal(result, [2.5])
+
+
+def test_get_value_thresholds_value_threshold_multiple_components():
+    """value_threshold is broadcast to one value per component."""
+    maps = np.array([[1, 2], [3, 4], [5, 6]])
+    result = get_value_thresholds(maps=maps, value_threshold=3.0)
+    assert result.shape == (2,)
+    np.testing.assert_array_almost_equal(result, [3.0, 3.0])
+
+
+def test_get_value_thresholds_value_threshold_zero():
+    """value_threshold can be zero."""
+    maps = np.array([[1, 2], [3, 4]])
+    result = get_value_thresholds(maps=maps, value_threshold=0.0)
+    np.testing.assert_array_almost_equal(result, [0.0, 0.0])
+
+
+def test_get_value_thresholds_proportion_threshold_50_per_column():
+    """proportion_threshold computes percentile per column (axis=0)."""
+    # Columns have different values; 50th percentile of col0 is 3, col1 is 4
+    maps = np.array([[1, 2], [3, 4], [5, 6]])
+    result = get_value_thresholds(maps=maps, proportion_threshold=50)
+    assert result.shape == (2,)
+    np.testing.assert_array_almost_equal(result, [3.0, 4.0])
+
+
+def test_get_value_thresholds_proportion_threshold_uses_absolute_values():
+    """proportion_threshold is applied to absolute values of maps."""
+    maps = np.array([[-4, 2], [-2, 4], [-6, 6]])  # col0: 4,2,6 → 50th = 4
+    result = get_value_thresholds(maps=maps, proportion_threshold=50)
+    assert result.shape == (2,)
+    np.testing.assert_array_almost_equal(result, [4.0, 4.0])
+
+
+def test_get_value_thresholds_proportion_threshold_0_min():
+    """proportion_threshold=0 gives minimum absolute value per column."""
+    maps = np.array([[3, 1], [5, 2], [4, 3]])
+    result = get_value_thresholds(maps=maps, proportion_threshold=0)
+    np.testing.assert_array_almost_equal(result, [3.0, 1.0])
+
+
+def test_get_value_thresholds_proportion_threshold_100_max():
+    """proportion_threshold=100 gives maximum absolute value per column."""
+    maps = np.array([[3, 1], [5, 2], [4, 3]])
+    result = get_value_thresholds(maps=maps, proportion_threshold=100)
+    np.testing.assert_array_almost_equal(result, [5.0, 3.0])
+
+
+def test_get_value_thresholds_proportion_threshold_single_component():
+    """proportion_threshold with one component returns length-1 array."""
+    maps = np.array([[1.0], [2.0], [3.0], [4.0], [5.0]])
+    result = get_value_thresholds(maps=maps, proportion_threshold=50)
+    assert result.shape == (1,)
+    # 50th percentile of [1,2,3,4,5] with method 'higher' is 3
+    np.testing.assert_array_almost_equal(result, [3.0])
+
+
+def test_get_value_thresholds_neither_threshold_raises():
+    """Providing neither value_threshold nor proportion_threshold raises."""
+    maps = np.array([[1, 2], [3, 4]])
+    with pytest.raises(ValueError, match="Only one of value_threshold or proportion_threshold"):
+        get_value_thresholds(maps=maps)
+
+
+def test_get_value_thresholds_both_thresholds_raise():
+    """Providing both value_threshold and proportion_threshold raises."""
+    maps = np.array([[1, 2], [3, 4]])
+    with pytest.raises(ValueError, match="Only one of value_threshold or proportion_threshold"):
+        get_value_thresholds(
+            maps=maps,
+            value_threshold=1.0,
+            proportion_threshold=50,
+        )
+
+
+def test_get_value_thresholds_proportion_threshold_above_100_raises():
+    """proportion_threshold > 100 raises."""
+    maps = np.array([[1, 2], [3, 4]])
+    with pytest.raises(ValueError, match="proportion_threshold must be between 0 and 100"):
+        get_value_thresholds(maps=maps, proportion_threshold=101)
+
+
+def test_get_value_thresholds_proportion_threshold_below_0_raises():
+    """proportion_threshold < 0 raises."""
+    maps = np.array([[1, 2], [3, 4]])
+    with pytest.raises(ValueError, match="proportion_threshold must be between 0 and 100"):
+        get_value_thresholds(maps=maps, proportion_threshold=-0.1)
+
+
+def test_get_value_thresholds_proportion_threshold_boundary_0_and_100_valid():
+    """proportion_threshold 0 and 100 are valid (inclusive)."""
+    maps = np.array([[1, 2], [3, 4]])
+    r0 = get_value_thresholds(maps=maps, proportion_threshold=0)
+    r100 = get_value_thresholds(maps=maps, proportion_threshold=100)
+    assert r0.shape == r100.shape == (2,)
+    np.testing.assert_array_almost_equal(r0, [1.0, 2.0])
+    np.testing.assert_array_almost_equal(r100, [3.0, 4.0])
+
+
+def test_get_value_thresholds_keyword_only_args():
+    """Maps must be passed as keyword (function uses *)."""
+    maps = np.array([[1, 2], [3, 4]])
+    # Should work with keyword
+    result = get_value_thresholds(maps=maps, value_threshold=1.0)
+    assert result.shape == (2,)
+    # Positional maps would raise TypeError
+    with pytest.raises(TypeError):
+        get_value_thresholds(maps, value_threshold=1.0)
+
+
+def test_get_value_thresholds_return_type_ndarray():
+    """Return value is a numpy ndarray."""
+    maps = np.array([[1, 2], [3, 4]])
+    result_val = get_value_thresholds(maps=maps, value_threshold=1.0)
+    result_prop = get_value_thresholds(maps=maps, proportion_threshold=50)
+    assert isinstance(result_val, np.ndarray)
+    assert isinstance(result_prop, np.ndarray)
