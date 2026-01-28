@@ -5,8 +5,6 @@ import logging
 import numpy as np
 from scipy import linalg, stats
 
-from tedana import utils
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
@@ -34,54 +32,42 @@ def getfbounds(n_independent_sources):
     return f05, f025, f01
 
 
-def computefeats2(data, mixing, mask=None, normalize=True):
+def computefeats2(data, mixing, normalize=True):
     """
     Convert `data` to component space using `mixing`.
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data
+    data : (Mb x T) array_like
+        Input data, where `Mb` is samples in base mask, and `T` is time
     mixing : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like or None, optional
-        Boolean mask array. Default: None
     normalize : bool, optional
         Whether to z-score output. Default: True
 
     Returns
     -------
-    data_z : (S x C) :obj:`numpy.ndarray`
+    data_z : (Mb x C) :obj:`numpy.ndarray`
         Data in component space
     """
     if data.ndim != 2:
         raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
     elif mixing.ndim not in [2]:
         raise ValueError(f"Parameter mixing should be 2d, not {mixing.ndim}d")
-    elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
-    elif (mask is not None) and (data.shape[0] != mask.shape[0]):
-        raise ValueError(
-            f"First dimensions (number of samples) of data ({data.shape[0]}) "
-            f"and mask ({mask.shape[0]}) do not match."
-        )
     elif data.shape[1] != mixing.shape[0]:
         raise ValueError(
             f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
             f"and mixing ({mixing.shape[0]}) do not match."
         )
 
-    # demean masked data
-    if mask is not None:
-        data = data[mask, ...]
     # normalize data (subtract mean and divide by standard deviation) in the last dimension
     # so that least-squares estimates represent "approximate" correlation values (data_r)
     # assuming mixing matrix (mixing) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mixing` and limit to range [-0.999, 0.999]
-    data_r = get_coeffs(data_vn, mixing, mask=None)
+    data_r = get_coeffs(data_vn, mixing)
     # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
     data_r[data_r < -0.999] = -0.999
     data_r[data_r > 0.999] = 0.999
@@ -135,9 +121,8 @@ def voxelwise_univariate_zstats(data, mixing):
     return zstat
 
 
-def get_coeffs(data, x, mask=None, add_const=False):
-    """
-    Perform least-squares fit of `x` against `data`.
+def get_coeffs(data, x, add_const=False):
+    """Perform least-squares fit of `x` against `data`.
 
     Parameters
     ----------
@@ -145,8 +130,6 @@ def get_coeffs(data, x, mask=None, add_const=False):
         Array where `S` is samples, `E` is echoes, and `T` is time
     x : (T [x C]) array_like
         Array where `T` is time and `C` is predictor variables
-    mask : (S [x E]) array_like
-        Boolean mask array
     add_const : bool, optional
         Add intercept column to `x` before fitting. Default: False
 
@@ -165,19 +148,6 @@ def get_coeffs(data, x, mask=None, add_const=False):
             f"match first dimension of x ({x.shape[0]})"
         )
 
-    # mask data and flip (time x samples)
-    if mask is not None:
-        if mask.ndim not in [1, 2]:
-            raise ValueError(f"Parameter data should be 1d or 2d, not {mask.ndim}d")
-        elif data.shape[0] != mask.shape[0]:
-            raise ValueError(
-                f"First dimensions of data ({data.shape[0]}) and "
-                f"mask ({mask.shape[0]}) do not match"
-            )
-        mdata = data[mask, :].T
-    else:
-        mdata = data.T
-
     # coerce x to >=2d
     x = np.atleast_2d(x)
 
@@ -187,12 +157,9 @@ def get_coeffs(data, x, mask=None, add_const=False):
     if add_const:  # add intercept, if specified
         x = np.column_stack([x, np.ones((len(x), 1))])
 
-    betas = np.linalg.lstsq(x, mdata, rcond=None)[0].T
+    betas = np.linalg.lstsq(x, data.T, rcond=None)[0].T
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
-
-    if mask is not None:
-        betas = utils.unmask(betas, mask)
 
     return betas
 

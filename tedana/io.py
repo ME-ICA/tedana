@@ -17,6 +17,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 import requests
+from nilearn import masking
 from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image import new_img_like
 
@@ -131,6 +132,7 @@ class OutputGenerator:
 
         self.config = cfg
         self.reference_img = check_niimg(reference_img)
+        self.mask = None
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
@@ -206,6 +208,18 @@ class OutputGenerator:
         """
         self.registry["input img"] = [op.relpath(name, start=self.out_dir) for name in names]
 
+    def register_mask(self, mask):
+        """Register mask image.
+
+        Parameters
+        ----------
+        mask : img_like
+            The mask image to register.
+        """
+        if isinstance(mask, str):
+            mask = nib.load(mask)
+        self.mask = mask
+
     def get_name(self, description, **kwargs):
         """Generate a file full path to simplify file output.
 
@@ -234,15 +248,9 @@ class OutputGenerator:
         extension = self._determine_extension(description, name)
 
         name_variables = get_fields(name)
-        for key, value in kwargs.items():
-            if key not in name_variables:
-                raise ValueError(
-                    f"Argument {key} passed but has no match in format "
-                    f"string. Available format variables: "
-                    f"{name_variables} from {kwargs} and {name}."
-                )
+        name_kwargs = {k: v for k, v in kwargs.items() if k in name_variables}
 
-        name = name.format(**kwargs)
+        name = name.format(**name_kwargs)
         name = op.join(self.out_dir, self.prefix + name + extension)
         return name
 
@@ -271,7 +279,7 @@ class OutputGenerator:
             )
 
         if description.endswith("img"):
-            self.save_img(data, name)
+            self.save_img(data, name, mask=kwargs.get("mask", None))
         elif description.endswith("json"):
             prepped = prep_data_for_json(data)
             self.save_json(prepped, name)
@@ -284,7 +292,7 @@ class OutputGenerator:
 
         return name
 
-    def save_img(self, data, name):
+    def save_img(self, data, name, mask=None):
         """Save image data to a nifti file.
 
         Parameters
@@ -317,7 +325,12 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        img = new_nii_like(self.reference_img, data)
+        mask = mask or self.mask
+        img = masking.unmask(data.T, mask)
+        if img.ndim == 4:
+            # Only set the TR for 4D images.
+            img.header.set_zooms(self.reference_img.header.get_zooms())
+
         img.to_filename(name)
 
     def save_json(self, data, name):
@@ -607,12 +620,12 @@ def denoise_ts(data, mixing, mask, component_table):
 
     Parameters
     ----------
-    data : (S x T) array_like
+    data : (Mb x T) array_like
         Input time series
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -620,11 +633,11 @@ def denoise_ts(data, mixing, mask, component_table):
 
     Returns
     -------
-    dnts : (S x T) array_like
+    dnts : (Mb x T) array_like
         Denoised data (i.e., data with rejected components removed).
-    hikts : (S x T) array_like
+    hikts : (Mb x T) array_like
         High-Kappa data (i.e., data composed only of accepted components).
-    lowkts : (S x T) array_like
+    lowkts : (Mb x T) array_like
         Low-Kappa data (i.e., data composed only of rejected components).
     """
     acc = component_table[component_table.classification == "accepted"].index.values
@@ -635,7 +648,7 @@ def denoise_ts(data, mixing, mask, component_table):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing, mask=None)
+    betas = get_coeffs(dmdata.T, mixing)
     varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
@@ -652,12 +665,12 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
 
     Parameters
     ----------
-    data : (S x T) array_like
+    data : (Mb x T) array_like
         Input time series
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
@@ -732,9 +745,9 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
 
     Parameters
     ----------
-    ts : (S x T) array_like
+    ts : (Mb x T) array_like
         Time series to denoise and save to disk
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -771,7 +784,7 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
     acc = component_table[component_table.classification == "accepted"].index.values
     write_split_ts(ts, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(ts, mixing, mask)
+    ts_pes = get_coeffs(ts, mixing)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
@@ -780,8 +793,7 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
-        feats = computefeats2(split_ts(ts, mixing, mask, component_table)[0], mixing[:, acc], mask)
-        feats = utils.unmask(feats, mask)
+        feats = computefeats2(split_ts(ts, mixing, component_table)[0], mixing[:, acc])
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
         LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
 
@@ -791,13 +803,13 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
-        Input data time series
+    data_cat : (Mb x E x T) array_like
+        Input data time series, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
+    mask : (Mb,) array_like
+        Boolean mask array, where `Mb` is samples in base mask.
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
@@ -837,6 +849,8 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
 # File Loading Functions
 def load_data(data, n_echos=None, dummy_scans=0):
     """Coerce input `data` files to required 3D array output.
+
+    TODO: Remove in favor of applying base mask to files with Nilearn.
 
     Parameters
     ----------
@@ -941,18 +955,16 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     return nii
 
 
-def split_ts(data, mixing, mask, component_table):
+def split_ts(data, mixing, component_table):
     """Split `data` time series into accepted component time series and remainder.
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data, where `S` is samples and `T` is time
+    data : (Mb x T) array_like
+        Input data, where `Mb` is samples in base mask, and `T` is time
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
@@ -960,17 +972,16 @@ def split_ts(data, mixing, mask, component_table):
 
     Returns
     -------
-    hikts : (S x T) :obj:`numpy.ndarray`
+    hikts : (Mb x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    resid : (S x T) :obj:`numpy.ndarray`
+    resid : (Mb x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
     acc = component_table[component_table.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing, mask)
-    betas = cbetas[mask]
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing)
     if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
+        hikts = cbetas[:, acc].dot(mixing.T[acc, :])
     else:
         hikts = None
 
@@ -1120,3 +1131,50 @@ def _infer_prefix(prefix):
     """Determine the appropriate prefix for output files."""
     prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
     return prefix
+
+
+def load_data_nilearn(data, mask_img, n_echos):
+    """Load data using nilearn's apply_mask function."""
+    import nibabel as nb
+    from nilearn.masking import apply_mask
+
+    if len(data) == 1:
+        # z-cat data
+        data_img = nb.load(data[0])
+        n_z = data_img.shape[2] // n_echos
+        imgs = []
+        for i_echo in range(n_echos):
+            # Using slicer to create the image messes up the affine, so we need to create the
+            # image manually. Use a header copy with dimensions updated to match each echo's
+            # array, since the original header describes the full z-concatenated volume.
+            arr = data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :].get_fdata()
+            echo_header = data_img.header.copy()
+            echo_header.set_data_shape(arr.shape)
+            img = nb.Nifti1Image(arr, data_img.affine, echo_header)
+            imgs.append(img)
+
+        data = imgs
+
+    return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
+
+
+def load_ref_img(data, n_echos):
+    """Load data using nibabel's load function."""
+    import nibabel as nb
+
+    if len(data) == 1:
+        # z-cat data
+        data_img = nb.load(data[0])
+        n_z = data_img.shape[2] // n_echos
+        arr = data_img.slicer[:, :, :n_z, :].get_fdata()
+        # Using slicer to create the image messes up the affine, so we need to create the
+        # image manually. Use a header copy with dimensions updated to match the ref array,
+        # since the original header describes the full z-concatenated volume.
+        ref_header = data_img.header.copy()
+        ref_header.set_data_shape(arr.shape)
+        ref_img = nb.Nifti1Image(arr, data_img.affine, ref_header)
+
+    else:
+        ref_img = nb.load(data[0])
+
+    return ref_img

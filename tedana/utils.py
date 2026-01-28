@@ -34,6 +34,8 @@ RepLGR = logging.getLogger("REPORT")
 def reshape_niimg(data):
     """Take input `data` and return a sample x time array.
 
+    TODO: Remove this function in favor of working with nibabel images directly.
+
     Parameters
     ----------
     data : (X x Y x Z [x T]) array_like or img_like object
@@ -54,18 +56,13 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, methods=["dropout"]):
+def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
-    data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
-    mask : :obj:`str` or img_like
-        Binary mask for voxels to consider in TE Dependent ANAlysis.
-        This must be provided, as the mask is used to identify exemplar voxels.
-        Without a mask limiting the voxels to consider,
-        the adaptive mask will generally select voxels outside the brain as exemplars.
+    data : (Mb x E x T) array_like
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
@@ -79,9 +76,10 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
 
     Returns
     -------
-    mask : (S,) :obj:`numpy.ndarray`
-        Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    mask : (Mb,) :obj:`numpy.ndarray`
+        Boolean array of samples in mask that have sufficient signal in at least ``threshold``
+        echos.
+    adaptive_mask : (Mb,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a given voxel.
 
     Notes
@@ -138,8 +136,6 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
         f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
-    mask = reshape_niimg(mask).astype(bool)
-    data = data[mask, :, :]
 
     if (methods is None) or (len(methods) == 1 and methods[0].lower() == "none"):
         LGR.warning(
@@ -175,6 +171,8 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
 
     if ("dropout" in methods) or ("decay" in methods):
         echo_means = data.mean(axis=-1)  # temporal mean of echos
+        LGR.info(f"data shape: {data.shape}")
+        LGR.info(f"echo_means shape: {echo_means.shape}")
 
     if "dropout" in methods:
         # take temporal mean of echos and extract non-zero values in first echo
@@ -202,10 +200,13 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
         # Start with every voxel's value==0, increment up the echoes, and
         # change to a new value every time a later good echo is found
         dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
+        LGR.info(f"dropout_adaptive_mask shape: {dropout_adaptive_mask.shape}")
+        LGR.info(f"echo_means shape: {echo_means.shape}")
+        LGR.info(f"lthrs shape: {lthrs.shape}")
         for echo_idx in range(n_echos):
-            dropout_adaptive_mask[(np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx])] = (
-                echo_idx + 1
-            )
+            idx = np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx]
+            LGR.info(f"{echo_idx} idx shape: {idx.shape}")
+            dropout_adaptive_mask[idx] = echo_idx + 1
 
         adaptive_masks.append(dropout_adaptive_mask)
 
@@ -268,8 +269,6 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
                 f"even if there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
-    adaptive_mask = unmask(adaptive_mask, mask)
-    modified_mask = unmask(modified_mask, mask)
 
     return modified_mask, adaptive_mask
 
@@ -291,6 +290,13 @@ def unmask(data, mask):
     out : (S [x E [x T]]) :obj:`numpy.ndarray`
         Unmasked `data` array
     """
+    if data.shape[0] != mask.sum():
+        raise ValueError(
+            f"Number of data samples ({data.shape[0]}) does not match number of mask samples "
+            f"({mask.sum()})."
+        )
+
+    mask = mask.astype(bool)
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
@@ -403,7 +409,7 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     return power_spectrum[idx], freqs[idx]
 
 
-def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=True, sided="bi"):
+def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="bi"):
     """
     Cluster-extent threshold and binarize image.
 
@@ -416,8 +422,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
     threshold : float or None, optional
         Cluster-defining threshold for img. If None (default), assume img is
         already thresholded.
-    mask : (S,) array_like or None, optional
-        Boolean array for masking resultant data array. Default is None.
     binarize : bool, optional
         Default is True.
     sided : {'bi', 'two', 'one'}, optional
@@ -434,10 +438,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
         arr = img.get_fdata()
     else:
         arr = img.copy()
-
-    if mask is not None:
-        mask = mask.astype(bool)
-        arr *= mask.reshape(arr.shape)
 
     if binarize:
         clust_thresholded = np.zeros(arr.shape, bool)
@@ -485,13 +485,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
                     clust_thresholded[labeled == i_clust] = True
                 else:
                     clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
-
-    # reshape to (S,)
-    clust_thresholded = clust_thresholded.ravel()
-
-    # if mask provided, mask output
-    if mask is not None:
-        clust_thresholded = clust_thresholded[mask]
 
     return clust_thresholded
 
