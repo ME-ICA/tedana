@@ -164,7 +164,7 @@ countnoise
 ==========
 :func:`tedana.metrics.dependence.compute_countnoise`
 
-The number of significant voxels in each component's z-scored weight map
+The number of significant voxels in each component's standardized parameter estimate map
 that are not in clusters.
 In theory, these non-cluster voxels should be noise,
 and if a component exhibits more non-cluster voxels than cluster voxels,
@@ -198,10 +198,11 @@ dice_FT2
 :func:`tedana.metrics.dependence.compute_dice`
 
 The Dice similarity index between each component's cluster-extent thresholded
-T2*-model F-statistic map and its cluster-extent thresholded weight map.
+T2*-model F-statistic map (using a p<0.05 threshold) and
+its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
 This is a measure of the similarity between the T2*-model F-statistic map and the weight map.
-If the weight map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
-it is more likely to be noise.
+If the standardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
+it is more likely to be signal.
 
 
 dice_FS0
@@ -209,9 +210,10 @@ dice_FS0
 :func:`tedana.metrics.dependence.compute_dice`
 
 The Dice similarity index between each component's cluster-extent thresholded
-S0-model F-statistic map and its cluster-extent thresholded weight map.
-This is a measure of the similarity between the S0-model F-statistic map and the weight map.
-If the weight map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
+S0-model F-statistic map (using a p<0.05 threshold) and
+its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
+This is a measure of the similarity between the S0-model F-statistic map and the standardized parameter estimate map.
+If the standardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
 it is more likely to be noise.
 
 
@@ -249,8 +251,8 @@ normalized variance explained
 :func:`tedana.metrics.dependence.calculate_varex_norm`
 
 The normalized variance explained by each component is calculated as the square of the
-parameter estimates from the regression of the z-scored optimally combined data against the component time series,
-divided by the total variance in the data.
+standardized parameter estimate map,
+divided by the total variance in all of the standardized parameter estimate maps.
 
 
 kappa_rho_difference
