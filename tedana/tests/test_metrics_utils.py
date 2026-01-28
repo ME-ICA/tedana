@@ -79,6 +79,7 @@ def test_dependency_resolver():
         "metric_a": ["input1"],
         "metric_b": ["metric_a", "input2"],
         "metric_c": ["metric_b"],
+        "map Z": ["input1"],
     }
     base_inputs = ["input1", "input2"]
 
@@ -109,6 +110,9 @@ def test_dependency_resolver():
     assert "metric_a" in required
     assert "metric_c" in required
     assert "metric_b" in required
+
+    with pytest.raises(ValueError, match="The following metrics are no longer supported:"):
+        dependency_resolver(dependencies, ["map Z"], base_inputs)
 
 
 def test_add_external_dependencies():

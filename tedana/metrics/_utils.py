@@ -101,6 +101,20 @@ def dependency_resolver(
         if escape_counter >= 10:
             LGR.warning("dependency_resolver in infinite loop. Escaping early.")
             break
+
+    # Check for deprecated metrics and raise an error if they are used
+    deprecated_metrics = {
+        "map Z": "map weight",
+        "map Z clusterized": "map weight clusterized",
+    }
+    msg = []
+    for metric in deprecated_metrics:
+        if metric in required_metrics:
+            msg.append(f"{metric}: Use {deprecated_metrics[metric]} instead.")
+    if msg:
+        msg = "\n\t- ".join(msg)
+        raise ValueError(f"The following metrics are no longer supported:\n\t- {msg}")
+
     return required_metrics
 
 
