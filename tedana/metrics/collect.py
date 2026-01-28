@@ -145,6 +145,7 @@ def generate_metrics(
     # use either the inputted number of indie echoes or the total number of echoes
     # to calculate the threshold for f tests
     f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
+    proportion_threshold = 95  # top 5% of voxels for standardized parameter estimate maps
 
     # Get reference image from io_generator
     ref_img = io_generator.reference_img
@@ -246,7 +247,6 @@ def generate_metrics(
 
     if "map weight clusterized" in required_metrics:
         LGR.info("Thresholding standardized parameter estimate maps")
-        proportion_threshold = 95  # top 5% of voxels
         metric_maps["map weight clusterized"] = dependence.threshold_map(
             maps=metric_maps["map weight"],
             mask=mask,

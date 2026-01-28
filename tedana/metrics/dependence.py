@@ -490,9 +490,10 @@ def compute_signal_minus_noise_z(
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     value_threshold : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is None.
+        Threshold for voxel-wise significance in input ``z_maps``. Default is None.
     proportion_threshold : float, optional
-        Proportion threshold for voxel-wise significance. Values between 0 and 100.
+        Proportion threshold for voxel-wise significance in input ``z_maps``.
+        Values between 0 and 100.
         Default is None.
 
     Returns
@@ -567,9 +568,10 @@ def compute_signal_minus_noise_t(
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     value_threshold : float, optional
-        Z-statistic threshold for voxel-wise significance. Default is None.
+        Threshold for voxel-wise significance in input ``z_maps``. Default is None.
     proportion_threshold : float, optional
-        Proportion threshold for voxel-wise significance. Values between 0 and 100.
+        Proportion threshold for voxel-wise significance in input ``z_maps``.
+        Values between 0 and 100.
         Default is None.
 
     Returns
@@ -642,9 +644,12 @@ def compute_countnoise(
         Unthresholded statistical maps.
     stat_cl_maps : (S x C) array_like
         Cluster-extent thresholded and binarized version of stat_maps.
-    stat_thresh : float, optional
-        Statistical threshold. Default is 1.95 (Z-statistic threshold
-        corresponding to p<X one-sided).
+    value_threshold : float, optional
+        Threshold for voxel-wise significance in input ``stat_maps``. Default is None.
+    proportion_threshold : float, optional
+        Proportion threshold for voxel-wise significance in input ``stat_maps``.
+        Values between 0 and 100.
+        Default is None.
 
     Returns
     -------

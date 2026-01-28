@@ -187,10 +187,14 @@ def get_value_thresholds(
         Value thresholds for each map.
     """
     # One threshold must be provided, but not both
-    assert (value_threshold is None) != (proportion_threshold is None)
+    if (value_threshold is not None) != (proportion_threshold is None):
+        raise ValueError("Only one of value_threshold or proportion_threshold should be provided")
 
     n_components = maps.shape[1]
     if proportion_threshold is not None:
+        if proportion_threshold > 100 or proportion_threshold < 0:
+            raise ValueError("proportion_threshold must be between 0 and 100")
+
         if np.lib.NumpyVersion(np.__version__) >= "1.22.0":
             kwargs = {"method": "higher"}
         else:
