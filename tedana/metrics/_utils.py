@@ -110,6 +110,8 @@ def dependency_resolver(
         "map weight clusterized": "map optcom standardized parameter estimates clusterized",
         "map optcom betas": "map optcom parameter estimates",
         "map echo betas": "map echo parameter estimates",
+        "map beta T2 clusterized": "map PE T2 clusterized",
+        "map beta S0 clusterized": "map PE S0 clusterized",
     }
     msg = []
     for metric in deprecated_metrics:

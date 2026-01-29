@@ -920,7 +920,7 @@ def tedana_workflow(
             seed += 1
             n_restarts = seed - fixed_seed
 
-            # Estimate betas and compute selection metrics for mixing matrix
+            # Estimate PEs and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
             necessary_metrics = selector.necessary_metrics
@@ -1059,8 +1059,8 @@ def tedana_workflow(
         comps_rejected = selector.rejected_comps_
         acc_ts = mixing[:, comps_accepted]
         rej_ts = mixing[:, comps_rejected]
-        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
-        pred_rej_ts = np.dot(acc_ts, betas)
+        pes = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
+        pred_rej_ts = np.dot(acc_ts, pes)
         resid = rej_ts - pred_rej_ts
         mixing[:, comps_rejected] = resid
         comp_names = [

@@ -11,7 +11,7 @@ def test_calculate_varex_correctness():
     component_maps = np.array([[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]])
 
     # Calculate expected values manually
-    # compvar = sum of squared betas for each component
+    # compvar = sum of squared PEs for each component
     # compvar = [1^2+2^2+3^2, 2^2+3^2+4^2, 3^2+4^2+5^2]
     # compvar = [14, 29, 50]
     # total = 93

@@ -189,16 +189,16 @@ def test_smoke_calculate_unstandardized_parameter_estimates():
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    betas = dependence.calculate_unstandardized_parameter_estimates(data=data_optcom, mixing=mixing)
-    assert betas.shape == (n_voxels, n_components)
+    pes = dependence.calculate_unstandardized_parameter_estimates(data=data_optcom, mixing=mixing)
+    assert pes.shape == (n_voxels, n_components)
 
 
 def test_smoke_calculate_psc():
     """Smoke test for tedana.metrics.dependence.calculate_psc."""
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
-    optcom_betas = np.random.random((n_voxels, n_components))
-    psc = dependence.calculate_psc(data_optcom=data_optcom, optcom_betas=optcom_betas)
+    optcom_pes = np.random.random((n_voxels, n_components))
+    psc = dependence.calculate_psc(data_optcom=data_optcom, optcom_pes=optcom_pes)
     assert psc.shape == (n_voxels, n_components)
 
 

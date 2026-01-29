@@ -201,7 +201,7 @@ def generate_metrics(
         # used in kundu v3.2 tree
         metric_maps["map percent signal change"] = dependence.calculate_psc(
             data_optcom=data_optcom,
-            optcom_betas=metric_maps["map optcom parameter estimates"],
+            optcom_pes=metric_maps["map optcom parameter estimates"],
         )
 
     if "map univariate Z statistics" in required_metrics:
@@ -283,18 +283,18 @@ def generate_metrics(
         )
 
     # Back to maps
-    if "map beta T2 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
-        metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
+    if "map PE T2 clusterized" in required_metrics:
+        LGR.info("Thresholding optimal combination PE maps to match T2* F-statistic maps")
+        metric_maps["map PE T2 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom parameter estimates"],
             n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
             ref_img=ref_img,
         )
 
-    if "map beta S0 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
-        metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
+    if "map PE S0 clusterized" in required_metrics:
+        LGR.info("Thresholding optimal combination PE maps to match S0 F-statistic maps")
+        metric_maps["map PE S0 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom parameter estimates"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
@@ -326,21 +326,20 @@ def generate_metrics(
     # Spatial metrics
     if "dice_FT2" in required_metrics:
         LGR.info(
-            "Calculating DSI between thresholded T2* F-statistic and optimal combination beta maps"
+            "Calculating DSI between thresholded T2* F-statistic and optimal combination PE maps"
         )
         component_table["dice_FT2"] = dependence.compute_dice(
-            clmaps1=metric_maps["map beta T2 clusterized"],
+            clmaps1=metric_maps["map PE T2 clusterized"],
             clmaps2=metric_maps["map FT2 clusterized"],
             axis=0,
         )
 
     if "dice_FS0" in required_metrics:
         LGR.info(
-            "Calculating DSI between thresholded S0 F-statistic and "
-            "optimal combination beta maps"
+            "Calculating DSI between thresholded S0 F-statistic and optimal combination PE maps"
         )
         component_table["dice_FS0"] = dependence.compute_dice(
-            clmaps1=metric_maps["map beta S0 clusterized"],
+            clmaps1=metric_maps["map PE S0 clusterized"],
             clmaps2=metric_maps["map FS0 clusterized"],
             axis=0,
         )
@@ -426,20 +425,20 @@ def generate_metrics(
         )
     # Write verbose metrics if needed
     if io_generator.verbose:
-        write_betas = "map echo parameter estimates" in metric_maps
+        write_echowise_pes = "map echo parameter estimates" in metric_maps
         write_t2s0 = "map predicted T2" in metric_maps
-        if write_betas:
-            betas = metric_maps["map echo parameter estimates"]
+        if write_echowise_pes:
+            echowise_pes = metric_maps["map echo parameter estimates"]
 
         if write_t2s0:
             pred_t2_maps = metric_maps["map predicted T2"]
             pred_s0_maps = metric_maps["map predicted S0"]
 
         for i_echo in range(len(tes)):
-            if write_betas:
-                echo_betas = betas[:, i_echo, :]
+            if write_echowise_pes:
+                echo_pes = echowise_pes[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_betas, mask),
+                    utils.unmask(echo_pes, mask),
                     f"echo weight {label} map split img",
                     echo=(i_echo + 1),
                 )
@@ -573,19 +572,19 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         }
     if "dice_FT2" in component_table:
         metric_metadata["dice_FT2"] = {
-            "LongName": "T2 model beta map-F-statistic map Dice similarity index",
+            "LongName": "T2 model PE map-F-statistic map Dice similarity index",
             "Description": (
                 "Dice value of cluster-extent thresholded maps of "
-                "T2-model betas and F-statistics."
+                "T2-model echowise_pes and F-statistics."
             ),
             "Units": "arbitrary",
         }
     if "dice_FS0" in component_table:
         metric_metadata["dice_FS0"] = {
-            "LongName": ("S0 model beta map-F-statistic map Dice similarity index"),
+            "LongName": ("S0 model PE map-F-statistic map Dice similarity index"),
             "Description": (
                 "Dice value of cluster-extent thresholded maps of "
-                "S0-model betas and F-statistics."
+                "S0-model echowise_pes and F-statistics."
             ),
             "Units": "arbitrary",
         }
