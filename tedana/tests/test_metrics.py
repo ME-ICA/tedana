@@ -206,7 +206,6 @@ def test_smoke_calculate_f_maps():
     """Smoke test for tedana.metrics.dependence.calculate_f_maps."""
     n_voxels, n_echos, n_volumes, n_components = 1000, 5, 100, 50
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
-    z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
     # The ordering is random, but make sure the adaptive mask always includes values of 1-5
     adaptive_mask = np.random.permutation(
@@ -223,7 +222,6 @@ def test_smoke_calculate_f_maps():
     tes = np.array([15, 25, 35, 45, 55])
     f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -234,7 +232,6 @@ def test_smoke_calculate_f_maps():
     # rerunning with n_independent_echos=3
     f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,

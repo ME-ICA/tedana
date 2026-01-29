@@ -134,7 +134,6 @@ def calculate_z_maps(
 def calculate_f_maps(
     *,
     data_cat: np.ndarray,
-    z_maps: np.ndarray,
     mixing: np.ndarray,
     adaptive_mask: np.ndarray,
     tes: np.ndarray,
@@ -147,8 +146,6 @@ def calculate_f_maps(
     ----------
     data_cat : (M x E x T) array_like
         Multi-echo data, already masked.
-    z_maps : (M x C) array_like
-        Z-statistic maps for components, reflecting voxel-wise component loadings.
     mixing : (T x C) array_like
         Mixing matrix
     adaptive_mask : (M) array_like
@@ -170,10 +167,9 @@ def calculate_f_maps(
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """
-    assert data_cat.shape[0] == z_maps.shape[0] == adaptive_mask.shape[0]
+    assert data_cat.shape[0] == adaptive_mask.shape[0]
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
-    assert z_maps.shape[1] == mixing.shape[1]
 
     # TODO: Remove mask arg from get_coeffs
     me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
