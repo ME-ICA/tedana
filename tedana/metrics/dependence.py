@@ -144,7 +144,13 @@ def calculate_f_maps(
     assert data_cat.shape[2] == mixing.shape[0]
 
     # Calculate unstandardized parameter estimates (PEs) for the mixing matrix against the data
-    echowise_pes = get_coeffs(data_cat, mixing, add_const=True)
+    # TODO: Remove mask arg from get_coeffs
+    echowise_pes = get_coeffs(
+        data_cat,
+        mixing,
+        mask=np.ones(data_cat.shape[:2], bool),
+        add_const=True,
+    )
     n_voxels, n_echos, n_components = echowise_pes.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))

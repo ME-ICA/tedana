@@ -38,10 +38,10 @@ def test_calculate_dependence_metrics_correctness():
     n_voxels, n_components = 10, 2
     f_t2_maps = np.ones((n_voxels, n_components)) * 5.0
     f_s0_maps = np.ones((n_voxels, n_components)) * 3.0
-    z_maps = np.ones((n_voxels, n_components)) * 2.0
+    beta_maps = np.ones((n_voxels, n_components)) * 2.0
 
     kappas, rhos = dependence.calculate_dependence_metrics(
-        f_t2_maps=f_t2_maps, f_s0_maps=f_s0_maps, z_maps=z_maps
+        f_t2_maps=f_t2_maps, f_s0_maps=f_s0_maps, beta_maps=beta_maps
     )
 
     # With uniform weights and uniform f-maps, kappa and rho should equal the f-map values
@@ -50,17 +50,17 @@ def test_calculate_dependence_metrics_correctness():
     assert np.allclose(rhos, 3.0)
 
     # Test with varying weights
-    z_maps_vary = (
+    beta_maps_vary = (
         np.arange(n_voxels * n_components).reshape((n_voxels, n_components)).astype(float)
     )
     f_t2_vary = np.ones((n_voxels, n_components)) * np.arange(n_voxels)[:, np.newaxis]
 
     kappas_vary, _ = dependence.calculate_dependence_metrics(
-        f_t2_maps=f_t2_vary, f_s0_maps=f_s0_maps, z_maps=z_maps_vary
+        f_t2_maps=f_t2_vary, f_s0_maps=f_s0_maps, beta_maps=beta_maps_vary
     )
 
     # Kappa should be weighted average
-    weight_maps = z_maps_vary**2
+    weight_maps = beta_maps_vary**2
     expected_kappa = np.average(f_t2_vary, weights=weight_maps, axis=0)
     assert np.allclose(kappas_vary, expected_kappa)
 
