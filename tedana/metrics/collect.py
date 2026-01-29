@@ -87,7 +87,7 @@ def generate_metrics(
     dependency_config = io.load_json(dependency_config)
 
     if metrics is None:
-        metrics = ["map weight"]
+        metrics = ["map weight", "map optcom betas"]
 
     if external_regressors is not None:
         if external_regressor_config is None:
