@@ -1027,12 +1027,6 @@ def tedana_workflow(
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
 
-    data_optcom_z = stats.zscore(data_optcom[mask_denoise, :], axis=-1)
-    mixing_z = stats.zscore(mixing, axis=0)
-    betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask_denoise)
-    io_generator.save_file(betas_oc, "z-scored ICA components img")
-    del data_optcom_z, mixing_z, betas_oc
-
     # calculate the fit of rejected to accepted components to use as a quality measure
     # Note: This adds a column to component_table & needs to run before the table is saved
     reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
