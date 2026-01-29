@@ -175,14 +175,14 @@ def generate_metrics(
                 f"{label} component weights img",
             )
 
-    if "map optcom betas" in required_metrics:
+    if "map optcom parameter estimates" in required_metrics:
         LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")
-        metric_maps["map optcom betas"] = dependence.calculate_betas(
+        metric_maps["map optcom parameter estimates"] = dependence.calculate_unstandardized_parameter_estimates(
             data=data_optcom,
             mixing=mixing,
         )
         if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(
+            metric_maps["map echo parameter estimates"] = dependence.calculate_unstandardized_parameter_estimates(
                 data=data_cat,
                 mixing=mixing,
             )
@@ -192,7 +192,7 @@ def generate_metrics(
         # used in kundu v3.2 tree
         metric_maps["map percent signal change"] = dependence.calculate_psc(
             data_optcom=data_optcom,
-            optcom_betas=metric_maps["map optcom betas"],
+            optcom_betas=metric_maps["map optcom parameter estimates"],
         )
 
     if "map univariate Z statistics" in required_metrics:
@@ -275,7 +275,7 @@ def generate_metrics(
     if "map beta T2 clusterized" in required_metrics:
         LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map optcom parameter estimates"],
             n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
             ref_img=ref_img,
@@ -284,7 +284,7 @@ def generate_metrics(
     if "map beta S0 clusterized" in required_metrics:
         LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map optcom parameter estimates"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
             ref_img=ref_img,
@@ -303,7 +303,7 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            component_maps=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map optcom parameter estimates"],
         )
 
     if "normalized variance explained" in required_metrics:
@@ -415,10 +415,10 @@ def generate_metrics(
         )
     # Write verbose metrics if needed
     if io_generator.verbose:
-        write_betas = "map echo betas" in metric_maps
+        write_betas = "map echo parameter estimates" in metric_maps
         write_t2s0 = "map predicted T2" in metric_maps
         if write_betas:
-            betas = metric_maps["map echo betas"]
+            betas = metric_maps["map echo parameter estimates"]
 
         if write_t2s0:
             pred_t2_maps = metric_maps["map predicted T2"]

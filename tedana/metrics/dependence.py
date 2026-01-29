@@ -43,7 +43,7 @@ def calculate_weights(
     return weights
 
 
-def calculate_betas(
+def calculate_unstandardized_parameter_estimates(
     *,
     data: np.ndarray,
     mixing: np.ndarray,
@@ -53,35 +53,35 @@ def calculate_betas(
     Parameters
     ----------
     data : (M [x E] x T) array_like
-        Data to calculate betas for
+        Dependent variable (data) for which to calculate unstandardized parameter estimates.
     mixing : (T x C) array_like
         Mixing matrix
 
     Returns
     -------
-    betas : (M [x E] x C) array_like
-        Unstandardized parameter estimates
+    pes : (M [x E] x C) array_like
+        Unstandardized parameter estimates (PEs) for the mixing matrix against the data.
     """
     if data.ndim == 2:
         data_optcom = data
         assert data_optcom.shape[1] == mixing.shape[0]
         # mean-center optimally-combined data
         data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-        # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
-        betas = get_coeffs(data_optcom_dm, mixing)
+        # pes are from a normal OLS fit of the mixing matrix against the mean-centered data
+        pes = get_coeffs(data_optcom_dm, mixing)
 
     else:
-        betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
+        pes = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
         for n_echo in range(data.shape[1]):
-            betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+            pes[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
 
-    return betas
+    return pes
 
 
 def calculate_psc(
     *,
     data_optcom: np.ndarray,
-    optcom_betas: np.ndarray,
+    optcom_pes: np.ndarray,
 ) -> np.ndarray:
     """Calculate percent signal change maps for components against optimally-combined data.
 
@@ -89,7 +89,7 @@ def calculate_psc(
     ----------
     data_optcom : (M x T) array_like
         Optimally combined data, already masked.
-    optcom_betas : (M x C) array_like
+    optcom_pes : (M x C) array_like
         Component-wise, unstandardized parameter estimates from the regression
         of the optimally combined data against component time series.
 
@@ -98,8 +98,8 @@ def calculate_psc(
     psc : (M x C) array_like
         Component-wise percent signal change maps.
     """
-    assert data_optcom.shape[0] == optcom_betas.shape[0]
-    psc = 100 * optcom_betas / data_optcom.mean(axis=-1, keepdims=True)
+    assert data_optcom.shape[0] == optcom_pes.shape[0]
+    psc = 100 * optcom_pes / data_optcom.mean(axis=-1, keepdims=True)
     return psc
 
 
@@ -171,9 +171,9 @@ def calculate_f_maps(
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
 
-    # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
-    n_voxels, n_echos, n_components = me_betas.shape
+    # Calculate unstandardized parameter estimates (PEs) for the mixing matrix against the data
+    echowise_pes = get_coeffs(data_cat, mixing, add_const=True)
+    n_voxels, n_echos, n_components = echowise_pes.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
 
@@ -187,22 +187,21 @@ def calculate_f_maps(
     pred_s0_maps = np.zeros([n_voxels, len(tes), n_components])
 
     for i_comp in range(n_components):
-        # size of comp_betas is (n_echoes, n_samples)
-        comp_betas = np.atleast_3d(me_betas)[:, :, i_comp].T
-        alpha = (np.abs(comp_betas) ** 2).sum(axis=0)
+        # size of comp_echowise_pes is (n_echoes, n_samples)
+        comp_echowise_pes = np.atleast_3d(echowise_pes)[:, :, i_comp].T
 
         # Only analyze good echoes at each voxel
         for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
             mask_idx = adaptive_mask == j_echo
-            alpha = (np.abs(comp_betas[:j_echo]) ** 2).sum(axis=0)
+            alpha = (np.abs(comp_echowise_pes[:j_echo]) ** 2).sum(axis=0)
 
             # S0 Model
             # (S,) model coefficient map
-            coeffs_s0 = (comp_betas[:j_echo] * x1[:j_echo, :]).sum(axis=0) / (
+            coeffs_s0 = (comp_echowise_pes[:j_echo] * x1[:j_echo, :]).sum(axis=0) / (
                 x1[:j_echo, :] ** 2
             ).sum(axis=0)
             pred_s0 = x1[:j_echo, :] * np.tile(coeffs_s0, (j_echo, 1))
-            sse_s0 = (comp_betas[:j_echo] - pred_s0) ** 2
+            sse_s0 = (comp_echowise_pes[:j_echo] - pred_s0) ** 2
             sse_s0 = sse_s0.sum(axis=0)  # (S,) prediction error map
             if n_independent_echos is None or n_independent_echos >= j_echo:
                 f_s0 = (alpha - sse_s0) * (j_echo - 1) / (sse_s0)
@@ -212,11 +211,11 @@ def calculate_f_maps(
             f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
 
             # T2 Model
-            coeffs_t2 = (comp_betas[:j_echo] * x2[:j_echo, :]).sum(axis=0) / (
+            coeffs_t2 = (comp_echowise_pes[:j_echo] * x2[:j_echo, :]).sum(axis=0) / (
                 x2[:j_echo, :] ** 2
             ).sum(axis=0)
             pred_t2 = x2[:j_echo] * np.tile(coeffs_t2, (j_echo, 1))
-            sse_t2 = (comp_betas[:j_echo] - pred_t2) ** 2
+            sse_t2 = (comp_echowise_pes[:j_echo] - pred_t2) ** 2
             sse_t2 = sse_t2.sum(axis=0)
             if n_independent_echos is None or n_independent_echos >= j_echo:
                 f_t2 = (alpha - sse_t2) * (j_echo - 1) / (sse_t2)

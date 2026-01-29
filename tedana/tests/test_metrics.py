@@ -184,12 +184,12 @@ def test_smoke_calculate_weights():
     assert weights.shape == (n_voxels, n_components)
 
 
-def test_smoke_calculate_betas():
-    """Smoke test for tedana.metrics.dependence.calculate_betas."""
+def test_smoke_calculate_unstandardized_parameter_estimates():
+    """Smoke test for tedana.metrics.dependence.calculate_unstandardized_parameter_estimates."""
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    betas = dependence.calculate_betas(data=data_optcom, mixing=mixing)
+    betas = dependence.calculate_unstandardized_parameter_estimates(data=data_optcom, mixing=mixing)
     assert betas.shape == (n_voxels, n_components)
 
 
