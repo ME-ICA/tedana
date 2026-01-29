@@ -224,20 +224,20 @@ def test_compute_countnoise_correctness():
     # Create test data
     stat_maps = np.array([[3.0, 1.0], [2.5, 0.5], [1.0, 2.5], [-2.5, -1.5]])
     stat_cl_maps = np.array([[1, 0], [1, 0], [0, 1], [0, 0]])
-    stat_thresh = 1.95
+    stat_thresh = 1.96
 
     countnoise = dependence.compute_countnoise(
         stat_maps=stat_maps, stat_cl_maps=stat_cl_maps, value_threshold=stat_thresh
     )
 
     # For component 0: abs(stat_maps[:, 0]) = [3.0, 2.5, 1.0, 2.5]
-    # Values > 1.95: [3.0, 2.5, 2.5] at indices [0, 1, 3]
+    # Values > 1.96: [3.0, 2.5, 2.5] at indices [0, 1, 3]
     # stat_cl_maps at these indices: [1, 1, 0]
     # Noise voxels (>thresh and not in cluster): only index 3
     # Count: 1
 
     # For component 1: abs(stat_maps[:, 1]) = [1.0, 0.5, 2.5, 1.5]
-    # Values > 1.95: [2.5] at index [2]
+    # Values > 1.96: [2.5] at index [2]
     # stat_cl_maps at index 2: 1 (in cluster)
     # Noise voxels: 0
 
