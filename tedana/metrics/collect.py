@@ -160,9 +160,11 @@ def generate_metrics(
     metric_maps = {}
     if "map optcom standardized parameter estimates" in required_metrics:
         LGR.info("Calculating standardized parameter estimate maps for optimally combined data")
-        metric_maps["map optcom standardized parameter estimates"] = dependence.calculate_standardized_parameter_estimates(
-            data_optcom=data_optcom,
-            mixing=mixing,
+        metric_maps["map optcom standardized parameter estimates"] = (
+            dependence.calculate_standardized_parameter_estimates(
+                data_optcom=data_optcom,
+                mixing=mixing,
+            )
         )
         signs = determine_signs(metric_maps["map optcom standardized parameter estimates"], axis=0)
         component_table["optimal sign"] = signs
@@ -171,20 +173,27 @@ def generate_metrics(
         )
         if io_generator.verbose:
             io_generator.save_file(
-                utils.unmask(metric_maps["map optcom standardized parameter estimates"] ** 2, mask),
+                utils.unmask(
+                    metric_maps["map optcom standardized parameter estimates"] ** 2,
+                    mask,
+                ),
                 f"{label} component weights img",
             )
 
     if "map optcom parameter estimates" in required_metrics:
         LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")
-        metric_maps["map optcom parameter estimates"] = dependence.calculate_unstandardized_parameter_estimates(
-            data=data_optcom,
-            mixing=mixing,
+        metric_maps["map optcom parameter estimates"] = (
+            dependence.calculate_unstandardized_parameter_estimates(
+                data=data_optcom,
+                mixing=mixing,
+            )
         )
         if io_generator.verbose:
-            metric_maps["map echo parameter estimates"] = dependence.calculate_unstandardized_parameter_estimates(
-                data=data_cat,
-                mixing=mixing,
+            metric_maps["map echo parameter estimates"] = (
+                dependence.calculate_unstandardized_parameter_estimates(
+                    data=data_cat,
+                    mixing=mixing,
+                )
             )
 
     if "map percent signal change" in required_metrics:
@@ -233,11 +242,13 @@ def generate_metrics(
 
     if "map optcom standardized parameter estimates clusterized" in required_metrics:
         LGR.info("Thresholding standardized parameter estimate maps")
-        metric_maps["map optcom standardized parameter estimates clusterized"] = dependence.threshold_map(
-            maps=metric_maps["map optcom standardized parameter estimates"],
-            mask=mask,
-            ref_img=ref_img,
-            proportion_threshold=proportion_threshold,
+        metric_maps["map optcom standardized parameter estimates clusterized"] = (
+            dependence.threshold_map(
+                maps=metric_maps["map optcom standardized parameter estimates"],
+                mask=mask,
+                ref_img=ref_img,
+                proportion_threshold=proportion_threshold,
+            )
         )
 
     if "map FT2 clusterized" in required_metrics:
