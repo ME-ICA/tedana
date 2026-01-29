@@ -415,7 +415,7 @@ component (selected in the summary view, see below). It includes three different
 
 * **Component PE map:** This plot shows the map of the parameter estimates associated with
   a given component (selected in the summary view). The colorbar represents the amplitude
-  of the parameter estimates. The same weights could be flipped postive/negative so relative
+  of the parameter estimates. The same weights could be flipped positive/negative so relative
   values are more relevant that what is very positive vs negative.
   Plausibly BOLD-weighted components should have larger hotspots in area that follow
   cortical or cerebellar brain structure. Hotspots in ventricles, on the edges of the
