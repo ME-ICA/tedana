@@ -32,30 +32,6 @@ def test_calculate_varex_correctness():
     assert np.isclose(varex_single[0], 100.0)
 
 
-def test_calculate_z_maps_correctness():
-    """Test numerical correctness of calculate_z_maps."""
-    # Create weights with known mean and std
-    weights = np.array([[1.0, 5.0], [2.0, 6.0], [3.0, 7.0], [4.0, 8.0]])
-
-    z_maps = dependence.calculate_z_maps(weights=weights, z_max=8)
-
-    # Check that z-scoring worked (mean should be ~0, std should be ~1)
-    assert np.allclose(z_maps.mean(axis=0), 0.0, atol=1e-10)
-    assert np.allclose(z_maps.std(axis=0), 1.0, atol=1e-10)
-
-    # Test z_max clamping with more extreme data to ensure clamping actually occurs
-    weights_extreme = np.array(
-        [[1.0], [1.1], [1.2], [1.3], [1.4], [1.5], [1.6], [1.7], [1.8], [100.0]]
-    )
-    z_maps_clamped = dependence.calculate_z_maps(weights=weights_extreme, z_max=2.0)
-    assert np.all(np.abs(z_maps_clamped) <= 2.0)
-
-    # Test that the known extreme value (100.0) is clamped to z_max with correct magnitude
-    extreme_clamped_value = z_maps_clamped[-1, 0]
-    # The extreme value should be clamped to +z_max or -z_max
-    assert np.isclose(np.abs(extreme_clamped_value), 2.0)
-
-
 def test_calculate_dependence_metrics_correctness():
     """Test numerical correctness of calculate_dependence_metrics."""
     # Create simple test case

@@ -103,34 +103,6 @@ def calculate_psc(
     return psc
 
 
-def calculate_z_maps(
-    *,
-    weights: np.ndarray,
-    z_max: float = 8,
-) -> np.ndarray:
-    """Calculate component-wise z-statistic maps.
-
-    This is done by z-scoring standardized parameter estimate maps and cropping extreme values.
-
-    Parameters
-    ----------
-    weights : (M x C) array_like
-        Standardized parameter estimate maps for components.
-    z_max : float, optional
-        Maximum z-statistic, used to crop extreme values. Values in the
-        z-statistic maps greater than this value are set to it.
-
-    Returns
-    -------
-    z_maps : (M x C) array_like
-        Z-statistic maps for components, reflecting voxel-wise component loadings.
-    """
-    z_maps = stats.zscore(weights, axis=0)
-    extreme_idx = np.abs(z_maps) > z_max
-    z_maps[extreme_idx] = z_max * np.sign(z_maps[extreme_idx])
-    return z_maps
-
-
 def calculate_f_maps(
     *,
     data_cat: np.ndarray,
