@@ -184,11 +184,11 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
           np.ones((mixing_df.shape[0], 1)),
       ),
   )
-  betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
+  pes = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
-  # Denoise the data using the betas from just the bad components
+  # Denoise the data using the pes from just the bad components
   confounds_idx = np.arange(confounds.shape[1] + rejected_components.shape[1])
-  pred_data = np.dot(np.hstack((confounds, rejected_components)), betas[confounds_idx, :])
+  pred_data = np.dot(np.hstack((confounds, rejected_components)), pes[confounds_idx, :])
   data_denoised = data - pred_data
 
   # Save to file
@@ -222,8 +222,8 @@ This way, you can regress the rejected components out of the data in the form of
   bad_timeseries = np.hstack((rejected_components, confounds))
 
   # Regress the good components out of the bad time series to get "pure evil" regressors
-  betas = np.linalg.lstsq(accepted_components, bad_timeseries, rcond=None)[0]
-  pred_bad_timeseries = np.dot(accepted_components, betas)
+  pes = np.linalg.lstsq(accepted_components, bad_timeseries, rcond=None)[0]
+  pred_bad_timeseries = np.dot(accepted_components, pes)
   orth_bad_timeseries = bad_timeseries - pred_bad_timeseries
 
   # Once you have these "pure evil" components, you can denoise the data
