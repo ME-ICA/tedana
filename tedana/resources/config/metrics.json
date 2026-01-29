@@ -63,14 +63,12 @@
             "countsigFT2"
         ],
         "map FT2": [
-            "map Z",
             "mixing",
             "tes",
             "data_cat",
             "adaptive_mask"
         ],
         "map FS0": [
-            "map Z",
             "mixing",
             "tes",
             "data_cat",
