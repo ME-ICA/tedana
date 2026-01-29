@@ -13,7 +13,6 @@ from glob import glob
 import numpy as np
 import pandas as pd
 from nilearn.masking import compute_epi_mask
-from scipy import stats
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -38,7 +37,6 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.selection.component_selector import ComponentSelector
-from tedana.stats import get_coeffs
 from tedana.workflows.parser_utils import (
     check_n_robust_runs_value,
     check_tedpca_value,
