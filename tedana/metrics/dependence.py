@@ -15,12 +15,12 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def calculate_weights(
+def calculate_standardized_parameter_estimates(
     *,
     data_optcom: np.ndarray,
     mixing: np.ndarray,
 ) -> np.ndarray:
-    """Calculate standardized parameter estimates between data and mixing matrix.
+    """Calculate standardized parameter estimates (betas) between data and mixing matrix.
 
     Parameters
     ----------
@@ -31,7 +31,7 @@ def calculate_weights(
 
     Returns
     -------
-    weights : (M x C) array_like
+    betas : (M x C) array_like
         Standardized parameter estimates for optimally combined data against
         the mixing matrix.
     """
@@ -39,8 +39,8 @@ def calculate_weights(
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=-1)
     # compute standardized parameter estimates
-    weights = get_coeffs(data_optcom, mixing)
-    return weights
+    betas = get_coeffs(data_optcom, mixing)
+    return betas
 
 
 def calculate_unstandardized_parameter_estimates(
@@ -371,7 +371,7 @@ def calculate_dependence_metrics(
     *,
     f_t2_maps: np.ndarray,
     f_s0_maps: np.ndarray,
-    z_maps: np.ndarray,
+    beta_maps: np.ndarray,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Calculate Kappa and Rho metrics from F-statistic maps.
 
@@ -382,8 +382,8 @@ def calculate_dependence_metrics(
     f_t2_maps, f_s0_maps : (S x C) array_like
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
-    z_maps : (S x C) array_like
-        Z-statistic maps for components, reflecting voxel-wise component loadings.
+    beta_maps : (S x C) array_like
+        Standardized parameter estimate (beta) maps for components.
 
     Returns
     -------
@@ -391,15 +391,15 @@ def calculate_dependence_metrics(
         Averaged pseudo-F-statistics for TE-dependence and -independence
         models, respectively.
     """
-    assert f_t2_maps.shape == f_s0_maps.shape == z_maps.shape
+    assert f_t2_maps.shape == f_s0_maps.shape == beta_maps.shape
 
     RepLGR.info(
         "Kappa (kappa) and Rho (rho) were calculated as measures of "
         "TE-dependence and TE-independence, respectively."
     )
 
-    weight_maps = z_maps**2.0
-    n_components = z_maps.shape[1]
+    weight_maps = beta_maps**2.0
+    n_components = beta_maps.shape[1]
     kappas, rhos = np.zeros(n_components), np.zeros(n_components)
     for i_comp in range(n_components):
         kappas[i_comp] = np.average(f_t2_maps[:, i_comp], weights=weight_maps[:, i_comp])
@@ -460,8 +460,8 @@ def compute_dice(
 
 def compute_signal_minus_noise_z(
     *,
-    z_maps: np.ndarray,
-    z_clmaps: np.ndarray,
+    beta_maps: np.ndarray,
+    beta_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
     value_threshold: float = None,
     proportion_threshold: float = None,
@@ -476,18 +476,18 @@ def compute_signal_minus_noise_z(
 
     Parameters
     ----------
-    z_maps : (S x C) array_like
-        Z-statistic maps for components, reflecting voxel-wise component loadings.
-    z_clmaps : (S x C) array_like
-        Cluster-extent thresholded Z-statistic maps for components.
+    beta_maps : (S x C) array_like
+        Standardized parameter estimate (beta) maps for components.
+    beta_clmaps : (S x C) array_like
+        Cluster-extent thresholded standardized parameter estimate (beta) maps for components.
     f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     value_threshold : float, optional
-        Threshold for voxel-wise significance in input ``z_maps``. Default is None.
+        Threshold for voxel-wise significance in input ``beta_maps``. Default is None.
     proportion_threshold : float, optional
-        Proportion threshold for voxel-wise significance in input ``z_maps``.
+        Proportion threshold for voxel-wise significance in input ``beta_maps``.
         Values between 0 and 100.
         Default is None.
 
@@ -498,23 +498,23 @@ def compute_signal_minus_noise_z(
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
+    assert beta_maps.shape == beta_clmaps.shape == f_t2_maps.shape
 
     value_threshold = get_value_thresholds(
-        maps=z_maps,
+        maps=beta_maps,
         proportion_threshold=proportion_threshold,
         value_threshold=value_threshold,
     )
 
-    n_components = z_maps.shape[1]
+    n_components = beta_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > value_threshold) & (z_clmaps == 0)
+    noise_idx = (np.abs(beta_maps) > value_threshold) & (beta_clmaps == 0)
     countnoise = noise_idx.sum(axis=0)
-    countsignal = z_clmaps.sum(axis=0)
+    countsignal = beta_clmaps.sum(axis=0)
     for i_comp in range(n_components):
         noise_ft2_z = 0.5 * np.log(f_t2_maps[noise_idx[:, i_comp], i_comp])
-        signal_ft2_z = 0.5 * np.log(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp])
+        signal_ft2_z = 0.5 * np.log(f_t2_maps[beta_clmaps[:, i_comp] == 1, i_comp])
         n_noise_dupls = noise_ft2_z.size - np.unique(noise_ft2_z).size
         if n_noise_dupls:
             LGR.debug(
@@ -539,8 +539,8 @@ def compute_signal_minus_noise_z(
 
 def compute_signal_minus_noise_t(
     *,
-    z_maps: np.ndarray,
-    z_clmaps: np.ndarray,
+    beta_maps: np.ndarray,
+    beta_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
     value_threshold: float = None,
     proportion_threshold: float = None,
@@ -554,18 +554,18 @@ def compute_signal_minus_noise_t(
 
     Parameters
     ----------
-    z_maps : (S x C) array_like
-        Z-statistic maps for components, reflecting voxel-wise component loadings.
-    z_clmaps : (S x C) array_like
-        Cluster-extent thresholded Z-statistic maps for components.
+    beta_maps : (S x C) array_like
+        Standardized parameter estimate (beta) maps for components.
+    beta_clmaps : (S x C) array_like
+        Cluster-extent thresholded standardized parameter estimate (beta) maps for components.
     f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
     value_threshold : float, optional
-        Threshold for voxel-wise significance in input ``z_maps``. Default is None.
+        Threshold for voxel-wise significance in input ``beta_maps``. Default is None.
     proportion_threshold : float, optional
-        Proportion threshold for voxel-wise significance in input ``z_maps``.
+        Proportion threshold for voxel-wise significance in input ``beta_maps``.
         Values between 0 and 100.
         Default is None.
 
@@ -576,22 +576,22 @@ def compute_signal_minus_noise_t(
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
+    assert beta_maps.shape == beta_clmaps.shape == f_t2_maps.shape
 
     value_threshold = get_value_thresholds(
-        maps=z_maps,
+        maps=beta_maps,
         proportion_threshold=proportion_threshold,
         value_threshold=value_threshold,
     )
 
-    n_components = z_maps.shape[1]
+    n_components = beta_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > value_threshold) & (z_clmaps == 0)
+    noise_idx = (np.abs(beta_maps) > value_threshold) & (beta_clmaps == 0)
     for i_comp in range(n_components):
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
-        signal_ft2_z = np.log10(np.unique(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp]))
+        signal_ft2_z = np.log10(np.unique(f_t2_maps[beta_clmaps[:, i_comp] == 1, i_comp]))
         (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
             signal_ft2_z, noise_ft2_z, equal_var=False
         )

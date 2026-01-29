@@ -11,15 +11,15 @@
     "dependencies": {
         "kappa": [
             "map FT2",
-            "map weight"
+            "map optcom standardized parameter estimates"
         ],
         "rho": [
             "map FS0",
-            "map weight"
+            "map optcom standardized parameter estimates"
         ],
         "countnoise": [
-            "map weight",
-            "map weight clusterized"
+            "map optcom standardized parameter estimates",
+            "map optcom standardized parameter estimates clusterized"
         ],
         "countsigFT2": [
             "map FT2 clusterized"
@@ -36,20 +36,20 @@
             "map FS0 clusterized"
         ],
         "signal-noise_t": [
-            "map weight",
-            "map weight clusterized",
+            "map optcom standardized parameter estimates",
+            "map optcom standardized parameter estimates clusterized",
             "map FT2"
         ],
         "signal-noise_z": [
-            "map weight",
-            "map weight clusterized",
+            "map optcom standardized parameter estimates",
+            "map optcom standardized parameter estimates clusterized",
             "map FT2"
         ],
         "variance explained": [
             "map optcom parameter estimates"
         ],
         "normalized variance explained": [
-            "map weight"
+            "map optcom standardized parameter estimates"
         ],
         "kappa_rho_difference": [
             "kappa",
@@ -78,7 +78,7 @@
             "data_optcom",
             "mixing"
         ],
-        "map weight": [
+        "map optcom standardized parameter estimates": [
             "data_optcom",
             "mixing"
         ],
@@ -90,8 +90,8 @@
             "data_optcom",
             "map optcom parameter estimates"
         ],
-        "map weight clusterized": [
-            "map weight",
+        "map optcom standardized parameter estimates clusterized": [
+            "map optcom standardized parameter estimates",
             "mask",
             "ref_img",
             "tes"

@@ -87,7 +87,7 @@ def generate_metrics(
     dependency_config = io.load_json(dependency_config)
 
     if metrics is None:
-        metrics = ["map weight"]
+        metrics = ["map optcom standardized parameter estimates"]
 
     if external_regressors is not None:
         if external_regressor_config is None:
@@ -158,20 +158,20 @@ def generate_metrics(
     # Metric maps
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
-    if "map weight" in required_metrics:
+    if "map optcom standardized parameter estimates" in required_metrics:
         LGR.info("Calculating standardized parameter estimate maps for optimally combined data")
-        metric_maps["map weight"] = dependence.calculate_weights(
+        metric_maps["map optcom standardized parameter estimates"] = dependence.calculate_standardized_parameter_estimates(
             data_optcom=data_optcom,
             mixing=mixing,
         )
-        signs = determine_signs(metric_maps["map weight"], axis=0)
+        signs = determine_signs(metric_maps["map optcom standardized parameter estimates"], axis=0)
         component_table["optimal sign"] = signs
-        metric_maps["map weight"], mixing = flip_components(
-            metric_maps["map weight"], mixing, signs=signs
+        metric_maps["map optcom standardized parameter estimates"], mixing = flip_components(
+            metric_maps["map optcom standardized parameter estimates"], mixing, signs=signs
         )
         if io_generator.verbose:
             io_generator.save_file(
-                utils.unmask(metric_maps["map weight"] ** 2, mask),
+                utils.unmask(metric_maps["map optcom standardized parameter estimates"] ** 2, mask),
                 f"{label} component weights img",
             )
 
@@ -231,10 +231,10 @@ def generate_metrics(
                 f"{label} component F-S0 img",
             )
 
-    if "map weight clusterized" in required_metrics:
+    if "map optcom standardized parameter estimates clusterized" in required_metrics:
         LGR.info("Thresholding standardized parameter estimate maps")
-        metric_maps["map weight clusterized"] = dependence.threshold_map(
-            maps=metric_maps["map weight"],
+        metric_maps["map optcom standardized parameter estimates clusterized"] = dependence.threshold_map(
+            maps=metric_maps["map optcom standardized parameter estimates"],
             mask=mask,
             ref_img=ref_img,
             proportion_threshold=proportion_threshold,
@@ -296,7 +296,7 @@ def generate_metrics(
         component_table["kappa"], component_table["rho"] = dependence.calculate_dependence_metrics(
             f_t2_maps=metric_maps["map FT2"],
             f_s0_maps=metric_maps["map FS0"],
-            z_maps=metric_maps["map weight"],
+            beta_maps=metric_maps["map optcom standardized parameter estimates"],
         )
 
     # Generic metrics
@@ -309,7 +309,7 @@ def generate_metrics(
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
         component_table["normalized variance explained"] = dependence.calculate_varex(
-            component_maps=metric_maps["map weight"],
+            component_maps=metric_maps["map optcom standardized parameter estimates"],
         )
 
     # Spatial metrics
@@ -346,8 +346,8 @@ def generate_metrics(
             component_table["signal-noise_t"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_t(
-            z_maps=metric_maps["map weight"],
-            z_clmaps=metric_maps["map weight clusterized"],
+            beta_maps=metric_maps["map optcom standardized parameter estimates"],
+            beta_clmaps=metric_maps["map optcom standardized parameter estimates clusterized"],
             f_t2_maps=metric_maps["map FT2"],
             proportion_threshold=proportion_threshold,
         )
@@ -364,8 +364,8 @@ def generate_metrics(
             component_table["signal-noise_z"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_z(
-            z_maps=metric_maps["map weight"],
-            z_clmaps=metric_maps["map weight clusterized"],
+            beta_maps=metric_maps["map optcom standardized parameter estimates"],
+            beta_clmaps=metric_maps["map optcom standardized parameter estimates clusterized"],
             f_t2_maps=metric_maps["map FT2"],
             proportion_threshold=proportion_threshold,
         )
@@ -377,8 +377,8 @@ def generate_metrics(
             "calculated for each component."
         )
         component_table["countnoise"] = dependence.compute_countnoise(
-            stat_maps=metric_maps["map weight"],
-            stat_cl_maps=metric_maps["map weight clusterized"],
+            stat_maps=metric_maps["map optcom standardized parameter estimates"],
+            stat_cl_maps=metric_maps["map optcom standardized parameter estimates clusterized"],
             proportion_threshold=proportion_threshold,
         )
 
@@ -686,8 +686,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Description": (
                 "Optimal sign determined based on skew direction of component parameter estimates "
                 "across the brain. In cases where components were left-skewed (-1), the component "
-                "time series and map weights are flipped prior to metric calculation. "
-                "This sign applies to the original mixing matrix and map weights. "
+                "time series and parameter estimates are flipped prior to metric calculation. "
+                "This sign applies to the original mixing matrix and parameter estimates. "
                 "The outputs produced by tedana are already flipped."
             ),
             "Levels": {
