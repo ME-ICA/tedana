@@ -574,17 +574,17 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         metric_metadata["dice_FT2"] = {
             "LongName": "T2 model PE map-F-statistic map Dice similarity index",
             "Description": (
-                "Dice value of cluster-extent thresholded maps of "
-                "T2-model echowise_pes and F-statistics."
+                "Dice value of cluster-extent thresholded versions of "
+                "standardized parameter estimate and T2-model F-statistic maps."
             ),
             "Units": "arbitrary",
         }
     if "dice_FS0" in component_table:
         metric_metadata["dice_FS0"] = {
-            "LongName": ("S0 model PE map-F-statistic map Dice similarity index"),
+            "LongName": "S0 model PE map-F-statistic map Dice similarity index",
             "Description": (
-                "Dice value of cluster-extent thresholded maps of "
-                "S0-model echowise_pes and F-statistics."
+                "Dice value of cluster-extent thresholded versions of "
+                "standardized parameter estimate and S0-model F-statistic maps."
             ),
             "Units": "arbitrary",
         }
