@@ -215,7 +215,6 @@ def generate_metrics(
         LGR.info("Calculating F-statistic maps")
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat=data_cat,
-            z_maps=metric_maps["map Z"],
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
