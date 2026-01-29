@@ -19,9 +19,10 @@ import pandas as pd
 import requests
 from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image import new_img_like
+from scipy import stats
 
 from tedana import utils
-from tedana.stats import computefeats2, get_coeffs
+from tedana.stats import get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -727,12 +728,12 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(ts, mask, component_table, mixing, io_generator):
+def writeresults(data_optcom, mask, component_table, mixing, io_generator):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
     ----------
-    ts : (S x T) array_like
+    data_optcom : (S x T) array_like
         Time series to denoise and save to disk
     mask : (S,) array_like
         Boolean mask array
@@ -753,37 +754,40 @@ def writeresults(ts, mask, component_table, mixing, io_generator):
     Generated Files
     ---------------
 
-    =========================================    ===========================================
+    =========================================    ===============================================
     Filename                                     Content
-    =========================================    ===========================================
+    =========================================    ===============================================
     desc-denoised_bold.nii.gz                    Denoised time series.
-
     desc-optcomAccepted_bold.nii.gz              High-Kappa time series. (only with verbose)
     desc-optcomRejected_bold.nii.gz              Low-Kappa time series. (only with verbose)
-    desc-ICA_components.nii.gz                   Spatial component maps for all
-                                                 components.
-    desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted
-                                                 components.
+    desc-ICA_components.nii.gz                   Spatial component maps for all components.
+    desc-ICA_stat-z_components.nii.gz            Z-normalized spatial component maps
+                                                 for all components.
+    desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted components.
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
-    =========================================    ===========================================
+    =========================================    ===============================================
     """
     acc = component_table[component_table.classification == "accepted"].index.values
-    write_split_ts(ts, mixing, mask, component_table, io_generator)
+    write_split_ts(data_optcom, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(ts, mixing, mask)
+    ts_pes = get_coeffs(data_optcom, mixing, mask)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
+
+    data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
+    mixing_z = stats.zscore(mixing, axis=0)
+    betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask)
+    fout = io_generator.save_file(betas_oc, "z-scored ICA components img")
+    del data_optcom_z, mixing_z
+    LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
     if len(acc) != 0:
         fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
-        # write feature versions of components
-        feats = computefeats2(split_ts(ts, mixing, mask, component_table)[0], mixing[:, acc], mask)
-        feats = utils.unmask(feats, mask)
-        fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
-        LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
+        fout = io_generator.save_file(betas_oc[:, acc], "z-scored ICA accepted components img")
+        LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
 
 def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
