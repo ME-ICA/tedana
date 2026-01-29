@@ -180,7 +180,10 @@ def test_smoke_calculate_standardized_parameter_estimates():
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    weights = dependence.calculate_standardized_parameter_estimates(data_optcom=data_optcom, mixing=mixing)
+    weights = dependence.calculate_standardized_parameter_estimates(
+        data_optcom=data_optcom,
+        mixing=mixing,
+    )
     assert weights.shape == (n_voxels, n_components)
 
 
