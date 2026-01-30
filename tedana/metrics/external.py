@@ -639,9 +639,7 @@ def compute_external_regressor_correlations(
                 "External regressors: " + ", ".join(sorted(problematic_external)) + "."
             )
         if problematic_mixing:
-            msg_parts.append(
-                "ICA components: " + ", ".join(sorted(problematic_mixing)) + "."
-            )
+            msg_parts.append("ICA components: " + ", ".join(sorted(problematic_mixing)) + ".")
         LGR.warning(" ".join(msg_parts))
 
     # Convert DataFrames to numpy arrays
