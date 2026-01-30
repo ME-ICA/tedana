@@ -86,8 +86,11 @@ def generate_metrics(
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
     dependency_config = io.load_json(dependency_config)
 
-    if metrics is None:
-        metrics = ["map weight"]
+    metrics = metrics or []
+    if "map weight" not in metrics:
+        metrics.append("map weight")
+    if "map optcom betas" not in metrics:
+        metrics.append("map optcom betas")
 
     if external_regressors is not None:
         if external_regressor_config is None:
@@ -273,18 +276,18 @@ def generate_metrics(
 
     # Back to maps
     if "map beta T2 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
+        LGR.info("Thresholding standardized parameter estimate maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map weight"],
             n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
             ref_img=ref_img,
         )
 
     if "map beta S0 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
+        LGR.info("Thresholding standardized parameter estimate maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
-            maps=metric_maps["map optcom betas"],
+            maps=metric_maps["map weight"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
             ref_img=ref_img,
@@ -303,7 +306,7 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         component_table["variance explained"] = dependence.calculate_varex(
-            component_maps=metric_maps["map optcom betas"],
+            component_maps=metric_maps["map weight"],
         )
 
     if "normalized variance explained" in required_metrics:
