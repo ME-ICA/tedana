@@ -311,7 +311,7 @@ options for the ``--tedpca`` flag.
   in :footcite:t:`kundu2013integrated`.
 
 After component selection is performed,
-the retained components and their associated betas are used to reconstruct the optimally combined data,
+the retained components and their associated parameter estimates are used to reconstruct the optimally combined data,
 resulting in a dimensionally reduced version of the dataset which is then used in the
 :ref:`TEDICA` step.
 
@@ -344,12 +344,12 @@ brain (**desc-ICA_components.nii.gz**).
 
 Linear regression is used to fit the component time series to each voxel in each
 of the original, echo-specific data.
-This results in echo- and voxel-specific betas for each of the components.
-The beta values from the linear regression can be used to determine how the
+This results in echo- and voxel-specific parameter estimates for each of the components.
+The parameter estimates from the linear regression can be used to determine how the
 fluctuations (in each component timeseries) change across the echo times.
 
 TE-dependence (:math:`R_2` or :math:`1/T_{2}^*`) and TE-independence (:math:`S_0`) models can then
-be fit to these betas.
+be fit to these parameter estimates.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0` models
 (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
@@ -357,7 +357,7 @@ These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_
   For more information on how TE-dependence and TE-independence models are
   estimated, see :ref:`dependence models`.
 
-The grey lines below shows how beta values (a.k.a. parameter estimates)
+The grey lines below shows how parameter estimates (a.k.a. PEs)
 change with echo time, for one voxel and one component.
 The blue and red lines show the predicted values for the :math:`S_0` and
 :math:`T_2^*` models, respectively, for the same voxel and component.

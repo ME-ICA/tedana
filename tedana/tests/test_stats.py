@@ -47,21 +47,21 @@ def test_get_coeffs():
     x = np.arange(0, 40)[:, np.newaxis]
     mask = np.array([True, False])
 
-    betas = get_coeffs(data, x, mask=None, add_const=False)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5.0, 5.0]))
+    pes = get_coeffs(data, x, mask=None, add_const=False)
+    pes = np.squeeze(pes)
+    assert np.allclose(pes, np.array([5.0, 5.0]))
 
-    betas = get_coeffs(data, x, mask=None, add_const=True)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5.0, 5.0]))
+    pes = get_coeffs(data, x, mask=None, add_const=True)
+    pes = np.squeeze(pes)
+    assert np.allclose(pes, np.array([5.0, 5.0]))
 
-    betas = get_coeffs(data, x, mask=mask, add_const=False)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5, 0]))
+    pes = get_coeffs(data, x, mask=mask, add_const=False)
+    pes = np.squeeze(pes)
+    assert np.allclose(pes, np.array([5, 0]))
 
-    betas = get_coeffs(data, x, mask=mask, add_const=True)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5, 0]))
+    pes = get_coeffs(data, x, mask=mask, add_const=True)
+    pes = np.squeeze(pes)
+    assert np.allclose(pes, np.array([5, 0]))
 
 
 def test_break_get_coeffs():
@@ -147,11 +147,11 @@ def test_fit_model():
     y = y + residuals
 
     # Fitting model and confirming outputs are the correct shape
-    # and beta fits match inputted weights to four decimal places
-    betas, sse, df = fit_model(x, y)
+    # and PE fits match inputted weights to four decimal places
+    pes, sse, df = fit_model(x, y)
     assert df == (t - r)
     assert sse.shape == (c,)
-    assert (np.round(betas, decimals=4) == np.round(weights, decimals=4)).all()
+    assert (np.round(pes, decimals=4) == np.round(weights, decimals=4)).all()
 
     # Outputting the residual and checking it matches the inputted residual
     fit_residuals = fit_model(x, y, output_residual=True)
