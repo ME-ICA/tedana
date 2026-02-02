@@ -196,6 +196,33 @@ def generate_metrics(
             mixing=mixing,
         )
 
+    if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
+        LGR.info("Calculating kappa* and rho*")
+        f_t2star, f_s0, kappa_star, rho_star = dependence.component_te_variance_tests_voxelwise(
+            me_betas=metric_maps["map echo betas"],
+            tes=tes,
+            s0_hat=s0map,
+            t2s_hat=t2smap,
+            adaptive_mask=adaptive_mask,
+        )
+        weights = metric_maps["map weight"] ** 2
+        nan_mask = np.isnan(kappa_star) | np.isnan(rho_star) | np.isnan(f_t2star) | np.isnan(f_s0)
+        for i_comp in range(n_components):
+            nan_mask_comp = nan_mask[:, i_comp]
+            weights_comp = weights[~nan_mask_comp]
+            component_table.loc[i_comp, "kappa_star"] = np.average(
+                kappa_star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+            )
+            component_table.loc[i_comp, "rho_star"] = np.average(
+                rho_star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+            )
+            component_table.loc[i_comp, "f_t2star"] = np.average(
+                f_t2star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+            )
+            component_table.loc[i_comp, "f_s0"] = np.average(
+                f_s0[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+            )
+
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
         # used in kundu v3.2 tree
@@ -307,25 +334,6 @@ def generate_metrics(
             f_s0_maps=metric_maps["map FS0"],
             z_maps=metric_maps["map weight"],
         )
-
-    if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
-        LGR.info("Calculating kappa* and rho*")
-        f_t2star, f_s0, kappa_star, rho_star = (
-            dependence.component_te_variance_tests_voxelwise(
-                me_betas=metric_maps["map echo betas"],
-                tes=tes,
-                s0_hat=s0map,
-                t2s_hat=t2smap,
-                adaptive_mask=adaptive_mask,
-            )
-        )
-        weights = metric_maps["map weight"] ** 2
-        nan_mask = np.isnan(kappa_star) | np.isnan(rho_star) | np.isnan(f_t2star) | np.isnan(f_s0)
-        weights = weights[~nan_mask]
-        component_table["kappa_star"] = np.average(kappa_star[~nan_mask], weights=weights, axis=0)
-        component_table["rho_star"] = np.average(rho_star[~nan_mask], weights=weights, axis=0)
-        component_table["f_t2star"] = np.average(f_t2star[~nan_mask], weights=weights, axis=0)
-        component_table["f_s0"] = np.average(f_s0[~nan_mask], weights=weights, axis=0)
 
     # Generic metrics
     if "variance explained" in required_metrics:
