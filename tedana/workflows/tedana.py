@@ -366,6 +366,14 @@ def _get_parser():
         default=None,
     )
     optional.add_argument(
+        "--s0map",
+        dest="s0map",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help="Precalculated S0 map in the same space as the input data.",
+        default=None,
+    )
+    optional.add_argument(
         "--mix",
         dest="mixing_file",
         metavar="FILE",
@@ -434,6 +442,7 @@ def tedana_workflow(
     quiet=False,
     overwrite=False,
     t2smap=None,
+    s0map=None,
     mixing_file=None,
     n_threads=1,
     tedana_command=None,
@@ -554,6 +563,8 @@ def tedana_workflow(
         Precalculated T2* map in the same space as the input data. Values should
         be in seconds per BIDS convention. Maps in milliseconds are auto-detected
         and handled with a warning.
+    s0map : :obj:`str`, optional
+        Precalculated S0 map in the same space as the input data.
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -720,6 +731,14 @@ def tedana_workflow(
     elif t2smap is not None:
         raise OSError("Argument 't2smap' must be an existing file.")
 
+    if s0map is not None and op.isfile(s0map):
+        s0map_file = io_generator.get_name("s0 img")
+        s0map = op.abspath(s0map)
+        if s0map != s0map_file:
+            shutil.copyfile(s0map, s0map_file)
+    elif s0map is not None:
+        raise OSError("Argument 's0map' must be an existing file.")
+
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
         "\\citep{dupre2021te}."
@@ -757,6 +776,10 @@ def tedana_workflow(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."
         )
+
+    if s0map is not None:
+        s0_full = utils.reshape_niimg(s0map)
+        s0_limited = s0_full.copy()
 
     # Create an adaptive mask with at least 1 good echo, for denoising
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
@@ -828,7 +851,6 @@ def tedana_workflow(
 
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
-        del s0_full
 
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
@@ -856,7 +878,6 @@ def tedana_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
-    del t2s_full
 
     if "gsr" in gscontrol:
         # regress out global signal
@@ -881,6 +902,8 @@ def tedana_workflow(
             data_cat,
             data_optcom,
             mask_clf,
+            t2s_full,
+            s0_full,
             masksum_clf,
             io_generator,
             tes=tes,
@@ -932,6 +955,8 @@ def tedana_workflow(
                 data_cat=data_cat,
                 data_optcom=data_optcom,
                 mixing=mixing,
+                t2smap=t2s_full,
+                s0map=s0_full,
                 adaptive_mask=masksum_clf,
                 tes=tes,
                 n_independent_echos=n_independent_echos,
@@ -991,6 +1016,8 @@ def tedana_workflow(
             data_cat=data_cat,
             data_optcom=data_optcom,
             mixing=mixing,
+            t2smap=t2s_full,
+            s0map=s0_full,
             adaptive_mask=masksum_clf,
             tes=tes,
             n_independent_echos=n_independent_echos,

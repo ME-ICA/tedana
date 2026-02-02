@@ -28,6 +28,8 @@ def generate_metrics(
     data_optcom: npt.NDArray,
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
+    t2smap: npt.NDArray,
+    s0map: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
     n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
@@ -89,6 +91,9 @@ def generate_metrics(
     if metrics is None:
         metrics = ["map weight"]
 
+    if ("map optcom betas" in metrics) and ("map echo betas" not in metrics) and io_generator.verbose:
+        metrics.append("map echo betas")
+
     if external_regressors is not None:
         if external_regressor_config is None:
             raise ValueError(
@@ -125,6 +130,8 @@ def generate_metrics(
     data_cat = data_cat[mask, ...]
     data_optcom = data_optcom[mask, :]
     adaptive_mask = adaptive_mask[mask]
+    s0map = s0map[mask]
+    t2smap = t2smap[mask]
 
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
@@ -181,11 +188,13 @@ def generate_metrics(
             data=data_optcom,
             mixing=mixing,
         )
-        if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(
-                data=data_cat,
-                mixing=mixing,
-            )
+
+    if "map echo betas" in required_metrics:
+        LGR.info("Calculating unstandardized parameter estimate maps for echo-wise data")
+        metric_maps["map echo betas"] = dependence.calculate_betas(
+            data=data_cat,
+            mixing=mixing,
+        )
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
@@ -298,6 +307,25 @@ def generate_metrics(
             f_s0_maps=metric_maps["map FS0"],
             z_maps=metric_maps["map weight"],
         )
+
+    if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
+        LGR.info("Calculating kappa* and rho*")
+        f_t2star, f_s0, kappa_star, rho_star = (
+            dependence.component_te_variance_tests_voxelwise(
+                me_betas=metric_maps["map echo betas"],
+                tes=tes,
+                s0_hat=s0map,
+                t2s_hat=t2smap,
+                adaptive_mask=adaptive_mask,
+            )
+        )
+        weights = metric_maps["map weight"] ** 2
+        nan_mask = np.isnan(kappa_star) | np.isnan(rho_star) | np.isnan(f_t2star) | np.isnan(f_s0)
+        weights = weights[~nan_mask]
+        component_table["kappa_star"] = np.average(kappa_star[~nan_mask], weights=weights, axis=0)
+        component_table["rho_star"] = np.average(rho_star[~nan_mask], weights=weights, axis=0)
+        component_table["f_t2star"] = np.average(f_t2star[~nan_mask], weights=weights, axis=0)
+        component_table["f_s0"] = np.average(f_s0[~nan_mask], weights=weights, axis=0)
 
     # Generic metrics
     if "variance explained" in required_metrics:

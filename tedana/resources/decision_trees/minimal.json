@@ -10,7 +10,9 @@
         "dice_FS0",
         "dice_FT2",
         "signal-noise_t",
-        "variance explained"
+        "variance explained",
+        "kappa_star",
+        "rho_star"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
     "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance"],

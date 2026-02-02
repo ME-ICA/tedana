@@ -6,6 +6,7 @@ import typing
 import nibabel as nb
 import numpy as np
 from scipy import stats
+from tqdm import trange
 
 from tedana import io, utils
 from tedana.metrics._utils import get_value_thresholds
@@ -739,3 +740,102 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     assert kappa.shape == rho.shape
 
     return np.abs(kappa - rho) / (kappa + rho)
+
+
+def component_te_variance_tests_voxelwise(
+    me_betas: np.ndarray,
+    tes: np.ndarray,
+    s0_hat: np.ndarray,
+    t2s_hat: np.ndarray,
+    adaptive_mask: np.ndarray,
+):
+    """Voxel-wise statistically valid S0 vs T2* variance decomposition.
+
+    Parameters
+    ----------
+    me_betas : (n_voxels, n_echos, n_comps) array
+        Echo-wise component parameter estimates.
+    tes : (n_echos,) array
+        Echo times (ms).
+    s0_hat : (n_voxels,) array
+        Baseline S0 estimate per voxel.
+    t2s_hat : (n_voxels,) array
+        Baseline T2* estimate per voxel.
+    adaptive_mask : (n_voxels,) array of int
+        Number of valid echoes per voxel.
+
+    Returns
+    -------
+    F_t2star : (n_voxels, n_comps) array
+    F_s0 : (n_voxels, n_comps) array
+    kappa_star : (n_voxels, n_comps) array
+    rho_star : (n_voxels, n_comps) array
+    """
+    if not (me_betas.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]):
+        raise ValueError(
+            "me_betas, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
+        )
+    if me_betas.shape[1] != len(tes):
+        raise ValueError(
+            "me_betas and tes must have the same number of echoes"
+        )
+
+    n_voxels, _, n_comps = me_betas.shape
+    tes = np.asarray(tes, float)
+
+    f_t2star = np.full((n_voxels, n_comps), np.nan)
+    f_s0 = np.full((n_voxels, n_comps), np.nan)
+    kappa_star = np.full((n_voxels, n_comps), np.nan)
+    rho_star = np.full((n_voxels, n_comps), np.nan)
+
+    for i_voxel in trange(n_voxels, desc="Kappa*/Rho*"):
+        n_e = adaptive_mask[i_voxel]
+        if (n_e < 3) or (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
+            continue  # insufficient DOF
+
+        tes_v = tes[:n_e]
+
+        phi_s0 = np.exp(-tes_v / t2s_hat[i_voxel])
+        phi_t2 = (
+            s0_hat[i_voxel]
+            * np.exp(-tes_v / t2s_hat[i_voxel])
+            * tes_v / (t2s_hat[i_voxel] ** 2)
+        )
+
+        X_full = np.column_stack([phi_s0, phi_t2])
+        X_s0 = phi_s0[:, None]
+        X_t2 = phi_t2[:, None]
+
+        df_num = 1
+        df_den = n_e - 2
+
+        for j_comp in range(n_comps):
+            y = me_betas[i_voxel, :n_e, j_comp]
+
+            b_full, *_ = np.linalg.lstsq(X_full, y, rcond=None)
+            b_s0, *_ = np.linalg.lstsq(X_s0, y, rcond=None)
+            b_t2, *_ = np.linalg.lstsq(X_t2, y, rcond=None)
+
+            resid_full = y - X_full @ b_full
+            resid_s0 = y - X_s0 @ b_s0
+            resid_t2 = y - X_t2 @ b_t2
+
+            SSE_full = np.sum(resid_full ** 2)
+            SSE_s0 = np.sum(resid_s0 ** 2)
+            SSE_t2 = np.sum(resid_t2 ** 2)
+
+            ss_t2 = SSE_s0 - SSE_full
+            ss_s0 = SSE_t2 - SSE_full
+
+            if SSE_full <= 0 or df_den <= 0:
+                continue
+
+            f_t2star[i_voxel, j_comp] = (ss_t2 / df_num) / (SSE_full / df_den)
+            f_s0[i_voxel, j_comp] = (ss_s0 / df_num) / (SSE_full / df_den)
+
+            denom = ss_t2 + ss_s0
+            if denom > 0:
+                kappa_star[i_voxel, j_comp] = ss_t2 / denom
+                rho_star[i_voxel, j_comp] = ss_s0 / denom
+
+    return f_t2star, f_s0, kappa_star, rho_star

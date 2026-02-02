@@ -17,6 +17,14 @@
             "map FS0",
             "map weight"
         ],
+        "kappa_star": [
+            "map echo betas",
+            "map weight"
+        ],
+        "rho_star": [
+            "map echo betas",
+            "map weight"
+        ],
         "countnoise": [
             "map weight",
             "map weight clusterized"
@@ -84,6 +92,10 @@
         ],
         "map optcom betas": [
             "data_optcom",
+            "mixing"
+        ],
+        "map echo betas": [
+            "data_cat",
             "mixing"
         ],
         "map percent signal change": [
