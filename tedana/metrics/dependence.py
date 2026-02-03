@@ -749,7 +749,8 @@ def component_te_variance_tests_voxelwise(
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
 ):
-    """
+    """Calculate component-wise S0/T2* contributions to explainable variance.
+
     Perform voxel-wise variance decomposition of multi-echo ICA components
     into S0-driven and T2*-driven contributions using physically motivated,
     nested linear models.
@@ -791,10 +792,12 @@ def component_te_variance_tests_voxelwise(
         These should reflect the physical scaling of signal across echoes.
     tes : (n_echos,) array
         Echo times in milliseconds.
-    s0_hat : (n_voxels,) array
-        Voxel-wise baseline S0 estimates from monoexponential fitting.
-    t2s_hat : (n_voxels,) array
-        Voxel-wise baseline T2* estimates from monoexponential fitting.
+    s0_hat : (n_voxels,) or (n_voxels, n_vols) array
+        Voxel-wise (or voxel- and volume-wise) baseline S0 estimates from
+        monoexponential fitting.
+    t2s_hat : (n_voxels,) or (n_voxels, n_vols) array
+        Voxel-wise (or voxel- and volume-wise) baseline T2* estimates from
+        monoexponential fitting.
     adaptive_mask : (n_voxels,) array of int
         Number of valid echoes per voxel (used to truncate echo-wise fits
         and compute voxel-wise degrees of freedom).
@@ -819,7 +822,12 @@ def component_te_variance_tests_voxelwise(
     - kappa_star and rho_star are variance fractions, not hypothesis tests.
       Statistical inference should be based on the F-statistics.
     """
-    if not (echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]):
+    if not (
+        echowise_pes.shape[0]
+        == s0_hat.shape[0]
+        == t2s_hat.shape[0]
+        == adaptive_mask.shape[0]
+    ):
         raise ValueError(
             "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
         )
@@ -828,6 +836,9 @@ def component_te_variance_tests_voxelwise(
 
     n_voxels, _, n_comps = echowise_pes.shape
     tes = np.asarray(tes, float)
+
+    # Detect whether baseline estimates are voxel-wise or voxel+volume-wise
+    volume_wise = s0_hat.ndim == 2
 
     f_t2star = np.full((n_voxels, n_comps), np.nan)
     f_s0 = np.full((n_voxels, n_comps), np.nan)
@@ -838,24 +849,50 @@ def component_te_variance_tests_voxelwise(
         n_e = adaptive_mask[i_voxel]
 
         # Require at least 3 echoes to estimate a 2-parameter model
-        # and physically valid baseline estimates
-        if (n_e < 3) or (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
+        if n_e < 3:
             continue
 
         # Restrict echo times to voxel-specific valid echoes
         tes_v = tes[:n_e]
 
-        # Basis function for S0 fluctuations:
-        # ∂S/∂S0 evaluated at baseline parameters
-        phi_s0 = np.exp(-tes_v / t2s_hat[i_voxel])
+        if volume_wise:
+            # Volume-wise baseline estimates:
+            # construct echo-space sensitivities by averaging over volumes
+            s0_v = s0_hat[i_voxel, :]
+            t2s_v = t2s_hat[i_voxel, :]
 
-        # Basis function for T2* fluctuations:
-        # ∂S/∂T2* evaluated at baseline parameters
-        phi_t2 = (
-            s0_hat[i_voxel]
-            * np.exp(-tes_v / t2s_hat[i_voxel])
-            * tes_v / (t2s_hat[i_voxel] ** 2)
-        )
+            valid = (s0_v > 0) & (t2s_v > 0)
+            if not np.all(valid):
+                continue
+
+            phi_s0 = np.mean(
+                np.exp(-tes_v[:, None] / t2s_v[None, valid]),
+                axis=1,
+            )
+
+            phi_t2 = np.mean(
+                s0_v[valid][None, :]
+                * np.exp(-tes_v[:, None] / t2s_v[None, valid])
+                * tes_v[:, None]
+                / (t2s_v[None, valid] ** 2),
+                axis=1,
+            )
+        else:
+            # Voxel-wise baseline estimates
+            if (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
+                continue
+
+            # Basis function for S0 fluctuations:
+            # ∂S/∂S0 evaluated at baseline parameters
+            phi_s0 = np.exp(-tes_v / t2s_hat[i_voxel])
+
+            # Basis function for T2* fluctuations:
+            # ∂S/∂T2* evaluated at baseline parameters
+            phi_t2 = (
+                s0_hat[i_voxel]
+                * np.exp(-tes_v / t2s_hat[i_voxel])
+                * tes_v / (t2s_hat[i_voxel] ** 2)
+            )
 
         # Design matrices for nested models
         dm_full = np.column_stack([phi_s0, phi_t2])
@@ -865,6 +902,8 @@ def component_te_variance_tests_voxelwise(
         # Degrees of freedom for partial F-tests
         df_num = 1
         df_den = n_e - 2
+        if df_den <= 0:
+            continue
 
         for j_comp in range(n_comps):
             # Echo-wise parameter estimates for this voxel/component
@@ -885,11 +924,11 @@ def component_te_variance_tests_voxelwise(
             sse_s0 = np.sum(resid_s0 ** 2)
             sse_t2 = np.sum(resid_t2 ** 2)
 
-            # Unique variance explained by each term
-            ss_t2 = sse_s0 - sse_full
-            ss_s0 = sse_t2 - sse_full
+            # Type III (unique) sums of squares: unique variance explained by each term
+            ss_t2 = sse_s0 - sse_full  # Unique to T2* (given S0 is in model)
+            ss_s0 = sse_t2 - sse_full  # Unique to S0 (given T2* is in model)
 
-            if sse_full <= 0 or df_den <= 0:
+            if sse_full <= 0:
                 continue
 
             # Partial F-statistics
