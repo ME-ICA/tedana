@@ -199,7 +199,7 @@ def generate_metrics(
     if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
         LGR.info("Calculating kappa* and rho*")
         f_t2star, f_s0, ss_t2, ss_s0 = dependence.component_te_variance_tests_voxelwise(
-            me_betas=metric_maps["map echo betas"],
+            echowise_pes=metric_maps["map echo betas"],
             tes=tes,
             s0_hat=s0map,
             t2s_hat=t2smap,
