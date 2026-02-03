@@ -810,17 +810,23 @@ def component_te_variance_tests_voxelwise(
     f_s0 : (n_voxels, n_comps) array
         Partial F-statistics testing the contribution of the S0 term
         conditional on the T2* term.
-    kappa_star : (n_voxels, n_comps) array
-        Fraction of explainable variance attributed to T2*-driven effects.
-    rho_star : (n_voxels, n_comps) array
-        Fraction of explainable variance attributed to S0-driven effects.
+    ss_t2 : (n_voxels, n_comps) array
+        Unique sum of squares attributable to T2*-driven effects (Type III SS).
+        This is the reduction in SSE when adding the T2* term to a model
+        that already contains the S0 term.
+    ss_s0 : (n_voxels, n_comps) array
+        Unique sum of squares attributable to S0-driven effects (Type III SS).
+        This is the reduction in SSE when adding the S0 term to a model
+        that already contains the T2* term.
 
     Notes
     -----
     - This function is computationally expensive due to voxel-wise nested
       regression and is intended primarily for validation and research use.
-    - kappa_star and rho_star are variance fractions, not hypothesis tests.
-      Statistical inference should be based on the F-statistics.
+    - Component-level variance fractions (kappa_star, rho_star) should be
+      computed by aggregating ss_t2 and ss_s0 across voxels before taking
+      ratios, rather than averaging voxel-wise ratios. This preserves the
+      variance decomposition interpretation at the component level.
     """
     if not (
         echowise_pes.shape[0]
@@ -842,8 +848,8 @@ def component_te_variance_tests_voxelwise(
 
     f_t2star = np.full((n_voxels, n_comps), np.nan)
     f_s0 = np.full((n_voxels, n_comps), np.nan)
-    kappa_star = np.full((n_voxels, n_comps), np.nan)
-    rho_star = np.full((n_voxels, n_comps), np.nan)
+    ss_t2_out = np.full((n_voxels, n_comps), np.nan)
+    ss_s0_out = np.full((n_voxels, n_comps), np.nan)
 
     for i_voxel in trange(n_voxels, desc="Kappa*/Rho*"):
         n_e = adaptive_mask[i_voxel]
@@ -935,10 +941,8 @@ def component_te_variance_tests_voxelwise(
             f_t2star[i_voxel, j_comp] = (ss_t2 / df_num) / (sse_full / df_den)
             f_s0[i_voxel, j_comp] = (ss_s0 / df_num) / (sse_full / df_den)
 
-            # Variance fraction decomposition
-            denom = ss_t2 + ss_s0
-            if denom > 0:
-                kappa_star[i_voxel, j_comp] = ss_t2 / denom
-                rho_star[i_voxel, j_comp] = ss_s0 / denom
+            # Store raw sum of squares for principled aggregation
+            ss_t2_out[i_voxel, j_comp] = ss_t2
+            ss_s0_out[i_voxel, j_comp] = ss_s0
 
-    return f_t2star, f_s0, kappa_star, rho_star
+    return f_t2star, f_s0, ss_t2_out, ss_s0_out

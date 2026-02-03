@@ -198,7 +198,7 @@ def generate_metrics(
 
     if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
         LGR.info("Calculating kappa* and rho*")
-        f_t2star, f_s0, kappa_star, rho_star = dependence.component_te_variance_tests_voxelwise(
+        f_t2star, f_s0, ss_t2, ss_s0 = dependence.component_te_variance_tests_voxelwise(
             me_betas=metric_maps["map echo betas"],
             tes=tes,
             s0_hat=s0map,
@@ -206,16 +206,25 @@ def generate_metrics(
             adaptive_mask=adaptive_mask,
         )
         weights = metric_maps["map weight"] ** 2
-        nan_mask = np.isnan(kappa_star) | np.isnan(rho_star) | np.isnan(f_t2star) | np.isnan(f_s0)
+        nan_mask = np.isnan(ss_t2) | np.isnan(ss_s0) | np.isnan(f_t2star) | np.isnan(f_s0)
         for i_comp in range(n_components):
             nan_mask_comp = nan_mask[:, i_comp]
             weights_comp = weights[~nan_mask_comp, i_comp]
-            component_table.loc[i_comp, "kappa_star"] = np.average(
-                kappa_star[~nan_mask_comp, i_comp], weights=weights_comp
-            )
-            component_table.loc[i_comp, "rho_star"] = np.average(
-                rho_star[~nan_mask_comp, i_comp], weights=weights_comp
-            )
+
+            # Principled aggregation: sum-of-sums rather than average-of-ratios.
+            # Weight the voxel-wise SS values before summing to preserve the
+            # variance decomposition interpretation at the component level.
+            weighted_ss_t2 = np.sum(ss_t2[~nan_mask_comp, i_comp] * weights_comp)
+            weighted_ss_s0 = np.sum(ss_s0[~nan_mask_comp, i_comp] * weights_comp)
+            total_weighted_ss = weighted_ss_t2 + weighted_ss_s0
+
+            if total_weighted_ss > 0:
+                component_table.loc[i_comp, "kappa_star"] = weighted_ss_t2 / total_weighted_ss
+                component_table.loc[i_comp, "rho_star"] = weighted_ss_s0 / total_weighted_ss
+            else:
+                component_table.loc[i_comp, "kappa_star"] = np.nan
+                component_table.loc[i_comp, "rho_star"] = np.nan
+
             component_table.loc[i_comp, "f_t2star"] = np.average(
                 f_t2star[~nan_mask_comp, i_comp], weights=weights_comp
             )
