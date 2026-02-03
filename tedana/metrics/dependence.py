@@ -6,7 +6,6 @@ import typing
 import nibabel as nb
 import numpy as np
 from scipy import stats
-from tqdm import trange
 
 from tedana import io, utils
 from tedana.metrics._utils import get_value_thresholds
@@ -821,8 +820,6 @@ def component_te_variance_tests_voxelwise(
 
     Notes
     -----
-    - This function is computationally expensive due to voxel-wise nested
-      regression and is intended primarily for validation and research use.
     - Component-level variance fractions (kappa_star, rho_star) should be
       computed by aggregating ss_t2 and ss_s0 across voxels before taking
       ratios, rather than averaging voxel-wise ratios. This preserves the
@@ -840,109 +837,153 @@ def component_te_variance_tests_voxelwise(
     if echowise_pes.shape[1] != len(tes):
         raise ValueError("echowise_pes and tes must have the same number of echoes")
 
-    n_voxels, _, n_comps = echowise_pes.shape
-    tes = np.asarray(tes, float)
+    n_voxels, n_echos, n_comps = echowise_pes.shape
+    tes = np.asarray(tes, dtype=np.float64)
 
     # Detect whether baseline estimates are voxel-wise or voxel+volume-wise
     volume_wise = s0_hat.ndim == 2
 
+    # Initialize output arrays
     f_t2star = np.full((n_voxels, n_comps), np.nan)
     f_s0 = np.full((n_voxels, n_comps), np.nan)
     ss_t2_out = np.full((n_voxels, n_comps), np.nan)
     ss_s0_out = np.full((n_voxels, n_comps), np.nan)
 
-    for i_voxel in trange(n_voxels, desc="Kappa*/Rho*"):
-        n_e = adaptive_mask[i_voxel]
+    # Process voxels grouped by number of valid echoes for efficiency
+    unique_n_echoes = np.unique(adaptive_mask[adaptive_mask >= 3])
 
-        # Require at least 3 echoes to estimate a 2-parameter model
-        if n_e < 3:
-            continue
-
-        # Restrict echo times to voxel-specific valid echoes
-        tes_v = tes[:n_e]
-
-        if volume_wise:
-            # Volume-wise baseline estimates:
-            # construct echo-space sensitivities by averaging over volumes
-            s0_v = s0_hat[i_voxel, :]
-            t2s_v = t2s_hat[i_voxel, :]
-
-            valid = (s0_v > 0) & (t2s_v > 0)
-            if not np.all(valid):
-                continue
-
-            phi_s0 = np.mean(
-                np.exp(-tes_v[:, None] / t2s_v[None, valid]),
-                axis=1,
-            )
-
-            phi_t2 = np.mean(
-                s0_v[valid][None, :]
-                * np.exp(-tes_v[:, None] / t2s_v[None, valid])
-                * tes_v[:, None]
-                / (t2s_v[None, valid] ** 2),
-                axis=1,
-            )
-        else:
-            # Voxel-wise baseline estimates
-            if (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
-                continue
-
-            # Basis function for S0 fluctuations:
-            # ∂S/∂S0 evaluated at baseline parameters
-            phi_s0 = np.exp(-tes_v / t2s_hat[i_voxel])
-
-            # Basis function for T2* fluctuations:
-            # ∂S/∂T2* evaluated at baseline parameters
-            phi_t2 = (
-                s0_hat[i_voxel]
-                * np.exp(-tes_v / t2s_hat[i_voxel])
-                * tes_v / (t2s_hat[i_voxel] ** 2)
-            )
-
-        # Design matrices for nested models
-        dm_full = np.column_stack([phi_s0, phi_t2])
-        dm_s0 = phi_s0[:, None]
-        dm_t2 = phi_t2[:, None]
-
-        # Degrees of freedom for partial F-tests
-        df_num = 1
+    for n_e in unique_n_echoes:
         df_den = n_e - 2
         if df_den <= 0:
             continue
 
-        for j_comp in range(n_comps):
-            # Echo-wise parameter estimates for this voxel/component
-            y = echowise_pes[i_voxel, :n_e, j_comp]
+        # Get voxel indices with this number of echoes
+        voxel_mask = adaptive_mask == n_e
+        voxel_indices = np.where(voxel_mask)[0]
 
-            # Least-squares fits for full and reduced models
-            b_full, *_ = np.linalg.lstsq(dm_full, y, rcond=None)
-            b_s0, *_ = np.linalg.lstsq(dm_s0, y, rcond=None)
-            b_t2, *_ = np.linalg.lstsq(dm_t2, y, rcond=None)
+        # Filter for valid baseline estimates
+        if volume_wise:
+            valid_baseline = np.all((s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0), axis=1)
+        else:
+            valid_baseline = (s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0)
 
-            # Residuals for nested model comparison
-            resid_full = y - dm_full @ b_full
-            resid_s0 = y - dm_s0 @ b_s0
-            resid_t2 = y - dm_t2 @ b_t2
+        voxel_indices = voxel_indices[valid_baseline]
+        if len(voxel_indices) == 0:
+            continue
 
-            # Sum of squared errors
-            sse_full = np.sum(resid_full ** 2)
-            sse_s0 = np.sum(resid_s0 ** 2)
-            sse_t2 = np.sum(resid_t2 ** 2)
+        tes_v = tes[:n_e]
 
-            # Type III (unique) sums of squares: unique variance explained by each term
-            ss_t2 = sse_s0 - sse_full  # Unique to T2* (given S0 is in model)
-            ss_s0 = sse_t2 - sse_full  # Unique to S0 (given T2* is in model)
+        # Compute basis functions for all voxels in batch
+        if volume_wise:
+            # (n_vox_batch, n_vols)
+            s0_batch = s0_hat[voxel_indices]
+            t2s_batch = t2s_hat[voxel_indices]
 
-            if sse_full <= 0:
-                continue
+            # phi_s0: (n_vox_batch, n_e) - averaged over volumes
+            # exp(-tes / t2s) for each voxel/volume, then mean over volumes
+            phi_s0 = np.mean(
+                np.exp(-tes_v[None, :, None] / t2s_batch[:, None, :]),
+                axis=2,
+            )
 
-            # Partial F-statistics
-            f_t2star[i_voxel, j_comp] = (ss_t2 / df_num) / (sse_full / df_den)
-            f_s0[i_voxel, j_comp] = (ss_s0 / df_num) / (sse_full / df_den)
+            # phi_t2: (n_vox_batch, n_e)
+            phi_t2 = np.mean(
+                s0_batch[:, None, :]
+                * np.exp(-tes_v[None, :, None] / t2s_batch[:, None, :])
+                * tes_v[None, :, None]
+                / (t2s_batch[:, None, :] ** 2),
+                axis=2,
+            )
+        else:
+            # (n_vox_batch,) baseline estimates
+            s0_batch = s0_hat[voxel_indices]
+            t2s_batch = t2s_hat[voxel_indices]
 
-            # Store raw sum of squares for principled aggregation
-            ss_t2_out[i_voxel, j_comp] = ss_t2
-            ss_s0_out[i_voxel, j_comp] = ss_s0
+            # phi_s0: (n_vox_batch, n_e)
+            phi_s0 = np.exp(-tes_v[None, :] / t2s_batch[:, None])
+
+            # phi_t2: (n_vox_batch, n_e)
+            phi_t2 = (
+                s0_batch[:, None]
+                * np.exp(-tes_v[None, :] / t2s_batch[:, None])
+                * tes_v[None, :]
+                / (t2s_batch[:, None] ** 2)
+            )
+
+        # Extract echo-wise parameter estimates for this batch: (n_vox_batch, n_e, n_comps)
+        Y = echowise_pes[voxel_indices, :n_e, :]
+
+        # Compute SSE for single-predictor models using closed-form OLS
+        # For y = x*b + e, b = (x'y)/(x'x), SSE = y'y - (x'y)^2/(x'x)
+
+        # y'y for all voxels/components: (n_vox_batch, n_comps)
+        yty = np.sum(Y ** 2, axis=1)
+
+        # S0-only model: SSE_s0 = y'y - (phi_s0'y)^2 / (phi_s0'phi_s0)
+        phi_s0_norm_sq = np.sum(phi_s0 ** 2, axis=1, keepdims=True)  # (n_vox_batch, 1)
+        phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y)  # (n_vox_batch, n_comps)
+        sse_s0 = yty - (phi_s0_dot_y ** 2) / phi_s0_norm_sq
+
+        # T2*-only model: SSE_t2 = y'y - (phi_t2'y)^2 / (phi_t2'phi_t2)
+        phi_t2_norm_sq = np.sum(phi_t2 ** 2, axis=1, keepdims=True)  # (n_vox_batch, 1)
+        phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y)  # (n_vox_batch, n_comps)
+        sse_t2 = yty - (phi_t2_dot_y ** 2) / phi_t2_norm_sq
+
+        # Full model: need to solve 2x2 normal equations per voxel
+        # X = [phi_s0, phi_t2], X'X is 2x2, X'Y is 2 x n_comps
+        # SSE_full = y'y - y'X(X'X)^{-1}X'y
+
+        # Compute X'X elements: (n_vox_batch,) each
+        xtx_00 = phi_s0_norm_sq.squeeze()  # phi_s0' phi_s0
+        xtx_11 = phi_t2_norm_sq.squeeze()  # phi_t2' phi_t2
+        xtx_01 = np.sum(phi_s0 * phi_t2, axis=1)  # phi_s0' phi_t2
+
+        # Determinant of X'X: (n_vox_batch,)
+        det = xtx_00 * xtx_11 - xtx_01 ** 2
+
+        # Handle singular/near-singular cases
+        valid_det = det > 1e-10 * xtx_00 * xtx_11
+        if not np.any(valid_det):
+            continue
+
+        # Inverse of X'X (only for valid determinants)
+        # (X'X)^{-1} = (1/det) * [[xtx_11, -xtx_01], [-xtx_01, xtx_00]]
+        inv_00 = np.where(valid_det, xtx_11 / det, 0)
+        inv_11 = np.where(valid_det, xtx_00 / det, 0)
+        inv_01 = np.where(valid_det, -xtx_01 / det, 0)
+
+        # X'Y: (n_vox_batch, 2, n_comps)
+        xty_0 = phi_s0_dot_y  # (n_vox_batch, n_comps)
+        xty_1 = phi_t2_dot_y  # (n_vox_batch, n_comps)
+
+        # y'X(X'X)^{-1}X'y = xty' @ inv @ xty (per voxel)
+        # = inv_00 * xty_0^2 + inv_11 * xty_1^2 + 2 * inv_01 * xty_0 * xty_1
+        quadform = (
+            inv_00[:, None] * xty_0 ** 2
+            + inv_11[:, None] * xty_1 ** 2
+            + 2 * inv_01[:, None] * xty_0 * xty_1
+        )
+
+        sse_full = yty - quadform
+
+        # Type III sums of squares
+        ss_t2 = sse_s0 - sse_full
+        ss_s0 = sse_t2 - sse_full
+
+        # Compute F-statistics (only where SSE_full > 0 and determinant is valid)
+        valid = valid_det[:, None] & (sse_full > 0)
+
+        # F = (SS / df_num) / (SSE_full / df_den), with df_num = 1
+        f_t2_batch = np.where(valid, (ss_t2 * df_den) / sse_full, np.nan)
+        f_s0_batch = np.where(valid, (ss_s0 * df_den) / sse_full, np.nan)
+
+        # Store results (mask out invalid entries)
+        ss_t2 = np.where(valid, ss_t2, np.nan)
+        ss_s0 = np.where(valid, ss_s0, np.nan)
+
+        f_t2star[voxel_indices] = f_t2_batch
+        f_s0[voxel_indices] = f_s0_batch
+        ss_t2_out[voxel_indices] = ss_t2
+        ss_s0_out[voxel_indices] = ss_s0
 
     return f_t2star, f_s0, ss_t2_out, ss_s0_out
