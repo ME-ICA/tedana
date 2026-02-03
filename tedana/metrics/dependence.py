@@ -743,18 +743,19 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     return np.abs(kappa - rho) / (kappa + rho)
 
 
-def component_te_variance_tests_voxelwise(
+def component_te_variance_tests(
     echowise_pes: np.ndarray,
     tes: np.ndarray,
     s0_hat: np.ndarray,
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
+    spatial_weights: np.ndarray | None = None,
 ):
     """Calculate component-wise S0/T2* contributions to explainable variance.
 
     Perform voxel-wise variance decomposition of multi-echo ICA components
     into S0-driven and T2*-driven contributions using physically motivated,
-    nested linear models.
+    nested linear models, then aggregate to component-level metrics.
 
     This function evaluates, at each voxel and for each ICA component,
     how much of the echo-wise component parameter estimates can be attributed
@@ -778,8 +779,8 @@ def component_te_variance_tests_voxelwise(
     3. Use partial F-tests to quantify whether adding the T2* term (or S0 term)
        significantly improves model fit beyond the reduced model.
 
-    4. Decompose the explainable variance into S0 and T2* components and
-       compute voxel-wise variance fractions:
+    4. Aggregate voxel-wise sums of squares using spatial weights to compute
+       component-level variance fractions:
            - kappa_star: fraction of explainable variance attributable to T2*
            - rho_star:   fraction of explainable variance attributable to S0
 
@@ -802,30 +803,31 @@ def component_te_variance_tests_voxelwise(
     adaptive_mask : (n_voxels,) array of int
         Number of valid echoes per voxel (used to truncate echo-wise fits
         and compute voxel-wise degrees of freedom).
+    spatial_weights : (n_voxels, n_comps) array, optional
+        Voxel weights for aggregation (e.g., component loadings squared).
+        If None, equal weighting is used.
 
     Returns
     -------
-    f_t2star : (n_voxels, n_comps) array
-        Partial F-statistics testing the contribution of the T2* term
-        conditional on the S0 term.
-    f_s0 : (n_voxels, n_comps) array
-        Partial F-statistics testing the contribution of the S0 term
-        conditional on the T2* term.
-    ss_t2 : (n_voxels, n_comps) array
-        Unique sum of squares attributable to T2*-driven effects (Type III SS).
-        This is the reduction in SSE when adding the T2* term to a model
-        that already contains the S0 term.
-    ss_s0 : (n_voxels, n_comps) array
-        Unique sum of squares attributable to S0-driven effects (Type III SS).
-        This is the reduction in SSE when adding the S0 term to a model
-        that already contains the T2* term.
+    kappa_star : (n_comps,) array
+        Component-level T2* variance fraction. Computed as the ratio of
+        weighted sum of T2* sums of squares to total weighted sums of squares.
+    rho_star : (n_comps,) array
+        Component-level S0 variance fraction. Computed as the ratio of
+        weighted sum of S0 sums of squares to total weighted sums of squares.
+    f_t2star : (n_comps,) array
+        Weighted average partial F-statistics testing the contribution of
+        the T2* term conditional on the S0 term.
+    f_s0 : (n_comps,) array
+        Weighted average partial F-statistics testing the contribution of
+        the S0 term conditional on the T2* term.
 
     Notes
     -----
-    - Component-level variance fractions (kappa_star, rho_star) should be
-      computed by aggregating ss_t2 and ss_s0 across voxels before taking
-      ratios, rather than averaging voxel-wise ratios. This preserves the
-      variance decomposition interpretation at the component level.
+    - Component-level variance fractions (kappa_star, rho_star) are computed
+      by aggregating ss_t2 and ss_s0 across voxels before taking ratios
+      (sum-of-sums), rather than averaging voxel-wise ratios. This preserves
+      the variance decomposition interpretation at the component level.
     """
     if not (
         echowise_pes.shape[0]
@@ -844,14 +846,23 @@ def component_te_variance_tests_voxelwise(
     n_voxels, n_echos, n_comps = echowise_pes.shape
     tes = np.asarray(tes, dtype=np.float64)
 
+    # Handle spatial weights
+    if spatial_weights is None:
+        spatial_weights = np.ones((n_voxels, n_comps))
+    elif spatial_weights.shape != (n_voxels, n_comps):
+        raise ValueError(
+            f"spatial_weights shape {spatial_weights.shape} must match "
+            f"(n_voxels, n_comps) = ({n_voxels}, {n_comps})"
+        )
+
     # Detect whether baseline estimates are voxel-wise or voxel+volume-wise
     volume_wise = s0_hat.ndim == 2
 
-    # Initialize output arrays
-    f_t2star = np.full((n_voxels, n_comps), np.nan)
-    f_s0 = np.full((n_voxels, n_comps), np.nan)
-    ss_t2_out = np.full((n_voxels, n_comps), np.nan)
-    ss_s0_out = np.full((n_voxels, n_comps), np.nan)
+    # Initialize voxel-wise output arrays (will be aggregated at the end)
+    f_t2star_vox = np.full((n_voxels, n_comps), np.nan)
+    f_s0_vox = np.full((n_voxels, n_comps), np.nan)
+    ss_t2_vox = np.full((n_voxels, n_comps), np.nan)
+    ss_s0_vox = np.full((n_voxels, n_comps), np.nan)
 
     # Process voxels grouped by number of valid echoes for efficiency
     unique_n_echoes = np.unique(adaptive_mask[adaptive_mask >= 3])
@@ -992,12 +1003,52 @@ def component_te_variance_tests_voxelwise(
         ss_t2 = np.where(valid, ss_t2, np.nan)
         ss_s0 = np.where(valid, ss_s0, np.nan)
 
-        f_t2star[voxel_indices] = f_t2_batch
-        f_s0[voxel_indices] = f_s0_batch
-        ss_t2_out[voxel_indices] = ss_t2
-        ss_s0_out[voxel_indices] = ss_s0
+        f_t2star_vox[voxel_indices] = f_t2_batch
+        f_s0_vox[voxel_indices] = f_s0_batch
+        ss_t2_vox[voxel_indices] = ss_t2
+        ss_s0_vox[voxel_indices] = ss_s0
 
-    return f_t2star, f_s0, ss_t2_out, ss_s0_out
+    # Aggregate voxel-wise results to component-level using spatial weights
+    # Use sum-of-sums aggregation for variance fractions (preserves decomposition)
+    kappa_star = np.full(n_comps, np.nan)
+    rho_star = np.full(n_comps, np.nan)
+    f_t2star = np.full(n_comps, np.nan)
+    f_s0 = np.full(n_comps, np.nan)
+
+    for i_comp in range(n_comps):
+        # Identify valid voxels for this component
+        valid_mask = (
+            ~np.isnan(ss_t2_vox[:, i_comp])
+            & ~np.isnan(ss_s0_vox[:, i_comp])
+            & ~np.isnan(f_t2star_vox[:, i_comp])
+            & ~np.isnan(f_s0_vox[:, i_comp])
+        )
+
+        if not np.any(valid_mask):
+            continue
+
+        weights_comp = spatial_weights[valid_mask, i_comp]
+
+        # Principled aggregation: sum-of-sums rather than average-of-ratios
+        # Weight the voxel-wise SS values before summing
+        weighted_ss_t2 = np.sum(ss_t2_vox[valid_mask, i_comp] * weights_comp)
+        weighted_ss_s0 = np.sum(ss_s0_vox[valid_mask, i_comp] * weights_comp)
+        total_weighted_ss = weighted_ss_t2 + weighted_ss_s0
+
+        if total_weighted_ss > 0:
+            kappa_star[i_comp] = weighted_ss_t2 / total_weighted_ss
+            rho_star[i_comp] = weighted_ss_s0 / total_weighted_ss
+        else:
+            kappa_star[i_comp] = np.nan
+            rho_star[i_comp] = np.nan
+
+        # Weighted average for F-statistics
+        f_t2star[i_comp] = np.average(
+            f_t2star_vox[valid_mask, i_comp], weights=weights_comp
+        )
+        f_s0[i_comp] = np.average(f_s0_vox[valid_mask, i_comp], weights=weights_comp)
+
+    return kappa_star, rho_star, f_t2star, f_s0
 
 
 def component_te_permutation_test(
@@ -1049,17 +1100,19 @@ def component_te_permutation_test(
         Observed T2* variance fraction for each component.
     rho_star : (n_comps,) array
         Observed S0 variance fraction for each component.
-    p_kappa : (n_comps,) array
-        Permutation p-values testing T2*-dependence (one-tailed).
-        Low values indicate significant T2*-dependence (BOLD-like).
-    p_rho : (n_comps,) array
-        Permutation p-values testing S0-dependence (one-tailed).
-        Low values indicate significant S0-dependence (non-BOLD).
+    p_t2 : (n_comps,) array
+        Permutation p-values testing T2*-dependence.
+        Low values indicate the component's echo-wise structure specifically
+        matches local T2* sensitivity (BOLD-like).
+    p_s0 : (n_comps,) array
+        Permutation p-values testing S0-dependence.
+        Low values indicate the component's echo-wise structure specifically
+        matches local S0 sensitivity (non-BOLD physiological noise).
 
     Notes
     -----
     **Null hypothesis**: The component's echo-wise parameter estimates are
-    not specifically aligned with local T2* sensitivity. Under the null,
+    not specifically aligned with local T2*/S0 sensitivity. Under the null,
     permuting which voxel's basis functions are used for fitting should
     not systematically reduce model fit.
 
@@ -1075,14 +1128,19 @@ def component_te_permutation_test(
 
     - Spatial specificity of TE-dependence (the BOLD signature)
 
+    **Test statistics**:
+
+    - sse_t2: SSE from T2*-only model. Tests if echo-wise pattern matches
+      local φ_T2* = S0·exp(-TE/T2*)·TE/T2*².
+    - sse_s0: SSE from S0-only model. Tests if echo-wise pattern matches
+      local φ_S0 = exp(-TE/T2*).
+
     **Interpretation**:
 
-    - Low p_kappa: Component shows significant T2*-dependence matching
-      local T2* values → likely BOLD signal
-    - Low p_rho, high p_kappa: S0-dependence without T2*-specificity
-      → likely non-BOLD noise
-    - High p_kappa and p_rho: Non-specific echo-wise structure
-      → unclear origin
+    - Low p_t2, high p_s0: T2*-driven signal → likely BOLD
+    - Low p_s0, high p_t2: S0-driven signal → likely non-BOLD noise
+    - Low p_t2 AND low p_s0: Mixed signal → combined T2*/S0 effects
+    - High p_t2 AND high p_s0: Non-specific → unclear origin
 
     **Why this tests BOLD specifically**: BOLD signal produces echo-wise
     fluctuations that follow ∂S/∂T2* = S0·exp(-TE/T2*)·TE/T2*², which
@@ -1176,7 +1234,7 @@ def component_te_permutation_test(
             "valid_det": valid_det,
         }
 
-    def compute_component_stats(perm_indices=None):
+    def compute_component_stats(perm_indices=None, return_detail=False):
         """Compute weighted ss_t2 and ss_s0 for all components.
 
         Parameters
@@ -1184,14 +1242,21 @@ def component_te_permutation_test(
         perm_indices : dict or None
             If provided, dict mapping n_e -> permutation indices for that group.
             If None, use identity (no permutation).
+        return_detail : bool
+            If True, also return detailed SSE breakdown for diagnostics.
 
         Returns
         -------
         ss_t2_total, ss_s0_total : (n_comps,) arrays
             Weighted sum of unique variance attributable to T2* and S0.
+        detail : dict (only if return_detail=True)
+            Detailed SSE breakdown.
         """
         ss_t2_total = np.zeros(n_comps)
         ss_s0_total = np.zeros(n_comps)
+        sse_s0_total = np.zeros(n_comps)
+        sse_t2_total = np.zeros(n_comps)
+        sse_full_total = np.zeros(n_comps)
 
         for n_e, data in precomputed.items():
             # Get precomputed values
@@ -1246,16 +1311,36 @@ def component_te_permutation_test(
             valid = valid_det[:, None] & (sse_full > 0)
             ss_t2_total += np.sum(np.where(valid, ss_t2 * weights, 0), axis=0)
             ss_s0_total += np.sum(np.where(valid, ss_s0 * weights, 0), axis=0)
+            sse_s0_total += np.sum(np.where(valid, sse_s0 * weights, 0), axis=0)
+            sse_t2_total += np.sum(np.where(valid, sse_t2 * weights, 0), axis=0)
+            sse_full_total += np.sum(np.where(valid, sse_full * weights, 0), axis=0)
 
-        return ss_t2_total, ss_s0_total
+        if return_detail:
+            return sse_t2_total, sse_s0_total, {
+                "sse_s0": sse_s0_total,
+                "sse_t2": sse_t2_total,
+                "sse_full": sse_full_total,
+                "ss_t2": ss_t2_total,
+                "ss_s0": ss_s0_total,
+            }
+        return sse_t2_total, sse_s0_total
 
     # Compute observed statistics (no permutation)
-    obs_ss_t2, obs_ss_s0 = compute_component_stats(perm_indices=None)
+    obs_sse_t2, obs_sse_s0, obs_detail = compute_component_stats(
+        perm_indices=None, return_detail=True
+    )
 
-    # Compute observed kappa_star and rho_star
-    total_ss = obs_ss_t2 + obs_ss_s0
-    kappa_star = np.where(total_ss > 0, obs_ss_t2 / total_ss, np.nan)
-    rho_star = np.where(total_ss > 0, obs_ss_s0 / total_ss, np.nan)
+    # Compute kappa_star and rho_star from Type III SS
+    total_ss = obs_detail["ss_t2"] + obs_detail["ss_s0"]
+    kappa_star = np.where(total_ss > 0, obs_detail["ss_t2"] / total_ss, np.nan)
+    rho_star = np.where(total_ss > 0, obs_detail["ss_s0"] / total_ss, np.nan)
+
+    # Debug: show observed SSE breakdown
+    LGR.debug("Observed SSE breakdown:")
+    for c in range(n_comps):
+        LGR.debug(f"  Component {c}: sse_s0={obs_detail['sse_s0'][c]:.4f}, "
+                  f"sse_t2={obs_detail['sse_t2'][c]:.4f}, "
+                  f"sse_full={obs_detail['sse_full'][c]:.4f}")
 
     # Pre-generate all permutation indices for efficiency
     perm_indices_all = []
@@ -1281,14 +1366,44 @@ def component_te_permutation_test(
             for i in tqdm(range(n_perm), desc="Permutation test")
         )
 
-    # Unpack results
-    null_ss_t2 = np.array([r[0] for r in null_results])
-    null_ss_s0 = np.array([r[1] for r in null_results])
+    # Unpack results (sse_t2, sse_s0)
+    null_sse_t2 = np.array([r[0] for r in null_results])
+    null_sse_s0 = np.array([r[1] for r in null_results])
 
-    # Compute p-values (one-tailed: is observed >= null?)
-    # Add 1 to numerator and denominator for conservative estimate
-    # that avoids p=0 and accounts for the observed value itself
-    p_kappa = (np.sum(null_ss_t2 >= obs_ss_t2, axis=0) + 1) / (n_perm + 1)
-    p_rho = (np.sum(null_ss_s0 >= obs_ss_s0, axis=0) + 1) / (n_perm + 1)
+    # Get detailed breakdown for first permutation to compare
+    _, _, perm_detail = compute_component_stats(
+        perm_indices=perm_indices_all[0], return_detail=True
+    )
+    LGR.debug("Sample permuted SSE breakdown (perm 0):")
+    for c in range(n_comps):
+        LGR.debug(f"  Component {c}: sse_s0={perm_detail['sse_s0'][c]:.4f}, "
+                  f"sse_t2={perm_detail['sse_t2'][c]:.4f}, "
+                  f"sse_full={perm_detail['sse_full'][c]:.4f}")
 
-    return kappa_star, rho_star, p_kappa, p_rho
+    # Debug output: print observed vs null distributions
+    LGR.debug("Permutation test diagnostics:")
+    for c in range(n_comps):
+        LGR.debug(f"  Component {c}:")
+        LGR.debug(f"    obs_sse_t2 = {obs_sse_t2[c]:.6f}")
+        LGR.debug(f"    null_sse_t2: mean={null_sse_t2[:, c].mean():.6f}, "
+                  f"std={null_sse_t2[:, c].std():.6f}, "
+                  f"min={null_sse_t2[:, c].min():.6f}, "
+                  f"max={null_sse_t2[:, c].max():.6f}")
+        LGR.debug(f"    obs_sse_s0 = {obs_sse_s0[c]:.6f}")
+        LGR.debug(f"    null_sse_s0: mean={null_sse_s0[:, c].mean():.6f}, "
+                  f"std={null_sse_s0[:, c].std():.6f}, "
+                  f"min={null_sse_s0[:, c].min():.6f}, "
+                  f"max={null_sse_s0[:, c].max():.6f}")
+
+    # Compute p-values based on single-predictor model SSEs (lower is better fit)
+    # p_t2: proportion of null permutations with sse_t2 <= observed
+    # Low p_t2 means the T2*-only model fits significantly better with matched basis
+    # → component's echo structure specifically matches local T2* sensitivity (BOLD)
+    p_t2 = (np.sum(null_sse_t2 <= obs_sse_t2, axis=0) + 1) / (n_perm + 1)
+
+    # p_s0: proportion of null permutations with sse_s0 <= observed
+    # Low p_s0 means the S0-only model fits significantly better with matched basis
+    # → component's echo structure specifically matches local S0 sensitivity (non-BOLD)
+    p_s0 = (np.sum(null_sse_s0 <= obs_sse_s0, axis=0) + 1) / (n_perm + 1)
+
+    return kappa_star, rho_star, p_t2, p_s0

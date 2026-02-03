@@ -198,39 +198,34 @@ def generate_metrics(
 
     if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics):
         LGR.info("Calculating kappa* and rho*")
-        f_t2star, f_s0, ss_t2, ss_s0 = dependence.component_te_variance_tests_voxelwise(
+        kappa_star, rho_star, f_t2star, f_s0 = dependence.component_te_variance_tests(
             echowise_pes=metric_maps["map echo betas"],
             tes=tes,
             s0_hat=s0map,
             t2s_hat=t2smap,
             adaptive_mask=adaptive_mask,
+            spatial_weights=metric_maps["map weight"] ** 2,
         )
-        weights = metric_maps["map weight"] ** 2
-        nan_mask = np.isnan(ss_t2) | np.isnan(ss_s0) | np.isnan(f_t2star) | np.isnan(f_s0)
-        for i_comp in range(n_components):
-            nan_mask_comp = nan_mask[:, i_comp]
-            weights_comp = weights[~nan_mask_comp, i_comp]
+        component_table["kappa_star"] = kappa_star
+        component_table["rho_star"] = rho_star
+        component_table["f_t2star"] = f_t2star
+        component_table["f_s0"] = f_s0
 
-            # Principled aggregation: sum-of-sums rather than average-of-ratios.
-            # Weight the voxel-wise SS values before summing to preserve the
-            # variance decomposition interpretation at the component level.
-            weighted_ss_t2 = np.sum(ss_t2[~nan_mask_comp, i_comp] * weights_comp)
-            weighted_ss_s0 = np.sum(ss_s0[~nan_mask_comp, i_comp] * weights_comp)
-            total_weighted_ss = weighted_ss_t2 + weighted_ss_s0
-
-            if total_weighted_ss > 0:
-                component_table.loc[i_comp, "kappa_star"] = weighted_ss_t2 / total_weighted_ss
-                component_table.loc[i_comp, "rho_star"] = weighted_ss_s0 / total_weighted_ss
-            else:
-                component_table.loc[i_comp, "kappa_star"] = np.nan
-                component_table.loc[i_comp, "rho_star"] = np.nan
-
-            component_table.loc[i_comp, "f_t2star"] = np.average(
-                f_t2star[~nan_mask_comp, i_comp], weights=weights_comp
-            )
-            component_table.loc[i_comp, "f_s0"] = np.average(
-                f_s0[~nan_mask_comp, i_comp], weights=weights_comp
-            )
+    if ("p_t2" in required_metrics) or ("p_s0" in required_metrics) or ("kappa_star_perm" in required_metrics) or ("rho_star_perm" in required_metrics):
+        LGR.info("Running permutation test for spatially-specific TE-dependence (p_t2, p_s0)")
+        _, _, p_t2, p_s0 = dependence.component_te_permutation_test(
+            echowise_pes=metric_maps["map echo betas"],
+            tes=tes,
+            s0_hat=s0map,
+            t2s_hat=t2smap,
+            adaptive_mask=adaptive_mask,
+            spatial_weights=metric_maps["map weight"] ** 2,
+            n_perm=1000,
+            n_jobs=1,
+            seed=42,
+        )
+        component_table["p_t2"] = p_t2
+        component_table["p_s0"] = p_s0
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")

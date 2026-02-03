@@ -1,0 +1,199 @@
+{
+    "tree_id": "permutation_decision_tree",
+    "info": "Decision tree using permutation test p-values for component classification",
+    "report": "The permutation decision tree uses spatially-specific TE-dependence testing via permutation \\citep{tedana_decision_trees}. Unlike traditional kappa/rho metrics which measure global TE-dependence, the permutation test evaluates whether each component's echo-wise structure specifically matches local T2* sensitivity patterns, providing a more principled statistical test for BOLD signal identification.",
+    "necessary_metrics": [
+        "kappa_star_perm",
+        "rho_star_perm",
+        "p_t2",
+        "p_s0",
+        "variance explained"
+    ],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "Mixed signal", "Spatially specific T2*", "Spatially specific S0"],
+    "_comment": "This decision tree uses permutation-based p-values (p_t2 and p_s0) to test whether components show spatially-specific TE-dependence. Low p_t2 indicates the component's echo-wise pattern matches local T2* sensitivity (BOLD-like). Low p_s0 indicates S0-driven signal (non-BOLD). The combination of kappa_star_perm and p-values provides robust classification.",
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
+            "kwargs": {
+                "clear_classification_tags": true,
+                "dont_warn_reclassify": true
+            },
+            "_comment": "All components are initially labeled as 'unclassified'."
+        },
+        {
+            "functionname": "calc_median",
+            "parameters": {
+                "decide_comps": "all",
+                "metric_name": "variance explained",
+                "median_label": "varex"
+            },
+            "_comment": "Calculate median variance explained for later thresholding."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "p_t2",
+                "right": 0.05
+            },
+            "kwargs": {
+                "left2": "p_s0",
+                "op2": ">",
+                "right2": 0.05,
+                "tag_if_true": "Unlikely BOLD"
+            },
+            "_comment": "Reject components with no spatially-specific TE-dependence (both p_t2 > 0.05 AND p_s0 > 0.05). These components have echo-wise structure that doesn't match local T2* or S0 patterns, suggesting non-physiological noise."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": "<",
+                "left": "kappa_star_perm",
+                "right": 0.2
+            },
+            "kwargs": {
+                "left2": "p_s0",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Spatially specific S0"
+            },
+            "_comment": "Reject components that are strongly S0-driven: low kappa_star_perm (< 0.2) AND significant S0 spatial specificity (p_s0 < 0.05). These are likely non-BOLD physiological noise (e.g., respiration, cardiac pulsation)."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "kappa_star_perm",
+                "right": 0.8
+            },
+            "kwargs": {
+                "left2": "p_t2",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Spatially specific T2*"
+            },
+            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). These are very likely BOLD signal."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
+                "op": ">",
+                "left": "kappa_star_perm",
+                "right": 0.5
+            },
+            "kwargs": {
+                "left2": "p_t2",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Likely BOLD"
+            },
+            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05)."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
+                "op": "<",
+                "left": "kappa_star_perm",
+                "right": 0.5
+            },
+            "kwargs": {
+                "left2": "p_s0",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Unlikely BOLD"
+            },
+            "_comment": "Provisionally reject remaining unclassified components with S0 dominance (kappa_star_perm < 0.5) AND significant S0 spatial specificity (p_s0 < 0.05). These are likely non-BOLD."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
+                "op": "<",
+                "left": "p_t2",
+                "right": 0.05
+            },
+            "kwargs": {
+                "left2": "p_s0",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Mixed signal"
+            },
+            "_comment": "Provisionally accept remaining unclassified components with both significant T2* AND S0 spatial specificity. These are mixed-signal components that may contain BOLD signal worth preserving."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
+                "op": ">",
+                "left": "rho_star_perm",
+                "right": "kappa_star_perm"
+            },
+            "kwargs": {"tag_if_true": "Unlikely BOLD"},
+            "_comment": "Provisionally reject any remaining unclassified components where rho_star_perm > kappa_star_perm, indicating more S0-driven than T2*-driven variance."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "provisionalaccept",
+                "op": ">",
+                "left": "kappa_star_perm",
+                "right": "rho_star_perm"
+            },
+            "kwargs": {"right_scale": 2, "tag_if_true": "Likely BOLD"},
+            "_comment": "Accept provisionally accepted components where kappa_star_perm is at least twice rho_star_perm. Strong T2* dominance confirms BOLD signal."
+        },
+        {
+            "functionname": "dec_variance_lessthan_thresholds",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "provisionalreject"
+            },
+            "kwargs": {
+                "var_metric": "variance explained",
+                "single_comp_threshold": 0.1,
+                "all_comp_threshold": 1.0,
+                "tag_if_true": "Low variance"
+            },
+            "_comment": "Accept low-variance provisionally rejected components (< 0.1% each, up to 1% total). These don't explain enough variance to be worth rejecting."
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "kwargs": {"tag": "Likely BOLD"},
+            "_comment": "Accept all remaining provisionally accepted components."
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "rejected",
+                "decide_comps": ["provisionalreject", "unclassified"]
+            },
+            "kwargs": {"tag": "Unlikely BOLD"},
+            "_comment": "Reject all remaining provisionally rejected and unclassified components."
+        }
+    ]
+}

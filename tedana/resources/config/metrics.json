@@ -25,6 +25,22 @@
             "map echo betas",
             "map weight"
         ],
+        "kappa_star_perm": [
+            "map echo betas",
+            "map weight"
+        ],
+        "rho_star_perm": [
+            "map echo betas",
+            "map weight"
+        ],
+        "p_t2": [
+            "map echo betas",
+            "map weight"
+        ],
+        "p_s0": [
+            "map echo betas",
+            "map weight"
+        ],
         "countnoise": [
             "map weight",
             "map weight clusterized"
