@@ -209,18 +209,18 @@ def generate_metrics(
         nan_mask = np.isnan(kappa_star) | np.isnan(rho_star) | np.isnan(f_t2star) | np.isnan(f_s0)
         for i_comp in range(n_components):
             nan_mask_comp = nan_mask[:, i_comp]
-            weights_comp = weights[~nan_mask_comp]
+            weights_comp = weights[~nan_mask_comp, i_comp]
             component_table.loc[i_comp, "kappa_star"] = np.average(
-                kappa_star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+                kappa_star[~nan_mask_comp, i_comp], weights=weights_comp
             )
             component_table.loc[i_comp, "rho_star"] = np.average(
-                rho_star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+                rho_star[~nan_mask_comp, i_comp], weights=weights_comp
             )
             component_table.loc[i_comp, "f_t2star"] = np.average(
-                f_t2star[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+                f_t2star[~nan_mask_comp, i_comp], weights=weights_comp
             )
             component_table.loc[i_comp, "f_s0"] = np.average(
-                f_s0[~nan_mask_comp, i_comp], weights=weights_comp, axis=0
+                f_s0[~nan_mask_comp, i_comp], weights=weights_comp
             )
 
     if "map percent signal change" in required_metrics:
