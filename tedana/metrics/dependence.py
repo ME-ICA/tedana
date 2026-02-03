@@ -6,6 +6,7 @@ import typing
 import nibabel as nb
 import numpy as np
 from scipy import stats
+from tqdm import trange
 
 from tedana import io, utils
 from tedana.metrics._utils import get_value_thresholds
@@ -834,6 +835,8 @@ def component_te_variance_tests_voxelwise(
         raise ValueError(
             "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
         )
+    if not s0_hat.ndim == t2s_hat.ndim:
+        raise ValueError("s0_hat and t2s_hat must have the same number of dimensions")
     if echowise_pes.shape[1] != len(tes):
         raise ValueError("echowise_pes and tes must have the same number of echoes")
 
@@ -994,3 +997,282 @@ def component_te_variance_tests_voxelwise(
         ss_s0_out[voxel_indices] = ss_s0
 
     return f_t2star, f_s0, ss_t2_out, ss_s0_out
+
+
+def component_te_permutation_test(
+    echowise_pes: np.ndarray,
+    tes: np.ndarray,
+    s0_hat: np.ndarray,
+    t2s_hat: np.ndarray,
+    adaptive_mask: np.ndarray,
+    spatial_weights: np.ndarray | None = None,
+    n_perm: int = 1000,
+    seed: int | None = None,
+):
+    """Permutation test for component-level TE-dependence.
+
+    Test whether each ICA component's echo-wise structure is specifically
+    aligned with voxel-local T2* sensitivity (as expected for BOLD signal)
+    versus showing non-specific echo-wise structure (as expected for noise).
+
+    This function provides valid p-values for component classification
+    without parametric assumptions about the distribution of test statistics.
+
+    Parameters
+    ----------
+    echowise_pes : (n_voxels, n_echos, n_comps) array
+        Echo-wise *unstandardized* ICA component parameter estimates.
+    tes : (n_echos,) array
+        Echo times in milliseconds.
+    s0_hat : (n_voxels,) or (n_voxels, n_vols) array
+        Baseline S0 estimates. If 2D, averaged over volumes.
+    t2s_hat : (n_voxels,) or (n_voxels, n_vols) array
+        Baseline T2* estimates. If 2D, averaged over volumes.
+    adaptive_mask : (n_voxels,) array of int
+        Number of valid echoes per voxel.
+    spatial_weights : (n_voxels, n_comps) array, optional
+        Voxel weights for aggregation (e.g., component loadings).
+        If None, equal weighting is used.
+    n_perm : int, optional
+        Number of permutations for null distribution. Default is 1000.
+    seed : int, optional
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    kappa_star : (n_comps,) array
+        Observed T2* variance fraction for each component.
+    rho_star : (n_comps,) array
+        Observed S0 variance fraction for each component.
+    p_kappa : (n_comps,) array
+        Permutation p-values testing T2*-dependence (one-tailed).
+        Low values indicate significant T2*-dependence (BOLD-like).
+    p_rho : (n_comps,) array
+        Permutation p-values testing S0-dependence (one-tailed).
+        Low values indicate significant S0-dependence (non-BOLD).
+
+    Notes
+    -----
+    **Null hypothesis**: The component's echo-wise parameter estimates are
+    not specifically aligned with local T2* sensitivity. Under the null,
+    permuting which voxel's basis functions are used for fitting should
+    not systematically reduce model fit.
+
+    **Permutation scheme**: Within groups of voxels sharing the same number
+    of valid echoes (n_e), shuffle the assignment of basis functions
+    (φ_S0, φ_T2*) to voxels while keeping echo-wise PEs fixed. This preserves:
+
+    - Total variance structure of each component
+    - Echo-wise correlation structure within voxels
+    - Distribution of basis function shapes across the brain
+
+    While breaking:
+
+    - Spatial specificity of TE-dependence (the BOLD signature)
+
+    **Interpretation**:
+
+    - Low p_kappa: Component shows significant T2*-dependence matching
+      local T2* values → likely BOLD signal
+    - Low p_rho, high p_kappa: S0-dependence without T2*-specificity
+      → likely non-BOLD noise
+    - High p_kappa and p_rho: Non-specific echo-wise structure
+      → unclear origin
+
+    **Why this tests BOLD specifically**: BOLD signal produces echo-wise
+    fluctuations that follow ∂S/∂T2* = S0·exp(-TE/T2*)·TE/T2*², which
+    depends on the *local* T2* value. Non-BOLD noise may have echo-wise
+    structure, but it should not specifically match local T2* sensitivity.
+    Permuting the basis function assignments breaks this spatial specificity.
+    """
+    if not (
+        echowise_pes.shape[0]
+        == s0_hat.shape[0]
+        == t2s_hat.shape[0]
+        == adaptive_mask.shape[0]
+    ):
+        raise ValueError(
+            "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
+        )
+    if echowise_pes.shape[1] != len(tes):
+        raise ValueError("echowise_pes and tes must have the same number of echoes")
+
+    rng = np.random.default_rng(seed)
+    n_voxels, n_echos, n_comps = echowise_pes.shape
+    tes = np.asarray(tes, dtype=np.float64)
+
+    if spatial_weights is None:
+        spatial_weights = np.ones((n_voxels, n_comps))
+
+    # Handle voxel+volume-wise estimates by averaging over volumes
+    if s0_hat.ndim == 2:
+        s0_hat = np.mean(s0_hat, axis=1)
+    if t2s_hat.ndim == 2:
+        t2s_hat = np.mean(t2s_hat, axis=1)
+
+    # Identify valid voxels
+    valid_voxel = (adaptive_mask >= 3) & (s0_hat > 0) & (t2s_hat > 0)
+
+    # Precompute everything that doesn't change with permutation, grouped by n_e
+    # This is the key optimization: we only recompute dot products during permutation
+    precomputed = {}
+
+    for n_e in np.unique(adaptive_mask[valid_voxel]):
+        mask_ne = valid_voxel & (adaptive_mask == n_e)
+        vox_idx = np.where(mask_ne)[0]
+        n_vox_ne = len(vox_idx)
+
+        tes_v = tes[:n_e]
+        s0_v = s0_hat[vox_idx]
+        t2s_v = t2s_hat[vox_idx]
+
+        # Basis functions: φ_S0 and φ_T2* (n_vox_ne, n_e)
+        phi_s0 = np.exp(-tes_v[None, :] / t2s_v[:, None])
+        phi_t2 = (
+            s0_v[:, None]
+            * np.exp(-tes_v[None, :] / t2s_v[:, None])
+            * tes_v[None, :]
+            / (t2s_v[:, None] ** 2)
+        )
+
+        # Data (fixed, never permuted): Y and y'y
+        Y = echowise_pes[vox_idx, :n_e, :]  # (n_vox_ne, n_e, n_comps)
+        yty = np.sum(Y ** 2, axis=1)  # (n_vox_ne, n_comps)
+        weights = spatial_weights[vox_idx, :] ** 2  # (n_vox_ne, n_comps)
+
+        # Basis function properties (permutation just reindexes these)
+        phi_s0_norm_sq = np.sum(phi_s0 ** 2, axis=1)  # (n_vox_ne,)
+        phi_t2_norm_sq = np.sum(phi_t2 ** 2, axis=1)  # (n_vox_ne,)
+        xtx_01 = np.sum(phi_s0 * phi_t2, axis=1)  # (n_vox_ne,)
+
+        # Determinant and inverse elements (permutation just reindexes)
+        det = phi_s0_norm_sq * phi_t2_norm_sq - xtx_01 ** 2
+        valid_det = det > 1e-10 * phi_s0_norm_sq * phi_t2_norm_sq
+
+        inv_00 = np.zeros(n_vox_ne)
+        inv_11 = np.zeros(n_vox_ne)
+        inv_01 = np.zeros(n_vox_ne)
+        np.divide(phi_t2_norm_sq, det, out=inv_00, where=valid_det)
+        np.divide(phi_s0_norm_sq, det, out=inv_11, where=valid_det)
+        np.divide(-xtx_01, det, out=inv_01, where=valid_det)
+
+        precomputed[n_e] = {
+            "n_vox": n_vox_ne,
+            "phi_s0": phi_s0,
+            "phi_t2": phi_t2,
+            "Y": Y,
+            "yty": yty,
+            "weights": weights,
+            "phi_s0_norm_sq": phi_s0_norm_sq,
+            "phi_t2_norm_sq": phi_t2_norm_sq,
+            "inv_00": inv_00,
+            "inv_11": inv_11,
+            "inv_01": inv_01,
+            "valid_det": valid_det,
+        }
+
+    def compute_component_stats(perm_indices=None):
+        """Compute weighted ss_t2 and ss_s0 for all components.
+
+        Parameters
+        ----------
+        perm_indices : dict or None
+            If provided, dict mapping n_e -> permutation indices for that group.
+            If None, use identity (no permutation).
+
+        Returns
+        -------
+        ss_t2_total, ss_s0_total : (n_comps,) arrays
+            Weighted sum of unique variance attributable to T2* and S0.
+        """
+        ss_t2_total = np.zeros(n_comps)
+        ss_s0_total = np.zeros(n_comps)
+
+        for n_e, data in precomputed.items():
+            # Get precomputed values
+            phi_s0 = data["phi_s0"]
+            phi_t2 = data["phi_t2"]
+            Y = data["Y"]
+            yty = data["yty"]
+            weights = data["weights"]
+            phi_s0_norm_sq = data["phi_s0_norm_sq"]
+            phi_t2_norm_sq = data["phi_t2_norm_sq"]
+            inv_00 = data["inv_00"]
+            inv_11 = data["inv_11"]
+            inv_01 = data["inv_01"]
+            valid_det = data["valid_det"]
+
+            # Apply permutation to basis functions if provided
+            if perm_indices is not None:
+                perm = perm_indices[n_e]
+                phi_s0 = phi_s0[perm]
+                phi_t2 = phi_t2[perm]
+                # Reindex precomputed values (same values, different order)
+                phi_s0_norm_sq = phi_s0_norm_sq[perm]
+                phi_t2_norm_sq = phi_t2_norm_sq[perm]
+                inv_00 = inv_00[perm]
+                inv_11 = inv_11[perm]
+                inv_01 = inv_01[perm]
+                valid_det = valid_det[perm]
+
+            # These are the only expensive operations that must be recomputed
+            # Use optimized matrix multiplication: (n_vox, n_e) @ (n_vox, n_e, n_comp)
+            # Equivalent to einsum("ve,vec->vc", phi, Y) but can be faster
+            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y, optimize=True)
+            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
+
+            # SSE for reduced models (using precomputed norms)
+            sse_s0 = yty - (phi_s0_dot_y ** 2) / phi_s0_norm_sq[:, None]
+            sse_t2 = yty - (phi_t2_dot_y ** 2) / phi_t2_norm_sq[:, None]
+
+            # SSE for full model (using precomputed inverse elements)
+            quadform = (
+                inv_00[:, None] * phi_s0_dot_y ** 2
+                + inv_11[:, None] * phi_t2_dot_y ** 2
+                + 2 * inv_01[:, None] * phi_s0_dot_y * phi_t2_dot_y
+            )
+            sse_full = yty - quadform
+
+            # Type III (unique) sums of squares
+            ss_t2 = sse_s0 - sse_full
+            ss_s0 = sse_t2 - sse_full
+
+            # Mask invalid voxels and accumulate
+            valid = valid_det[:, None] & (sse_full > 0)
+            ss_t2_total += np.sum(np.where(valid, ss_t2 * weights, 0), axis=0)
+            ss_s0_total += np.sum(np.where(valid, ss_s0 * weights, 0), axis=0)
+
+        return ss_t2_total, ss_s0_total
+
+    # Compute observed statistics (no permutation)
+    obs_ss_t2, obs_ss_s0 = compute_component_stats(perm_indices=None)
+
+    # Compute observed kappa_star and rho_star
+    total_ss = obs_ss_t2 + obs_ss_s0
+    kappa_star = np.where(total_ss > 0, obs_ss_t2 / total_ss, np.nan)
+    rho_star = np.where(total_ss > 0, obs_ss_s0 / total_ss, np.nan)
+
+    # Pre-generate all permutation indices for efficiency
+    perm_indices_all = []
+    for _ in range(n_perm):
+        perm_indices_all.append({
+            n_e: rng.permutation(data["n_vox"])
+            for n_e, data in precomputed.items()
+        })
+
+    # Build null distribution
+    null_ss_t2 = np.zeros((n_perm, n_comps))
+    null_ss_s0 = np.zeros((n_perm, n_comps))
+
+    for i_perm in trange(n_perm, desc="Permutation test"):
+        null_ss_t2[i_perm], null_ss_s0[i_perm] = compute_component_stats(
+            perm_indices=perm_indices_all[i_perm]
+        )
+
+    # Compute p-values (one-tailed: is observed >= null?)
+    # Add 1 to numerator and denominator for conservative estimate
+    # that avoids p=0 and accounts for the observed value itself
+    p_kappa = (np.sum(null_ss_t2 >= obs_ss_t2, axis=0) + 1) / (n_perm + 1)
+    p_rho = (np.sum(null_ss_s0 >= obs_ss_s0, axis=0) + 1) / (n_perm + 1)
+
+    return kappa_star, rho_star, p_kappa, p_rho
