@@ -743,44 +743,90 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
 
 
 def component_te_variance_tests_voxelwise(
-    me_betas: np.ndarray,
+    echowise_pes: np.ndarray,
     tes: np.ndarray,
     s0_hat: np.ndarray,
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
 ):
-    """Voxel-wise statistically valid S0 vs T2* variance decomposition.
+    """
+    Perform voxel-wise variance decomposition of multi-echo ICA components
+    into S0-driven and T2*-driven contributions using physically motivated,
+    nested linear models.
+
+    This function evaluates, at each voxel and for each ICA component,
+    how much of the echo-wise component parameter estimates can be attributed
+    to changes in the monoexponential signal intercept (S0) versus changes in
+    the decay constant (T2*).
+
+    The method proceeds as follows:
+
+    1. For each voxel, construct basis functions corresponding to the
+       first-order linearization of the monoexponential signal model
+       around the voxel's baseline S0 and T2* estimates:
+           - phi_s0: sensitivity to S0 fluctuations
+           - phi_t2: sensitivity to T2* fluctuations
+
+    2. Fit three nested linear models to the echo-wise component parameter
+       estimates:
+           - Full model:     [phi_s0, phi_t2]
+           - S0-only model:  [phi_s0]
+           - T2*-only model: [phi_t2]
+
+    3. Use partial F-tests to quantify whether adding the T2* term (or S0 term)
+       significantly improves model fit beyond the reduced model.
+
+    4. Decompose the explainable variance into S0 and T2* components and
+       compute voxel-wise variance fractions:
+           - kappa_star: fraction of explainable variance attributable to T2*
+           - rho_star:   fraction of explainable variance attributable to S0
+
+    Echo-wise fits and degrees of freedom are adjusted per voxel using the
+    adaptive_mask, which specifies the number of valid echoes at each voxel.
 
     Parameters
     ----------
-    me_betas : (n_voxels, n_echos, n_comps) array
-        Echo-wise component parameter estimates.
+    echowise_pes : (n_voxels, n_echos, n_comps) array
+        Echo-wise *unstandardized* ICA component parameter estimates.
+        These should reflect the physical scaling of signal across echoes.
     tes : (n_echos,) array
-        Echo times (ms).
+        Echo times in milliseconds.
     s0_hat : (n_voxels,) array
-        Baseline S0 estimate per voxel.
+        Voxel-wise baseline S0 estimates from monoexponential fitting.
     t2s_hat : (n_voxels,) array
-        Baseline T2* estimate per voxel.
+        Voxel-wise baseline T2* estimates from monoexponential fitting.
     adaptive_mask : (n_voxels,) array of int
-        Number of valid echoes per voxel.
+        Number of valid echoes per voxel (used to truncate echo-wise fits
+        and compute voxel-wise degrees of freedom).
 
     Returns
     -------
-    F_t2star : (n_voxels, n_comps) array
-    F_s0 : (n_voxels, n_comps) array
+    f_t2star : (n_voxels, n_comps) array
+        Partial F-statistics testing the contribution of the T2* term
+        conditional on the S0 term.
+    f_s0 : (n_voxels, n_comps) array
+        Partial F-statistics testing the contribution of the S0 term
+        conditional on the T2* term.
     kappa_star : (n_voxels, n_comps) array
+        Fraction of explainable variance attributed to T2*-driven effects.
     rho_star : (n_voxels, n_comps) array
-    """
-    if not (me_betas.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]):
-        raise ValueError(
-            "me_betas, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
-        )
-    if me_betas.shape[1] != len(tes):
-        raise ValueError(
-            "me_betas and tes must have the same number of echoes"
-        )
+        Fraction of explainable variance attributed to S0-driven effects.
 
-    n_voxels, _, n_comps = me_betas.shape
+    Notes
+    -----
+    - This function is computationally expensive due to voxel-wise nested
+      regression and is intended primarily for validation and research use.
+    - kappa_star and rho_star are variance fractions, not hypothesis tests.
+      Statistical inference should be based on the F-statistics.
+    """
+    if not (echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]):
+        raise ValueError(
+            "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
+        )
+    if echowise_pes.shape[1] != len(tes):
+        raise ValueError("echowise_pes and tes must have the same number of echoes")
+
+    n_voxels, _, n_comps = echowise_pes.shape
     tes = np.asarray(tes, float)
 
     f_t2star = np.full((n_voxels, n_comps), np.nan)
@@ -790,49 +836,67 @@ def component_te_variance_tests_voxelwise(
 
     for i_voxel in trange(n_voxels, desc="Kappa*/Rho*"):
         n_e = adaptive_mask[i_voxel]
-        if (n_e < 3) or (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
-            continue  # insufficient DOF
 
+        # Require at least 3 echoes to estimate a 2-parameter model
+        # and physically valid baseline estimates
+        if (n_e < 3) or (t2s_hat[i_voxel] <= 0) or (s0_hat[i_voxel] <= 0):
+            continue
+
+        # Restrict echo times to voxel-specific valid echoes
         tes_v = tes[:n_e]
 
+        # Basis function for S0 fluctuations:
+        # ∂S/∂S0 evaluated at baseline parameters
         phi_s0 = np.exp(-tes_v / t2s_hat[i_voxel])
+
+        # Basis function for T2* fluctuations:
+        # ∂S/∂T2* evaluated at baseline parameters
         phi_t2 = (
             s0_hat[i_voxel]
             * np.exp(-tes_v / t2s_hat[i_voxel])
             * tes_v / (t2s_hat[i_voxel] ** 2)
         )
 
-        X_full = np.column_stack([phi_s0, phi_t2])
-        X_s0 = phi_s0[:, None]
-        X_t2 = phi_t2[:, None]
+        # Design matrices for nested models
+        dm_full = np.column_stack([phi_s0, phi_t2])
+        dm_s0 = phi_s0[:, None]
+        dm_t2 = phi_t2[:, None]
 
+        # Degrees of freedom for partial F-tests
         df_num = 1
         df_den = n_e - 2
 
         for j_comp in range(n_comps):
-            y = me_betas[i_voxel, :n_e, j_comp]
+            # Echo-wise parameter estimates for this voxel/component
+            y = echowise_pes[i_voxel, :n_e, j_comp]
 
-            b_full, *_ = np.linalg.lstsq(X_full, y, rcond=None)
-            b_s0, *_ = np.linalg.lstsq(X_s0, y, rcond=None)
-            b_t2, *_ = np.linalg.lstsq(X_t2, y, rcond=None)
+            # Least-squares fits for full and reduced models
+            b_full, *_ = np.linalg.lstsq(dm_full, y, rcond=None)
+            b_s0, *_ = np.linalg.lstsq(dm_s0, y, rcond=None)
+            b_t2, *_ = np.linalg.lstsq(dm_t2, y, rcond=None)
 
-            resid_full = y - X_full @ b_full
-            resid_s0 = y - X_s0 @ b_s0
-            resid_t2 = y - X_t2 @ b_t2
+            # Residuals for nested model comparison
+            resid_full = y - dm_full @ b_full
+            resid_s0 = y - dm_s0 @ b_s0
+            resid_t2 = y - dm_t2 @ b_t2
 
-            SSE_full = np.sum(resid_full ** 2)
-            SSE_s0 = np.sum(resid_s0 ** 2)
-            SSE_t2 = np.sum(resid_t2 ** 2)
+            # Sum of squared errors
+            sse_full = np.sum(resid_full ** 2)
+            sse_s0 = np.sum(resid_s0 ** 2)
+            sse_t2 = np.sum(resid_t2 ** 2)
 
-            ss_t2 = SSE_s0 - SSE_full
-            ss_s0 = SSE_t2 - SSE_full
+            # Unique variance explained by each term
+            ss_t2 = sse_s0 - sse_full
+            ss_s0 = sse_t2 - sse_full
 
-            if SSE_full <= 0 or df_den <= 0:
+            if sse_full <= 0 or df_den <= 0:
                 continue
 
-            f_t2star[i_voxel, j_comp] = (ss_t2 / df_num) / (SSE_full / df_den)
-            f_s0[i_voxel, j_comp] = (ss_s0 / df_num) / (SSE_full / df_den)
+            # Partial F-statistics
+            f_t2star[i_voxel, j_comp] = (ss_t2 / df_num) / (sse_full / df_den)
+            f_s0[i_voxel, j_comp] = (ss_s0 / df_num) / (sse_full / df_den)
 
+            # Variance fraction decomposition
             denom = ss_t2 + ss_s0
             if denom > 0:
                 kappa_star[i_voxel, j_comp] = ss_t2 / denom
