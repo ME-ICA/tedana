@@ -6,7 +6,8 @@ import typing
 import nibabel as nb
 import numpy as np
 from scipy import stats
-from tqdm import trange
+from joblib import Parallel, delayed
+from tqdm import tqdm, trange
 
 from tedana import io, utils
 from tedana.metrics._utils import get_value_thresholds
@@ -1007,6 +1008,7 @@ def component_te_permutation_test(
     adaptive_mask: np.ndarray,
     spatial_weights: np.ndarray | None = None,
     n_perm: int = 1000,
+    n_jobs: int = 1,
     seed: int | None = None,
 ):
     """Permutation test for component-level TE-dependence.
@@ -1035,6 +1037,9 @@ def component_te_permutation_test(
         If None, equal weighting is used.
     n_perm : int, optional
         Number of permutations for null distribution. Default is 1000.
+    n_jobs : int, optional
+        Number of parallel jobs. Default is 1 (sequential).
+        Set to -1 to use all available cores.
     seed : int, optional
         Random seed for reproducibility.
 
@@ -1260,14 +1265,25 @@ def component_te_permutation_test(
             for n_e, data in precomputed.items()
         })
 
-    # Build null distribution
-    null_ss_t2 = np.zeros((n_perm, n_comps))
-    null_ss_s0 = np.zeros((n_perm, n_comps))
-
-    for i_perm in trange(n_perm, desc="Permutation test"):
-        null_ss_t2[i_perm], null_ss_s0[i_perm] = compute_component_stats(
-            perm_indices=perm_indices_all[i_perm]
+    # Build null distribution with optional parallelization
+    if n_jobs == 1:
+        # Sequential execution with progress bar
+        null_results = []
+        for i_perm in trange(n_perm, desc="Permutation test"):
+            null_results.append(compute_component_stats(
+                perm_indices=perm_indices_all[i_perm]
+            ))
+    else:
+        # Parallel execution
+        LGR.info(f"Running {n_perm} permutations with {n_jobs} parallel jobs")
+        null_results = Parallel(n_jobs=n_jobs)(
+            delayed(compute_component_stats)(perm_indices=perm_indices_all[i])
+            for i in tqdm(range(n_perm), desc="Permutation test")
         )
+
+    # Unpack results
+    null_ss_t2 = np.array([r[0] for r in null_results])
+    null_ss_s0 = np.array([r[1] for r in null_results])
 
     # Compute p-values (one-tailed: is observed >= null?)
     # Add 1 to numerator and denominator for conservative estimate
