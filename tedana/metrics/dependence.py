@@ -948,9 +948,13 @@ def component_te_variance_tests_voxelwise(
 
         # Inverse of X'X (only for valid determinants)
         # (X'X)^{-1} = (1/det) * [[xtx_11, -xtx_01], [-xtx_01, xtx_00]]
-        inv_00 = np.where(valid_det, xtx_11 / det, 0)
-        inv_11 = np.where(valid_det, xtx_00 / det, 0)
-        inv_01 = np.where(valid_det, -xtx_01 / det, 0)
+        # Use np.divide with where parameter to avoid divide-by-zero warnings
+        inv_00 = np.zeros_like(det)
+        inv_11 = np.zeros_like(det)
+        inv_01 = np.zeros_like(det)
+        np.divide(xtx_11, det, out=inv_00, where=valid_det)
+        np.divide(xtx_00, det, out=inv_11, where=valid_det)
+        np.divide(-xtx_01, det, out=inv_01, where=valid_det)
 
         # X'Y: (n_vox_batch, 2, n_comps)
         xty_0 = phi_s0_dot_y  # (n_vox_batch, n_comps)
