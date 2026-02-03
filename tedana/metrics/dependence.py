@@ -595,7 +595,7 @@ def compute_signal_minus_noise_t(
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
         signal_ft2_z = np.log10(np.unique(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp]))
-        (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
+        signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp] = stats.ttest_ind(
             signal_ft2_z, noise_ft2_z, equal_var=False
         )
 
@@ -830,10 +830,7 @@ def component_te_variance_tests(
       the variance decomposition interpretation at the component level.
     """
     if not (
-        echowise_pes.shape[0]
-        == s0_hat.shape[0]
-        == t2s_hat.shape[0]
-        == adaptive_mask.shape[0]
+        echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]
     ):
         raise ValueError(
             "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
@@ -935,17 +932,17 @@ def component_te_variance_tests(
         # For y = x*b + e, b = (x'y)/(x'x), SSE = y'y - (x'y)^2/(x'x)
 
         # y'y for all voxels/components: (n_vox_batch, n_comps)
-        yty = np.sum(Y ** 2, axis=1)
+        yty = np.sum(Y**2, axis=1)
 
         # S0-only model: SSE_s0 = y'y - (phi_s0'y)^2 / (phi_s0'phi_s0)
-        phi_s0_norm_sq = np.sum(phi_s0 ** 2, axis=1, keepdims=True)  # (n_vox_batch, 1)
+        phi_s0_norm_sq = np.sum(phi_s0**2, axis=1, keepdims=True)  # (n_vox_batch, 1)
         phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y)  # (n_vox_batch, n_comps)
-        sse_s0 = yty - (phi_s0_dot_y ** 2) / phi_s0_norm_sq
+        sse_s0 = yty - (phi_s0_dot_y**2) / phi_s0_norm_sq
 
         # T2*-only model: SSE_t2 = y'y - (phi_t2'y)^2 / (phi_t2'phi_t2)
-        phi_t2_norm_sq = np.sum(phi_t2 ** 2, axis=1, keepdims=True)  # (n_vox_batch, 1)
+        phi_t2_norm_sq = np.sum(phi_t2**2, axis=1, keepdims=True)  # (n_vox_batch, 1)
         phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y)  # (n_vox_batch, n_comps)
-        sse_t2 = yty - (phi_t2_dot_y ** 2) / phi_t2_norm_sq
+        sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq
 
         # Full model: need to solve 2x2 normal equations per voxel
         # X = [phi_s0, phi_t2], X'X is 2x2, X'Y is 2 x n_comps
@@ -957,7 +954,7 @@ def component_te_variance_tests(
         xtx_01 = np.sum(phi_s0 * phi_t2, axis=1)  # phi_s0' phi_t2
 
         # Determinant of X'X: (n_vox_batch,)
-        det = xtx_00 * xtx_11 - xtx_01 ** 2
+        det = xtx_00 * xtx_11 - xtx_01**2
 
         # Handle singular/near-singular cases
         valid_det = det > 1e-10 * xtx_00 * xtx_11
@@ -981,8 +978,8 @@ def component_te_variance_tests(
         # y'X(X'X)^{-1}X'y = xty' @ inv @ xty (per voxel)
         # = inv_00 * xty_0^2 + inv_11 * xty_1^2 + 2 * inv_01 * xty_0 * xty_1
         quadform = (
-            inv_00[:, None] * xty_0 ** 2
-            + inv_11[:, None] * xty_1 ** 2
+            inv_00[:, None] * xty_0**2
+            + inv_11[:, None] * xty_1**2
             + 2 * inv_01[:, None] * xty_0 * xty_1
         )
 
@@ -1043,9 +1040,7 @@ def component_te_variance_tests(
             rho_star[i_comp] = np.nan
 
         # Weighted average for F-statistics
-        f_t2star[i_comp] = np.average(
-            f_t2star_vox[valid_mask, i_comp], weights=weights_comp
-        )
+        f_t2star[i_comp] = np.average(f_t2star_vox[valid_mask, i_comp], weights=weights_comp)
         f_s0[i_comp] = np.average(f_s0_vox[valid_mask, i_comp], weights=weights_comp)
 
     return kappa_star, rho_star, f_t2star, f_s0
@@ -1149,10 +1144,7 @@ def component_te_permutation_test(
     Permuting the basis function assignments breaks this spatial specificity.
     """
     if not (
-        echowise_pes.shape[0]
-        == s0_hat.shape[0]
-        == t2s_hat.shape[0]
-        == adaptive_mask.shape[0]
+        echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]
     ):
         raise ValueError(
             "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
@@ -1200,16 +1192,16 @@ def component_te_permutation_test(
 
         # Data (fixed, never permuted): Y and y'y
         Y = echowise_pes[vox_idx, :n_e, :]  # (n_vox_ne, n_e, n_comps)
-        yty = np.sum(Y ** 2, axis=1)  # (n_vox_ne, n_comps)
+        yty = np.sum(Y**2, axis=1)  # (n_vox_ne, n_comps)
         weights = spatial_weights[vox_idx, :] ** 2  # (n_vox_ne, n_comps)
 
         # Basis function properties (permutation just reindexes these)
-        phi_s0_norm_sq = np.sum(phi_s0 ** 2, axis=1)  # (n_vox_ne,)
-        phi_t2_norm_sq = np.sum(phi_t2 ** 2, axis=1)  # (n_vox_ne,)
+        phi_s0_norm_sq = np.sum(phi_s0**2, axis=1)  # (n_vox_ne,)
+        phi_t2_norm_sq = np.sum(phi_t2**2, axis=1)  # (n_vox_ne,)
         xtx_01 = np.sum(phi_s0 * phi_t2, axis=1)  # (n_vox_ne,)
 
         # Determinant and inverse elements (permutation just reindexes)
-        det = phi_s0_norm_sq * phi_t2_norm_sq - xtx_01 ** 2
+        det = phi_s0_norm_sq * phi_t2_norm_sq - xtx_01**2
         valid_det = det > 1e-10 * phi_s0_norm_sq * phi_t2_norm_sq
 
         inv_00 = np.zeros(n_vox_ne)
@@ -1292,13 +1284,13 @@ def component_te_permutation_test(
             phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
 
             # SSE for reduced models (using precomputed norms)
-            sse_s0 = yty - (phi_s0_dot_y ** 2) / phi_s0_norm_sq[:, None]
-            sse_t2 = yty - (phi_t2_dot_y ** 2) / phi_t2_norm_sq[:, None]
+            sse_s0 = yty - (phi_s0_dot_y**2) / phi_s0_norm_sq[:, None]
+            sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq[:, None]
 
             # SSE for full model (using precomputed inverse elements)
             quadform = (
-                inv_00[:, None] * phi_s0_dot_y ** 2
-                + inv_11[:, None] * phi_t2_dot_y ** 2
+                inv_00[:, None] * phi_s0_dot_y**2
+                + inv_11[:, None] * phi_t2_dot_y**2
                 + 2 * inv_01[:, None] * phi_s0_dot_y * phi_t2_dot_y
             )
             sse_full = yty - quadform
@@ -1316,13 +1308,17 @@ def component_te_permutation_test(
             sse_full_total += np.sum(np.where(valid, sse_full * weights, 0), axis=0)
 
         if return_detail:
-            return sse_t2_total, sse_s0_total, {
-                "sse_s0": sse_s0_total,
-                "sse_t2": sse_t2_total,
-                "sse_full": sse_full_total,
-                "ss_t2": ss_t2_total,
-                "ss_s0": ss_s0_total,
-            }
+            return (
+                sse_t2_total,
+                sse_s0_total,
+                {
+                    "sse_s0": sse_s0_total,
+                    "sse_t2": sse_t2_total,
+                    "sse_full": sse_full_total,
+                    "ss_t2": ss_t2_total,
+                    "ss_s0": ss_s0_total,
+                },
+            )
         return sse_t2_total, sse_s0_total
 
     # Compute observed statistics (no permutation)
@@ -1338,26 +1334,25 @@ def component_te_permutation_test(
     # Debug: show observed SSE breakdown
     LGR.debug("Observed SSE breakdown:")
     for c in range(n_comps):
-        LGR.debug(f"  Component {c}: sse_s0={obs_detail['sse_s0'][c]:.4f}, "
-                  f"sse_t2={obs_detail['sse_t2'][c]:.4f}, "
-                  f"sse_full={obs_detail['sse_full'][c]:.4f}")
+        LGR.debug(
+            f"  Component {c}: sse_s0={obs_detail['sse_s0'][c]:.4f}, "
+            f"sse_t2={obs_detail['sse_t2'][c]:.4f}, "
+            f"sse_full={obs_detail['sse_full'][c]:.4f}"
+        )
 
     # Pre-generate all permutation indices for efficiency
     perm_indices_all = []
     for _ in range(n_perm):
-        perm_indices_all.append({
-            n_e: rng.permutation(data["n_vox"])
-            for n_e, data in precomputed.items()
-        })
+        perm_indices_all.append(
+            {n_e: rng.permutation(data["n_vox"]) for n_e, data in precomputed.items()}
+        )
 
     # Build null distribution with optional parallelization
     if n_jobs == 1:
         # Sequential execution with progress bar
         null_results = []
         for i_perm in trange(n_perm, desc="Permutation test"):
-            null_results.append(compute_component_stats(
-                perm_indices=perm_indices_all[i_perm]
-            ))
+            null_results.append(compute_component_stats(perm_indices=perm_indices_all[i_perm]))
     else:
         # Parallel execution
         LGR.info(f"Running {n_perm} permutations with {n_jobs} parallel jobs")
@@ -1376,24 +1371,30 @@ def component_te_permutation_test(
     )
     LGR.debug("Sample permuted SSE breakdown (perm 0):")
     for c in range(n_comps):
-        LGR.debug(f"  Component {c}: sse_s0={perm_detail['sse_s0'][c]:.4f}, "
-                  f"sse_t2={perm_detail['sse_t2'][c]:.4f}, "
-                  f"sse_full={perm_detail['sse_full'][c]:.4f}")
+        LGR.debug(
+            f"  Component {c}: sse_s0={perm_detail['sse_s0'][c]:.4f}, "
+            f"sse_t2={perm_detail['sse_t2'][c]:.4f}, "
+            f"sse_full={perm_detail['sse_full'][c]:.4f}"
+        )
 
     # Debug output: print observed vs null distributions
     LGR.debug("Permutation test diagnostics:")
     for c in range(n_comps):
         LGR.debug(f"  Component {c}:")
         LGR.debug(f"    obs_sse_t2 = {obs_sse_t2[c]:.6f}")
-        LGR.debug(f"    null_sse_t2: mean={null_sse_t2[:, c].mean():.6f}, "
-                  f"std={null_sse_t2[:, c].std():.6f}, "
-                  f"min={null_sse_t2[:, c].min():.6f}, "
-                  f"max={null_sse_t2[:, c].max():.6f}")
+        LGR.debug(
+            f"    null_sse_t2: mean={null_sse_t2[:, c].mean():.6f}, "
+            f"std={null_sse_t2[:, c].std():.6f}, "
+            f"min={null_sse_t2[:, c].min():.6f}, "
+            f"max={null_sse_t2[:, c].max():.6f}"
+        )
         LGR.debug(f"    obs_sse_s0 = {obs_sse_s0[c]:.6f}")
-        LGR.debug(f"    null_sse_s0: mean={null_sse_s0[:, c].mean():.6f}, "
-                  f"std={null_sse_s0[:, c].std():.6f}, "
-                  f"min={null_sse_s0[:, c].min():.6f}, "
-                  f"max={null_sse_s0[:, c].max():.6f}")
+        LGR.debug(
+            f"    null_sse_s0: mean={null_sse_s0[:, c].mean():.6f}, "
+            f"std={null_sse_s0[:, c].std():.6f}, "
+            f"min={null_sse_s0[:, c].min():.6f}, "
+            f"max={null_sse_s0[:, c].max():.6f}"
+        )
 
     # Compute p-values based on single-predictor model SSEs (lower is better fit)
     # p_t2: proportion of null permutations with sse_t2 <= observed

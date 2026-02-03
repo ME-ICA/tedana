@@ -91,7 +91,11 @@ def generate_metrics(
     if metrics is None:
         metrics = ["map weight"]
 
-    if ("map optcom betas" in metrics) and ("map echo betas" not in metrics) and io_generator.verbose:
+    if (
+        ("map optcom betas" in metrics)
+        and ("map echo betas" not in metrics)
+        and io_generator.verbose
+    ):
         metrics.append("map echo betas")
 
     if external_regressors is not None:
@@ -211,7 +215,12 @@ def generate_metrics(
         component_table["f_t2star"] = f_t2star
         component_table["f_s0"] = f_s0
 
-    if ("p_t2" in required_metrics) or ("p_s0" in required_metrics) or ("kappa_star_perm" in required_metrics) or ("rho_star_perm" in required_metrics):
+    if (
+        ("p_t2" in required_metrics)
+        or ("p_s0" in required_metrics)
+        or ("kappa_star_perm" in required_metrics)
+        or ("rho_star_perm" in required_metrics)
+    ):
         LGR.info("Running permutation test for spatially-specific TE-dependence (p_t2, p_s0)")
         _, _, p_t2, p_s0 = dependence.component_te_permutation_test(
             echowise_pes=metric_maps["map echo betas"],
