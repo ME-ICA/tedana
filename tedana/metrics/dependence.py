@@ -863,7 +863,10 @@ def component_te_variance_tests_voxelwise(
 
         # Filter for valid baseline estimates
         if volume_wise:
-            valid_baseline = np.all((s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0), axis=1)
+            valid_baseline = np.all(
+                (s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0),
+                axis=1,
+            )
         else:
             valid_baseline = (s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0)
 
