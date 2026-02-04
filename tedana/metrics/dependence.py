@@ -750,6 +750,8 @@ def compute_te_variance(
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
     spatial_weights: np.ndarray | None = None,
+    t2s_min: float = 5.0,
+    t2s_max: float = 500.0,
 ):
     """Compute descriptive variance fractions (kappa_star, rho_star) for components.
 
@@ -778,6 +780,12 @@ def compute_te_variance(
     spatial_weights : (n_voxels, n_comps) array, optional
         Voxel weights for aggregation (e.g., component loadings squared).
         If None, equal weighting is used.
+    t2s_min : float, optional
+        Minimum valid T2* value in milliseconds. Voxels with T2* below this
+        are excluded as unrealistic. Default is 5.0 ms.
+    t2s_max : float, optional
+        Maximum valid T2* value in milliseconds. Voxels with T2* above this
+        are excluded as unrealistic. Default is 500.0 ms.
 
     Returns
     -------
@@ -954,14 +962,20 @@ def compute_te_variance(
         voxel_mask = adaptive_mask == n_e
         voxel_indices = np.where(voxel_mask)[0]
 
-        # Filter for valid baseline estimates
+        # Filter for valid baseline estimates (positive S0 and T2* within bounds)
         if volume_wise:
             valid_baseline = np.all(
-                (s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0),
+                (s0_hat[voxel_indices] > 0)
+                & (t2s_hat[voxel_indices] >= t2s_min)
+                & (t2s_hat[voxel_indices] <= t2s_max),
                 axis=1,
             )
         else:
-            valid_baseline = (s0_hat[voxel_indices] > 0) & (t2s_hat[voxel_indices] > 0)
+            valid_baseline = (
+                (s0_hat[voxel_indices] > 0)
+                & (t2s_hat[voxel_indices] >= t2s_min)
+                & (t2s_hat[voxel_indices] <= t2s_max)
+            )
 
         voxel_indices = voxel_indices[valid_baseline]
         if len(voxel_indices) == 0:
@@ -1137,6 +1151,8 @@ def compute_te_variance_permutation(
     n_perm: int = 1000,
     n_threads: int = 1,
     seed: int | None = None,
+    t2s_min: float = 5.0,
+    t2s_max: float = 500.0,
 ):
     """Permutation test for spatial specificity of component TE-dependence.
 
@@ -1163,6 +1179,12 @@ def compute_te_variance_permutation(
         If None, equal weighting is used.
     n_perm : int, optional
         Number of permutations for null distribution. Default is 1000.
+    t2s_min : float, optional
+        Minimum valid T2* value in milliseconds. Voxels with T2* below this
+        are excluded as unrealistic. Default is 5.0 ms.
+    t2s_max : float, optional
+        Maximum valid T2* value in milliseconds. Voxels with T2* above this
+        are excluded as unrealistic. Default is 500.0 ms.
     n_threads : int, optional
         Number of parallel jobs. Default is 1 (sequential).
         Set to -1 to use all available cores.
@@ -1301,8 +1323,13 @@ def compute_te_variance_permutation(
     if t2s_hat.ndim == 2:
         t2s_hat = np.mean(t2s_hat, axis=1)
 
-    # Identify valid voxels
-    valid_voxel = (adaptive_mask >= 3) & (s0_hat > 0) & (t2s_hat > 0)
+    # Identify valid voxels (positive S0 and T2* within realistic bounds)
+    valid_voxel = (
+        (adaptive_mask >= 3)
+        & (s0_hat > 0)
+        & (t2s_hat >= t2s_min)
+        & (t2s_hat <= t2s_max)
+    )
 
     # Precompute everything that doesn't change with permutation, grouped by n_e
     # This is the key optimization: we only recompute dot products during permutation
@@ -1331,21 +1358,9 @@ def compute_te_variance_permutation(
         yty = np.sum(Y**2, axis=1)  # (n_vox_ne, n_comps)
         weights = spatial_weights[vox_idx, :]  # (n_vox_ne, n_comps)
 
-        # Basis function properties (permutation just reindexes these)
+        # Basis function norms (permutation just reindexes these)
         phi_s0_norm_sq = np.sum(phi_s0**2, axis=1)  # (n_vox_ne,)
         phi_t2_norm_sq = np.sum(phi_t2**2, axis=1)  # (n_vox_ne,)
-        xtx_01 = np.sum(phi_s0 * phi_t2, axis=1)  # (n_vox_ne,)
-
-        # Determinant and inverse elements (permutation just reindexes)
-        det = phi_s0_norm_sq * phi_t2_norm_sq - xtx_01**2
-        valid_det = det > 1e-10 * phi_s0_norm_sq * phi_t2_norm_sq
-
-        inv_00 = np.zeros(n_vox_ne)
-        inv_11 = np.zeros(n_vox_ne)
-        inv_01 = np.zeros(n_vox_ne)
-        np.divide(phi_t2_norm_sq, det, out=inv_00, where=valid_det)
-        np.divide(phi_s0_norm_sq, det, out=inv_11, where=valid_det)
-        np.divide(-xtx_01, det, out=inv_01, where=valid_det)
 
         precomputed[n_e] = {
             "n_vox": n_vox_ne,
@@ -1356,10 +1371,6 @@ def compute_te_variance_permutation(
             "weights": weights,
             "phi_s0_norm_sq": phi_s0_norm_sq,
             "phi_t2_norm_sq": phi_t2_norm_sq,
-            "inv_00": inv_00,
-            "inv_11": inv_11,
-            "inv_01": inv_01,
-            "valid_det": valid_det,
         }
 
     def compute_ss_t2(perm_t2_indices=None):
@@ -1405,7 +1416,8 @@ def compute_te_variance_permutation(
             # For full model, need to recompute Gram matrix inverse with mixed bases
             phi_s0_dot_t2 = np.sum(phi_s0 * phi_t2, axis=1)
             det = phi_s0_norm_sq * phi_t2_norm_sq - phi_s0_dot_t2**2
-            valid_det = det > 1e-10
+            # Use relative threshold consistent with compute_te_variance
+            valid_det = det > 1e-10 * phi_s0_norm_sq * phi_t2_norm_sq
             det_safe = np.where(valid_det, det, 1.0)
 
             inv_00 = np.where(valid_det, phi_t2_norm_sq / det_safe, 0)
@@ -1472,7 +1484,8 @@ def compute_te_variance_permutation(
             # For full model, need to recompute Gram matrix inverse with mixed bases
             phi_s0_dot_t2 = np.sum(phi_s0 * phi_t2, axis=1)
             det = phi_s0_norm_sq * phi_t2_norm_sq - phi_s0_dot_t2**2
-            valid_det = det > 1e-10
+            # Use relative threshold consistent with compute_te_variance
+            valid_det = det > 1e-10 * phi_s0_norm_sq * phi_t2_norm_sq
             det_safe = np.where(valid_det, det, 1.0)
 
             inv_00 = np.where(valid_det, phi_t2_norm_sq / det_safe, 0)

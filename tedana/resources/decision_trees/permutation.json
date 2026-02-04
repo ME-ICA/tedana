@@ -94,9 +94,12 @@
                 "left2": "p_t2",
                 "op2": "<",
                 "right2": 0.05,
+                "left3": "p_s0",
+                "op3": ">=",
+                "right3": 0.05,
                 "tag_if_true": "T2*-aligned (strong)"
             },
-            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). These are consistent with BOLD-like signal."
+            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05) AND non-significant S0 spatial specificity (p_s0 >= 0.05). Components with both significant p_t2 and p_s0 fall through to Mixed handling."
         },
         {
             "functionname": "dec_left_op_right",
@@ -112,9 +115,12 @@
                 "left2": "p_t2",
                 "op2": "<",
                 "right2": 0.05,
+                "left3": "p_s0",
+                "op3": ">=",
+                "right3": 0.05,
                 "tag_if_true": "T2*-aligned (moderate)"
             },
-            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05)."
+            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05) AND non-significant S0 spatial specificity (p_s0 >= 0.05). Components with both significant p_t2 and p_s0 fall through to Mixed handling."
         },
         {
             "functionname": "dec_left_op_right",
@@ -137,7 +143,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalaccept",
+                "if_true": "provisionalreject",
                 "if_false": "nochange",
                 "decide_comps": "unclassified",
                 "op": "<",
@@ -150,7 +156,7 @@
                 "right2": 0.05,
                 "tag_if_true": "Mixed T2*/S0"
             },
-            "_comment": "Provisionally accept remaining unclassified components with both significant T2* AND S0 spatial specificity. These are mixed-signal components that may contain BOLD signal worth preserving."
+            "_comment": "Provisionally reject remaining unclassified components with both significant T2* AND S0 spatial specificity. These mixed-signal components have ambiguous character - the spatial specificity for both bases could indicate artifact with structure correlated to T2* maps rather than genuine BOLD."
         },
         {
             "functionname": "dec_left_op_right",
