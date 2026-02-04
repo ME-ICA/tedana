@@ -225,7 +225,7 @@ def generate_metrics(
         or ("rho_star_perm" in required_metrics)
     ):
         LGR.info("Running permutation test for spatially-specific TE-dependence (p_t2, p_s0)")
-        _, _, p_t2, p_s0 = dependence.compute_te_variance_permutation(
+        kappa_star_perm, rho_star_perm, p_t2, p_s0 = dependence.compute_te_variance_permutation(
             echowise_pes=metric_maps["map echo betas"],
             tes=tes,
             s0_hat=s0map,
@@ -236,6 +236,8 @@ def generate_metrics(
             n_threads=n_threads,
             seed=42,
         )
+        component_table["kappa_star_perm"] = kappa_star_perm
+        component_table["rho_star_perm"] = rho_star_perm
         component_table["p_t2"] = p_t2
         component_table["p_s0"] = p_s0
 

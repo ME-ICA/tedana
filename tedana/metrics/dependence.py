@@ -1203,18 +1203,29 @@ def compute_te_variance_permutation(
 
     **Permutation scheme**
 
+    This test uses *independent* permutations for T2* and S0 to isolate
+    spatial specificity of each component:
+
+    - For ``p_t2``: Permute only φ_T2* while keeping φ_S0 fixed (local).
+      This tests whether T2* explains more unique variance with its local
+      basis than with a randomly assigned basis.
+
+    - For ``p_s0``: Permute only φ_S0 while keeping φ_T2* fixed (local).
+      This tests whether S0 explains more unique variance with its local
+      basis than with a randomly assigned basis.
+
     Within groups of voxels sharing the same number of valid echoes (n_e),
-    shuffle the assignment of basis functions (φ_S0, φ_T2*) to voxels while
-    keeping echo-wise PEs fixed. This preserves:
+    shuffle the assignment of the target basis function to voxels while
+    keeping echo-wise PEs and the other basis fixed. This preserves:
 
     - Total variance structure of each component
     - Echo-wise correlation structure within voxels
     - Marginal distribution of basis function shapes
+    - The contribution from the non-permuted basis (isolation of effects)
 
     While breaking:
 
-    - Spatial alignment between echo-wise structure and voxel-local
-      T2*/S0 sensitivity
+    - Spatial alignment between the target basis and voxel-local sensitivity
 
     Note that permutations are performed within echo-availability strata
     only. The null is therefore: "alignment no better than random assignment
@@ -1222,13 +1233,16 @@ def compute_te_variance_permutation(
 
     **Test statistics**
 
-    - ``sse_t2``: SSE from T2*-only model (φ_T2* = S0·exp(-TE/T2*)·TE/T2*²).
-      Lower values indicate better fit to local T2* sensitivity.
-    - ``sse_s0``: SSE from S0-only model (φ_S0 = exp(-TE/T2*)).
-      Lower values indicate better fit to local S0 sensitivity.
+    - ``ss_t2``: Unique variance explained by T2* (Type III sum of squares).
+      This is the variance that T2* explains *beyond* what S0 explains.
+      Higher values indicate better spatial alignment with local T2*.
 
-    P-values are the proportion of permutations achieving SSE as low or
-    lower than observed.
+    - ``ss_s0``: Unique variance explained by S0 (Type III sum of squares).
+      This is the variance that S0 explains *beyond* what T2* explains.
+      Higher values indicate better spatial alignment with local S0.
+
+    P-values are the proportion of permutations achieving unique variance
+    as high or higher than observed (one-tailed test, higher is better).
 
     **Interpretation**
 
@@ -1275,7 +1289,7 @@ def compute_te_variance_permutation(
         raise ValueError("echowise_pes and tes must have the same number of echoes")
 
     rng = np.random.default_rng(seed)
-    n_voxels, n_echos, n_comps = echowise_pes.shape
+    n_voxels, _, n_comps = echowise_pes.shape
     tes = np.asarray(tes, dtype=np.float64)
 
     if spatial_weights is None:
@@ -1315,7 +1329,7 @@ def compute_te_variance_permutation(
         # Data (fixed, never permuted): Y and y'y
         Y = echowise_pes[vox_idx, :n_e, :]  # (n_vox_ne, n_e, n_comps)
         yty = np.sum(Y**2, axis=1)  # (n_vox_ne, n_comps)
-        weights = spatial_weights[vox_idx, :] ** 2  # (n_vox_ne, n_comps)
+        weights = spatial_weights[vox_idx, :]  # (n_vox_ne, n_comps)
 
         # Basis function properties (permutation just reindexes these)
         phi_s0_norm_sq = np.sum(phi_s0**2, axis=1)  # (n_vox_ne,)
@@ -1348,68 +1362,57 @@ def compute_te_variance_permutation(
             "valid_det": valid_det,
         }
 
-    def compute_component_stats(perm_indices=None, return_detail=False):
-        """Compute weighted ss_t2 and ss_s0 for all components.
+    def compute_ss_t2(perm_t2_indices=None):
+        """Compute unique T2* variance (ss_t2) with optional phi_t2 permutation.
 
         Parameters
         ----------
-        perm_indices : dict or None
-            If provided, dict mapping n_e -> permutation indices for that group.
-            If None, use identity (no permutation).
-        return_detail : bool
-            If True, also return detailed SSE breakdown for diagnostics.
+        perm_t2_indices : dict or None
+            If provided, dict mapping n_e -> permutation indices for phi_t2.
+            phi_s0 remains unpermuted (local).
 
         Returns
         -------
-        ss_t2_total, ss_s0_total : (n_comps,) arrays
-            Weighted sum of unique variance attributable to T2* and S0.
-        detail : dict (only if return_detail=True)
-            Detailed SSE breakdown.
+        ss_t2_total : (n_comps,) array
+            Weighted sum of unique variance attributable to T2*.
         """
         ss_t2_total = np.zeros(n_comps)
-        ss_s0_total = np.zeros(n_comps)
-        sse_s0_total = np.zeros(n_comps)
-        sse_t2_total = np.zeros(n_comps)
-        sse_full_total = np.zeros(n_comps)
 
         for n_e, data in precomputed.items():
-            # Get precomputed values
+            # phi_s0 always uses local (unpermuted) basis
             phi_s0 = data["phi_s0"]
+            phi_s0_norm_sq = data["phi_s0_norm_sq"]
+
+            # phi_t2 may be permuted
             phi_t2 = data["phi_t2"]
+            phi_t2_norm_sq = data["phi_t2_norm_sq"]
+            if perm_t2_indices is not None:
+                perm = perm_t2_indices[n_e]
+                phi_t2 = phi_t2[perm]
+                phi_t2_norm_sq = phi_t2_norm_sq[perm]
+
             Y = data["Y"]
             yty = data["yty"]
             weights = data["weights"]
-            phi_s0_norm_sq = data["phi_s0_norm_sq"]
-            phi_t2_norm_sq = data["phi_t2_norm_sq"]
-            inv_00 = data["inv_00"]
-            inv_11 = data["inv_11"]
-            inv_01 = data["inv_01"]
-            valid_det = data["valid_det"]
 
-            # Apply permutation to basis functions if provided
-            if perm_indices is not None:
-                perm = perm_indices[n_e]
-                phi_s0 = phi_s0[perm]
-                phi_t2 = phi_t2[perm]
-                # Reindex precomputed values (same values, different order)
-                phi_s0_norm_sq = phi_s0_norm_sq[perm]
-                phi_t2_norm_sq = phi_t2_norm_sq[perm]
-                inv_00 = inv_00[perm]
-                inv_11 = inv_11[perm]
-                inv_01 = inv_01[perm]
-                valid_det = valid_det[perm]
-
-            # These are the only expensive operations that must be recomputed
-            # Use optimized matrix multiplication: (n_vox, n_e) @ (n_vox, n_e, n_comp)
-            # Equivalent to einsum("ve,vec->vc", phi, Y) but can be faster
+            # Compute dot products
             phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y, optimize=True)
             phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
 
-            # SSE for reduced models (using precomputed norms)
+            # SSE for S0-only model (local phi_s0)
             sse_s0 = yty - (phi_s0_dot_y**2) / phi_s0_norm_sq[:, None]
-            sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq[:, None]
 
-            # SSE for full model (using precomputed inverse elements)
+            # For full model, need to recompute Gram matrix inverse with mixed bases
+            phi_s0_dot_t2 = np.sum(phi_s0 * phi_t2, axis=1)
+            det = phi_s0_norm_sq * phi_t2_norm_sq - phi_s0_dot_t2**2
+            valid_det = det > 1e-10
+            det_safe = np.where(valid_det, det, 1.0)
+
+            inv_00 = np.where(valid_det, phi_t2_norm_sq / det_safe, 0)
+            inv_11 = np.where(valid_det, phi_s0_norm_sq / det_safe, 0)
+            inv_01 = np.where(valid_det, -phi_s0_dot_t2 / det_safe, 0)
+
+            # SSE for full model
             quadform = (
                 inv_00[:, None] * phi_s0_dot_y**2
                 + inv_11[:, None] * phi_t2_dot_y**2
@@ -1417,116 +1420,164 @@ def compute_te_variance_permutation(
             )
             sse_full = yty - quadform
 
-            # Type III (unique) sums of squares
+            # ss_t2 = unique T2* variance = sse_s0 - sse_full
             ss_t2 = sse_s0 - sse_full
-            ss_s0 = sse_t2 - sse_full
 
-            # Mask invalid voxels and accumulate
+            # Accumulate
             valid = valid_det[:, None] & (sse_full > 0)
             ss_t2_total += np.sum(np.where(valid, ss_t2 * weights, 0), axis=0)
-            ss_s0_total += np.sum(np.where(valid, ss_s0 * weights, 0), axis=0)
-            sse_s0_total += np.sum(np.where(valid, sse_s0 * weights, 0), axis=0)
-            sse_t2_total += np.sum(np.where(valid, sse_t2 * weights, 0), axis=0)
-            sse_full_total += np.sum(np.where(valid, sse_full * weights, 0), axis=0)
 
-        if return_detail:
-            return (
-                sse_t2_total,
-                sse_s0_total,
-                {
-                    "sse_s0": sse_s0_total,
-                    "sse_t2": sse_t2_total,
-                    "sse_full": sse_full_total,
-                    "ss_t2": ss_t2_total,
-                    "ss_s0": ss_s0_total,
-                },
+        return ss_t2_total
+
+    def compute_ss_s0(perm_s0_indices=None):
+        """Compute unique S0 variance (ss_s0) with optional phi_s0 permutation.
+
+        Parameters
+        ----------
+        perm_s0_indices : dict or None
+            If provided, dict mapping n_e -> permutation indices for phi_s0.
+            phi_t2 remains unpermuted (local).
+
+        Returns
+        -------
+        ss_s0_total : (n_comps,) array
+            Weighted sum of unique variance attributable to S0.
+        """
+        ss_s0_total = np.zeros(n_comps)
+
+        for n_e, data in precomputed.items():
+            # phi_t2 always uses local (unpermuted) basis
+            phi_t2 = data["phi_t2"]
+            phi_t2_norm_sq = data["phi_t2_norm_sq"]
+
+            # phi_s0 may be permuted
+            phi_s0 = data["phi_s0"]
+            phi_s0_norm_sq = data["phi_s0_norm_sq"]
+            if perm_s0_indices is not None:
+                perm = perm_s0_indices[n_e]
+                phi_s0 = phi_s0[perm]
+                phi_s0_norm_sq = phi_s0_norm_sq[perm]
+
+            Y = data["Y"]
+            yty = data["yty"]
+            weights = data["weights"]
+
+            # Compute dot products
+            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y, optimize=True)
+            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
+
+            # SSE for T2*-only model (local phi_t2)
+            sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq[:, None]
+
+            # For full model, need to recompute Gram matrix inverse with mixed bases
+            phi_s0_dot_t2 = np.sum(phi_s0 * phi_t2, axis=1)
+            det = phi_s0_norm_sq * phi_t2_norm_sq - phi_s0_dot_t2**2
+            valid_det = det > 1e-10
+            det_safe = np.where(valid_det, det, 1.0)
+
+            inv_00 = np.where(valid_det, phi_t2_norm_sq / det_safe, 0)
+            inv_11 = np.where(valid_det, phi_s0_norm_sq / det_safe, 0)
+            inv_01 = np.where(valid_det, -phi_s0_dot_t2 / det_safe, 0)
+
+            # SSE for full model
+            quadform = (
+                inv_00[:, None] * phi_s0_dot_y**2
+                + inv_11[:, None] * phi_t2_dot_y**2
+                + 2 * inv_01[:, None] * phi_s0_dot_y * phi_t2_dot_y
             )
-        return sse_t2_total, sse_s0_total
+            sse_full = yty - quadform
+
+            # ss_s0 = unique S0 variance = sse_t2 - sse_full
+            ss_s0 = sse_t2 - sse_full
+
+            # Accumulate
+            valid = valid_det[:, None] & (sse_full > 0)
+            ss_s0_total += np.sum(np.where(valid, ss_s0 * weights, 0), axis=0)
+
+        return ss_s0_total
 
     # Compute observed statistics (no permutation)
-    obs_sse_t2, obs_sse_s0, obs_detail = compute_component_stats(
-        perm_indices=None, return_detail=True
-    )
+    obs_ss_t2 = compute_ss_t2(perm_t2_indices=None)
+    obs_ss_s0 = compute_ss_s0(perm_s0_indices=None)
 
     # Compute kappa_star and rho_star from Type III SS
-    total_ss = obs_detail["ss_t2"] + obs_detail["ss_s0"]
-    kappa_star = np.where(total_ss > 0, obs_detail["ss_t2"] / total_ss, np.nan)
-    rho_star = np.where(total_ss > 0, obs_detail["ss_s0"] / total_ss, np.nan)
+    total_ss = obs_ss_t2 + obs_ss_s0
+    kappa_star = np.where(total_ss > 0, obs_ss_t2 / total_ss, np.nan)
+    rho_star = np.where(total_ss > 0, obs_ss_s0 / total_ss, np.nan)
 
-    # Debug: show observed SSE breakdown
-    LGR.debug("Observed SSE breakdown:")
+    # Debug: show observed SS
+    LGR.debug("Observed unique variance (Type III SS):")
     for c in range(n_comps):
         LGR.debug(
-            f"  Component {c}: sse_s0={obs_detail['sse_s0'][c]:.4f}, "
-            f"sse_t2={obs_detail['sse_t2'][c]:.4f}, "
-            f"sse_full={obs_detail['sse_full'][c]:.4f}"
+            f"  Component {c}: ss_t2={obs_ss_t2[c]:.4f}, ss_s0={obs_ss_s0[c]:.4f}, "
+            f"kappa_star={kappa_star[c]:.4f}, rho_star={rho_star[c]:.4f}"
         )
 
-    # Pre-generate all permutation indices for efficiency
-    perm_indices_all = []
+    # Pre-generate permutation indices (separate for T2* and S0 tests)
+    perm_t2_indices_all = []
+    perm_s0_indices_all = []
     for _ in range(n_perm):
-        perm_indices_all.append(
+        perm_t2_indices_all.append(
+            {n_e: rng.permutation(data["n_vox"]) for n_e, data in precomputed.items()}
+        )
+        perm_s0_indices_all.append(
             {n_e: rng.permutation(data["n_vox"]) for n_e, data in precomputed.items()}
         )
 
-    # Build null distribution with optional parallelization
+    # Build null distributions with optional parallelization
+    LGR.info(f"Running permutation test: {n_perm} permutations for T2* and S0 separately")
+
     if n_threads == 1:
         # Sequential execution with progress bar
-        null_results = []
-        for i_perm in trange(n_perm, desc="Permutation test"):
-            null_results.append(compute_component_stats(perm_indices=perm_indices_all[i_perm]))
+        null_ss_t2_list = []
+        null_ss_s0_list = []
+        for i_perm in trange(n_perm, desc="Permutation test (T2*)"):
+            null_ss_t2_list.append(compute_ss_t2(perm_t2_indices=perm_t2_indices_all[i_perm]))
+        for i_perm in trange(n_perm, desc="Permutation test (S0)"):
+            null_ss_s0_list.append(compute_ss_s0(perm_s0_indices=perm_s0_indices_all[i_perm]))
     else:
         # Parallel execution
-        LGR.info(f"Running {n_perm} permutations with {n_threads} parallel jobs")
-        null_results = Parallel(n_threads=n_threads)(
-            delayed(compute_component_stats)(perm_indices=perm_indices_all[i])
-            for i in tqdm(range(n_perm), desc="Permutation test")
+        LGR.info(f"Using {n_threads} parallel jobs")
+        null_ss_t2_list = Parallel(n_jobs=n_threads)(
+            delayed(compute_ss_t2)(perm_t2_indices=perm_t2_indices_all[i])
+            for i in tqdm(range(n_perm), desc="Permutation test (T2*)")
+        )
+        null_ss_s0_list = Parallel(n_jobs=n_threads)(
+            delayed(compute_ss_s0)(perm_s0_indices=perm_s0_indices_all[i])
+            for i in tqdm(range(n_perm), desc="Permutation test (S0)")
         )
 
-    # Unpack results (sse_t2, sse_s0)
-    null_sse_t2 = np.array([r[0] for r in null_results])
-    null_sse_s0 = np.array([r[1] for r in null_results])
-
-    # Get detailed breakdown for first permutation to compare
-    _, _, perm_detail = compute_component_stats(
-        perm_indices=perm_indices_all[0], return_detail=True
-    )
-    LGR.debug("Sample permuted SSE breakdown (perm 0):")
-    for c in range(n_comps):
-        LGR.debug(
-            f"  Component {c}: sse_s0={perm_detail['sse_s0'][c]:.4f}, "
-            f"sse_t2={perm_detail['sse_t2'][c]:.4f}, "
-            f"sse_full={perm_detail['sse_full'][c]:.4f}"
-        )
+    null_ss_t2 = np.array(null_ss_t2_list)
+    null_ss_s0 = np.array(null_ss_s0_list)
 
     # Debug output: print observed vs null distributions
     LGR.debug("Permutation test diagnostics:")
     for c in range(n_comps):
         LGR.debug(f"  Component {c}:")
-        LGR.debug(f"    obs_sse_t2 = {obs_sse_t2[c]:.6f}")
+        LGR.debug(f"    obs_ss_t2 = {obs_ss_t2[c]:.6f}")
         LGR.debug(
-            f"    null_sse_t2: mean={null_sse_t2[:, c].mean():.6f}, "
-            f"std={null_sse_t2[:, c].std():.6f}, "
-            f"min={null_sse_t2[:, c].min():.6f}, "
-            f"max={null_sse_t2[:, c].max():.6f}"
+            f"    null_ss_t2: mean={null_ss_t2[:, c].mean():.6f}, "
+            f"std={null_ss_t2[:, c].std():.6f}, "
+            f"min={null_ss_t2[:, c].min():.6f}, "
+            f"max={null_ss_t2[:, c].max():.6f}"
         )
-        LGR.debug(f"    obs_sse_s0 = {obs_sse_s0[c]:.6f}")
+        LGR.debug(f"    obs_ss_s0 = {obs_ss_s0[c]:.6f}")
         LGR.debug(
-            f"    null_sse_s0: mean={null_sse_s0[:, c].mean():.6f}, "
-            f"std={null_sse_s0[:, c].std():.6f}, "
-            f"min={null_sse_s0[:, c].min():.6f}, "
-            f"max={null_sse_s0[:, c].max():.6f}"
+            f"    null_ss_s0: mean={null_ss_s0[:, c].mean():.6f}, "
+            f"std={null_ss_s0[:, c].std():.6f}, "
+            f"min={null_ss_s0[:, c].min():.6f}, "
+            f"max={null_ss_s0[:, c].max():.6f}"
         )
 
-    # Compute p-values based on single-predictor model SSEs (lower is better fit)
-    # p_t2: proportion of null permutations with sse_t2 <= observed
-    # Low p_t2 means the T2*-only model fits significantly better with matched basis
-    # → component's echo structure specifically matches local T2* sensitivity (BOLD)
-    p_t2 = (np.sum(null_sse_t2 <= obs_sse_t2, axis=0) + 1) / (n_perm + 1)
+    # Compute p-values based on unique variance (higher is better spatial specificity)
+    # p_t2: proportion of null permutations with ss_t2 >= observed
+    # Low p_t2 means T2* explains significantly MORE unique variance with local basis
+    # → component's T2* contribution is spatially specific (BOLD-like)
+    p_t2 = (np.sum(null_ss_t2 >= obs_ss_t2, axis=0) + 1) / (n_perm + 1)
 
-    # p_s0: proportion of null permutations with sse_s0 <= observed
-    # Low p_s0 means the S0-only model fits significantly better with matched basis
-    # → component's echo structure specifically matches local S0 sensitivity (non-BOLD)
-    p_s0 = (np.sum(null_sse_s0 <= obs_sse_s0, axis=0) + 1) / (n_perm + 1)
+    # p_s0: proportion of null permutations with ss_s0 >= observed
+    # Low p_s0 means S0 explains significantly MORE unique variance with local basis
+    # → component's S0 contribution is spatially specific (non-BOLD)
+    p_s0 = (np.sum(null_ss_s0 >= obs_ss_s0, axis=0) + 1) / (n_perm + 1)
 
     return kappa_star, rho_star, p_t2, p_s0
