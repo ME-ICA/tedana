@@ -1135,7 +1135,7 @@ def compute_te_variance_permutation(
     adaptive_mask: np.ndarray,
     spatial_weights: np.ndarray | None = None,
     n_perm: int = 1000,
-    n_jobs: int = 1,
+    n_threads: int = 1,
     seed: int | None = None,
 ):
     """Permutation test for spatial specificity of component TE-dependence.
@@ -1163,7 +1163,7 @@ def compute_te_variance_permutation(
         If None, equal weighting is used.
     n_perm : int, optional
         Number of permutations for null distribution. Default is 1000.
-    n_jobs : int, optional
+    n_threads : int, optional
         Number of parallel jobs. Default is 1 (sequential).
         Set to -1 to use all available cores.
     seed : int, optional
@@ -1470,15 +1470,15 @@ def compute_te_variance_permutation(
         )
 
     # Build null distribution with optional parallelization
-    if n_jobs == 1:
+    if n_threads == 1:
         # Sequential execution with progress bar
         null_results = []
         for i_perm in trange(n_perm, desc="Permutation test"):
             null_results.append(compute_component_stats(perm_indices=perm_indices_all[i_perm]))
     else:
         # Parallel execution
-        LGR.info(f"Running {n_perm} permutations with {n_jobs} parallel jobs")
-        null_results = Parallel(n_jobs=n_jobs)(
+        LGR.info(f"Running {n_perm} permutations with {n_threads} parallel jobs")
+        null_results = Parallel(n_threads=n_threads)(
             delayed(compute_component_stats)(perm_indices=perm_indices_all[i])
             for i in tqdm(range(n_perm), desc="Permutation test")
         )

@@ -37,6 +37,7 @@ def generate_metrics(
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
+    n_threads: int = 1,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
@@ -72,6 +73,8 @@ def generate_metrics(
         A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
+    n_threads : int
+        Number of cores to use for parallel processing.
 
     Returns
     -------
@@ -230,7 +233,7 @@ def generate_metrics(
             adaptive_mask=adaptive_mask,
             spatial_weights=metric_maps["map weight"] ** 2,
             n_perm=1000,
-            n_jobs=1,
+            n_threads=n_threads,
             seed=42,
         )
         component_table["p_t2"] = p_t2

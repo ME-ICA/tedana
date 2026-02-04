@@ -965,6 +965,7 @@ def tedana_workflow(
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
+                n_threads=n_threads,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -1026,6 +1027,7 @@ def tedana_workflow(
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
+            n_threads=n_threads,
         )
         selector = selection.automatic_selection(
             component_table,
