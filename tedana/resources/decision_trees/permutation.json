@@ -9,6 +9,7 @@
         "rho_star_perm",
         "p_t2",
         "p_s0",
+        "r2_full",
         "variance explained"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
@@ -21,6 +22,7 @@
         "S0-aligned",
         "S0-dominant",
         "Non-specific TE pattern",
+        "Poor model fit",
         "Low variance",
         "Unclassified rejected"
     ],
@@ -69,6 +71,21 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": "<",
+                "left": "r2_full",
+                "right": 0.2
+            },
+            "kwargs": {
+                "tag_if_true": "Poor model fit"
+            },
+            "_comment": "Reject components where the linearized monoexponential model explains very little echo-wise variance (R² < 0.2). If the model doesn't fit, the p-values are not meaningful, and the component's echo-wise structure is inconsistent with both BOLD and S0-driven signal."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": "<",
                 "left": "kappa_star_perm",
                 "right": 0.2
             },
@@ -83,9 +100,27 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalaccept",
+                "if_true": "provisionalreject",
                 "if_false": "nochange",
                 "decide_comps": "all",
+                "op": "<",
+                "left": "p_t2",
+                "right": 0.05
+            },
+            "kwargs": {
+                "left2": "p_s0",
+                "op2": "<",
+                "right2": 0.05,
+                "tag_if_true": "Mixed T2*/S0"
+            },
+            "_comment": "Provisionally reject components with BOTH significant T2* AND S0 spatial specificity. These mixed-signal components have ambiguous character - the spatial specificity for both bases could indicate artifact with structure correlated to T2* maps rather than genuine BOLD. This must come BEFORE the T2*-aligned acceptance nodes."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
                 "op": ">",
                 "left": "kappa_star_perm",
                 "right": 0.8
@@ -94,12 +129,9 @@
                 "left2": "p_t2",
                 "op2": "<",
                 "right2": 0.05,
-                "left3": "p_s0",
-                "op3": ">=",
-                "right3": 0.05,
                 "tag_if_true": "T2*-aligned (strong)"
             },
-            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05) AND non-significant S0 spatial specificity (p_s0 >= 0.05). Components with both significant p_t2 and p_s0 fall through to Mixed handling."
+            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). Mixed components were already handled above."
         },
         {
             "functionname": "dec_left_op_right",
@@ -115,12 +147,9 @@
                 "left2": "p_t2",
                 "op2": "<",
                 "right2": 0.05,
-                "left3": "p_s0",
-                "op3": ">=",
-                "right3": 0.05,
                 "tag_if_true": "T2*-aligned (moderate)"
             },
-            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05) AND non-significant S0 spatial specificity (p_s0 >= 0.05). Components with both significant p_t2 and p_s0 fall through to Mixed handling."
+            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05). Mixed components were already handled above."
         },
         {
             "functionname": "dec_left_op_right",
@@ -139,24 +168,6 @@
                 "tag_if_true": "S0-aligned"
             },
             "_comment": "Provisionally reject remaining unclassified components with S0 dominance (kappa_star_perm < 0.5) AND significant S0 spatial specificity (p_s0 < 0.05). These are consistent with S0-driven fluctuations."
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "provisionalreject",
-                "if_false": "nochange",
-                "decide_comps": "unclassified",
-                "op": "<",
-                "left": "p_t2",
-                "right": 0.05
-            },
-            "kwargs": {
-                "left2": "p_s0",
-                "op2": "<",
-                "right2": 0.05,
-                "tag_if_true": "Mixed T2*/S0"
-            },
-            "_comment": "Provisionally reject remaining unclassified components with both significant T2* AND S0 spatial specificity. These mixed-signal components have ambiguous character - the spatial specificity for both bases could indicate artifact with structure correlated to T2* maps rather than genuine BOLD."
         },
         {
             "functionname": "dec_left_op_right",

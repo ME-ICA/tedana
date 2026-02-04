@@ -800,6 +800,13 @@ def compute_te_variance(
         Weighted average partial F-statistics for T2* term (descriptive).
     f_s0 : (n_comps,) array
         Weighted average partial F-statistics for S0 term (descriptive).
+    r2_full : (n_comps,) array
+        Weighted average R² (coefficient of determination) for the full model.
+        Measures how well the linearized model (φ_S0 + φ_T2*) explains the
+        echo-wise variance. Values near 1 indicate good model fit; values
+        near 0 or negative indicate poor fit. Useful for identifying
+        components whose echo-wise structure doesn't match the expected
+        monoexponential model.
 
     Notes
     -----
@@ -866,6 +873,21 @@ def compute_te_variance(
     - *F-statistics are averaged*: While kappa_star/rho_star use principled
       sum-of-sums aggregation, f_t2star/f_s0 are still weighted averages of
       voxel-wise F-statistics, which is statistically suboptimal.
+
+    **About R² (r2_full)**
+
+    The r2_full metric provides complementary information about absolute
+    model fit quality. While kappa_star/rho_star tell you the *composition*
+    of explained variance, r2_full tells you *how much* variance is explained.
+
+    - High r2_full + high kappa_star: Well-fitting T2*-dominated component
+    - High r2_full + low kappa_star: Well-fitting S0-dominated component
+    - Low r2_full + any kappa_star: Echo-wise structure doesn't match the
+      monoexponential model (suspicious regardless of kappa_star)
+
+    This is particularly useful for catching components where p_t2 is
+    significant (spatially specific) but the echo profile shape doesn't
+    actually match the expected basis functions derived from local T2*.
 
     **Interpretation guidelines**
 
@@ -949,6 +971,7 @@ def compute_te_variance(
     f_s0_vox = np.full((n_voxels, n_comps), np.nan)
     ss_t2_vox = np.full((n_voxels, n_comps), np.nan)
     ss_s0_vox = np.full((n_voxels, n_comps), np.nan)
+    r2_vox = np.full((n_voxels, n_comps), np.nan)
 
     # Process voxels grouped by number of valid echoes for efficiency
     unique_n_echoes = np.unique(adaptive_mask[adaptive_mask >= 3])
@@ -1080,6 +1103,15 @@ def compute_te_variance(
 
         sse_full = yty - quadform
 
+        # Compute total sum of squares (variance around mean) for R²
+        # SST = Σ(y - ȳ)² = y'y - (Σy)²/n = yty - sum_y²/n_e
+        sum_y = np.sum(Y, axis=1)  # (n_vox_batch, n_comps)
+        sst = yty - (sum_y**2) / n_e
+
+        # R² = 1 - SSE_full / SST (coefficient of determination)
+        # Handle SST = 0 (constant echo profile) by setting R² to NaN
+        r2_batch = np.where(sst > 0, 1 - sse_full / sst, np.nan)
+
         # Type III sums of squares
         ss_t2 = sse_s0 - sse_full
         ss_s0 = sse_t2 - sse_full
@@ -1094,11 +1126,13 @@ def compute_te_variance(
         # Store results (mask out invalid entries)
         ss_t2 = np.where(valid, ss_t2, np.nan)
         ss_s0 = np.where(valid, ss_s0, np.nan)
+        r2_batch = np.where(valid, r2_batch, np.nan)
 
         f_t2star_vox[voxel_indices] = f_t2_batch
         f_s0_vox[voxel_indices] = f_s0_batch
         ss_t2_vox[voxel_indices] = ss_t2
         ss_s0_vox[voxel_indices] = ss_s0
+        r2_vox[voxel_indices] = r2_batch
 
     # Aggregate voxel-wise results to component-level using spatial weights
     # Use sum-of-sums aggregation for variance fractions (preserves decomposition)
@@ -1106,6 +1140,7 @@ def compute_te_variance(
     rho_star = np.full(n_comps, np.nan)
     f_t2star = np.full(n_comps, np.nan)
     f_s0 = np.full(n_comps, np.nan)
+    r2_full = np.full(n_comps, np.nan)
 
     for i_comp in range(n_comps):
         # Identify valid voxels for this component
@@ -1114,6 +1149,7 @@ def compute_te_variance(
             & ~np.isnan(ss_s0_vox[:, i_comp])
             & ~np.isnan(f_t2star_vox[:, i_comp])
             & ~np.isnan(f_s0_vox[:, i_comp])
+            & ~np.isnan(r2_vox[:, i_comp])
         )
 
         if not np.any(valid_mask):
@@ -1134,11 +1170,12 @@ def compute_te_variance(
             kappa_star[i_comp] = np.nan
             rho_star[i_comp] = np.nan
 
-        # Weighted average for F-statistics
+        # Weighted average for F-statistics and R²
         f_t2star[i_comp] = np.average(f_t2star_vox[valid_mask, i_comp], weights=weights_comp)
         f_s0[i_comp] = np.average(f_s0_vox[valid_mask, i_comp], weights=weights_comp)
+        r2_full[i_comp] = np.average(r2_vox[valid_mask, i_comp], weights=weights_comp)
 
-    return kappa_star, rho_star, f_t2star, f_s0
+    return kappa_star, rho_star, f_t2star, f_s0, r2_full
 
 
 def compute_te_variance_permutation(

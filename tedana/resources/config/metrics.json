@@ -25,6 +25,10 @@
             "map echo betas",
             "map weight"
         ],
+        "r2_full": [
+            "map echo betas",
+            "map weight"
+        ],
         "kappa_star_perm": [
             "map echo betas",
             "map weight"
