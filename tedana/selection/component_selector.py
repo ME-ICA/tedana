@@ -653,13 +653,7 @@ class ComponentSelector:
     @property
     def likely_bold_comps_(self) -> int:
         """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
-        likely_bold_comps = asarray([False] * len(self.component_table_))
-        for idx in range(len(likely_bold_comps)):
-            if "Likely BOLD" in self.component_table_["classification_tags"].loc[idx]:
-                likely_bold_comps[idx] = True
-            else:
-                likely_bold_comps[idx] = False
-        return likely_bold_comps
+        return self.component_table_["classification_tags"].str.contains("Likely BOLD")
 
     @property
     def n_likely_bold_comps_(self) -> int:
