@@ -342,8 +342,8 @@ def dec_left_op_right(
                 f"left2={left2}, right2={right2}, op2={op2}"
             )
 
-    # If any of the values for the second boolean statement are set
-    if left3 or right3 or op3:
+    # If any of the values for the third boolean statement are set
+    if left3 is not None or right3 is not None or op3 is not None:
         if is_compound == 0:
             raise ValueError(
                 "left_op_right is includes parameters for a third conditional "
@@ -351,7 +351,7 @@ def dec_left_op_right(
                 "second statement"
             )
         # Check if they're all set & use them all or raise an error
-        if left3 and right3 and op3:
+        if left3 is not None and right3 is not None and op3 is not None:
             is_compound = 3
             left3_scale, left3, right3_scale, right3 = confirm_valid_conditional(
                 left3_scale, left3, right3_scale, right3, op3
