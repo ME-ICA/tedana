@@ -1057,14 +1057,13 @@ def component_te_permutation_test(
     n_jobs: int = 1,
     seed: int | None = None,
 ):
-    """Permutation test for component-level TE-dependence.
+    """Permutation test for spatial specificity of component TE-dependence.
 
     Test whether each ICA component's echo-wise structure is specifically
-    aligned with voxel-local T2* sensitivity (as expected for BOLD signal)
-    versus showing non-specific echo-wise structure (as expected for noise).
-
-    This function provides valid p-values for component classification
-    without parametric assumptions about the distribution of test statistics.
+    aligned with voxel-local T2* or S0 sensitivity, under a linearized
+    monoexponential signal model. This provides valid permutation p-values
+    for testing spatial specificity without parametric assumptions about
+    the distribution of test statistics.
 
     Parameters
     ----------
@@ -1092,56 +1091,98 @@ def component_te_permutation_test(
     Returns
     -------
     kappa_star : (n_comps,) array
-        Observed T2* variance fraction for each component.
+        Observed T2* variance fraction for each component (descriptive only).
     rho_star : (n_comps,) array
-        Observed S0 variance fraction for each component.
+        Observed S0 variance fraction for each component (descriptive only).
     p_t2 : (n_comps,) array
-        Permutation p-values testing T2*-dependence.
+        Permutation p-values testing spatial specificity of T2*-alignment.
         Low values indicate the component's echo-wise structure specifically
-        matches local T2* sensitivity (BOLD-like).
+        matches local T2* sensitivity (consistent with BOLD-like signal).
     p_s0 : (n_comps,) array
-        Permutation p-values testing S0-dependence.
+        Permutation p-values testing spatial specificity of S0-alignment.
         Low values indicate the component's echo-wise structure specifically
-        matches local S0 sensitivity (non-BOLD physiological noise).
+        matches local S0 sensitivity (consistent with S0-driven fluctuations).
 
     Notes
     -----
-    **Null hypothesis**: The component's echo-wise parameter estimates are
-    not specifically aligned with local T2*/S0 sensitivity. Under the null,
-    permuting which voxel's basis functions are used for fitting should
-    not systematically reduce model fit.
+    **Important: Inference vs. Description**
 
-    **Permutation scheme**: Within groups of voxels sharing the same number
-    of valid echoes (n_e), shuffle the assignment of basis functions
-    (φ_S0, φ_T2*) to voxels while keeping echo-wise PEs fixed. This preserves:
+    - ``kappa_star`` and ``rho_star`` are *descriptive* variance fractions
+      and are not used for statistical inference.
+    - Statistical inference is based solely on the permutation p-values
+      (``p_t2``, ``p_s0``), which are empirical tail probabilities from
+      the null distribution.
+
+    **Null hypothesis**
+
+    The component's echo-wise parameter estimates show echo-wise structure,
+    but this structure is not specifically aligned with voxel-local T2* or
+    S0 sensitivity. Under the null, permuting which voxel's basis functions
+    are used for fitting should not systematically change model fit.
+
+    **Permutation scheme**
+
+    Within groups of voxels sharing the same number of valid echoes (n_e),
+    shuffle the assignment of basis functions (φ_S0, φ_T2*) to voxels while
+    keeping echo-wise PEs fixed. This preserves:
 
     - Total variance structure of each component
     - Echo-wise correlation structure within voxels
-    - Distribution of basis function shapes across the brain
+    - Marginal distribution of basis function shapes
 
     While breaking:
 
-    - Spatial specificity of TE-dependence (the BOLD signature)
+    - Spatial alignment between echo-wise structure and voxel-local
+      T2*/S0 sensitivity
 
-    **Test statistics**:
+    Note that permutations are performed within echo-availability strata
+    only. The null is therefore: "alignment no better than random assignment
+    within echo-availability groups."
 
-    - sse_t2: SSE from T2*-only model. Tests if echo-wise pattern matches
-      local φ_T2* = S0·exp(-TE/T2*)·TE/T2*².
-    - sse_s0: SSE from S0-only model. Tests if echo-wise pattern matches
-      local φ_S0 = exp(-TE/T2*).
+    **Test statistics**
 
-    **Interpretation**:
+    - ``sse_t2``: SSE from T2*-only model (φ_T2* = S0·exp(-TE/T2*)·TE/T2*²).
+      Lower values indicate better fit to local T2* sensitivity.
+    - ``sse_s0``: SSE from S0-only model (φ_S0 = exp(-TE/T2*)).
+      Lower values indicate better fit to local S0 sensitivity.
 
-    - Low p_t2, high p_s0: T2*-driven signal → likely BOLD
-    - Low p_s0, high p_t2: S0-driven signal → likely non-BOLD noise
-    - Low p_t2 AND low p_s0: Mixed signal → combined T2*/S0 effects
-    - High p_t2 AND high p_s0: Non-specific → unclear origin
+    P-values are the proportion of permutations achieving SSE as low or
+    lower than observed.
 
-    **Why this tests BOLD specifically**: BOLD signal produces echo-wise
-    fluctuations that follow ∂S/∂T2* = S0·exp(-TE/T2*)·TE/T2*², which
-    depends on the *local* T2* value. Non-BOLD noise may have echo-wise
-    structure, but it should not specifically match local T2* sensitivity.
-    Permuting the basis function assignments breaks this spatial specificity.
+    **Interpretation**
+
+    - Low ``p_t2``: Echo-wise pattern is spatially aligned with local T2*
+      sensitivity → consistent with BOLD-like signal
+    - Low ``p_s0``: Echo-wise pattern is spatially aligned with local S0
+      sensitivity → consistent with S0-driven fluctuations
+    - Both low: Mixed signal with both T2* and S0 spatial specificity
+    - Both high: Non-specific echo-wise structure
+
+    **Limitations and caveats**
+
+    1. *Model dependence*: This test evaluates alignment conditional on the
+       linearized monoexponential model δS ≈ (∂S/∂S0)δS0 + (∂S/∂T2*)δT2*.
+       If the linearization is poor (large fluctuations, nonlinear effects),
+       the interpretation weakens.
+
+    2. *Map quality dependence*: The test assumes the provided s0_hat and
+       t2s_hat are meaningful voxelwise quantities. If T2*/S0 maps are noisy
+       or biased, the null distribution becomes wider and power decreases.
+       P-values are conditional on map quality.
+
+    3. *Physiological interpretation*: This test identifies components whose
+       echo-wise structure is consistent with voxel-local T2* sensitivity.
+       This is a *necessary but not sufficient* condition for neuronal BOLD
+       signal. A component could show T2*-alignment due to non-neuronal
+       effects (e.g., motion-correlated susceptibility artifacts).
+
+    **Why this approach**
+
+    Traditional kappa/rho metrics and parametric F-tests for component-level
+    TE-dependence suffer from invalid aggregation (averaging ratios) or
+    incorrect degrees of freedom. This permutation test avoids parametric
+    assumptions entirely and directly tests the spatial specificity that
+    distinguishes BOLD from other echo-wise structure.
     """
     if not (
         echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]

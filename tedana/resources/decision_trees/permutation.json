@@ -1,17 +1,19 @@
 {
     "tree_id": "permutation_decision_tree",
     "info": "Decision tree using permutation test p-values for component classification",
-    "report": "The permutation decision tree uses spatially-specific TE-dependence testing via permutation \\citep{tedana_decision_trees}. Unlike traditional kappa/rho metrics which measure global TE-dependence, the permutation test evaluates whether each component's echo-wise structure specifically matches local T2* sensitivity patterns, providing a more principled statistical test for BOLD signal identification.",
+    "report": "The permutation decision tree uses spatially-specific TE-dependence testing via permutation \\citep{tedana_decision_trees}. Unlike traditional kappa/rho metrics which measure global TE-dependence, the permutation test evaluates whether each component's echo-wise structure specifically matches local T2* sensitivity patterns under a linearized signal model. Low p_t2 values indicate spatial alignment consistent with BOLD-like signal; low p_s0 values indicate alignment consistent with S0-driven fluctuations. Note that T2*-alignment is a necessary but not sufficient condition for neuronal BOLD signal.",
     "necessary_metrics": [
-        "kappa_star_perm",
-        "rho_star_perm",
+        "kappa",
+        "rho",
+        "kappa_star",
+        "rho_star",
         "p_t2",
         "p_s0",
         "variance explained"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
     "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "Mixed signal", "Spatially specific T2*", "Spatially specific S0"],
-    "_comment": "This decision tree uses permutation-based p-values (p_t2 and p_s0) to test whether components show spatially-specific TE-dependence. Low p_t2 indicates the component's echo-wise pattern matches local T2* sensitivity (BOLD-like). Low p_s0 indicates S0-driven signal (non-BOLD). The combination of kappa_star_perm and p-values provides robust classification.",
+    "_comment": "This decision tree uses permutation-based p-values (p_t2 and p_s0) to test whether components show spatially-specific TE-dependence under a linearized model. Low p_t2 indicates the component's echo-wise pattern is spatially aligned with local T2* sensitivity (consistent with BOLD-like signal). Low p_s0 indicates alignment with local S0 sensitivity (consistent with S0-driven fluctuations). The combination of kappa_star (descriptive variance fraction) and p-values (inferential) provides robust classification.",
     "nodes": [
         {
             "functionname": "manual_classify",
@@ -56,7 +58,7 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": "<",
-                "left": "kappa_star_perm",
+                "left": "kappa_star",
                 "right": 0.2
             },
             "kwargs": {
@@ -65,7 +67,7 @@
                 "right2": 0.05,
                 "tag_if_true": "Spatially specific S0"
             },
-            "_comment": "Reject components that are strongly S0-driven: low kappa_star_perm (< 0.2) AND significant S0 spatial specificity (p_s0 < 0.05). These are likely non-BOLD physiological noise (e.g., respiration, cardiac pulsation)."
+            "_comment": "Reject components that are strongly S0-driven: low kappa_star (< 0.2) AND significant S0 spatial specificity (p_s0 < 0.05). These are consistent with S0-driven fluctuations (e.g., physiological noise from respiration or cardiac pulsation)."
         },
         {
             "functionname": "dec_left_op_right",
@@ -74,7 +76,7 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "kappa_star_perm",
+                "left": "kappa_star",
                 "right": 0.8
             },
             "kwargs": {
@@ -83,7 +85,7 @@
                 "right2": 0.05,
                 "tag_if_true": "Spatially specific T2*"
             },
-            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). These are very likely BOLD signal."
+            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). These are consistent with BOLD-like signal."
         },
         {
             "functionname": "dec_left_op_right",
@@ -92,7 +94,7 @@
                 "if_false": "nochange",
                 "decide_comps": "unclassified",
                 "op": ">",
-                "left": "kappa_star_perm",
+                "left": "kappa_star",
                 "right": 0.5
             },
             "kwargs": {
@@ -101,7 +103,7 @@
                 "right2": 0.05,
                 "tag_if_true": "Likely BOLD"
             },
-            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05)."
+            "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05)."
         },
         {
             "functionname": "dec_left_op_right",
@@ -110,7 +112,7 @@
                 "if_false": "nochange",
                 "decide_comps": "unclassified",
                 "op": "<",
-                "left": "kappa_star_perm",
+                "left": "kappa_star",
                 "right": 0.5
             },
             "kwargs": {
@@ -119,7 +121,7 @@
                 "right2": 0.05,
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Provisionally reject remaining unclassified components with S0 dominance (kappa_star_perm < 0.5) AND significant S0 spatial specificity (p_s0 < 0.05). These are likely non-BOLD."
+            "_comment": "Provisionally reject remaining unclassified components with S0 dominance (kappa_star < 0.5) AND significant S0 spatial specificity (p_s0 < 0.05). These are consistent with S0-driven fluctuations."
         },
         {
             "functionname": "dec_left_op_right",
@@ -146,11 +148,11 @@
                 "if_false": "nochange",
                 "decide_comps": "unclassified",
                 "op": ">",
-                "left": "rho_star_perm",
-                "right": "kappa_star_perm"
+                "left": "rho_star",
+                "right": "kappa_star"
             },
             "kwargs": {"tag_if_true": "Unlikely BOLD"},
-            "_comment": "Provisionally reject any remaining unclassified components where rho_star_perm > kappa_star_perm, indicating more S0-driven than T2*-driven variance."
+            "_comment": "Provisionally reject any remaining unclassified components where rho_star > kappa_star, indicating more S0-driven than T2*-driven variance."
         },
         {
             "functionname": "dec_left_op_right",
@@ -159,11 +161,11 @@
                 "if_false": "nochange",
                 "decide_comps": "provisionalaccept",
                 "op": ">",
-                "left": "kappa_star_perm",
-                "right": "rho_star_perm"
+                "left": "kappa_star",
+                "right": "rho_star"
             },
             "kwargs": {"right_scale": 2, "tag_if_true": "Likely BOLD"},
-            "_comment": "Accept provisionally accepted components where kappa_star_perm is at least twice rho_star_perm. Strong T2* dominance confirms BOLD signal."
+            "_comment": "Accept provisionally accepted components where kappa_star is at least twice rho_star. Strong T2* dominance is consistent with BOLD-like signal."
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
