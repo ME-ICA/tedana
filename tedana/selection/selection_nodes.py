@@ -429,7 +429,7 @@ def dec_left_op_right(
             # statement 1 is now the combination of the first two conditional statements
             statement1 = decision_boolean.copy()
             # statement 2 is now the third conditional statement
-            statement2 = eval(f"(left3_scale*left3_val) {op2} (right3_scale * right3_val)")
+            statement2 = eval(f"(left3_scale*left3_val) {op3} (right3_scale * right3_val)")
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
 
