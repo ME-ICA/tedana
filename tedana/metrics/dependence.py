@@ -743,7 +743,7 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     return np.abs(kappa - rho) / (kappa + rho)
 
 
-def component_te_variance_tests(
+def compute_te_variance(
     echowise_pes: np.ndarray,
     tes: np.ndarray,
     s0_hat: np.ndarray,
@@ -751,41 +751,13 @@ def component_te_variance_tests(
     adaptive_mask: np.ndarray,
     spatial_weights: np.ndarray | None = None,
 ):
-    """Calculate component-wise S0/T2* contributions to explainable variance.
+    """Compute descriptive variance fractions (kappa_star, rho_star) for components.
 
-    Perform voxel-wise variance decomposition of multi-echo ICA components
-    into S0-driven and T2*-driven contributions using physically motivated,
-    nested linear models, then aggregate to component-level metrics.
-
-    This function evaluates, at each voxel and for each ICA component,
-    how much of the echo-wise component parameter estimates can be attributed
-    to changes in the monoexponential signal intercept (S0) versus changes in
-    the decay constant (T2*).
-
-    The method proceeds as follows:
-
-    1. For each voxel, construct basis functions corresponding to the
-       first-order linearization of the monoexponential signal model
-       around the voxel's baseline S0 and T2* estimates:
-           - phi_s0: sensitivity to S0 fluctuations
-           - phi_t2: sensitivity to T2* fluctuations
-
-    2. Fit three nested linear models to the echo-wise component parameter
-       estimates:
-           - Full model:     [phi_s0, phi_t2]
-           - S0-only model:  [phi_s0]
-           - T2*-only model: [phi_t2]
-
-    3. Use partial F-tests to quantify whether adding the T2* term (or S0 term)
-       significantly improves model fit beyond the reduced model.
-
-    4. Aggregate voxel-wise sums of squares using spatial weights to compute
-       component-level variance fractions:
-           - kappa_star: fraction of explainable variance attributable to T2*
-           - rho_star:   fraction of explainable variance attributable to S0
-
-    Echo-wise fits and degrees of freedom are adjusted per voxel using the
-    adaptive_mask, which specifies the number of valid echoes at each voxel.
+    Decompose the echo-wise variance of each ICA component into S0-driven and
+    T2*-driven contributions using a linearized monoexponential signal model.
+    Returns descriptive metrics (kappa_star, rho_star) indicating what fraction
+    of each component's explainable variance is attributable to T2* versus S0
+    effects.
 
     Parameters
     ----------
@@ -810,24 +782,133 @@ def component_te_variance_tests(
     Returns
     -------
     kappa_star : (n_comps,) array
-        Component-level T2* variance fraction. Computed as the ratio of
-        weighted sum of T2* sums of squares to total weighted sums of squares.
+        Component-level T2* variance fraction (descriptive). Values range
+        from 0 to 1, where higher values indicate more T2*-driven variance.
     rho_star : (n_comps,) array
-        Component-level S0 variance fraction. Computed as the ratio of
-        weighted sum of S0 sums of squares to total weighted sums of squares.
+        Component-level S0 variance fraction (descriptive). Values range
+        from 0 to 1, where higher values indicate more S0-driven variance.
+        Note: kappa_star + rho_star = 1 by construction.
     f_t2star : (n_comps,) array
-        Weighted average partial F-statistics testing the contribution of
-        the T2* term conditional on the S0 term.
+        Weighted average partial F-statistics for T2* term (descriptive).
     f_s0 : (n_comps,) array
-        Weighted average partial F-statistics testing the contribution of
-        the S0 term conditional on the T2* term.
+        Weighted average partial F-statistics for S0 term (descriptive).
 
     Notes
     -----
-    - Component-level variance fractions (kappa_star, rho_star) are computed
-      by aggregating ss_t2 and ss_s0 across voxels before taking ratios
-      (sum-of-sums), rather than averaging voxel-wise ratios. This preserves
-      the variance decomposition interpretation at the component level.
+    **Method overview**
+
+    For each voxel and component, this function:
+
+    1. Constructs voxel-specific basis functions from the linearized
+       monoexponential signal model S(TE) = S0·exp(-TE/T2*):
+
+       - φ_S0 = ∂S/∂S0 = exp(-TE/T2*)
+       - φ_T2* = ∂S/∂T2* = S0·exp(-TE/T2*)·TE/T2*²
+
+    2. Fits three nested linear models to the echo-wise component betas:
+
+       - Full model: Y ~ φ_S0 + φ_T2*
+       - S0-only model: Y ~ φ_S0
+       - T2*-only model: Y ~ φ_T2*
+
+    3. Computes Type III (unique) sums of squares:
+
+       - SS_T2* = SSE(S0-only) - SSE(Full)
+       - SS_S0 = SSE(T2*-only) - SSE(Full)
+
+    4. Aggregates across voxels using spatial weights and computes:
+
+       - kappa_star = Σ(w·SS_T2*) / Σ(w·(SS_T2* + SS_S0))
+       - rho_star = Σ(w·SS_S0) / Σ(w·(SS_T2* + SS_S0))
+
+    **Strengths**
+
+    - *Physically motivated*: Basis functions derived from the actual signal
+      model, using voxel-specific T2* values for accurate basis shapes.
+
+    - *Principled aggregation*: Uses sum-of-sums rather than averaging ratios,
+      preserving variance decomposition interpretation at component level.
+
+    - *Type III SS*: Properly partitions variance when basis functions are
+      non-orthogonal (which they typically are).
+
+    - *Fast computation*: Vectorized implementation, no permutations needed.
+
+    - *Interpretable output*: kappa_star and rho_star sum to 1 and directly
+      indicate the relative T2*/S0 contribution.
+
+    **Weaknesses and limitations**
+
+    - *Descriptive only*: kappa_star and rho_star are variance fractions,
+      not p-values. They do not provide statistical inference about whether
+      observed values are significantly different from chance.
+
+    - *No spatial specificity test*: Does not test whether T2*-dependence
+      specifically matches *local* T2* sensitivity (the BOLD signature).
+      A component could have high kappa_star due to global T2*-like structure
+      without being spatially specific.
+
+    - *Model dependence*: Results depend on the linearization approximation
+      δS ≈ (∂S/∂S0)δS0 + (∂S/∂T2*)δT2*. If fluctuations are large or the
+      monoexponential model is poor, interpretation weakens.
+
+    - *Map quality dependence*: Accuracy of kappa_star/rho_star depends on
+      the quality of T2* and S0 maps. Noisy maps lead to noisier estimates.
+
+    - *F-statistics are averaged*: While kappa_star/rho_star use principled
+      sum-of-sums aggregation, f_t2star/f_s0 are still weighted averages of
+      voxel-wise F-statistics, which is statistically suboptimal.
+
+    **Interpretation guidelines**
+
+    - kappa_star ≈ 1: Component variance is predominantly T2*-driven
+      (consistent with BOLD-like signal, but not proof of BOLD)
+
+    - kappa_star ≈ 0: Component variance is predominantly S0-driven
+      (consistent with S0-driven noise like respiration/cardiac)
+
+    - kappa_star ≈ 0.5: Mixed T2*/S0 contributions
+
+    **Important**: High kappa_star indicates T2*-like echo-wise structure
+    but does NOT prove the component is neuronal BOLD signal. Non-neuronal
+    effects (e.g., motion-correlated susceptibility) can also produce
+    T2*-like structure.
+
+    **Comparison with compute_te_variance_permutation**
+
+    +---------------------------+----------------------------+----------------------------+
+    | Aspect                    | compute_te_variance| compute_te_variance_permutation|
+    +===========================+============================+============================+
+    | Output type               | Descriptive (variance      | Inferential (p-values)     |
+    |                           | fractions)                 |                            |
+    +---------------------------+----------------------------+----------------------------+
+    | Statistical inference     | No                         | Yes (permutation-based)    |
+    +---------------------------+----------------------------+----------------------------+
+    | Tests spatial specificity | No                         | Yes                        |
+    +---------------------------+----------------------------+----------------------------+
+    | Computation time          | Fast (no permutations)     | Slower (n_perm iterations) |
+    +---------------------------+----------------------------+----------------------------+
+    | Use case                  | Quick descriptive summary  | Formal hypothesis testing  |
+    +---------------------------+----------------------------+----------------------------+
+
+    **Recommended workflow**:
+
+    1. Use ``compute_te_variance`` for fast descriptive metrics
+       (kappa_star, rho_star) to get a quick overview of component character.
+
+    2. Use ``compute_te_variance_permutation`` for formal statistical testing
+       (p_t2, p_s0) when you need to assess significance of spatial specificity.
+
+    3. Combine both: Use kappa_star to characterize *how much* variance is
+       T2*-driven, and p_t2 to assess *whether* that T2*-dependence is
+       spatially specific (consistent with BOLD).
+
+    See Also
+    --------
+    compute_te_variance_permutation : Permutation test for spatial specificity
+        of TE-dependence. Provides p-values for statistical inference.
+    calculate_dependence_metrics : Traditional kappa/rho calculation using
+        simpler basis functions (µ and TE×µ) and averaged F-statistics.
     """
     if not (
         echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]
@@ -1046,7 +1127,7 @@ def component_te_variance_tests(
     return kappa_star, rho_star, f_t2star, f_s0
 
 
-def component_te_permutation_test(
+def compute_te_variance_permutation(
     echowise_pes: np.ndarray,
     tes: np.ndarray,
     s0_hat: np.ndarray,
