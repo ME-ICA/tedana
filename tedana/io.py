@@ -19,7 +19,6 @@ import pandas as pd
 import requests
 from nilearn import masking
 from nilearn._utils.niimg_conversions import check_niimg
-from nilearn.image import new_img_like
 from scipy import stats
 
 from tedana import utils
@@ -1051,9 +1050,6 @@ def load_data_nilearn(data, mask_img, n_echos):
     -----
     Images are converted to NIfTI1 format to ensure compatibility with nilearn's apply_mask.
     """
-    import nibabel as nb
-    from nilearn.masking import apply_mask
-
     if len(data) == 1:
         # z-cat data
         data_img = nb.load(data[0])
@@ -1093,9 +1089,7 @@ def _convert_to_nifti1(img):
     This is necessary because nilearn functions like compute_epi_mask and apply_mask
     do not work properly with AFNI HEAD/BRIK format images.
     """
-    import nibabel as nb
-
-    if isinstance(img, nb.Nifti1Image):
+    if isinstance(img, nib.Nifti1Image):
         return img
 
     # Convert to NIfTI1Image by extracting data and affine
@@ -1125,8 +1119,6 @@ def load_ref_img(data, n_echos):
     -----
     Images are converted to NIfTI1 format to ensure compatibility with nilearn functions.
     """
-    import nibabel as nb
-
     if len(data) == 1:
         # z-cat data
         data_img = nb.load(data[0])

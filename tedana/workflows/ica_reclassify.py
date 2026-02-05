@@ -8,6 +8,7 @@ import os.path as op
 import sys
 from glob import glob
 
+import nibabel as nib
 import numpy as np
 import pandas as pd
 from nilearn.masking import apply_mask
@@ -421,6 +422,14 @@ def ica_reclassify_workflow(
         out_dir=out_dir,
         old_registry=ioh.registry,
     )
+    
+    # Register the base mask for masked data operations
+    # Create mask from non-zero voxels in the reference image
+    ref_data = data_optcom.get_fdata()
+    # Create mask from voxels that have non-zero values
+    mask_data = (ref_data != 0).any(axis=-1).astype(np.int32)
+    mask_img = nib.Nifti1Image(mask_data, data_optcom.affine)
+    io_generator.register_mask(mask_img)
 
     if verbose:
         LGR.debug("Loading input 4D data")
@@ -428,7 +437,7 @@ def ica_reclassify_workflow(
         # Extract the data from the nibabel objects
         data_cat = io.load_data_nilearn(
             data_cat,
-            mask_img=io_generator.mask_img,
+            mask_img=io_generator.mask,
             n_echos=len(data_cat),
         )
         if dummy_scans > 0:

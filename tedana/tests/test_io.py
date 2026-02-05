@@ -11,7 +11,6 @@ import pytest
 import requests
 
 from tedana import io as me
-from tedana.tests.test_utils import fnames, tes
 from tedana.tests.utils import data_for_testing_info, get_test_data_path
 
 data_dir = get_test_data_path()

@@ -4,7 +4,6 @@ import random
 from os.path import dirname
 from os.path import join as pjoin
 
-import nibabel as nib
 import numpy as np
 import pytest
 
