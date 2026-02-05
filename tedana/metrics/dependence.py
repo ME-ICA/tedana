@@ -370,7 +370,7 @@ def threshold_to_match(
                 binarize=True,
                 sided="bi",
             )
-            clmap = (thresh_arr[mask_bool] != 0)
+            clmap = thresh_arr[mask_bool] != 0
             n_found = int(clmap.sum())
             diff = abs(target - n_found)
             if diff < best_diff:
