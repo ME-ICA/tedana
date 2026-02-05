@@ -640,6 +640,9 @@ def denoise_ts(data, mixing, mask, component_table):
     lowkts : (Mb x T) array_like
         Low-Kappa data (i.e., data composed only of rejected components).
     """
+    if mask.dtype != bool:
+        raise ValueError("Mask must be a boolean array")
+
     acc = component_table[component_table.classification == "accepted"].index.values
     rej = component_table[component_table.classification == "rejected"].index.values
 
@@ -652,10 +655,10 @@ def denoise_ts(data, mixing, mask, component_table):
     varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
-    # create component-based data
-    hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
-    lowkts = utils.unmask(betas[:, rej].dot(mixing.T[rej, :]), mask)
-    dnts = utils.unmask(data[mask] - lowkts[mask], mask)
+    # create component-based data (already in masked space)
+    hikts = betas[:, acc].dot(mixing.T[acc, :])
+    lowkts = betas[:, rej].dot(mixing.T[rej, :])
+    dnts = mdata - lowkts
     return dnts, hikts, lowkts
 
 

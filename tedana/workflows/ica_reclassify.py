@@ -523,7 +523,7 @@ def ica_reclassify_workflow(
         two_sided=False,
         copy_header=True,
     )
-    mask_denoise = masking.apply_mask(mask_denoise_img, io_generator.mask)
+    mask_denoise = masking.apply_mask(mask_denoise_img, io_generator.mask).astype(bool)
     data_optcom = masking.apply_mask(data_optcom, io_generator.mask).T
 
     # TODO: make a better result-writing function
