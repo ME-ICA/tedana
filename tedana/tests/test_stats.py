@@ -7,43 +7,7 @@ import pytest
 from numpy.linalg import LinAlgError
 from numpy.matlib import repmat
 
-from tedana.stats import (
-    computefeats2,
-    fit_model,
-    get_coeffs,
-    getfbounds,
-    voxelwise_univariate_zstats,
-)
-
-
-def test_break_computefeats2():
-    """Ensure that computefeats2 fails when input data do not have the right shapes."""
-    n_samples, n_vols, n_comps = 10000, 100, 50
-    data = np.empty((n_samples, n_vols))
-    mixing = np.empty((n_vols, n_comps))
-
-    data = np.empty(n_samples)
-    with pytest.raises(ValueError, match="Parameter data should be 2d"):
-        computefeats2(data, mixing, normalize=True)
-
-    data = np.empty((n_samples, n_vols))
-    mixing = np.empty(n_vols)
-    with pytest.raises(ValueError, match="Parameter mixing should be 2d"):
-        computefeats2(data, mixing, normalize=True)
-
-    mixing = np.empty((n_vols + 1, n_comps))
-    with pytest.raises(ValueError, match="Second dimensions"):
-        computefeats2(data, mixing, normalize=True)
-
-
-def test_smoke_computefeats2():
-    """Ensures that computefeats2 works with random inputs and different optional parameters."""
-    n_samples, n_times, n_components = 100, 20, 6
-    data = np.random.random((n_samples, n_times))
-    mixing = np.random.random((n_times, n_components))
-
-    assert computefeats2(data, mixing) is not None
-    assert computefeats2(data, mixing, normalize=False) is not None
+from tedana.stats import fit_model, get_coeffs, getfbounds, voxelwise_univariate_zstats
 
 
 def test_break_voxelwise_univariate_zstats():

@@ -455,7 +455,6 @@ def ica_reclassify_workflow(
     comp_names = component_table["Component"].values
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     to_copy = [
-        "z-scored ICA components img",
         "ICA mixing tsv",
         "ICA decomposition json",
         "ICA metrics json",

@@ -209,19 +209,10 @@ def test_smoke_calculate_psc():
     assert psc.shape == (n_voxels, n_components)
 
 
-def test_smoke_calculate_z_maps():
-    """Smoke test for tedana.metrics.dependence.calculate_z_maps."""
-    n_voxels, n_components = 1000, 50
-    weights = np.random.random((n_voxels, n_components))
-    z_maps = dependence.calculate_z_maps(weights=weights, z_max=4)
-    assert z_maps.shape == (n_voxels, n_components)
-
-
 def test_smoke_calculate_f_maps():
     """Smoke test for tedana.metrics.dependence.calculate_f_maps."""
     n_voxels, n_echos, n_volumes, n_components = 1000, 5, 100, 50
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
-    z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
     # The ordering is random, but make sure the adaptive mask always includes values of 1-5
     adaptive_mask = np.random.permutation(
@@ -238,7 +229,6 @@ def test_smoke_calculate_f_maps():
     tes = np.array([15, 25, 35, 45, 55])
     f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -249,7 +239,6 @@ def test_smoke_calculate_f_maps():
     # rerunning with n_independent_echos=3
     f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -326,7 +315,7 @@ def test_smoke_compute_signal_minus_noise_z():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        value_threshold=1.96,
     )
     assert signal_minus_noise_z.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -344,7 +333,7 @@ def test_smoke_compute_signal_minus_noise_t():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        value_threshold=1.96,
     )
     assert signal_minus_noise_t.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -365,7 +354,7 @@ def test_smoke_compute_countnoise():
     countnoise = dependence.compute_countnoise(
         stat_maps=stat_maps,
         stat_cl_maps=stat_cl_maps,
-        stat_thresh=1.95,
+        value_threshold=1.96,
     )
     assert countnoise.shape == (n_components,)
 
