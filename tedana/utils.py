@@ -144,8 +144,6 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
 
     if ("dropout" in methods) or ("decay" in methods):
         echo_means = data.mean(axis=-1)  # temporal mean of echos
-        LGR.info(f"data shape: {data.shape}")
-        LGR.info(f"echo_means shape: {echo_means.shape}")
 
     if "dropout" in methods:
         # take temporal mean of echos and extract non-zero values in first echo
@@ -173,12 +171,8 @@ def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dr
         # Start with every voxel's value==0, increment up the echoes, and
         # change to a new value every time a later good echo is found
         dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
-        LGR.info(f"dropout_adaptive_mask shape: {dropout_adaptive_mask.shape}")
-        LGR.info(f"echo_means shape: {echo_means.shape}")
-        LGR.info(f"lthrs shape: {lthrs.shape}")
         for echo_idx in range(n_echos):
             idx = np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx]
-            LGR.info(f"{echo_idx} idx shape: {idx.shape}")
             dropout_adaptive_mask[idx] = echo_idx + 1
 
         adaptive_masks.append(dropout_adaptive_mask)

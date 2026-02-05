@@ -225,7 +225,7 @@ def tedpca(
         _ = ma_pca.fit_transform(data_img, io_generator.mask)
 
         # Extract results from maPCA
-        voxel_comp_weights = ma_pca.u_
+        voxel_comp_weights = ma_pca.u_[mask, :]
         varex = ma_pca.explained_variance_
         varex_norm = ma_pca.explained_variance_ratio_
         comp_ts = ma_pca.components_.T
