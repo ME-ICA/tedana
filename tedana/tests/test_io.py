@@ -4,7 +4,7 @@ import json
 import os
 from unittest import mock
 
-import nibabel as nib
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
@@ -60,8 +60,8 @@ def test_smoke_write_split_ts():
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
 
     ref_img = os.path.join(data_dir, "mask.nii.gz")
-    ref_img = nib.load(ref_img)
-    ref_img_4d = nib.Nifti1Image(ref_img.get_fdata()[..., None], ref_img.affine, ref_img.header)
+    ref_img = nb.load(ref_img)
+    ref_img_4d = nb.Nifti1Image(ref_img.get_fdata()[..., None], ref_img.affine, ref_img.header)
     ref_img_4d.header.set_zooms(ref_img.header.get_zooms() + (1,))
     n_samples_in_mask = int(ref_img.get_fdata().sum())
     n_times, n_components = 10, 6
@@ -125,7 +125,7 @@ def test_smoke_filewrite():
     in both bids and orig formats.
     """
     ref_img = os.path.join(data_dir, "mask.nii.gz")
-    ref_img = nib.load(ref_img)
+    ref_img = nb.load(ref_img)
     n_samples_in_mask = int(ref_img.get_fdata().sum())
     io_generator = me.OutputGenerator(ref_img)
     io_generator.register_mask(ref_img)

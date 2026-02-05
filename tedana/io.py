@@ -13,7 +13,7 @@ from copy import deepcopy
 from string import Formatter
 from typing import List
 
-import nibabel as nib
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import requests
@@ -217,7 +217,7 @@ class OutputGenerator:
             The mask image to register.
         """
         if isinstance(mask, str):
-            mask = nib.load(mask)
+            mask = nb.load(mask)
         self.mask = mask
 
     def get_name(self, description, **kwargs):
@@ -307,7 +307,7 @@ class OutputGenerator:
         Will coerce 64-bit float and int arrays into 32-bit arrays.
         """
         data_type = type(data)
-        if isinstance(data, nib.nifti1.Nifti1Image):
+        if isinstance(data, nb.nifti1.Nifti1Image):
             data.to_filename(name)
             return
         elif not isinstance(data, np.ndarray):
@@ -438,7 +438,7 @@ class InputHarvester:
     loaders = {
         "json": lambda f: load_json(f),
         "tsv": lambda f: pd.read_csv(f, delimiter="\t"),
-        "img": lambda f: nib.load(f),
+        "img": lambda f: nb.load(f),
     }
 
     def __init__(self, path):
@@ -1089,7 +1089,7 @@ def _convert_to_nifti1(img):
     This is necessary because nilearn functions like compute_epi_mask and apply_mask
     do not work properly with AFNI HEAD/BRIK format images.
     """
-    if isinstance(img, nib.Nifti1Image):
+    if isinstance(img, nb.Nifti1Image):
         return img
 
     # Convert to NIfTI1Image by extracting data and affine

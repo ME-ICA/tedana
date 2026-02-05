@@ -3,7 +3,7 @@
 import os.path as op
 from shutil import rmtree
 
-import nibabel as nib
+import nibabel as nb
 import pytest
 
 from tedana import workflows
@@ -30,15 +30,15 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nib.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
     def test_basic_t2smap2(self):
@@ -60,15 +60,15 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nib.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
     def test_basic_t2smap3(self):
@@ -90,15 +90,15 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nib.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
     def test_basic_t2smap4(self):
@@ -120,15 +120,15 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nib.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
     def test_t2smap_cli(self):
@@ -163,15 +163,15 @@ class TestT2smap:
         workflows.t2smap._main(args)
 
         # Check outputs
-        img = nib.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
     def test_failing_t2smap_01(self):
