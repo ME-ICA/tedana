@@ -5,7 +5,6 @@ import os.path as op
 import numpy as np
 import pandas as pd
 import pytest
-from nilearn import image, masking
 
 from tedana import io, utils
 from tedana.metrics import collect, dependence, external
@@ -79,16 +78,13 @@ def test_smoke_generate_metrics(testdata1):
         n_vols=n_vols,
         dummy_scans=0,
     )
-    # Unmask the adaptive mask first, then apply threshold
-    adaptive_mask_img = masking.unmask(testdata1["adaptive_mask"], testdata1["generator"].mask)
-    mask_img = image.math_img("(img >= 3).astype(int)", img=adaptive_mask_img)
 
     component_table, new_mixing = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
         mixing=testdata1["mixing"],
         adaptive_mask=testdata1["adaptive_mask"],
-        mask_img=mask_img,
+        mask_img=testdata1["generator"].mask,
         tes=testdata1["tes"],
         io_generator=testdata1["generator"],
         label="ICA",

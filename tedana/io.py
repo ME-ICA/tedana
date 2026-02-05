@@ -1139,7 +1139,26 @@ def _infer_prefix(prefix):
 
 
 def load_data_nilearn(data, mask_img, n_echos):
-    """Load data using nilearn's apply_mask function."""
+    """Load data using nilearn's apply_mask function.
+
+    Parameters
+    ----------
+    data : list of str or str
+        List of paths to input files, or a single path for z-concatenated data
+    mask_img : nibabel image
+        Mask image to apply
+    n_echos : int
+        Number of echoes in the data
+
+    Returns
+    -------
+    data_cat : (Mb x E x T) array
+        Masked multi-echo data where Mb is samples in base mask, E is echoes, T is time
+
+    Notes
+    -----
+    Images are converted to NIfTI1 format to ensure compatibility with nilearn's apply_mask.
+    """
     import nibabel as nb
     from nilearn.masking import apply_mask
 
@@ -1153,18 +1172,66 @@ def load_data_nilearn(data, mask_img, n_echos):
             # image manually. Use a header copy with dimensions updated to match each echo's
             # array, since the original header describes the full z-concatenated volume.
             arr = data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :].get_fdata()
-            echo_header = data_img.header.copy()
-            echo_header.set_data_shape(arr.shape)
-            img = nb.Nifti1Image(arr, data_img.affine, echo_header)
+            img = nb.Nifti1Image(arr, data_img.affine)
             imgs.append(img)
 
         data = imgs
+    else:
+        # Convert each input image to NIfTI1 format if needed
+        data = [_convert_to_nifti1(nb.load(f)) for f in data]
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
 
+def _convert_to_nifti1(img):
+    """Convert any nibabel image to NIfTI1Image format.
+
+    Parameters
+    ----------
+    img : nibabel image
+        Input image in any nibabel-supported format
+
+    Returns
+    -------
+    nifti_img : nibabel.Nifti1Image
+        Image converted to NIfTI1 format
+
+    Notes
+    -----
+    This is necessary because nilearn functions like compute_epi_mask and apply_mask
+    do not work properly with AFNI HEAD/BRIK format images.
+    """
+    import nibabel as nb
+
+    if isinstance(img, nb.Nifti1Image):
+        return img
+
+    # Convert to NIfTI1Image by extracting data and affine
+    data = img.get_fdata()
+    affine = img.affine
+
+    # Try to preserve header information where possible
+    return nb.Nifti1Image(data, affine)
+
 
 def load_ref_img(data, n_echos):
-    """Load data using nibabel's load function."""
+    """Load data using nibabel's load function and convert to NIfTI1 format.
+
+    Parameters
+    ----------
+    data : list of str
+        List of paths to input files
+    n_echos : int
+        Number of echoes in the data
+
+    Returns
+    -------
+    ref_img : nibabel.Nifti1Image
+        Reference image in NIfTI1 format
+
+    Notes
+    -----
+    Images are converted to NIfTI1 format to ensure compatibility with nilearn functions.
+    """
     import nibabel as nb
 
     if len(data) == 1:
@@ -1175,11 +1242,11 @@ def load_ref_img(data, n_echos):
         # Using slicer to create the image messes up the affine, so we need to create the
         # image manually. Use a header copy with dimensions updated to match the ref array,
         # since the original header describes the full z-concatenated volume.
-        ref_header = data_img.header.copy()
-        ref_header.set_data_shape(arr.shape)
-        ref_img = nb.Nifti1Image(arr, data_img.affine, ref_header)
+        ref_img = nb.Nifti1Image(arr, data_img.affine)
 
     else:
         ref_img = nb.load(data[0])
+        # Convert to NIfTI1 if needed (e.g., AFNI format)
+        ref_img = _convert_to_nifti1(ref_img)
 
     return ref_img

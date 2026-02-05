@@ -286,7 +286,7 @@ def threshold_map(
         thresh_arr = utils.threshold_map(
             comp_img,
             min_cluster_size=csize,
-            threshold=value_threshold,
+            threshold=value_threshold[i_comp],
             binarize=True,
             sided="bi",
         )

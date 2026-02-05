@@ -662,7 +662,7 @@ def plot_rmse(
     rmse_img = io_generator.get_name("rmse img")
     confounds_file = io_generator.get_name("confounds tsv")
     mask_img = io_generator.get_name("adaptive mask img")
-    mask_img = image.math_img("(img >= 2).astype(np.uint8)", img=mask_img)
+    mask_img = image.binarize_img(mask_img, threshold=2, two_sided=False, copy_header=True)
 
     rmse_data = masking.apply_mask(rmse_img, mask_img)
     rmse_p02, rmse_p98 = np.percentile(rmse_data, [2, 98])
@@ -755,8 +755,18 @@ def plot_adaptive_mask(
     mean_optcom_img = masking.unmask(np.mean(optcom, axis=1), io_generator.mask)
 
     # Concatenate the three masks used in tedana to treat as a probabilistic atlas
-    mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
-    mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
+    mask_denoise = image.binarize_img(
+        adaptive_mask_img,
+        threshold=1,
+        two_sided=False,
+        copy_header=True,
+    )
+    mask_clf = image.binarize_img(
+        adaptive_mask_img,
+        threshold=3,
+        two_sided=False,
+        copy_header=True,
+    )
     all_masks = image.concat_imgs((io_generator.mask, mask_denoise, mask_clf))
     # Set values to 0.5 for probabilistic atlas plotting
     all_masks = image.math_img("img * 0.5", img=all_masks)
@@ -1042,7 +1052,12 @@ def plot_decay_variance(
         For more information on thresholding, see `make_adaptive_mask`.
     """
     mask_img = io_generator.get_name("adaptive mask img")
-    mask_img = image.math_img("(img >= 2).astype(np.uint8)", img=mask_img)
+    mask_img = image.binarize_img(
+        mask_img,
+        threshold=2,
+        two_sided=False,
+        copy_header=True,
+    )
 
     names = [
         "stat-variance_desc-t2star_statmap",

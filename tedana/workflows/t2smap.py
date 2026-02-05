@@ -399,6 +399,8 @@ def t2smap_workflow(
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = nb.load(mask)
+        # Convert to NIfTI1 if needed (e.g., AFNI format)
+        mask_img = io._convert_to_nifti1(mask_img)
     else:
         mask_img = compute_epi_mask(ref_img)
         RepLGR.info(
