@@ -656,9 +656,9 @@ def denoise_ts(data, mixing, mask, component_table):
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data (already in masked space)
-    hikts = betas[:, acc].dot(mixing.T[acc, :])
-    lowkts = betas[:, rej].dot(mixing.T[rej, :])
-    dnts = mdata - lowkts
+    hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
+    lowkts = utils.unmask(betas[:, rej].dot(mixing.T[rej, :]), mask)
+    dnts = utils.unmask(mdata, mask) - lowkts
     return dnts, hikts, lowkts
 
 
