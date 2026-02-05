@@ -678,7 +678,7 @@ def tedana_workflow(
         LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap))
         t2s_loaded = t2s_img.get_fdata()
-        mask = (t2s_loaded != 0).astype(int)
+        mask = (t2s_loaded != 0).astype(np.uint8)
         mask_img = nb.Nifti1Image(mask, ref_img.affine)
         t2s_limited = apply_mask(t2s_img, mask_img)
         t2s_limited = utils.check_t2s_values(t2s_limited)
@@ -687,7 +687,7 @@ def tedana_workflow(
         LGR.info("Combining user-defined mask and T2* map to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap))
         t2s_loaded = t2s_img.get_fdata()
-        mask = nb.load(mask).get_fdata().astype(int)
+        mask = nb.load(mask).get_fdata().astype(np.uint8)
         mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
         mask_img = nb.Nifti1Image(mask, ref_img.affine)
         t2s_limited = apply_mask(t2s_img, mask_img)
@@ -783,6 +783,7 @@ def tedana_workflow(
     # Create an adaptive mask with at least 3 good echoes, for classification
     masksum_clf = masksum_denoise.copy()
     masksum_clf[masksum_clf < 3] = 0
+    mask_denoise = mask_denoise.astype(bool)
     mask_clf = masksum_clf.astype(bool)
     RepLGR.info(
         "A two-stage masking procedure was applied, in which a liberal mask "
