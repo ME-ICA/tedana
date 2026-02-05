@@ -11,7 +11,7 @@ from glob import glob
 import nibabel as nb
 import numpy as np
 import pandas as pd
-from nilearn.masking import apply_mask
+from nilearn import image, masking
 
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, rica, selection, utils
@@ -517,9 +517,14 @@ def ica_reclassify_workflow(
     adaptive_mask = io._convert_to_nifti1(adaptive_mask)
     data_optcom = io._convert_to_nifti1(data_optcom)
 
-    adaptive_mask = apply_mask(adaptive_mask, io_generator.mask)
-    mask_denoise = adaptive_mask >= 1
-    data_optcom = apply_mask(data_optcom, io_generator.mask).T
+    mask_denoise_img = image.binarize_img(
+        adaptive_mask,
+        threshold=0.5,
+        two_sided=False,
+        copy_header=True,
+    )
+    mask_denoise = masking.apply_mask(mask_denoise_img, io_generator.mask)
+    data_optcom = masking.apply_mask(data_optcom, io_generator.mask).T
 
     # TODO: make a better result-writing function
     # #############################################!!!!
@@ -604,7 +609,7 @@ def ica_reclassify_workflow(
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
-            mask=mask_denoise,
+            mask=mask_denoise_img,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
