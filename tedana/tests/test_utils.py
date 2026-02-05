@@ -62,18 +62,6 @@ def test_andb():
         utils.andb([rs.randint(10, size=(10, 10)), rs.randint(10, size=(20, 20))])
 
 
-def test_reshape_niimg():
-    fimg = nib.load(fnames[0])
-    exp_shape = (64350, 5)
-
-    # load filepath to image
-    assert utils.reshape_niimg(fnames[0]).shape == exp_shape
-    # load img_like object
-    assert utils.reshape_niimg(fimg).shape == exp_shape
-    # load array
-    assert utils.reshape_niimg(fimg.get_fdata()).shape == exp_shape
-
-
 def test_make_adaptive_mask(caplog):
     """Test tedana.utils.make_adaptive_mask with different methods."""
     from nilearn.masking import apply_mask
@@ -261,26 +249,6 @@ def test_make_adaptive_mask(caplog):
 
 
 # SMOKE TESTS
-
-
-def test_smoke_reshape_niimg():
-    """Ensure that reshape_niimg returns reasonable objects with random inputs.
-
-    in the correct format.
-
-    Note: reshape_niimg could take in 3D or 4D array.
-    """
-    data_3d = np.random.random((100, 5, 20))
-    data_4d = np.random.random((100, 5, 20, 50))
-
-    assert utils.reshape_niimg(data_3d) is not None
-    assert utils.reshape_niimg(data_4d) is not None
-
-    with pytest.raises(TypeError):
-        utils.reshape_niimg(5)
-
-    with pytest.raises(ValueError):
-        utils.reshape_niimg("/path/to/nonexistent/file")
 
 
 def test_smoke_make_adaptive_mask():

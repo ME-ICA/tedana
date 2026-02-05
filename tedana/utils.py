@@ -31,31 +31,6 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def reshape_niimg(data):
-    """Take input `data` and return a sample x time array.
-
-    TODO: Remove this function in favor of working with nibabel images directly.
-
-    Parameters
-    ----------
-    data : (X x Y x Z [x T]) array_like or img_like object
-        Data array or data file to be loaded and reshaped
-
-    Returns
-    -------
-    fdata : (S [x T]) :obj:`numpy.ndarray`
-        Reshaped `data`, where `S` is samples and `T` is time
-    """
-    if isinstance(data, (str, nib.spatialimages.SpatialImage)):
-        data = check_niimg(data).get_fdata()
-    elif not isinstance(data, np.ndarray):
-        raise TypeError(f"Unsupported type {type(data)}")
-
-    fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
-
-    return fdata
-
-
 def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 

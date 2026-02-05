@@ -10,6 +10,7 @@ from glob import glob
 
 import numpy as np
 import pandas as pd
+from nilearn.masking import apply_mask
 
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, rica, selection, utils
@@ -503,10 +504,13 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    adaptive_mask = utils.reshape_niimg(adaptive_mask)
+    # Convert to NIfTI1 format if needed (e.g., AFNI format)
+    adaptive_mask = io._convert_to_nifti1(adaptive_mask)
+    data_optcom = io._convert_to_nifti1(data_optcom)
+
+    adaptive_mask = apply_mask(adaptive_mask, io_generator.mask)
     mask_denoise = adaptive_mask >= 1
-    data_optcom = utils.reshape_niimg(data_optcom)
+    data_optcom = apply_mask(data_optcom, io_generator.mask).T
 
     # TODO: make a better result-writing function
     # #############################################!!!!
