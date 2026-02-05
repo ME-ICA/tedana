@@ -286,7 +286,7 @@ def threshold_map(
         thresh_arr = utils.threshold_map(
             comp_img,
             min_cluster_size=csize,
-            threshold=threshold,
+            threshold=value_threshold,
             binarize=True,
             sided="bi",
         )
@@ -604,7 +604,7 @@ def compute_signal_minus_noise_t(
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
         signal_ft2_z = np.log10(np.unique(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp]))
-        (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
+        signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp] = stats.ttest_ind(
             signal_ft2_z, noise_ft2_z, equal_var=False
         )
 
