@@ -7,6 +7,7 @@ desc-tedana_registry.json
 desc-optcom_bold.nii.gz
 S0map.nii.gz
 T2starmap.nii.gz
+figures
 t2smap_call.sh
 desc-confounds_timeseries.tsv
 desc-rmse_statmap.nii.gz
