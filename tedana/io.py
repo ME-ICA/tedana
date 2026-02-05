@@ -1182,6 +1182,7 @@ def load_data_nilearn(data, mask_img, n_echos):
 
     return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
 
+
 def _convert_to_nifti1(img):
     """Convert any nibabel image to NIfTI1Image format.
 
