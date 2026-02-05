@@ -162,8 +162,9 @@ def generate_metrics(
         )
         if io_generator.verbose:
             io_generator.save_file(
-                utils.unmask(metric_maps["map weight"] ** 2, mask),
+                metric_maps["map weight"] ** 2,
                 f"{label} component weights img",
+                mask=mask_img,
             )
 
     if "map optcom betas" in required_metrics:
