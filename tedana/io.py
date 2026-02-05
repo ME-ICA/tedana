@@ -1068,7 +1068,7 @@ def load_data_nilearn(data, mask_img, n_echos):
         # Convert each input image to NIfTI1 format if needed
         data = [_convert_to_nifti1(nb.load(f)) for f in data]
 
-    return np.stack([apply_mask(f, mask_img).T for f in data], axis=1)
+    return np.stack([masking.apply_mask(f, mask_img).T for f in data], axis=1)
 
 
 def _convert_to_nifti1(img):
