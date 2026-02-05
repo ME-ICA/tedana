@@ -17,6 +17,14 @@
             "map FS0",
             "map weight"
         ],
+        "kappa_dominance": [
+            "kappa",
+            "rho"
+        ],
+        "rho_dominance": [
+            "kappa",
+            "rho"
+        ],
         "kappa_star": [
             "map echo betas",
             "map weight"

@@ -5,6 +5,8 @@
     "necessary_metrics": [
         "kappa",
         "rho",
+        "kappa_dominance",
+        "rho_dominance",
         "kappa_star_perm",
         "rho_star_perm",
         "p_t2",
@@ -52,8 +54,23 @@
                 "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
+                "left": "rho_star_perm",
                 "op": ">",
+                "right": 0.5
+            },
+            "kwargs": {
+                "tag_if_true": "S0-dominant"
+            },
+            "_comment": "Reject components that are primarily S0-driven: higher rho_star_perm than kappa_star_perm. These are consistent with S0-driven fluctuations (e.g., physiological noise from respiration or cardiac pulsation)."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
                 "left": "p_t2",
+                "op": ">",
                 "right": 0.05
             },
             "kwargs": {
@@ -62,16 +79,16 @@
                 "right2": 0.05,
                 "tag_if_true": "Non-specific TE pattern"
             },
-            "_comment": "Reject components with no spatially-specific TE-dependence (both p_t2 > 0.05 AND p_s0 > 0.05). These components have echo-wise structure that doesn't match local T2* or S0 patterns, suggesting non-physiological noise."
+            "_comment": "Accept components with no spatially-specific TE-dependence (both p_t2 > 0.05 AND p_s0 > 0.05). These components have echo-wise structure that doesn't match local T2* or S0 patterns, suggesting non-physiological noise."
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
                 "if_true": "rejected",
                 "if_false": "nochange",
-                "decide_comps": "all",
-                "op": "<",
+                "decide_comps": "unclassified",
                 "left": "r2_full",
+                "op": "<",
                 "right": 0.2
             },
             "kwargs": {
@@ -82,29 +99,29 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "rejected",
+                "if_true": "provisionalaccept",
                 "if_false": "nochange",
-                "decide_comps": "all",
-                "op": "<",
+                "decide_comps": "unclassified",
                 "left": "kappa_star_perm",
-                "right": 0.2
+                "op": ">",
+                "right": 0.8
             },
             "kwargs": {
-                "left2": "p_s0",
+                "left2": "p_t2",
                 "op2": "<",
                 "right2": 0.05,
-                "tag_if_true": "S0-aligned"
+                "tag_if_true": "T2*-aligned (strong)"
             },
-            "_comment": "Reject components that are strongly S0-driven: low kappa_star_perm (< 0.2) AND significant S0 spatial specificity (p_s0 < 0.05). These are consistent with S0-driven fluctuations (e.g., physiological noise from respiration or cardiac pulsation)."
+            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). Mixed components were already handled above."
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
                 "if_true": "provisionalreject",
                 "if_false": "nochange",
-                "decide_comps": "all",
-                "op": "<",
+                "decide_comps": "unclassified",
                 "left": "p_t2",
+                "op": "<",
                 "right": 0.05
             },
             "kwargs": {
@@ -121,26 +138,8 @@
                 "if_true": "provisionalaccept",
                 "if_false": "nochange",
                 "decide_comps": "unclassified",
-                "op": ">",
                 "left": "kappa_star_perm",
-                "right": 0.8
-            },
-            "kwargs": {
-                "left2": "p_t2",
-                "op2": "<",
-                "right2": 0.05,
-                "tag_if_true": "T2*-aligned (strong)"
-            },
-            "_comment": "Provisionally accept components that are strongly T2*-driven: high kappa_star_perm (> 0.8) AND significant T2* spatial specificity (p_t2 < 0.05). Mixed components were already handled above."
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "provisionalaccept",
-                "if_false": "nochange",
-                "decide_comps": "unclassified",
                 "op": ">",
-                "left": "kappa_star_perm",
                 "right": 0.5
             },
             "kwargs": {
@@ -150,37 +149,6 @@
                 "tag_if_true": "T2*-aligned (moderate)"
             },
             "_comment": "Provisionally accept remaining unclassified components with moderate-to-high T2* dominance (kappa_star_perm > 0.5) AND significant T2* spatial specificity (p_t2 < 0.05). Mixed components were already handled above."
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "provisionalreject",
-                "if_false": "nochange",
-                "decide_comps": "unclassified",
-                "op": "<",
-                "left": "kappa_star_perm",
-                "right": 0.5
-            },
-            "kwargs": {
-                "left2": "p_s0",
-                "op2": "<",
-                "right2": 0.05,
-                "tag_if_true": "S0-aligned"
-            },
-            "_comment": "Provisionally reject remaining unclassified components with S0 dominance (kappa_star_perm < 0.5) AND significant S0 spatial specificity (p_s0 < 0.05). These are consistent with S0-driven fluctuations."
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "provisionalreject",
-                "if_false": "nochange",
-                "decide_comps": "unclassified",
-                "op": ">",
-                "left": "rho_star_perm",
-                "right": "kappa_star_perm"
-            },
-            "kwargs": {"tag_if_true": "S0-dominant"},
-            "_comment": "Provisionally reject any remaining unclassified components where rho_star_perm > kappa_star_perm, indicating more S0-driven than T2*-driven variance."
         },
         {
             "functionname": "dec_left_op_right",
@@ -212,18 +180,21 @@
         },
         {
             "functionname": "manual_classify",
-            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": ["provisionalaccept", "unclassified"]
+            },
             "kwargs": {"tag": "T2*-aligned"},
-            "_comment": "Accept all remaining provisionally accepted components."
+            "_comment": "Accept all remaining provisionally accepted and unclassified components."
         },
         {
             "functionname": "manual_classify",
             "parameters": {
                 "new_classification": "rejected",
-                "decide_comps": ["provisionalreject", "unclassified"]
+                "decide_comps": ["provisionalreject"]
             },
             "kwargs": {"tag": "Unclassified rejected"},
-            "_comment": "Reject all remaining provisionally rejected and unclassified components."
+            "_comment": "Reject all remaining provisionally rejected components."
         }
     ]
 }

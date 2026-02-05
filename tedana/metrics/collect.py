@@ -354,6 +354,16 @@ def generate_metrics(
             z_maps=metric_maps["map weight"],
         )
 
+    if ("kappa_dominance" in required_metrics) or ("rho_dominance" in required_metrics):
+        LGR.info("Calculating kappa and rho dominance")
+        (
+            component_table["kappa_dominance"],
+            component_table["rho_dominance"],
+        ) = dependence.compute_kappa_rho_dominance(
+            kappa=component_table["kappa"],
+            rho=component_table["rho"],
+        )
+
     # Generic metrics
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
