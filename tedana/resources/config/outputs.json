@@ -251,6 +251,22 @@
         "orig": "ica_orth_metrics",
         "bidsv1.5.0": "desc-ICAOrth_metrics"
     },
+    "external regressors metrics tsv": {
+        "orig": "external_regressor_metrics",
+        "bidsv1.5.0": "desc-external_metrics"
+    },
+    "external regressors metrics json": {
+        "orig": "external_regressor_metrics",
+        "bidsv1.5.0": "desc-external_metrics"
+    },
+    "confounds metrics tsv": {
+        "orig": "confounds_metrics",
+        "bidsv1.5.0": "desc-confounds_metrics"
+    },
+    "confounds metrics json": {
+        "orig": "confounds_metrics",
+        "bidsv1.5.0": "desc-confounds_metrics"
+    },
     "registry json": {
         "orig": "registry",
         "bidsv1.5.0": "desc-tedana_registry"
