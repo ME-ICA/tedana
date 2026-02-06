@@ -6,50 +6,36 @@ import numpy as np
 import pytest
 from numpy.matlib import repmat
 
-from tedana.stats import computefeats2, fit_model, get_coeffs, getfbounds
+from tedana.stats import fit_model, get_coeffs, getfbounds, voxelwise_univariate_zstats
 
 
-def test_break_computefeats2():
-    """Ensure that computefeats2 fails when input data do not have the right shapes."""
+def test_break_voxelwise_univariate_zstats():
+    """Ensure that voxelwise_univariate_zstats fails when input data do not have right shapes."""
     n_samples, n_vols, n_comps = 10000, 100, 50
     data = np.empty((n_samples, n_vols))
     mixing = np.empty((n_vols, n_comps))
-    mask = np.empty(n_samples)
 
     data = np.empty(n_samples)
     with pytest.raises(ValueError):
-        computefeats2(data, mixing, mask, normalize=True)
+        voxelwise_univariate_zstats(data, mixing)
 
     data = np.empty((n_samples, n_vols))
     mixing = np.empty(n_vols)
     with pytest.raises(ValueError):
-        computefeats2(data, mixing, mask, normalize=True)
+        voxelwise_univariate_zstats(data, mixing)
 
-    mixing = np.empty((n_vols, n_comps))
-    mask = np.empty((n_samples, n_vols))
-    with pytest.raises(ValueError):
-        computefeats2(data, mixing, mask, normalize=True)
-
-    mask = np.empty(n_samples + 1)
-    with pytest.raises(ValueError):
-        computefeats2(data, mixing, mask, normalize=True)
-    data.shape[1] != mixing.shape[0]
-    mask = np.empty(n_samples)
     mixing = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
-        computefeats2(data, mixing, mask, normalize=True)
+        voxelwise_univariate_zstats(data, mixing)
 
 
-def test_smoke_computefeats2():
-    """Ensures that computefeats2 works with random inputs and different optional parameters."""
+def test_smoke_voxelwise_univariate_zstats():
+    """Ensures that voxelwise_univariate_zstats works with rand inputs and diff optional params."""
     n_samples, n_times, n_components = 100, 20, 6
     data = np.random.random((n_samples, n_times))
     mixing = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
 
-    assert computefeats2(data, mixing) is not None
-    assert computefeats2(data, mixing, mask=mask) is not None
-    assert computefeats2(data, mixing, normalize=False) is not None
+    assert voxelwise_univariate_zstats(data, mixing) is not None
 
 
 def test_get_coeffs():

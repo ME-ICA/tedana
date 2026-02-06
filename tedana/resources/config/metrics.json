@@ -11,15 +11,15 @@
     "dependencies": {
         "kappa": [
             "map FT2",
-            "map Z"
+            "map weight"
         ],
         "rho": [
             "map FS0",
-            "map Z"
+            "map weight"
         ],
         "countnoise": [
-            "map Z",
-            "map Z clusterized"
+            "map weight",
+            "map weight clusterized"
         ],
         "countsigFT2": [
             "map FT2 clusterized"
@@ -36,13 +36,13 @@
             "map FS0 clusterized"
         ],
         "signal-noise_t": [
-            "map Z",
-            "map Z clusterized",
+            "map weight",
+            "map weight clusterized",
             "map FT2"
         ],
         "signal-noise_z": [
-            "map Z",
-            "map Z clusterized",
+            "map weight",
+            "map weight clusterized",
             "map FT2"
         ],
         "variance explained": [
@@ -63,21 +63,20 @@
             "countsigFT2"
         ],
         "map FT2": [
-            "map Z",
             "mixing",
             "tes",
             "data_cat",
             "adaptive_mask"
         ],
         "map FS0": [
-            "map Z",
             "mixing",
             "tes",
             "data_cat",
             "adaptive_mask"
         ],
-        "map Z": [
-            "map weight"
+        "map univariate Z statistics": [
+            "data_optcom",
+            "mixing"
         ],
         "map weight": [
             "data_optcom",
@@ -91,8 +90,8 @@
             "data_optcom",
             "map optcom betas"
         ],
-        "map Z clusterized": [
-            "map Z",
+        "map weight clusterized": [
+            "map weight",
             "mask",
             "ref_img",
             "tes"

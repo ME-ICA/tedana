@@ -34,71 +34,38 @@ def getfbounds(n_independent_sources):
     return f05, f025, f01
 
 
-def computefeats2(data, mixing, mask=None, normalize=True):
-    """
-    Convert `data` to component space using `mixing`.
+def voxelwise_univariate_zstats(data, mixing):
+    """Compute univariate voxelwise z-statistics using correlations.
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data
-    mixing : (T [x C]) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    mask : (S,) array_like or None, optional
-        Boolean mask array. Default: None
-    normalize : bool, optional
-        Whether to z-score output. Default: True
+    mixing : array, shape (n_vols, n_components)
+        Independent variables (time x components)
+    data : array, shape (n_voxels, n_vols)
+        Dependent variables (voxels x time)
 
     Returns
     -------
-    data_z : (S x C) :obj:`numpy.ndarray`
-        Data in component space
+    zstat : array, shape (n_voxels, n_components)
+        Z-statistics for each voxel/component
     """
-    if data.ndim != 2:
-        raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
-    elif mixing.ndim not in [2]:
-        raise ValueError(f"Parameter mixing should be 2d, not {mixing.ndim}d")
-    elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
-    elif (mask is not None) and (data.shape[0] != mask.shape[0]):
-        raise ValueError(
-            f"First dimensions (number of samples) of data ({data.shape[0]}) "
-            f"and mask ({mask.shape[0]}) do not match."
-        )
-    elif data.shape[1] != mixing.shape[0]:
-        raise ValueError(
-            f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
-            f"and mixing ({mixing.shape[0]}) do not match."
-        )
+    n_vols_mixing, _ = mixing.shape
+    _, n_vols_data = data.shape
+    if n_vols_mixing != n_vols_data:
+        raise ValueError("Time dimension mismatch between mixing and data")
 
-    # demean masked data
-    if mask is not None:
-        data = data[mask, ...]
-    # normalize data (subtract mean and divide by standard deviation) in the last dimension
-    # so that least-squares estimates represent "approximate" correlation values (data_r)
-    # assuming mixing matrix (mixing) values are also normalized
-    data_vn = stats.zscore(data, axis=-1)
+    # Z-score over time
+    mixing = stats.zscore(mixing, axis=0)
+    data = stats.zscore(data, axis=1)
 
-    # get betas of `data`~`mixing` and limit to range [-0.999, 0.999]
-    data_r = get_coeffs(data_vn, mixing, mask=None)
-    # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
-    data_r[data_r < -0.999] = -0.999
-    data_r[data_r > 0.999] = 0.999
+    # Pearson correlations (voxel x component)
+    r = (data @ mixing) / n_vols_data
 
-    # R-to-Z transform
-    data_z = np.arctanh(data_r)
-    if data_z.ndim == 1:
-        data_z = np.atleast_2d(data_z).T
+    # Convert correlation to z-statistic
+    tstat = r * np.sqrt((n_vols_data - 2) / (1.0 - r**2))
+    zstat = t_to_z(t_values=tstat, dof=n_vols_data - 2)
 
-    # normalize data (only division by std)
-    if normalize:
-        # subtract mean and dividing by standard deviation
-        data_zm = stats.zscore(data_z, axis=0)
-        # adding back the mean
-        data_z = data_zm + (data_z.mean(axis=0, keepdims=True) / data_z.std(axis=0, keepdims=True))
-
-    return data_z
+    return zstat
 
 
 def get_coeffs(data, x, mask=None, add_const=False):
