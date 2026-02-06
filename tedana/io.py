@@ -1071,6 +1071,12 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
         return arr[mask_bool]
 
     if len(data) == 1:
+        LGR.warning(
+            "DEPRECATION WARNING: We are planning to deprecate supplying a single "
+            "z-concatenated data file at the end of 2026. "
+            "If you are using this option, "
+            "please comment on https://github.com/ME-ICA/tedana/issues/1313."
+        )
         # z-cat data
         data_img = nb.load(data[0])
         n_z = data_img.shape[2] // n_echos
