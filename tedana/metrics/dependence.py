@@ -5,7 +5,7 @@ import typing
 
 import nibabel as nb
 import numpy as np
-from nilearn import image, masking
+from nilearn import masking
 from scipy import stats
 
 from tedana import utils
@@ -267,7 +267,6 @@ def threshold_map(
     maps_thresh : (M_s x C) array_like
     """
     n_voxels, n_components = maps.shape
-    maps_thresh = np.zeros([n_voxels, n_components], bool)
     if csize is None:
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
     else:
@@ -284,18 +283,19 @@ def threshold_map(
     # `safe_get_data()` which calls `gc.collect()` frequently. We already have `thresh_arr`
     # in voxel space, so direct boolean indexing is equivalent.
     mask_bool = np.asanyarray(mask_img.dataobj).astype(bool)
+    # Unmask once, then operate on NumPy volumes to avoid repeated niimg slicing
+    # and `get_fdata()` conversions inside `utils.threshold_map`.
     img = masking.unmask(maps.T, mask_img)
-    for i_comp in range(n_components):
-        comp_img = image.index_img(img, i_comp)
-        thresh_arr = utils.threshold_map(
-            comp_img,
-            min_cluster_size=csize,
-            threshold=value_threshold[i_comp],
-            binarize=True,
-            sided="bi",
-        )
-        maps_thresh[:, i_comp] = thresh_arr[mask_bool] != 0
-    return maps_thresh
+    img_arr = np.asanyarray(img.dataobj)
+    thresh_4d = utils.threshold_map(
+        img_arr,
+        min_cluster_size=csize,
+        threshold=value_threshold,
+        binarize=True,
+        sided="bi",
+    )
+    # Boolean indexing a 4D array with a 3D mask yields (n_voxels, n_components)
+    return thresh_4d[mask_bool]
 
 
 def threshold_to_match(

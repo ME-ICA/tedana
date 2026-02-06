@@ -383,12 +383,17 @@ def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="b
     Parameters
     ----------
     img : img_like or array_like
-        Image object or 3D array to be clustered
+        Image object or 3D/4D array to be clustered.
+        If 4D, the last dimension is treated as independent volumes, and clustering is
+        performed separately for each 3D volume.
     min_cluster_size : int
         Minimum cluster size (in voxels)
-    threshold : float or None, optional
-        Cluster-defining threshold for img. If None (default), assume img is
-        already thresholded.
+    threshold : float or None or (V,) array_like, optional
+        Cluster-defining threshold for img.
+        - If None (default), assume img is already thresholded.
+        - If float, the same threshold is used for all volumes.
+        - If array_like and img is 4D, must have length equal to the number of volumes
+          (last dimension), and each threshold is applied to the corresponding volume.
     binarize : bool, optional
         Default is True.
     sided : {'bi', 'two', 'one'}, optional
@@ -400,11 +405,43 @@ def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="b
     -------
     clust_thresholded : (M) :obj:`numpy.ndarray`
         Cluster-extent thresholded (and optionally binarized) map.
+        If img is 4D, returns a 4D array with the same shape.
     """
     if not isinstance(img, np.ndarray):
-        arr = img.get_fdata()
+        # Avoid `get_fdata()` here: it forces float64 and an eager copy.
+        # `dataobj` preserves on-disk dtype and is typically cheaper.
+        arr = np.asanyarray(img.dataobj)
     else:
-        arr = img.copy()
+        # Avoid copying; we don't mutate `arr` in-place.
+        arr = np.asanyarray(img)
+
+    # 4D support: apply 3D clustering independently per volume
+    if arr.ndim == 4:
+        n_vols = arr.shape[-1]
+        if threshold is None or np.isscalar(threshold):
+            thresholds = [threshold] * n_vols
+        else:
+            thresholds_arr = np.asarray(threshold)
+            if thresholds_arr.ndim != 1 or thresholds_arr.shape[0] != n_vols:
+                raise ValueError(
+                    "If `img` is 4D and `threshold` is array_like, it must have shape "
+                    f"({n_vols},). Got {thresholds_arr.shape}."
+                )
+            thresholds = thresholds_arr.tolist()
+
+        out = np.zeros(arr.shape, dtype=bool if binarize else int)
+        for i_vol in range(n_vols):
+            out[..., i_vol] = threshold_map(
+                arr[..., i_vol],
+                min_cluster_size=min_cluster_size,
+                threshold=thresholds[i_vol],
+                binarize=binarize,
+                sided=sided,
+            )
+        return out
+
+    if arr.ndim != 3:
+        raise ValueError(f"`img` must be 3D or 4D. Got array with shape {arr.shape}.")
 
     if binarize:
         clust_thresholded = np.zeros(arr.shape, bool)
@@ -414,7 +451,8 @@ def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="b
     if sided == "two":
         test_arr = np.abs(arr)
     else:
-        test_arr = arr.copy()
+        # Avoid copying; comparisons below don't mutate.
+        test_arr = arr
 
     # Positive values (or absolute values) first
     if threshold is not None:

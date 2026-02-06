@@ -340,6 +340,28 @@ def test_smoke_threshold_map():
     assert utils.threshold_map(img, min_cluster_size, sided="bi") is not None
 
 
+def test_threshold_map_4d_thresholds_per_volume():
+    """Ensure threshold_map supports 4D input + per-volume thresholds."""
+    img = np.zeros((5, 5, 5, 2), dtype=float)
+    img[2, 2, 2, 0] = 0.9
+    img[1, 1, 1, 1] = 0.6
+
+    out = utils.threshold_map(img, min_cluster_size=1, threshold=[0.8, 0.7], binarize=True)
+    assert out.shape == img.shape
+    assert out[2, 2, 2, 0] is True or out[2, 2, 2, 0] == True
+    assert out[1, 1, 1, 1] is False or out[1, 1, 1, 1] == False
+
+    # Scalar threshold should be broadcast to all volumes
+    out2 = utils.threshold_map(img, min_cluster_size=1, threshold=0.8, binarize=True)
+    assert out2.shape == img.shape
+    assert out2[2, 2, 2, 0] is True or out2[2, 2, 2, 0] == True
+    assert out2[1, 1, 1, 1] is False or out2[1, 1, 1, 1] == False
+
+    # Wrong-length thresholds should error
+    with pytest.raises(ValueError):
+        utils.threshold_map(img, min_cluster_size=1, threshold=[0.5], binarize=True)
+
+
 def test_create_legendre_polynomial_basis_set():
     """Checking that accurate Legendre polynomials are created."""
 
