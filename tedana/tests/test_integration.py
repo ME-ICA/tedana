@@ -270,7 +270,7 @@ def test_integration_four_echo(skip_integration):
 
     component_table = pd.read_table(op.join(out_dir_manual, "desc-tedana_metrics.tsv"))
     assert set(component_table.loc[1]["classification_tags"].split(",")) == {
-        "Accept borderline",
+        "Likely BOLD",
         "manual tag 1",
         "manual tag 2",
     }
