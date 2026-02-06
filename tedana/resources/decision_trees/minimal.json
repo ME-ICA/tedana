@@ -60,7 +60,7 @@
             "functionname": "calc_median",
             "parameters": {
                 "decide_comps": "all",
-                "metric_name": "normalized variance explained",
+                "metric_name": "variance explained",
                 "median_label": "varex"
             },
             "_comment": "The median variance explained is calculated across all components, for use in later steps."
@@ -76,7 +76,7 @@
                 "right": "dice_FT2"
             },
             "kwargs": {
-                "left2": "normalized variance explained",
+                "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -94,7 +94,7 @@
                 "right": "signal-noise_t"
             },
             "kwargs": {
-                "left2": "normalized variance explained",
+                "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -160,7 +160,7 @@
                 "decide_comps": "provisionalreject"
             },
             "kwargs": {
-                "var_metric": "normalized variance explained",
+                "var_metric": "variance explained",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
