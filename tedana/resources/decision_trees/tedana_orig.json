@@ -7,8 +7,8 @@
         "rho",
         "countsigFS0",
         "countsigFT2",
-        "dice_FS0",
-        "dice_FT2",
+        "dice_FS0_PE",
+        "dice_FT2_PE",
         "signal-noise_t",
         "variance explained",
         "d_table_score",
@@ -79,8 +79,8 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "dice_FS0",
-                "right": "dice_FT2"
+                "left": "dice_FS0_PE",
+                "right": "dice_FT2_PE"
             },
             "kwargs": {
                 "left2": "variance explained",

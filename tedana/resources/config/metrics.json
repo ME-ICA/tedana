@@ -35,6 +35,14 @@
             "map beta S0 clusterized",
             "map FS0 clusterized"
         ],
+        "dice_FT2_PE": [
+            "map PE T2 clusterized",
+            "map FT2 clusterized"
+        ],
+        "dice_FS0_PE": [
+            "map PE S0 clusterized",
+            "map FS0 clusterized"
+        ],
         "signal-noise_t": [
             "map weight",
             "map weight clusterized",
@@ -119,6 +127,22 @@
         "map beta S0 clusterized": [
             "map FS0 clusterized",
             "map weight",
+            "countsigFS0",
+            "mask",
+            "ref_img",
+            "tes"
+        ],
+        "map PE T2 clusterized": [
+            "map FT2 clusterized",
+            "map optcom betas",
+            "countsigFT2",
+            "mask",
+            "ref_img",
+            "tes"
+        ],
+        "map PE S0 clusterized": [
+            "map FS0 clusterized",
+            "map optcom betas",
             "countsigFS0",
             "mask",
             "ref_img",
