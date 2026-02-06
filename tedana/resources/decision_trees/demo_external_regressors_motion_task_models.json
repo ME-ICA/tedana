@@ -10,7 +10,7 @@
         "dice_FS0",
         "dice_FT2",
         "signal-noise_t",
-        "variance explained",
+        "normalized variance explained",
         "pval nuisance model",
         "pval task model",
         "pval nuisance Motion partial model",
@@ -89,7 +89,7 @@
             "functionname": "calc_median",
             "parameters": {
                 "decide_comps": "all",
-                "metric_name": "variance explained",
+                "metric_name": "normalized variance explained",
                 "median_label": "varex"
             }
         },
@@ -104,7 +104,7 @@
                 "right": "dice_FT2"
             },
             "kwargs": {
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -121,7 +121,7 @@
                 "right": "signal-noise_t"
             },
             "kwargs": {
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -270,7 +270,7 @@
                 "decide_comps": "provisionalreject"
             },
             "kwargs": {
-                "var_metric": "variance explained",
+                "var_metric": "normalized variance explained",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"

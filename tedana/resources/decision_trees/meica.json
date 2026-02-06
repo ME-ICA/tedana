@@ -10,7 +10,7 @@
         "dice_FS0",
         "dice_FT2",
         "signal-noise_t",
-        "variance explained",
+        "normalized variance explained",
         "d_table_score",
         "countnoise"
     ],
@@ -67,7 +67,7 @@
             "functionname": "calc_median",
             "parameters": {
                 "decide_comps": "all",
-                "metric_name": "variance explained",
+                "metric_name": "normalized variance explained",
                 "median_label": "varex"
             },
             "_comment": "The median variance explained is calculated across all components, for use in later steps."
@@ -83,7 +83,7 @@
                 "right": "dice_FT2"
             },
             "kwargs": {
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -101,7 +101,7 @@
                 "right": "signal-noise_t"
             },
             "kwargs": {
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "op2": ">",
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
@@ -210,7 +210,7 @@
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "right2": "varex_upper_thresh",
                 "right2_scale": "extend_factor",
                 "tag_if_true": "Less likely BOLD",
@@ -231,7 +231,7 @@
             "kwargs": {
                 "tag_if_true": "Low variance",
                 "op2": "<=",
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "right2": "varex_lower_thresh",
                 "op3": "<=",
                 "left3": "kappa",
@@ -277,7 +277,7 @@
                 "right2": "extend_factor",
                 "right2_scale": 2,
                 "op3": ">",
-                "left3": "variance explained",
+                "left3": "normalized variance explained",
                 "right3": "varex_upper_thresh",
                 "right3_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of kappa, variance, and other factors are ranked worse than others"
@@ -303,7 +303,7 @@
                 "tag_if_true": "Less likely BOLD",
                 "right_scale": 0.9,
                 "op2": ">",
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "right2": "varex_lower_thresh",
                 "right2_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of variance and ranks of other metrics are worse than others"
@@ -343,7 +343,7 @@
             "kwargs": {
                 "tag_if_true": "Accept borderline",
                 "op2": ">",
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "Accept components with a bad d_table_score, but are at the higher end of the remaining variance so more cautious to not remove"
             },
@@ -367,7 +367,7 @@
             "kwargs": {
                 "tag_if_true": "Accept borderline",
                 "op2": ">",
-                "left2": "variance explained",
+                "left2": "normalized variance explained",
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "For not already rejected components, accept ones below the kappa elbow, but at the higher end of the remaining variance so more cautious to not remove"
             },
