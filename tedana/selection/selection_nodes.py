@@ -1832,11 +1832,8 @@ def calc_revised_meanmetricrank_guesses(
         tmp_countnoise = selector.component_table_.loc[comps2use, "countnoise"].to_numpy()
         tmp_countsig_ft2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
-            kappa=tmp_kappa,
-            dice_ft2=tmp_dice_ft2,
-            signal_minus_noise_t=tmp_signal_m_noise_t,
-            countnoise=tmp_countnoise,
-            countsig_ft2=tmp_countsig_ft2,
+            descending=[tmp_kappa, tmp_dice_ft2, tmp_signal_m_noise_t, tmp_countsig_ft2],
+            ascending=[tmp_countnoise],
         )
         selector.component_table_[f"d_table_score_node{selector.current_node_idx_}"] = np.nan
         selector.component_table_.loc[

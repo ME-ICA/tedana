@@ -168,11 +168,8 @@ def test_generate_decision_table_score_correctness():
     countsig_ft2 = np.array([10, 20, 30, 40, 50])  # Higher is better
 
     d_table_score = dependence.generate_decision_table_score(
-        kappa=kappa,
-        dice_ft2=dice_ft2,
-        signal_minus_noise_t=signal_minus_noise_t,
-        countnoise=countnoise,
-        countsig_ft2=countsig_ft2,
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+        ascending=[countnoise],
     )
 
     # Component with index 4 should have the best score (lowest value)
@@ -184,11 +181,8 @@ def test_generate_decision_table_score_correctness():
 
     # Test with single component
     d_table_single = dependence.generate_decision_table_score(
-        kappa=np.array([1.0]),
-        dice_ft2=np.array([0.5]),
-        signal_minus_noise_t=np.array([2.0]),
-        countnoise=np.array([10]),
-        countsig_ft2=np.array([20]),
+        descending=[np.array([1.0]), np.array([0.5]), np.array([2.0]), np.array([20])],
+        ascending=[np.array([10])],
     )
     assert d_table_single.shape == (1,)
     # Single component: all metrics rank as 1, inverted ranks are 0
