@@ -1032,8 +1032,8 @@ def _infer_prefix(prefix):
     return prefix
 
 
-def load_data_nilearn(data, mask_img, n_echos):
-    """Load data using nilearn's apply_mask function.
+def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
+    """Load multi-echo data as a masked array.
 
     Parameters
     ----------
@@ -1043,6 +1043,8 @@ def load_data_nilearn(data, mask_img, n_echos):
         Mask image to apply
     n_echos : int
         Number of echoes in the data
+    dtype : numpy dtype, optional
+        Dtype to load data as. Default is float32 for speed and memory.
 
     Returns
     -------
@@ -1051,30 +1053,51 @@ def load_data_nilearn(data, mask_img, n_echos):
 
     Notes
     -----
-    Images are converted to NIfTI1 format to ensure compatibility with nilearn's apply_mask.
+    This function prefers a fast path using direct boolean indexing into the image data
+    (avoiding nilearn's check_niimg overhead). If that fails for any reason, it falls
+    back to nilearn's `masking.apply_mask`.
     """
+    # Precompute mask boolean array once (C-order matches numpy boolean indexing semantics).
+    mask_bool = np.asanyarray(mask_img.dataobj).astype(bool)
+
+    def _mask_4d(img):
+        """Return (Mb x T) array from a 4D image using mask_bool."""
+        if img.shape[:3] != mask_bool.shape:
+            raise ValueError("Image/mask shape mismatch")
+        arr = np.asarray(img.dataobj, dtype=dtype)
+        if arr.ndim != 4:
+            raise ValueError("Expected 4D image")
+        # boolean indexing on first 3 dims yields (Mb, T)
+        return arr[mask_bool]
+
     if len(data) == 1:
         # z-cat data
         data_img = nb.load(data[0])
         n_z = data_img.shape[2] // n_echos
-        imgs = []
+        # Load full z-concatenated data once, then slice per echo in numpy.
+        arr = np.asarray(data_img.dataobj, dtype=dtype)
+        if arr.ndim != 4:
+            raise ValueError("Expected 4D z-concatenated image")
+        masked = []
         for i_echo in range(n_echos):
-            # Using slicer to create the image messes up the affine, so we need to create the
-            # image manually. Use a header copy with dimensions updated to match each echo's
-            # array, since the original header describes the full z-concatenated volume.
-            arr = data_img.slicer[:, :, i_echo * n_z : (i_echo + 1) * n_z, :].get_fdata()
-            img = nb.Nifti1Image(arr, data_img.affine)
-            imgs.append(img)
-
-        data = imgs
+            echo_arr = arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :]
+            if echo_arr.shape[:3] != mask_bool.shape:
+                # Fall back if mask doesn't match slice shape for any reason
+                raise ValueError("Z-cat echo slice/mask shape mismatch")
+            masked.append(echo_arr[mask_bool])
+        return np.stack(masked, axis=1)
     else:
-        # Convert each input image to NIfTI1 format if needed
-        data = [_convert_to_nifti1(nb.load(f)) for f in data]
+        # Fast path: direct indexing (avoids nilearn overhead)
+        try:
+            masked = [_mask_4d(nb.load(f)) for f in data]
+            return np.stack(masked, axis=1)
+        except Exception:
+            # Slow, robust fallback
+            data_imgs = [_convert_to_nifti1(nb.load(f), dtype=dtype) for f in data]
+            return np.stack([masking.apply_mask(img, mask_img).T for img in data_imgs], axis=1)
 
-    return np.stack([masking.apply_mask(f, mask_img).T for f in data], axis=1)
 
-
-def _convert_to_nifti1(img):
+def _convert_to_nifti1(img, dtype=None):
     """Convert any nibabel image to NIfTI1Image format.
 
     Parameters
@@ -1096,7 +1119,10 @@ def _convert_to_nifti1(img):
         return img
 
     # Convert to NIfTI1Image by extracting data and affine
-    data = img.get_fdata()
+    if dtype is None:
+        data = np.asanyarray(img.dataobj)
+    else:
+        data = np.asarray(img.dataobj, dtype=dtype)
     affine = img.affine
 
     # Try to preserve header information where possible
