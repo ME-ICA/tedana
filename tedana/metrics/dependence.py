@@ -280,6 +280,10 @@ def threshold_map(
     )
 
     # Cluster-extent threshold and binarize F-maps
+    # Avoid per-component `nilearn.masking.apply_mask()` here: it is expensive and triggers
+    # `safe_get_data()` which calls `gc.collect()` frequently. We already have `thresh_arr`
+    # in voxel space, so direct boolean indexing is equivalent.
+    mask_bool = np.asanyarray(mask_img.dataobj).astype(bool)
     img = masking.unmask(maps.T, mask_img)
     for i_comp in range(n_components):
         comp_img = image.index_img(img, i_comp)
@@ -290,8 +294,7 @@ def threshold_map(
             binarize=True,
             sided="bi",
         )
-        thresh_img = nb.Nifti1Image(thresh_arr, mask_img.affine, mask_img.header)
-        maps_thresh[:, i_comp] = masking.apply_mask(thresh_img, mask_img)
+        maps_thresh[:, i_comp] = thresh_arr[mask_bool] != 0
     return maps_thresh
 
 
