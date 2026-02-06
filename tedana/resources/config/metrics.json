@@ -35,11 +35,11 @@
             "map beta S0 clusterized",
             "map FS0 clusterized"
         ],
-        "dice_FT2_PE": [
+        "dice_FT2_SPE": [
             "map PE T2 clusterized",
             "map FT2 clusterized"
         ],
-        "dice_FS0_PE": [
+        "dice_FS0_SPE": [
             "map PE S0 clusterized",
             "map FS0 clusterized"
         ],

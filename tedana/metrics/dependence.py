@@ -677,6 +677,9 @@ def generate_decision_table_score(
     Metrics are ranked in either descending or ascending order if they measure TE-dependence or
     -independence, respectively, and are then averaged for each component.
 
+    TODO: Generalize this to allow any set of metrics, identified as 'ascending' or 'descending'
+    metrics.
+
     Parameters
     ----------
     kappa : (C) array_like
