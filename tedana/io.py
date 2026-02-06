@@ -1100,7 +1100,15 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
         except Exception:
             # Slow, robust fallback
             data_imgs = [_convert_to_nifti1(nb.load(f), dtype=dtype) for f in data]
-            return np.stack([masking.apply_mask(img, mask_img).T for img in data_imgs], axis=1)
+            masked = []
+            for img in data_imgs:
+                m = masking.apply_mask(img, mask_img)
+                # nilearn returns (T, Mb) for 4D inputs. For 3D inputs it returns (Mb,),
+                # which would silently produce an incorrectly shaped output.
+                if m.ndim != 2:
+                    raise ValueError("Expected 4D image")
+                masked.append(m.T.astype(dtype, copy=False))
+            return np.stack(masked, axis=1)
 
 
 def _convert_to_nifti1(img, dtype=None):

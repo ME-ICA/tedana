@@ -348,18 +348,124 @@ def test_threshold_map_4d_thresholds_per_volume():
 
     out = utils.threshold_map(img, min_cluster_size=1, threshold=[0.8, 0.7], binarize=True)
     assert out.shape == img.shape
-    assert out[2, 2, 2, 0] is True or out[2, 2, 2, 0] == True
-    assert out[1, 1, 1, 1] is False or out[1, 1, 1, 1] == False
+    assert out[2, 2, 2, 0] is True or out[2, 2, 2, 0] is np.True_
+    assert out[1, 1, 1, 1] is False or out[1, 1, 1, 1] is np.False_
 
     # Scalar threshold should be broadcast to all volumes
     out2 = utils.threshold_map(img, min_cluster_size=1, threshold=0.8, binarize=True)
     assert out2.shape == img.shape
-    assert out2[2, 2, 2, 0] is True or out2[2, 2, 2, 0] == True
-    assert out2[1, 1, 1, 1] is False or out2[1, 1, 1, 1] == False
+    assert out2[2, 2, 2, 0] is True or out2[2, 2, 2, 0] is np.True_
+    assert out2[1, 1, 1, 1] is False or out2[1, 1, 1, 1] is np.False_
 
     # Wrong-length thresholds should error
     with pytest.raises(ValueError):
         utils.threshold_map(img, min_cluster_size=1, threshold=[0.5], binarize=True)
+
+
+def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
+    """`load_mask` should load a user mask and return a NIfTI1 image."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.uint8)
+    mask_arr[2, 2, 2] = 1
+    # Use NIfTI2 to exercise conversion to NIfTI1
+    mask_img = nb.Nifti2Image(mask_arr, affine)
+    mask_path = tmp_path / "mask.nii.gz"
+    mask_img.to_filename(mask_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=None)
+    assert isinstance(out_mask_img, nb.Nifti1Image)
+    assert out_t2s is None
+    assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
+
+
+def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
+    """`load_mask` should build a mask from nonzero T2* and return masked T2* in ms."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    # Single non-zero voxel, in seconds (per BIDS): 0.02s -> 20ms
+    t2s_arr = np.zeros(shape, dtype=np.float32)
+    t2s_arr[1, 1, 1] = 0.02
+    t2s_img = nb.Nifti1Image(t2s_arr, affine)
+    t2s_path = tmp_path / "t2smap.nii.gz"
+    t2s_img.to_filename(t2s_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=str(t2s_path))
+    assert isinstance(out_mask_img, nb.Nifti1Image)
+    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
+    assert out_mask_arr.dtype == np.uint8
+    assert int(out_mask_arr.sum()) == 1
+    assert out_mask_arr[1, 1, 1] == 1
+    assert out_t2s is not None
+    assert np.asarray(out_t2s).shape == (1,)
+    assert np.allclose(out_t2s[0], 20.0)
+
+
+def test_load_mask_combines_mask_and_t2smap(tmp_path):
+    """If both mask and T2* map are provided, T2* zeros should zero-out the mask."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.uint8)
+    mask_arr[1, 1, 1] = 1
+    mask_arr[2, 2, 2] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_path = tmp_path / "mask.nii.gz"
+    mask_img.to_filename(mask_path)
+
+    # Only one of the masked voxels has non-zero T2*
+    t2s_arr = np.zeros(shape, dtype=np.float32)
+    t2s_arr[1, 1, 1] = 0.03  # seconds -> 30ms
+    t2s_img = nb.Nifti1Image(t2s_arr, affine)
+    t2s_path = tmp_path / "t2smap.nii.gz"
+    t2s_img.to_filename(t2s_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=str(t2s_path))
+    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
+    assert int(out_mask_arr.sum()) == 1
+    assert out_mask_arr[1, 1, 1] == 1
+    assert out_mask_arr[2, 2, 2] == 0
+    assert np.asarray(out_t2s).shape == (1,)
+    assert np.allclose(out_t2s[0], 30.0)
+
+
+def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
+    """If neither mask nor T2* map are provided, `compute_epi_mask(ref_img)` is used."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    sentinel_mask = nb.Nifti1Image(np.ones(shape, dtype=np.uint8), affine)
+    called = {"n": 0, "arg": None}
+
+    def _fake_compute_epi_mask(arg):
+        called["n"] += 1
+        called["arg"] = arg
+        return sentinel_mask
+
+    # `compute_epi_mask` is imported inside `utils.load_mask`, so patch the module attr.
+    import nilearn.masking as nm
+
+    monkeypatch.setattr(nm, "compute_epi_mask", _fake_compute_epi_mask)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=None)
+    assert called["n"] == 1
+    assert called["arg"] is ref_img
+    assert out_mask_img is sentinel_mask
+    assert out_t2s is None
 
 
 def test_create_legendre_polynomial_basis_set():

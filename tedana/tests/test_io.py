@@ -118,6 +118,207 @@ def test_smoke_write_split_ts():
     os.remove(fname)
 
 
+def test_load_data_nilearn_multi_echo_fastpath(tmp_path):
+    """`load_data_nilearn` should return (Mb, E, T) for multi-echo files."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols = 5
+    n_echos = 2
+
+    # Mask with a few voxels enabled
+    mask_arr = np.zeros(shape3d, dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_arr[3, 1, 0] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+    n_vox = int(mask_bool.sum())
+
+    echo1 = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float64)
+    echo2 = np.random.RandomState(1).rand(*shape3d, n_vols).astype(np.float64)
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti1Image(echo1, affine).to_filename(e1_path)
+    nb.Nifti1Image(echo2, affine).to_filename(e2_path)
+
+    out = me.load_data_nilearn(
+        [str(e1_path), str(e2_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    assert out.shape == (n_vox, n_echos, n_vols)
+    assert out.dtype == np.float32
+
+    expected = np.stack(
+        [echo1.astype(np.float32)[mask_bool], echo2.astype(np.float32)[mask_bool]],
+        axis=1,
+    )
+    assert np.allclose(out, expected)
+
+
+def test_load_data_nilearn_zcat_fastpath(tmp_path):
+    """`load_data_nilearn` should support z-concatenated input (len(data)==1)."""
+    affine = np.eye(4)
+    x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
+    z_cat = n_z * n_echos
+
+    # Mask is defined in the per-echo z-space (x, y, n_z)
+    mask_arr = np.zeros((x, y, n_z), dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+    n_vox = int(mask_bool.sum())
+
+    # Build a z-concat 4D image where each echo has a distinct constant value
+    arr = np.zeros((x, y, z_cat, n_vols), dtype=np.float32)
+    for i_echo in range(n_echos):
+        arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :] = (i_echo + 1) * 10.0
+
+    zcat_path = tmp_path / "zcat.nii.gz"
+    nb.Nifti1Image(arr, affine).to_filename(zcat_path)
+
+    out = me.load_data_nilearn(
+        [str(zcat_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    assert out.shape == (n_vox, n_echos, n_vols)
+
+    expected = []
+    for i_echo in range(n_echos):
+        echo_arr = arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :]
+        expected.append(echo_arr[mask_bool])
+    expected = np.stack(expected, axis=1)
+    assert np.allclose(out, expected)
+
+
+def test_load_data_nilearn_zcat_requires_4d(tmp_path):
+    """z-concatenated inputs must be 4D."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
+
+    bad_path = tmp_path / "zcat_bad.nii.gz"
+    nb.Nifti1Image(np.zeros(shape3d, dtype=np.float32), affine).to_filename(bad_path)
+
+    with pytest.raises(ValueError, match="Expected 4D z-concatenated image"):
+        me.load_data_nilearn([str(bad_path)], mask_img=mask_img, n_echos=2, dtype=np.float32)
+
+
+def test_load_data_nilearn_zcat_mask_shape_mismatch(tmp_path):
+    """z-concatenated inputs should raise if mask doesn't match per-echo slice shape."""
+    affine = np.eye(4)
+    x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
+    z_cat = n_z * n_echos
+
+    # Wrong mask shape (z differs)
+    wrong_mask = nb.Nifti1Image(np.ones((x, y, n_z + 1), dtype=np.uint8), affine)
+
+    arr = np.zeros((x, y, z_cat, n_vols), dtype=np.float32)
+    zcat_path = tmp_path / "zcat.nii.gz"
+    nb.Nifti1Image(arr, affine).to_filename(zcat_path)
+
+    with pytest.raises(ValueError, match="Z-cat echo slice/mask shape mismatch"):
+        me.load_data_nilearn(
+            [str(zcat_path)],
+            mask_img=wrong_mask,
+            n_echos=n_echos,
+            dtype=np.float32,
+        )
+
+
+def test_load_data_nilearn_multi_echo_mask_shape_mismatch_executes_fastpath_check(
+    tmp_path, monkeypatch
+):
+    """Multi-echo inputs with shape mismatch should hit the fast-path check and then fail."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols, n_echos = 5, 2
+
+    echo = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float32)
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti1Image(echo, affine).to_filename(e1_path)
+    nb.Nifti1Image(echo, affine).to_filename(e2_path)
+
+    wrong_mask = nb.Nifti1Image(np.ones((4, 3, 3), dtype=np.uint8), affine)
+
+    # Ensure we fail deterministically in the fallback too (avoid nilearn-specific messages).
+    def _raise_apply_mask(*args, **kwargs):  # noqa:U100
+        raise ValueError("Image/mask shape mismatch")
+
+    monkeypatch.setattr(me.masking, "apply_mask", _raise_apply_mask)
+
+    with pytest.raises(ValueError, match="Image/mask shape mismatch"):
+        me.load_data_nilearn([str(e1_path), str(e2_path)], mask_img=wrong_mask, n_echos=n_echos)
+
+
+def test_load_data_nilearn_multi_echo_requires_4d(tmp_path):
+    """Multi-echo inputs must be 4D; this should error even via fallback."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_echos = 2
+
+    mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
+
+    # 3D (invalid) images
+    arr3d = np.random.RandomState(0).rand(*shape3d).astype(np.float32)
+    e1_path = tmp_path / "echo1_3d.nii.gz"
+    e2_path = tmp_path / "echo2_3d.nii.gz"
+    nb.Nifti1Image(arr3d, affine).to_filename(e1_path)
+    nb.Nifti1Image(arr3d, affine).to_filename(e2_path)
+
+    with pytest.raises(ValueError, match="Expected 4D image"):
+        me.load_data_nilearn([str(e1_path), str(e2_path)], mask_img=mask_img, n_echos=n_echos)
+
+
+def test_load_data_nilearn_multi_echo_fallback_path(tmp_path, monkeypatch):
+    """Force the nilearn fallback path and verify output matches expected masking."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols, n_echos = 5, 2
+
+    mask_arr = np.zeros(shape3d, dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+
+    echo1 = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float32)
+    echo2 = np.random.RandomState(1).rand(*shape3d, n_vols).astype(np.float32)
+
+    # Save as NIfTI2 to also exercise `_convert_to_nifti1(..., dtype=...)` in fallback.
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti2Image(echo1, affine).to_filename(e1_path)
+    nb.Nifti2Image(echo2, affine).to_filename(e2_path)
+
+    real_load = me.nb.load
+    calls = {"n": 0}
+
+    def _flaky_load(path):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("synthetic load failure to force fallback")
+        return real_load(path)
+
+    monkeypatch.setattr(me.nb, "load", _flaky_load)
+
+    out = me.load_data_nilearn(
+        [str(e1_path), str(e2_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    expected = np.stack([echo1[mask_bool], echo2[mask_bool]], axis=1).astype(np.float32)
+    assert out.shape == expected.shape
+    assert out.dtype == np.float32
+    assert np.allclose(out, expected)
+
+
 def test_smoke_filewrite():
     """
     Ensures that filewrite fails for no known image type, write a known key.

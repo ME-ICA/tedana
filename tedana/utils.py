@@ -888,3 +888,67 @@ def parse_volume_indices(indices_str):
             indices.add(index)
 
     return sorted(indices)
+
+
+def load_mask(ref_img, mask=None, t2smap=None):
+    """Load mask from user-defined mask or T2* map.
+
+    Parameters
+    ----------
+    ref_img : nibabel.Nifti1Image
+    mask : str or None
+    t2smap : str or None
+        Path to T2* map file
+
+    Returns
+    -------
+    mask_img : nibabel.Nifti1Image
+        Mask image
+    t2s : numpy.ndarray or None
+        Masked T2* map data in milliseconds, or None if no T2* map was provided.
+    """
+    import nibabel as nb
+    from nilearn.masking import apply_mask, compute_epi_mask
+
+    from tedana import io
+    from tedana.utils import check_t2s_values
+
+    t2s = None
+    if mask and not t2smap:
+        # TODO: add affine check
+        LGR.info("Using user-defined mask")
+        RepLGR.info("A user-defined mask was applied to the data.")
+        mask_img = nb.load(mask)
+        # Convert to NIfTI1 if needed (e.g., AFNI format)
+        mask_img = io._convert_to_nifti1(mask_img)
+    elif t2smap and not mask:
+        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
+        t2s_img = io._convert_to_nifti1(nb.load(t2smap))
+        t2s_loaded = t2s_img.get_fdata()
+        mask = (t2s_loaded != 0).astype(np.uint8)
+        mask_img = nb.Nifti1Image(mask, ref_img.affine)
+        t2s = apply_mask(t2s_img, mask_img)
+        t2s = check_t2s_values(t2s)
+    elif t2smap and mask:
+        LGR.info("Combining user-defined mask and T2* map to generate mask")
+        t2s_img = io._convert_to_nifti1(nb.load(t2smap))
+        t2s_loaded = t2s_img.get_fdata()
+        mask = nb.load(mask).get_fdata().astype(np.uint8)
+        mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
+        mask_img = nb.Nifti1Image(mask, ref_img.affine)
+        t2s = apply_mask(t2s_img, mask_img)
+        t2s = check_t2s_values(t2s)
+    else:
+        LGR.warning(
+            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
+            "Most external pipelines include more reliable masking functions. "
+            "It is strongly recommended to provide an external mask, "
+            "and to visually confirm that mask accurately conforms to data boundaries."
+        )
+        mask_img = compute_epi_mask(ref_img)
+        RepLGR.info(
+            "An initial mask was generated from the first echo using "
+            "nilearn's compute_epi_mask function."
+        )
+
+    return mask_img, t2s

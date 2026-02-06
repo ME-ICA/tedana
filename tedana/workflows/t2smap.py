@@ -6,9 +6,7 @@ import os
 import os.path as op
 import sys
 
-import nibabel as nb
 import numpy as np
-from nilearn.masking import compute_epi_mask
 from threadpoolctl import threadpool_limits
 
 from tedana import __version__, combine, decay, io, utils
@@ -394,20 +392,7 @@ def t2smap_workflow(
         verbose=verbose,
     )
 
-    if mask:
-        # TODO: add affine check
-        LGR.info("Using user-defined mask")
-        RepLGR.info("A user-defined mask was applied to the data.")
-        mask_img = nb.load(mask)
-        # Convert to NIfTI1 if needed (e.g., AFNI format)
-        mask_img = io._convert_to_nifti1(mask_img)
-    else:
-        mask_img = compute_epi_mask(ref_img)
-        RepLGR.info(
-            "An initial mask was generated from the first echo using "
-            "nilearn's compute_epi_mask function."
-        )
-
+    mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None)
     io_generator.register_mask(mask_img)
 
     LGR.info(f"Loading input data: {[f for f in data]}")

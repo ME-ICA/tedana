@@ -10,10 +10,9 @@ import shutil
 import sys
 from glob import glob
 
-import nibabel as nb
 import numpy as np
 import pandas as pd
-from nilearn.masking import apply_mask, compute_epi_mask, unmask
+from nilearn.masking import unmask
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -667,44 +666,9 @@ def tedana_workflow(
         "\\citep{dupre2021te}."
     )
 
-    if mask and not t2smap:
-        # TODO: add affine check
-        LGR.info("Using user-defined mask")
-        RepLGR.info("A user-defined mask was applied to the data.")
-        mask_img = nb.load(mask)
-        # Convert to NIfTI1 if needed (e.g., AFNI format)
-        mask_img = io._convert_to_nifti1(mask_img)
-    elif t2smap and not mask:
-        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
-        t2s_img = io._convert_to_nifti1(nb.load(t2smap))
-        t2s_loaded = t2s_img.get_fdata()
-        mask = (t2s_loaded != 0).astype(np.uint8)
-        mask_img = nb.Nifti1Image(mask, ref_img.affine)
-        t2s_limited = apply_mask(t2s_img, mask_img)
-        t2s_limited = utils.check_t2s_values(t2s_limited)
+    mask_img, t2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap)
+    if t2s_limited is not None:
         t2s_full = t2s_limited.copy()
-    elif t2smap and mask:
-        LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_img = io._convert_to_nifti1(nb.load(t2smap))
-        t2s_loaded = t2s_img.get_fdata()
-        mask = nb.load(mask).get_fdata().astype(np.uint8)
-        mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
-        mask_img = nb.Nifti1Image(mask, ref_img.affine)
-        t2s_limited = apply_mask(t2s_img, mask_img)
-        t2s_limited = utils.check_t2s_values(t2s_limited)
-        t2s_full = t2s_limited.copy()
-    else:
-        LGR.warning(
-            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
-            "Most external pipelines include more reliable masking functions. "
-            "It is strongly recommended to provide an external mask, "
-            "and to visually confirm that mask accurately conforms to data boundaries."
-        )
-        mask_img = compute_epi_mask(ref_img)
-        RepLGR.info(
-            "An initial mask was generated from the first echo using "
-            "nilearn's compute_epi_mask function."
-        )
 
     io_generator.register_mask(mask_img)
 
