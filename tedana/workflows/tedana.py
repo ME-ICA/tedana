@@ -1076,6 +1076,28 @@ def tedana_workflow(
             "series."
         )
 
+        # Generate a new component table from the orthogonalized mixing matrix
+        LGR.info("Generating metrics for TEDORT-orthogonalized mixing matrix")
+        orig_verbose = io_generator.verbose
+        io_generator.verbose = False
+        orth_component_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=mixing,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            n_independent_echos=n_independent_echos,
+            io_generator=io_generator,
+            label="ICA",
+            metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
+        )
+        io_generator.verbose = orig_verbose
+        io_generator.save_file(orth_component_table, "ICA orthogonalized metrics tsv")
+        orth_metric_metadata = metrics.collect.get_metadata(orth_component_table)
+        io_generator.save_file(orth_metric_metadata, "ICA orthogonalized metrics json")
+
     io.writeresults(
         data_optcom,
         mask=mask_denoise,
@@ -1085,7 +1107,7 @@ def tedana_workflow(
     )
 
     if "mir" in gscontrol:
-        gsc.minimum_image_regression(
+        mir_mixing = gsc.minimum_image_regression(
             data_optcom=data_optcom,
             mixing=mixing,
             mask=mask_denoise,
@@ -1093,6 +1115,28 @@ def tedana_workflow(
             classification_tags=selector.classification_tags,
             io_generator=io_generator,
         )
+
+        # Generate a new component table from the MIR-denoised mixing matrix
+        LGR.info("Generating metrics for MIR-denoised mixing matrix")
+        orig_verbose = io_generator.verbose
+        io_generator.verbose = False
+        mir_component_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=mir_mixing,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            n_independent_echos=n_independent_echos,
+            io_generator=io_generator,
+            label="ICA",
+            metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
+        )
+        io_generator.verbose = orig_verbose
+        io_generator.save_file(mir_component_table, "ICA MIR metrics tsv")
+        mir_metric_metadata = metrics.collect.get_metadata(mir_component_table)
+        io_generator.save_file(mir_metric_metadata, "ICA MIR metrics json")
 
     if verbose:
         io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
