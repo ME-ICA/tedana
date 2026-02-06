@@ -152,9 +152,9 @@ def tedpca(
 
             - Nonsignificant :math:`{\kappa}` and :math:`{\rho}`.
             - Nonsignificant variance explained.
+
     Generated Files
     ---------------
-
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
@@ -221,11 +221,12 @@ def tedpca(
     if algorithm in ["mdl", "aic", "kic"]:
         # Use un-normalized data for maPCA to match GIFT results
         data_img = masking.unmask(utils.unmask(data, mask).T, io_generator.mask)
+        mask_img = masking.unmask(mask, io_generator.mask)
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
-        _ = ma_pca.fit_transform(data_img, io_generator.mask)
+        _ = ma_pca.fit_transform(data_img, mask_img)
 
         # Extract results from maPCA
-        voxel_comp_weights = ma_pca.u_[mask, :]
+        voxel_comp_weights = ma_pca.u_
         varex = ma_pca.explained_variance_
         varex_norm = ma_pca.explained_variance_ratio_
         comp_ts = ma_pca.components_.T

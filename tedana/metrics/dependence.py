@@ -332,62 +332,56 @@ def threshold_to_match(
     else:
         csize = int(csize)
 
+    # Preserve original behavior (rank-based thresholding) while reducing memory/copying:
+    # - don't allocate abs(maps) for all components
+    # - avoid Nifti1Image + apply_mask by indexing thresholded 3D arrays with mask_bool
     clmaps = np.zeros([n_voxels, n_components], dtype=bool)
-    # Avoid repeated apply_mask calls: `utils.threshold_map` returns a 3D array
-    # in the same space as `mask_img`, so we can index directly into it.
     mask_bool = np.asanyarray(mask_img.dataobj).astype(bool)
+
     for i_comp in range(n_components):
         target = int(n_sig_voxels[i_comp])
         if target <= 0:
             clmaps[:, i_comp] = False
             continue
-        if target >= n_voxels:
-            clmaps[:, i_comp] = True
-            continue
 
-        # Initial cluster-defining threshold is defined based on the number
-        # of significant voxels from the F-statistic maps. This threshold
-        # will be relaxed until the number of significant voxels from both
-        # maps is roughly equal.
-        vals = np.abs(maps[:, i_comp])
-        ccimg = masking.unmask(vals, mask_img)
+        # Rank-transform absolute values (matches prior semantics)
+        ranks = stats.rankdata(np.abs(maps[:, i_comp]))
+        ccimg = masking.unmask(ranks, mask_img)
 
-        # Cluster-extent thresholding makes the voxel count depend on spatial structure.
-        # Use a small, bounded bisection to find a threshold that yields approximately
-        # `target` significant voxels after cluster-extent thresholding.
-        lo = 0.0
-        hi = float(np.max(vals))
-        best_clmap = None
-        best_diff = np.inf
+        step = max(int(target / 10), 1)
+        rank_thresh = n_voxels - target
 
-        # 12 iterations gives ~1/4096 relative resolution on [lo, hi]
-        for _ in range(12):
-            thr = (lo + hi) / 2.0
+        while True:
             thresh_arr = utils.threshold_map(
                 ccimg,
                 min_cluster_size=csize,
-                threshold=thr,
+                threshold=rank_thresh,
                 binarize=True,
                 sided="bi",
             )
             clmap = thresh_arr[mask_bool] != 0
             n_found = int(clmap.sum())
-            diff = abs(target - n_found)
-            if diff < best_diff:
-                best_diff = diff
-                best_clmap = clmap
-                if best_diff == 0:
-                    break
 
-            # Lower threshold => more suprathreshold voxels
-            if n_found > target:
-                lo = thr
+            if rank_thresh <= 0:  # all voxels significant
+                break
+
+            diff = target - n_found
+            if diff < 0 or n_found == 0:
+                rank_thresh += step
+                thresh_arr = utils.threshold_map(
+                    ccimg,
+                    min_cluster_size=csize,
+                    threshold=rank_thresh,
+                    binarize=True,
+                    sided="bi",
+                )
+                clmap = thresh_arr[mask_bool] != 0
+                break
             else:
-                hi = thr
+                rank_thresh -= step
 
-        if best_clmap is None:
-            best_clmap = np.zeros(n_voxels, dtype=bool)
-        clmaps[:, i_comp] = best_clmap
+        clmaps[:, i_comp] = clmap
+
     return clmaps
 
 
