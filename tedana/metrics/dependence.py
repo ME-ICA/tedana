@@ -42,6 +42,8 @@ def calculate_weights(
     """
     assert data_optcom.shape[1] == mixing.shape[0]
 
+    data_std = np.std(data_optcom, axis=-1, keepdims=True)
+
     # Z-score over time
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=-1)
@@ -52,6 +54,7 @@ def calculate_weights(
     else:
         # standardized parameter estimates using one regressor at a time
         weights = (data_optcom @ mixing)
+        weights = weights * data_std
     return weights
 
 
@@ -66,9 +69,9 @@ def calculate_betas(
     Parameters
     ----------
     data : (M [x E] x T) array_like
-        Data to calculate betas for
+        Data for which to calculate parameter estimates.
     mixing : (T x C) array_like
-        Mixing matrix
+        Mixing matrix (already z-scored over time).
     use_multivariate : bool
         Whether to use multivariate (using all regressors in ``mixing`` in a single model)
         or univariate (using one regressor at a time) regression for metrics.
@@ -77,22 +80,45 @@ def calculate_betas(
     Returns
     -------
     betas : (M [x E] x C) array_like
-        Unstandardized parameter estimates
+        Unstandardized parameter estimates for data against mixing matrix.
     """
-    # TODO: Add support for univariate modeling
     if use_multivariate:
+        # Multivariate OLS
         if data.ndim == 2:
-            data_optcom = data
-            assert data_optcom.shape[1] == mixing.shape[0]
+            # (M x T)
+            assert data.shape[1] == mixing.shape[0]
             # mean-center optimally-combined data
-            data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
+            data_dm = data - data.mean(axis=-1, keepdims=True)
             # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
-            betas = get_coeffs(data_optcom_dm, mixing)
+            betas = get_coeffs(data_dm, mixing)
 
         else:
+            # (M x E x T)
             betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
             for n_echo in range(data.shape[1]):
                 betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+    else:
+        # Univariate OLS
+        dof = mixing.shape[0] - 1
+
+        if data.ndim == 2:
+            # (M x T)
+            data_std = np.std(data, axis=-1, keepdims=True)
+            data_z = stats.zscore(data, axis=-1)
+            betas = (data_z @ mixing) / dof
+            betas = betas * data_std.squeeze()
+
+        else:
+            # (M x E x T)
+            betas = np.zeros((data.shape[0], data.shape[1], mixing.shape[1]))
+
+            for i_echo in range(data.shape[1]):
+                data_e = data[:, i_echo, :]
+                data_std = np.std(data_e, axis=-1, keepdims=True)
+                data_z = stats.zscore(data_e, axis=-1)
+
+                betas[:, i_echo, :] = (data_z @ mixing) / dof
+                betas[:, i_echo, :] *= data_std.squeeze()
 
     return betas
 
