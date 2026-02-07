@@ -77,7 +77,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
         "signal-noise_t",
         "signal-noise_p",
         "d_table_score",
-        "kappa ratio",
+        "varex kappa ratio",
         "rationale",
         "d_table_score_scrub",
     ]
