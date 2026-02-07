@@ -301,6 +301,28 @@ def generate_metrics(
             component_maps=metric_maps["map weight"],
         )
 
+    if "marginal R-squared" in required_metrics:
+        LGR.info("Calculating marginal R-squared")
+        component_table["marginal R-squared"] = dependence.calculate_marginal_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "semi-partial R-squared" in required_metrics:
+        LGR.info("Calculating semi-partial R-squared")
+        component_table["semi-partial R-squared"] = dependence.calculate_semipartial_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "partial R-squared" in required_metrics:
+        LGR.info("Calculating partial R-squared")
+        total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+        component_table["partial R-squared"] = dependence.calculate_partial_r2(
+            semipartial_r2=component_table["semi-partial R-squared"],
+            total_r2=total_r2,
+        )
+
     # Spatial metrics
     if "dice_FT2" in required_metrics:
         LGR.info(
@@ -450,6 +472,9 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
+        "marginal R-squared",
+        "partial R-squared",
+        "semi-partial R-squared",
         "countsigFT2",
         "countsigFS0",
         "dice_FT2",
@@ -459,7 +484,8 @@ def generate_metrics(
         "signal-noise_z",
         "signal-noise_p",
         "d_table_score",
-        "kappa ratio",
+        "kappa_rho_difference",
+        "varex kappa ratio",
         "d_table_score_scrub",
         "external fit",
         "classification",
@@ -515,8 +541,12 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         metric_metadata["variance explained"] = {
             "LongName": "Variance explained",
             "Description": (
-                "Variance explained in the optimally combined data of "
-                "each component. On a scale from 0 to 100."
+                "The square of the parameter estimates from the regression of the mean-centered, "
+                "but not z-scored, optimally combined data against the component time series, "
+                "divided by the sum of the squares of the parameter estimates. "
+                "This metric reflects relative participation in the fitted model, "
+                "not unique or marginal explanatory power. "
+                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }
@@ -531,6 +561,44 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "-0.999 and 0.999, and then the Fisher's z-transform is applied to the parameter "
                 "estimates. This is then used to calculate the variance explained for each "
                 "component. On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "marginal R-squared" in component_table:
+        metric_metadata["marginal R-squared"] = {
+            "LongName": "Marginal R-squared",
+            "Description": (
+                "Marginal R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component without "
+                "controlling for other components. "
+                "Mathematically, it is equivalent to 100 * the squared correlation "
+                "between the component time series and the data, averaged over voxels. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "partial R-squared" in component_table:
+        metric_metadata["partial R-squared"] = {
+            "LongName": "Partial R-squared",
+            "Description": (
+                "Partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "the other components out of the data *and* the component itself. "
+                "It is a conditional effect size. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "semi-partial R-squared" in component_table:
+        metric_metadata["semi-partial R-squared"] = {
+            "LongName": "Semi-partial R-squared",
+            "Description": (
+                "Semi-partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "out the other components from the target component. "
+                "It indicates the incremental increase in R-squared when adding the target "
+                "component to the model. "
+                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }
@@ -609,6 +677,14 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
+    if "kappa_rho_difference" in component_table:
+        metric_metadata["kappa_rho_difference"] = {
+            "LongName": "Kappa-rho difference",
+            "Description": (
+                "Proportion of pseudo-F-statistics that is dominated by either kappa or rho."
+            ),
+            "Units": "percent",
+        }
     if "original_classification" in component_table:
         metric_metadata["original_classification"] = {
             "LongName": "Original classification",
@@ -652,8 +728,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "This column label was replaced with classification_tags in late 2022"
             ),
         }
-    if "kappa ratio" in component_table:
-        metric_metadata["kappa ratio"] = {
+    if "varex kappa ratio" in component_table:
+        metric_metadata["varex kappa ratio"] = {
             "LongName": "Kappa ratio",
             "Description": (
                 "Ratio score calculated by dividing range of kappa "
