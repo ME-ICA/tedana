@@ -90,7 +90,7 @@ def test_calculate_total_r2_smoke():
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
     total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
-    assert total_r2.shape == (n_components,)
+    assert np.isscalar(total_r2)
 
     with pytest.raises(ValueError):
         dependence.calculate_total_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
