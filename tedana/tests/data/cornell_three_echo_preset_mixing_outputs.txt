@@ -11,6 +11,8 @@ desc-tedana_registry.json
 desc-ICACrossComponent_metrics.json
 desc-ICA_status_table.tsv
 desc-ICA_decision_tree.json
+desc-external_metrics.json
+desc-external_metrics.tsv
 desc-ICA_mixing.tsv
 desc_ICA_mixing_static.tsv
 desc-ICA_stat-z_components.nii.gz
