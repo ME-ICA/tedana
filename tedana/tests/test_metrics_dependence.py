@@ -1,6 +1,8 @@
 """Tests for tedana.metrics.dependence."""
 
 import numpy as np
+import pytest
+from scipy import stats
 
 from tedana.metrics import dependence
 
@@ -30,6 +32,68 @@ def test_calculate_varex_correctness():
     varex_single = dependence.calculate_varex(component_maps=component_maps_single)
     assert varex_single.shape == (1,)
     assert np.isclose(varex_single[0], 100.0)
+
+
+def test_calculate_marginal_r2_correctness():
+    """Test numerical correctness of calculate_marginal_r2."""
+    # Create simple test case with known values
+    rng = np.random.default_rng(0)
+    mean = [0, 0]
+    cov = [[1, 0.5], [0.5, 1]]  # corr at about r = 0.5
+    mixing = rng.multivariate_normal(mean, cov, size=100000)
+    mixing = stats.zscore(mixing, axis=0)
+    # corr = np.corrcoef(mixing)[0, 1]
+    # shared_variance = 100 * (corr**2)  # 25% of variance is shared
+
+    data_optcom = np.sum(mixing, axis=1)[None, :]
+    data_optcom = stats.zscore(data_optcom, axis=1)
+
+    varex = dependence.calculate_marginal_r2(data_optcom=data_optcom, mixing=mixing)
+    # 100% + (2 * 25%) = 150%
+    assert np.isclose(varex.sum(), 150.0, atol=5)
+    # they contribute equally to the variance explained, so 75% each
+    assert np.isclose(varex[0], varex[1])
+
+    with pytest.raises(ValueError):
+        dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
+
+def test_calculate_semipartial_r2_smoke():
+    """Test smoke test of calculate_semipartial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert semipartial_r2.shape == (n_components,)
+
+    with pytest.raises(ValueError):
+        dependence.calculate_semipartial_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
+
+def test_calculate_partial_r2_smoke():
+    """Test smoke test of calculate_partial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    partial_r2 = dependence.calculate_partial_r2(
+        semipartial_r2=semipartial_r2,
+        total_r2=total_r2,
+    )
+    assert partial_r2.shape == (n_components,)
+
+
+def test_calculate_total_r2_smoke():
+    """Test smoke test of calculate_total_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    assert np.isscalar(total_r2)
+
+    with pytest.raises(ValueError):
+        dependence.calculate_total_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
 def test_calculate_dependence_metrics_correctness():

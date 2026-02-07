@@ -210,8 +210,9 @@ def tedpca(
     )
     data = data_optcom[mask, :]
 
-    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    # Do not z-score the data if using MAPCA
+    if algorithm not in ["mdl", "aic", "kic"]:
+        data = stats.zscore(data, axis=-1)  # z-score over time
 
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
@@ -320,23 +321,23 @@ def tedpca(
 
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
-        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
+        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data)
     else:
         # If algorithm is kundu or kundu-stablize component metrics
         # are calculated without dimensionality estimation and
         # reduction and then kundu identifies components that are
         # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
 
     # Compute Kappa and Rho for PCA comps
@@ -454,6 +455,5 @@ def tedpca(
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
-    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return kept_data, n_components
