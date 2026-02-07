@@ -492,7 +492,8 @@ def generate_metrics(
         "signal-noise_z",
         "signal-noise_p",
         "d_table_score",
-        "kappa ratio",
+        "kappa_rho_difference",
+        "varex kappa ratio",
         "d_table_score_scrub",
         "external fit",
         "classification",
@@ -684,6 +685,14 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
+    if "kappa_rho_difference" in component_table:
+        metric_metadata["kappa_rho_difference"] = {
+            "LongName": "Kappa-rho difference",
+            "Description": (
+                "Proportion of pseudo-F-statistics that is dominated by either kappa or rho."
+            ),
+            "Units": "percent",
+        }
     if "original_classification" in component_table:
         metric_metadata["original_classification"] = {
             "LongName": "Original classification",
@@ -727,8 +736,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "This column label was replaced with classification_tags in late 2022"
             ),
         }
-    if "kappa ratio" in component_table:
-        metric_metadata["kappa ratio"] = {
+    if "varex kappa ratio" in component_table:
+        metric_metadata["varex kappa ratio"] = {
             "LongName": "Kappa ratio",
             "Description": (
                 "Ratio score calculated by dividing range of kappa "

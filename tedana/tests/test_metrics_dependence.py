@@ -66,6 +66,9 @@ def test_calculate_semipartial_r2_smoke():
     semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
     assert semipartial_r2.shape == (n_components,)
 
+    with pytest.raises(ValueError):
+        dependence.calculate_semipartial_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
 
 def test_calculate_partial_r2_smoke():
     """Test smoke test of calculate_partial_r2."""
@@ -79,6 +82,18 @@ def test_calculate_partial_r2_smoke():
         total_r2=total_r2,
     )
     assert partial_r2.shape == (n_components,)
+
+
+def test_calculate_total_r2_smoke():
+    """Test smoke test of calculate_total_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    assert total_r2.shape == (n_components,)
+
+    with pytest.raises(ValueError):
+        dependence.calculate_total_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
 def test_calculate_z_maps_correctness():

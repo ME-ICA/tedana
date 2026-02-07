@@ -454,8 +454,8 @@ def calculate_total_r2(
     """
     if data_optcom.shape[1] != mixing.shape[0]:
         raise ValueError(
-            f"Second dimensions (number of volumes) of data ({data_optcom.shape[1]}) "
-            f"and mixing ({mixing.shape[0]}) do not match."
+            f"Second dimension (number of volumes) of data ({data_optcom.shape[1]}) "
+            f"does not match first dimension of mixing ({mixing.shape[0]})."
         )
 
     # Z-score over time
