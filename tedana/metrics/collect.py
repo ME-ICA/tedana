@@ -35,6 +35,7 @@ def generate_metrics(
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
+    use_multivariate: bool = True,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
@@ -70,6 +71,12 @@ def generate_metrics(
         A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
+    use_multivariate : bool
+        Whether to use multivariate (using all regressors in ``mixing`` in a single model)
+        or univariate (using one regressor at a time) regression for metrics.
+        Multivariate modeling is appropriate for ICA, but univariate modeling is appropriate for
+        external regressors and confounds.
+        Default is True.
 
     Returns
     -------
@@ -163,6 +170,7 @@ def generate_metrics(
         metric_maps["map weight"] = dependence.calculate_weights(
             data_optcom=data_optcom,
             mixing=mixing,
+            use_multivariate=use_multivariate,
         )
         signs = determine_signs(metric_maps["map weight"], axis=0)
         component_table["optimal sign"] = signs
@@ -180,11 +188,13 @@ def generate_metrics(
         metric_maps["map optcom betas"] = dependence.calculate_betas(
             data=data_optcom,
             mixing=mixing,
+            use_multivariate=use_multivariate,
         )
         if io_generator.verbose:
             metric_maps["map echo betas"] = dependence.calculate_betas(
                 data=data_cat,
                 mixing=mixing,
+                use_multivariate=use_multivariate,
             )
 
     if "map percent signal change" in required_metrics:

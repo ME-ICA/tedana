@@ -19,6 +19,7 @@ def calculate_weights(
     *,
     data_optcom: np.ndarray,
     mixing: np.ndarray,
+    use_multivariate: bool = True,
 ) -> np.ndarray:
     """Calculate standardized parameter estimates between data and mixing matrix.
 
@@ -28,6 +29,10 @@ def calculate_weights(
         Optimally combined data, already masked.
     mixing : (T x C) array_like
         Mixing matrix
+    use_multivariate : bool
+        Whether to use multivariate (using all regressors in ``mixing`` in a single model)
+        or univariate (using one regressor at a time) regression for metrics.
+        Default is True.
 
     Returns
     -------
@@ -36,10 +41,17 @@ def calculate_weights(
         the mixing matrix.
     """
     assert data_optcom.shape[1] == mixing.shape[0]
+
+    # Z-score over time
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=-1)
-    # compute standardized parameter estimates
-    weights = get_coeffs(data_optcom, mixing)
+
+    if use_multivariate:
+        # compute standardized parameter estimates using all regressors in mixing
+        weights = get_coeffs(data_optcom, mixing)
+    else:
+        # standardized parameter estimates using one regressor at a time
+        weights = (data_optcom @ mixing)
     return weights
 
 
@@ -47,6 +59,7 @@ def calculate_betas(
     *,
     data: np.ndarray,
     mixing: np.ndarray,
+    use_multivariate: bool = True,
 ) -> np.ndarray:
     """Calculate unstandardized parameter estimates between data and mixing matrix.
 
@@ -56,24 +69,30 @@ def calculate_betas(
         Data to calculate betas for
     mixing : (T x C) array_like
         Mixing matrix
+    use_multivariate : bool
+        Whether to use multivariate (using all regressors in ``mixing`` in a single model)
+        or univariate (using one regressor at a time) regression for metrics.
+        Default is True.
 
     Returns
     -------
     betas : (M [x E] x C) array_like
         Unstandardized parameter estimates
     """
-    if data.ndim == 2:
-        data_optcom = data
-        assert data_optcom.shape[1] == mixing.shape[0]
-        # mean-center optimally-combined data
-        data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-        # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
-        betas = get_coeffs(data_optcom_dm, mixing)
+    # TODO: Add support for univariate modeling
+    if use_multivariate:
+        if data.ndim == 2:
+            data_optcom = data
+            assert data_optcom.shape[1] == mixing.shape[0]
+            # mean-center optimally-combined data
+            data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
+            # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
+            betas = get_coeffs(data_optcom_dm, mixing)
 
-    else:
-        betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
-        for n_echo in range(data.shape[1]):
-            betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+        else:
+            betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
+            for n_echo in range(data.shape[1]):
+                betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
 
     return betas
 
