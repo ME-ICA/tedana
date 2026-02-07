@@ -309,7 +309,7 @@ def test_integration_three_echo(skip_integration, caplog):
     # Check that a deprecation warning about z-concatenated data is shown
     assert "DEPRECATION WARNING" in caplog.text
 
-    # Files for PCA component estimation are not expected because a fixed % variance was specified
+    # External regressor metrics are not expected because no external regressors were provided
     unexpected_files = [
         "desc-external_metrics.json",
         "desc-external_metrics.tsv",
