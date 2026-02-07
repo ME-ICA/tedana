@@ -47,6 +47,7 @@ def calculate_weights(
     data_optcom = stats.zscore(data_optcom, axis=-1)
 
     if use_multivariate:
+        # Multivariate OLS
         weights = get_coeffs(data_optcom, mixing)
     else:
         dof = mixing.shape[0] - 1
