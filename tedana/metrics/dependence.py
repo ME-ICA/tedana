@@ -42,19 +42,17 @@ def calculate_weights(
     """
     assert data_optcom.shape[1] == mixing.shape[0]
 
-    data_std = np.std(data_optcom, axis=-1, keepdims=True)
-
     # Z-score over time
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=-1)
 
     if use_multivariate:
-        # compute standardized parameter estimates using all regressors in mixing
         weights = get_coeffs(data_optcom, mixing)
     else:
-        # standardized parameter estimates using one regressor at a time
-        weights = (data_optcom @ mixing)
-        weights = weights * data_std
+        dof = mixing.shape[0] - 1
+
+        # Univariate OLS
+        weights = (data_optcom @ mixing) / dof
     return weights
 
 
