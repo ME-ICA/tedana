@@ -232,11 +232,8 @@ def test_generate_decision_table_score_correctness():
     countsig_ft2 = np.array([10, 20, 30, 40, 50])  # Higher is better
 
     d_table_score = dependence.generate_decision_table_score(
-        kappa=kappa,
-        dice_ft2=dice_ft2,
-        signal_minus_noise_t=signal_minus_noise_t,
-        countnoise=countnoise,
-        countsig_ft2=countsig_ft2,
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+        ascending=[countnoise],
     )
 
     # Component with index 4 should have the best score (lowest value)
@@ -248,17 +245,42 @@ def test_generate_decision_table_score_correctness():
 
     # Test with single component
     d_table_single = dependence.generate_decision_table_score(
-        kappa=np.array([1.0]),
-        dice_ft2=np.array([0.5]),
-        signal_minus_noise_t=np.array([2.0]),
-        countnoise=np.array([10]),
-        countsig_ft2=np.array([20]),
+        descending=[np.array([1.0]), np.array([0.5]), np.array([2.0]), np.array([20])],
+        ascending=[np.array([10])],
     )
     assert d_table_single.shape == (1,)
     # Single component: all metrics rank as 1, inverted ranks are 0
     # countnoise rank is 1 (not inverted)
     # Mean of [0, 0, 0, 1, 0] = 1/5 = 0.2
     assert np.isclose(d_table_single[0], 0.2)
+
+    # Use only descending metrics
+    d_table_descending = dependence.generate_decision_table_score(
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+    )
+    # Component with index 4 should have the best score (lowest value)
+    # because it has highest kappa, dice, signal-noise, countsig and lowest countnoise
+    assert np.argmin(d_table_descending) == 4
+    # Component with index 0 should have worst score (highest value)
+    assert np.argmax(d_table_descending) == 0
+
+    # Use only ascending metrics
+    d_table_ascending = dependence.generate_decision_table_score(
+        ascending=[countnoise],
+    )
+    # Component with index 4 should have the best score (lowest value)
+    # because it has lowest countnoise
+    assert np.argmin(d_table_ascending) == 4
+    # Component with index 0 should have worst score (highest value)
+    assert np.argmax(d_table_ascending) == 0
+
+    with pytest.raises(ValueError, match="At least one of"):
+        dependence.generate_decision_table_score(descending=[], ascending=[])
+    with pytest.raises(ValueError, match="All metric arrays must be 1-D"):
+        dependence.generate_decision_table_score(
+            descending=[np.array([1.0, 2.0])],
+            ascending=[np.array([10])],
+        )
 
 
 def test_compute_countsignal_correctness():

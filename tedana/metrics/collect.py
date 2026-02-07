@@ -408,11 +408,15 @@ def generate_metrics(
     if "d_table_score" in required_metrics:
         LGR.info("Calculating decision table score")
         component_table["d_table_score"] = dependence.generate_decision_table_score(
-            kappa=component_table["kappa"],
-            dice_ft2=component_table["dice_FT2"],
-            signal_minus_noise_t=component_table["signal-noise_t"],
-            countnoise=component_table["countnoise"],
-            countsig_ft2=component_table["countsigFT2"],
+            descending=[
+                component_table["kappa"].values,
+                component_table["dice_FT2"].values,
+                component_table["signal-noise_t"].values,
+                component_table["countsigFT2"].values,
+            ],
+            ascending=[
+                component_table["countnoise"].values,
+            ],
         )
 
     if "kappa_rho_difference" in required_metrics:

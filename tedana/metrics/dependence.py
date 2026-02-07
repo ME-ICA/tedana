@@ -829,55 +829,51 @@ def compute_countnoise(
 
 def generate_decision_table_score(
     *,
-    kappa: np.ndarray,
-    dice_ft2: np.ndarray,
-    signal_minus_noise_t: np.ndarray,
-    countnoise: np.ndarray,
-    countsig_ft2: np.ndarray,
+    ascending: typing.List[np.ndarray] = None,
+    descending: typing.List[np.ndarray] = None,
 ) -> np.ndarray:
-    """Generate a five-metric decision table.
+    """Generate a decision table score from an arbitrary set of metrics.
 
-    Metrics are ranked in either descending or ascending order if they measure TE-dependence or
-    -independence, respectively, and are then averaged for each component.
+    Each metric array is ranked across components. Metrics in ``descending``
+    are ranked so that higher values receive lower (better) scores, while
+    metrics in ``ascending`` are ranked so that lower values receive lower
+    (better) scores. The ranks are then averaged per component.
 
     Parameters
     ----------
-    kappa : (C) array_like
-        Pseudo-F-statistics for TE-dependence model.
-    dice_ft2 : (C) array_like
-        Dice similarity index for cluster-extent thresholded beta maps and
-        cluster-extent thresholded TE-dependence F-statistic maps.
-    signal_minus_noise_t : (C) array_like
-        Signal-noise t-statistic metrics.
-    countnoise : (C) array_like
-        Numbers of significant non-cluster voxels from the thresholded beta
-        maps.
-    countsig_ft2 : (C) array_like
-        Numbers of significant voxels from clusters from the thresholded
-        TE-dependence F-statistic maps.
+    ascending : list of (C,) array_like, optional
+        Metric arrays where **lower values are better**.
+        Ranked with ``rankdata(x)`` (rank 1 = smallest value).
+    descending : list of (C,) array_like, optional
+        Metric arrays where **higher values are better**.
+        Ranked with ``n - rankdata(x)`` (rank 0 = largest value).
 
     Returns
     -------
     d_table_score : (C) array_like
-        Decision table metric scores.
+        Decision table metric scores. Lower values indicate "better"
+        components (e.g., more TE-dependent).
     """
-    assert (
-        kappa.shape
-        == dice_ft2.shape
-        == signal_minus_noise_t.shape
-        == countnoise.shape
-        == countsig_ft2.shape
-    )
+    if ascending is None:
+        ascending = []
+    if descending is None:
+        descending = []
 
-    d_table_rank = np.vstack(
-        [
-            len(kappa) - stats.rankdata(kappa),
-            len(kappa) - stats.rankdata(dice_ft2),
-            len(kappa) - stats.rankdata(signal_minus_noise_t),
-            stats.rankdata(countnoise),
-            len(kappa) - stats.rankdata(countsig_ft2),
-        ]
-    ).T
+    if not ascending and not descending:
+        raise ValueError("At least one of `ascending` or `descending` must be provided.")
+
+    all_metrics = ascending + descending
+    n = len(all_metrics[0])
+    if not all(m.shape == (n,) for m in all_metrics):
+        raise ValueError("All metric arrays must be 1-D and have the same length.")
+
+    ranks = []
+    for metric in ascending:
+        ranks.append(stats.rankdata(metric))
+    for metric in descending:
+        ranks.append(n - stats.rankdata(metric))
+
+    d_table_rank = np.vstack(ranks).T
     d_table_score = d_table_rank.mean(axis=1)
     return d_table_score
 

@@ -364,11 +364,8 @@ def test_smoke_generate_decision_table_score():
     countnoise = np.random.randint(0, n_voxels, size=n_components)
     countsig_ft2 = np.random.randint(0, n_voxels, size=n_components)
     decision_table_score = dependence.generate_decision_table_score(
-        kappa=kappa,
-        dice_ft2=dice_ft2,
-        signal_minus_noise_t=signal_minus_noise_t,
-        countnoise=countnoise,
-        countsig_ft2=countsig_ft2,
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+        ascending=[countnoise],
     )
     assert decision_table_score.shape == (n_components,)
 
