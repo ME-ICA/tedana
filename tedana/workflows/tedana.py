@@ -1159,7 +1159,7 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
             label="ICA",
-            metrics=necessary_metrics,
+            metrics=["kappa", "rho", "normalized variance explained"],
         )
         io_generator.verbose = orig_verbose
 
