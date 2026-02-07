@@ -309,10 +309,20 @@ def test_integration_three_echo(skip_integration, caplog):
     # Check that a deprecation warning about z-concatenated data is shown
     assert "DEPRECATION WARNING" in caplog.text
 
+    # Files for PCA component estimation are not expected because a fixed % variance was specified
+    unexpected_files = [
+        "desc-external_metrics.json",
+        "desc-external_metrics.tsv",
+    ]
+
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
     check_integration_outputs(
-        fn, out_dir, max_expected_comp=64, extra_expected_files=["tedana_call.sh"]
+        fn,
+        out_dir,
+        max_expected_comp=64,
+        extra_expected_files=["tedana_call.sh"],
+        unexpected_files=unexpected_files,
     )
 
 
