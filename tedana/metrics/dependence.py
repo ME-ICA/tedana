@@ -646,7 +646,7 @@ def compute_spearmans_rho(
     rho_values = np.zeros(n_components)
     # Loop over components to avoid memory issues
     for i_comp in range(n_components):
-        rho_values[i_comp] = stats.spearmanr(maps1[:, i_comp], maps2[:, i_comp]).statistic
+        rho_values[i_comp] = stats.spearmanr(maps1[:, i_comp], maps2[:, i_comp])[0]
     return rho_values
 
 
