@@ -65,6 +65,7 @@ def test_smoke_generate_metrics(testdata1):
         "semi-partial R-squared",
         "d_table_score",
         "kappa_rho_difference",
+        "kappa proportion",
     ]
 
     external_regressors, _ = sample_external_regressors()
