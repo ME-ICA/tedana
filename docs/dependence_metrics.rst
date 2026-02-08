@@ -199,9 +199,9 @@ dice_FT2
 
 The Dice similarity index between each component's cluster-extent thresholded
 T2*-model F-statistic map (using a p<0.05 threshold) and
-its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
+its cluster-extent thresholded unstandardized parameter estimate map (using a 5% threshold).
 This is a measure of the similarity between the T2*-model F-statistic map and the weight map.
-If the standardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
+If the unstandardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
 it is more likely to be signal.
 
 
@@ -211,10 +211,46 @@ dice_FS0
 
 The Dice similarity index between each component's cluster-extent thresholded
 S0-model F-statistic map (using a p<0.05 threshold) and
-its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
+its cluster-extent thresholded unstandardized parameter estimate map (using a 5% threshold).
 This is a measure of the similarity between the S0-model F-statistic map and the standardized parameter estimate map.
-If the standardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
+If the unstandardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
 it is more likely to be noise.
+
+
+spearman_FT2_beta
+=================
+:func:`tedana.metrics.dependence.compute_spearmans_rho`
+
+The Spearman's rank correlation coefficient between each component's squared
+standardized parameter estimate map and T2*-model F-statistic map.
+
+Like ``dice_FT2``, this metric measures the similarity between the
+component spatial weights and the spatial distribution of the
+TE-dependence model strength.
+The two differences are that this metric does not use thresholded maps and it
+uses the squared standardized parameter estimate map instead of the
+unstandardized parameter estimate map.
+
+If ``spearman_FT2_beta`` is higher than ``spearman_FS0_beta``,
+it is more likely that the component is TE-dependent.
+
+
+spearman_FS0_beta
+=================
+:func:`tedana.metrics.dependence.compute_spearmans_rho`
+
+The Spearman's rank correlation coefficient between each component's squared
+standardized parameter estimate map and S0-model F-statistic map.
+
+Like ``dice_FS0``, this metric measures the similarity between the
+component spatial weights and the spatial distribution of the
+TE-independence model strength.
+The two differences are that this metric does not use thresholded maps and it
+uses the squared standardized parameter estimate map instead of the
+unstandardized parameter estimate map.
+
+If ``spearman_FT2_beta`` is higher than ``spearman_FS0_beta``,
+it is more likely that the component is TE-dependent.
 
 
 signal-noise_t
