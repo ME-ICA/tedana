@@ -925,7 +925,13 @@ def tedana_workflow(
             # with thermal noise)
             necessary_metrics = selector.necessary_metrics
             # The figures require some metrics that might not be used by the decision tree.
-            extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+            extra_metrics = [
+                "variance explained",
+                "normalized variance explained",
+                "kappa",
+                "rho",
+                "marginal R-squared",
+            ]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
             component_table, mixing = metrics.collect.generate_metrics(
@@ -984,7 +990,13 @@ def tedana_workflow(
         # selector = ComponentSelector(tree)
         necessary_metrics = selector.necessary_metrics
         # The figures require some metrics that might not be used by the decision tree.
-        extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+        extra_metrics = [
+            "variance explained",
+            "normalized variance explained",
+            "kappa",
+            "rho",
+            "marginal R-squared",
+        ]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
         component_table, mixing = metrics.collect.generate_metrics(
