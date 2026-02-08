@@ -329,3 +329,11 @@ def test_compute_countnoise_correctness():
 
     expected = np.array([1, 0])
     assert np.array_equal(countnoise, expected)
+
+
+def test_compute_kappa_proportion_correctness():
+    """Test numerical correctness of compute_kappa_proportion."""
+    kappa = np.array([10.0, 0, 10.0])
+    rho = np.array([0, 10.0, 10.0])
+    proportion = dependence.compute_kappa_proportion(kappa=kappa, rho=rho)
+    assert np.allclose(proportion, np.array([1.0, 0.0, 0.5]))
