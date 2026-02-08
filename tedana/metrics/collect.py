@@ -707,9 +707,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
     if "kappa proportion" in component_table:
         metric_metadata["kappa proportion"] = {
             "LongName": "Kappa proportion",
-            "Description": (
-                "Proportion of pseudo-F-statistics that is dominated by kappa."
-            ),
+            "Description": "Proportion of pseudo-F-statistics that is dominated by kappa.",
             "Units": "percent",
         }
     if "original_classification" in component_table:
