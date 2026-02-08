@@ -331,6 +331,17 @@ Higher values indicate that the component is more dominated by either kappa or r
 which indicates "specificity" of the component to either TE-dependent or TE-independent signals.
 
 
+kappa_proportion/rho_proportion
+================================
+:func:`tedana.metrics.dependence.compute_kappa_rho_proportion`
+
+The proportion of the component's pseudo-F-statistics that is dominated by either kappa or rho,
+respectively.
+
+Higher values indicate that the component is more dominated by either kappa or rho,
+which indicates "specificity" of the component to either TE-dependent or TE-independent signals.
+
+
 d_table_score
 =============
 :func:`tedana.metrics.dependence.generate_decision_table_score`
