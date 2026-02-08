@@ -193,61 +193,32 @@ Having more cluster voxels in the S0-model F-statistic map than
 in the T2*-model F-statistic map is a good indicator that the component is noise.
 
 
-dice_FT2
-========
-:func:`tedana.metrics.dependence.compute_dice`
-
-The Dice similarity index between each component's cluster-extent thresholded
-T2*-model F-statistic map (using a p<0.05 threshold) and
-its cluster-extent thresholded unstandardized parameter estimate map (using a 5% threshold).
-This is a measure of the similarity between the T2*-model F-statistic map and the weight map.
-If the unstandardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
-it is more likely to be signal.
-
-
-dice_FS0
-========
-:func:`tedana.metrics.dependence.compute_dice`
-
-The Dice similarity index between each component's cluster-extent thresholded
-S0-model F-statistic map (using a p<0.05 threshold) and
-its cluster-extent thresholded unstandardized parameter estimate map (using a 5% threshold).
-This is a measure of the similarity between the S0-model F-statistic map and the standardized parameter estimate map.
-If the unstandardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
-it is more likely to be noise.
-
-
-spearman_FT2_beta
+dice_FT2/dice_FS0
 =================
+:func:`tedana.metrics.dependence.compute_dice`
+
+The Dice similarity index between each component's cluster-extent thresholded
+T2*-model (``dice_FT2``) or S0-model (``dice_FS0``) F-statistic map
+(using a p<0.05 threshold) and
+its cluster-extent thresholded unstandardized parameter estimate map (using a 5% threshold).
+These metrics are measures of the similarity between the models' F-statistic maps and the weight map.
+If the unstandardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
+it is more likely to be TE-dependent.
+
+
+spearman_FT2_beta/spearman_FS0_beta
+===================================
 :func:`tedana.metrics.dependence.compute_spearmans_rho`
 
 The Spearman's rank correlation coefficient between each component's squared
 standardized parameter estimate map and T2*-model F-statistic map.
 
-Like ``dice_FT2``, this metric measures the similarity between the
+Like ``dice_FT2``/``dice_FS0``, these metrics measure the similarity between the
 component spatial weights and the spatial distribution of the
-TE-dependence model strength.
-The two differences are that this metric does not use thresholded maps and it
-uses the squared standardized parameter estimate map instead of the
-unstandardized parameter estimate map.
-
-If ``spearman_FT2_beta`` is higher than ``spearman_FS0_beta``,
-it is more likely that the component is TE-dependent.
-
-
-spearman_FS0_beta
-=================
-:func:`tedana.metrics.dependence.compute_spearmans_rho`
-
-The Spearman's rank correlation coefficient between each component's squared
-standardized parameter estimate map and S0-model F-statistic map.
-
-Like ``dice_FS0``, this metric measures the similarity between the
-component spatial weights and the spatial distribution of the
-TE-independence model strength.
-The two differences are that this metric does not use thresholded maps and it
-uses the squared standardized parameter estimate map instead of the
-unstandardized parameter estimate map.
+TE-(in)dependence model strength.
+The two differences are that these metrics do not use thresholded maps and they
+use the squared standardized parameter estimate maps instead of the
+unstandardized parameter estimate maps.
 
 If ``spearman_FT2_beta`` is higher than ``spearman_FS0_beta``,
 it is more likely that the component is TE-dependent.
@@ -303,7 +274,7 @@ divided by the sum of the squares of the parameter estimates.
 
 
 normalized variance explained
-============================
+=============================
 :func:`tedana.metrics.dependence.calculate_varex_norm`
 
 The "normalized variance explained" by each component is calculated as the

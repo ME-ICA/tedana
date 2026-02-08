@@ -329,3 +329,16 @@ def test_compute_countnoise_correctness():
 
     expected = np.array([1, 0])
     assert np.array_equal(countnoise, expected)
+
+
+def test_compute_spearmans_rho_correctness():
+    """Test numerical correctness of compute_spearmans_rho."""
+    # Test with equal maps
+    maps1 = np.array([[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]])
+    maps2 = np.array([[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]])
+    rho = dependence.compute_spearmans_rho(maps1=maps1, maps2=maps2)
+    assert np.allclose(rho, 1.0)  # Should be 1 when equal
+    assert rho.shape == (3,)
+
+    with pytest.raises(ValueError, match="Maps must have the same shape"):
+        dependence.compute_spearmans_rho(maps1=maps1, maps2=maps2[:-1])

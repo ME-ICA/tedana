@@ -639,7 +639,8 @@ def compute_spearmans_rho(
     rho_values : (C) array_like
         Spearman's rank correlation coefficient between the two maps.
     """
-    assert maps1.shape == maps2.shape
+    if maps1.shape != maps2.shape:
+        raise ValueError("Maps must have the same shape.")
 
     n_components = maps1.shape[1]
     rho_values = np.zeros(n_components)
