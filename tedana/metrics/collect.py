@@ -426,12 +426,9 @@ def generate_metrics(
             rho=component_table["rho"],
         )
 
-    if "kappa_proportion" in required_metrics or "rho_proportion" in required_metrics:
-        LGR.info("Calculating kappa or rho proportion")
-        (
-            component_table["kappa_proportion"],
-            component_table["rho_proportion"],
-        ) = dependence.compute_kappa_rho_proportion(
+    if "kappa proportion" in required_metrics:
+        LGR.info("Calculating kappa proportion")
+        component_table["kappa proportion"] = dependence.compute_kappa_proportion(
             kappa=component_table["kappa"],
             rho=component_table["rho"],
         )

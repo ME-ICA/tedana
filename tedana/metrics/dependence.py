@@ -900,12 +900,12 @@ def compute_kappa_rho_difference(*, kappa: np.ndarray, rho: np.ndarray) -> np.nd
     return np.abs(kappa - rho) / (kappa + rho)
 
 
-def compute_kappa_rho_proportion(
+def compute_kappa_proportion(
     *,
     kappa: np.ndarray,
     rho: np.ndarray,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
-    """Compute the proportion of kappa or rho that dominates the component.
+    """Compute the proportion of kappa that dominates the component.
 
     Parameters
     ----------
@@ -916,18 +916,14 @@ def compute_kappa_rho_proportion(
 
     Returns
     -------
-    kappa_proportion : (C) array_like
+    kappa proportion : (C) array_like
         Proportion of kappa that dominates the component.
         Values above 0.5 indicate that kappa is dominating the component.
         Values below 0.5 indicate that rho is dominating the component.
-    rho_proportion : (C) array_like
-        Proportion of rho that dominates the component.
-        Values above 0.5 indicate that rho is dominating the component.
-        Values below 0.5 indicate that kappa is dominating the component.
     """
     assert kappa.shape == rho.shape
 
-    return kappa / (kappa + rho), rho / (kappa + rho)
+    return kappa / (kappa + rho)
 
 
 def _orthogonalize_by_others(*, arr: np.ndarray) -> np.ndarray:

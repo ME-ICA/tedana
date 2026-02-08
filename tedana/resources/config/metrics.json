@@ -68,11 +68,7 @@
             "kappa",
             "rho"
         ],
-        "kappa_proportion": [
-            "kappa",
-            "rho"
-        ],
-        "rho_proportion": [
+        "kappa proportion": [
             "kappa",
             "rho"
         ],
