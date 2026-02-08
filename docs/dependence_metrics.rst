@@ -328,6 +328,8 @@ averaged over voxels.
 
 This represents the variance in the data explained by each component
 without controlling for other components.
+
+
 partial R-squared
 =================
 :func:`tedana.metrics.dependence.calculate_partial_r2`
