@@ -139,47 +139,249 @@ def calculate_f_maps(
     tes: np.ndarray,
     n_independent_echos=None,
     f_max: float = 500,
+    estimate_simultaneously: bool = False,
 ) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
 
-    Parameters
-    ----------
-    data_cat : (M x E x T) array_like
-        Multi-echo data, already masked.
-    mixing : (T x C) array_like
-        Mixing matrix
-    adaptive_mask : (M) array_like
-        Adaptive mask, where each voxel's value is the number of echoes with
-        "good signal". Limited to masked voxels.
-    tes : (E) array_like
-        Echo times in milliseconds, in the same order as the echoes in data_cat.
-    n_independent_echos : int
-        Number of independent echoes to use in goodness of fit metrics (fstat).
-        Primarily used for EPTI acquisitions.
-        If None, number of echoes will be used. Default is None.
-    f_max : float, optional
-        Maximum F-statistic, used to crop extreme values. Values in the
-        F-statistic maps greater than this value are set to it.
+    If estimate_simultaneously is False (default), reproduces the original tedana
+    behavior using separate reduced models.
 
-    Returns
-    -------
-    f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps : (M x C) array_like
-        Pseudo-F-statistic maps for TE-dependence and -independence models,
-        respectively.
+    If estimate_simultaneously is True, fits a single joint model with S0 and
+    T2 regressors and computes partial F-statistics.
     """
     assert data_cat.shape[0] == adaptive_mask.shape[0]
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
 
     # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
+    me_betas = get_coeffs(
+        data_cat,
+        mixing,
+        mask=np.ones(data_cat.shape[:2], bool),
+        add_const=True,
+    )
+    n_voxels, n_echos, n_components = me_betas.shape
+
+    mu = data_cat.mean(axis=-1, dtype=float)
+    tes = np.reshape(tes, (n_echos, 1))
+
+    # set up Xmats (unchanged)
+    x1 = mu.T  # (E, M)  S0 model
+    x2 = np.tile(tes, (1, n_voxels)) * mu.T  # (E, M)  T2 model
+
+    f_t2_maps = np.zeros((n_voxels, n_components))
+    f_s0_maps = np.zeros((n_voxels, n_components))
+    pred_t2_maps = np.zeros((n_voxels, n_echos, n_components))
+    pred_s0_maps = np.zeros((n_voxels, n_echos, n_components))
+
+    for i_comp in range(n_components):
+        # comp_betas: (E, M)
+        comp_betas = np.atleast_3d(me_betas)[:, :, i_comp].T
+
+        # loop over number of usable echoes
+        for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
+            mask_idx = adaptive_mask == j_echo
+
+            # total sum of squares (same definition as original)
+            alpha = (np.abs(comp_betas[:j_echo]) ** 2).sum(axis=0)
+
+            if estimate_simultaneously:
+                # ====================================================
+                # NEW: simultaneous estimation branch
+                # ====================================================
+                # Full design matrix: [x1, x2]
+                X = np.stack(
+                    [x1[:j_echo, :], x2[:j_echo, :]],
+                    axis=-1,
+                )  # (j_echo, M, 2)
+
+                # Solve voxelwise OLS for both regressors
+                XtX = np.einsum("emk,eml->mkl", X, X)          # (M, 2, 2)
+                XtX_inv = np.linalg.inv(XtX)                  # (M, 2, 2)
+                XtY = np.einsum("emk,em->mk", X, comp_betas[:j_echo])
+                coeffs = np.einsum("mkl,ml->mk", XtX_inv, XtY)  # (M, 2)
+
+                # Predictions
+                pred = np.einsum("emk,mk->em", X, coeffs)
+                resid = comp_betas[:j_echo] - pred
+                sse_full = (resid ** 2).sum(axis=0)
+
+                # error DOF
+                dof_error = (
+                    j_echo - 2
+                    if n_independent_echos is None or n_independent_echos >= j_echo
+                    else n_independent_echos - 2
+                )
+                sigma2 = sse_full / dof_error
+
+                # Partial F for S0 (regressor 0)
+                var_s0 = XtX_inv[:, 0, 0] * sigma2
+                f_s0 = (coeffs[:, 0] ** 2) / var_s0
+
+                # Partial F for T2 (regressor 1)
+                var_t2 = XtX_inv[:, 1, 1] * sigma2
+                f_t2 = (coeffs[:, 1] ** 2) / var_t2
+
+                # Clip
+                f_s0[f_s0 > f_max] = f_max
+                f_t2[f_t2 > f_max] = f_max
+
+                f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
+                f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
+
+                pred_s0_maps[mask_idx, :j_echo, i_comp] = (
+                    x1[:j_echo, :] * coeffs[:, 0]
+                ).T[mask_idx, :]
+                pred_t2_maps[mask_idx, :j_echo, i_comp] = (
+                    x2[:j_echo, :] * coeffs[:, 1]
+                ).T[mask_idx, :]
+
+            else:
+                # ====================================================
+                # ORIGINAL tedana behavior (unchanged)
+                # ====================================================
+                # ---------- S0 model ----------
+                coeffs_s0 = (comp_betas[:j_echo] * x1[:j_echo, :]).sum(axis=0) / (
+                    x1[:j_echo, :] ** 2
+                ).sum(axis=0)
+                pred_s0 = x1[:j_echo, :] * np.tile(coeffs_s0, (j_echo, 1))
+                sse_s0 = ((comp_betas[:j_echo] - pred_s0) ** 2).sum(axis=0)
+
+                if n_independent_echos is None or n_independent_echos >= j_echo:
+                    f_s0 = (alpha - sse_s0) * (j_echo - 1) / sse_s0
+                else:
+                    f_s0 = (alpha - sse_s0) * (n_independent_echos - 1) / sse_s0
+
+                f_s0[f_s0 > f_max] = f_max
+                f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
+
+                # ---------- T2 model ----------
+                coeffs_t2 = (comp_betas[:j_echo] * x2[:j_echo, :]).sum(axis=0) / (
+                    x2[:j_echo, :] ** 2
+                ).sum(axis=0)
+                pred_t2 = x2[:j_echo, :] * np.tile(coeffs_t2, (j_echo, 1))
+                sse_t2 = ((comp_betas[:j_echo] - pred_t2) ** 2).sum(axis=0)
+
+                if n_independent_echos is None or n_independent_echos >= j_echo:
+                    f_t2 = (alpha - sse_t2) * (j_echo - 1) / sse_t2
+                else:
+                    f_t2 = (alpha - sse_t2) * (n_independent_echos - 1) / sse_t2
+
+                f_t2[f_t2 > f_max] = f_max
+                f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
+
+                pred_s0_maps[mask_idx, :j_echo, i_comp] = pred_s0.T[mask_idx, :]
+                pred_t2_maps[mask_idx, :j_echo, i_comp] = pred_t2.T[mask_idx, :]
+
+    return f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps
+
+
+def calculate_f_maps_simultaneous(
+    *,
+    data_cat: np.ndarray,
+    mixing: np.ndarray,
+    adaptive_mask: np.ndarray,
+    tes: np.ndarray,
+    n_independent_echos=None,
+    f_max: float = 500,
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Calculate partial F-statistic maps from a simultaneous TE-dependence/-independence model.
+
+    Unlike :func:`calculate_f_maps`, which fits the TE-dependence (T2*) and
+    TE-independence (S0) models separately, this function fits a single combined
+    model with both predictors simultaneously:
+
+        PE(TE_k) = mean_S(TE_k) * X_S0 + mean_S(TE_k) * TE_k * X_T2
+
+    Partial F-statistics are then computed for each predictor using a Type III
+    (extra sum of squares) approach. Each partial F measures the unique
+    contribution of one predictor after accounting for the other:
+
+    - **F_T2** (kappa): compares the full model to the S0-only reduced model,
+      measuring the additional variance explained by the T2* term.
+    - **F_S0** (rho): compares the full model to the T2*-only reduced model,
+      measuring the additional variance explained by the S0 term.
+
+    Because both predictors are estimated simultaneously, each partial F
+    reflects the *unique* contribution of that predictor, controlling for the
+    other. This differs from the separate-model approach in
+    :func:`calculate_f_maps`, where each model is fit independently and
+    ignores the other predictor.
+
+    Parameters
+    ----------
+    data_cat : (M x E x T) array_like
+        Multi-echo data, already masked.
+    mixing : (T x C) array_like
+        Mixing matrix.
+    adaptive_mask : (M,) array_like
+        Adaptive mask, where each voxel's value is the number of echoes with
+        "good signal". Limited to masked voxels.
+    tes : (E,) array_like
+        Echo times in milliseconds, in the same order as the echoes in data_cat.
+    n_independent_echos : int, optional
+        Number of independent echoes to use for degrees of freedom in the
+        F-statistics. Primarily used for EPTI acquisitions where many echoes
+        are acquired but are not all independent. If None, the number of
+        echoes will be used. Default is None.
+    f_max : float, optional
+        Maximum F-statistic, used to crop extreme values. Values in the
+        F-statistic maps greater than this value are set to it. Default is 500.
+
+    Returns
+    -------
+    f_t2_maps : (M x C) :obj:`numpy.ndarray`
+        Partial pseudo-F-statistic maps for the TE-dependence (T2*) model.
+        Each value measures the unique contribution of the T2* predictor
+        after accounting for the S0 predictor.
+    f_s0_maps : (M x C) :obj:`numpy.ndarray`
+        Partial pseudo-F-statistic maps for the TE-independence (S0) model.
+        Each value measures the unique contribution of the S0 predictor
+        after accounting for the T2* predictor.
+    pred_t2_maps : (M x E x C) :obj:`numpy.ndarray`
+        Predicted values from the T2* term of the simultaneous model
+        (i.e., ``mean_S(TE_k) * TE_k * X_T2_full``).
+    pred_s0_maps : (M x E x C) :obj:`numpy.ndarray`
+        Predicted values from the S0 term of the simultaneous model
+        (i.e., ``mean_S(TE_k) * X_S0_full``).
+
+    Notes
+    -----
+    The simultaneous model requires at least 3 usable echoes per voxel
+    (enforced by the ``adaptive_mask >= 3`` constraint) to have positive
+    residual degrees of freedom for the full two-predictor model
+    (df_resid = n_echoes - 2).
+
+    When ``n_independent_echos`` is specified and is less than the number of
+    usable echoes, it is used only to adjust the degrees of freedom in the
+    F-statistic formula, not the actual regression. If
+    ``n_independent_echos <= 2``, there are insufficient degrees of freedom
+    for the full model and those voxels are skipped (F-values remain 0).
+
+    See Also
+    --------
+    calculate_f_maps :
+        The original separate-model approach, where T2* and S0 models are
+        fit independently.
+    """
+    assert data_cat.shape[0] == adaptive_mask.shape[0]
+    assert data_cat.shape[1] == tes.shape[0]
+    assert data_cat.shape[2] == mixing.shape[0]
+
+    # Compute component-wise parameter estimates across echoes
+    # me_betas shape: (n_voxels, n_echos, n_components)
+    me_betas = get_coeffs(
+        data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True
+    )
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
 
-    # set up Xmats
-    x1 = mu.T  # Model 1
-    x2 = np.tile(tes, (1, n_voxels)) * mu.T  # Model 2
+    # Design matrix columns (vary per voxel via mu)
+    # x1: S0 (TE-independence) predictor — shape (n_echos, n_voxels)
+    x1 = mu.T
+    # x2: T2* (TE-dependence) predictor — shape (n_echos, n_voxels)
+    x2 = np.tile(tes, (1, n_voxels)) * mu.T
 
     f_t2_maps = np.zeros([n_voxels, n_components])
     f_s0_maps = np.zeros([n_voxels, n_components])
@@ -187,46 +389,90 @@ def calculate_f_maps(
     pred_s0_maps = np.zeros([n_voxels, len(tes), n_components])
 
     for i_comp in range(n_components):
-        # size of comp_betas is (n_echoes, n_samples)
+        # comp_betas shape: (n_echos, n_voxels)
         comp_betas = np.atleast_3d(me_betas)[:, :, i_comp].T
-        alpha = (np.abs(comp_betas) ** 2).sum(axis=0)
 
-        # Only analyze good echoes at each voxel
+        # Only analyze echoes with good signal at each voxel
         for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
             mask_idx = adaptive_mask == j_echo
-            alpha = (np.abs(comp_betas[:j_echo]) ** 2).sum(axis=0)
 
-            # S0 Model
-            # (S,) model coefficient map
-            coeffs_s0 = (comp_betas[:j_echo] * x1[:j_echo, :]).sum(axis=0) / (
-                x1[:j_echo, :] ** 2
-            ).sum(axis=0)
-            pred_s0 = x1[:j_echo, :] * np.tile(coeffs_s0, (j_echo, 1))
-            sse_s0 = (comp_betas[:j_echo] - pred_s0) ** 2
-            sse_s0 = sse_s0.sum(axis=0)  # (S,) prediction error map
+            # Determine residual degrees of freedom
+            # Full model has 2 predictors (no intercept): df_resid = n - 2
             if n_independent_echos is None or n_independent_echos >= j_echo:
-                f_s0 = (alpha - sse_s0) * (j_echo - 1) / (sse_s0)
+                df_resid_full = j_echo - 2
             else:
-                f_s0 = (alpha - sse_s0) * (n_independent_echos - 1) / (sse_s0)
-            f_s0[f_s0 > f_max] = f_max
+                df_resid_full = n_independent_echos - 2
+
+            # Need df_resid_full > 0 (at least 3 effective echoes for 2 predictors)
+            if df_resid_full <= 0:
+                LGR.warning(
+                    "Skipping voxels with %d usable echoes and n_independent_echos=%s: "
+                    "insufficient degrees of freedom for simultaneous model "
+                    "(need > 2 effective echoes).",
+                    j_echo,
+                    n_independent_echos,
+                )
+                continue
+
+            # Slice data and design matrices to usable echoes
+            y = comp_betas[:j_echo]       # (j_echo, n_voxels)
+            x1_j = x1[:j_echo, :]         # (j_echo, n_voxels)
+            x2_j = x2[:j_echo, :]         # (j_echo, n_voxels)
+
+            # --- Full model: y = x1 * beta_s0 + x2 * beta_t2 ---
+            # Compute elements of X^T X (2x2 system per voxel, vectorized)
+            a = (x1_j**2).sum(axis=0)       # sum(x1^2), shape (n_voxels,)
+            b = (x1_j * x2_j).sum(axis=0)   # sum(x1*x2), shape (n_voxels,)
+            d = (x2_j**2).sum(axis=0)        # sum(x2^2), shape (n_voxels,)
+
+            det = a * d - b * b              # determinant of X^T X, shape (n_voxels,)
+
+            # X^T y
+            rhs1 = (x1_j * y).sum(axis=0)   # sum(x1*y), shape (n_voxels,)
+            rhs2 = (x2_j * y).sum(axis=0)   # sum(x2*y), shape (n_voxels,)
+
+            # Solve 2x2 system analytically: beta = (X^T X)^{-1} X^T y
+            # Guard against singular/near-singular X^T X
+            safe_det = np.where(np.abs(det) > 1e-30, det, 1e-30)
+            beta_s0_full = (d * rhs1 - b * rhs2) / safe_det
+            beta_t2_full = (-b * rhs1 + a * rhs2) / safe_det
+
+            # Full model partial predictions and residuals
+            pred_s0_part = x1_j * beta_s0_full   # S0 term contribution
+            pred_t2_part = x2_j * beta_t2_full   # T2* term contribution
+            pred_full = pred_s0_part + pred_t2_part
+            sse_full = ((y - pred_full) ** 2).sum(axis=0)
+
+            # --- Reduced model 1: S0 only (to test unique T2* contribution) ---
+            safe_a = np.where(np.abs(a) > 1e-30, a, 1e-30)
+            coeffs_s0_only = rhs1 / safe_a
+            pred_s0_only = x1_j * coeffs_s0_only
+            sse_s0_only = ((y - pred_s0_only) ** 2).sum(axis=0)
+
+            # --- Reduced model 2: T2* only (to test unique S0 contribution) ---
+            safe_d = np.where(np.abs(d) > 1e-30, d, 1e-30)
+            coeffs_t2_only = rhs2 / safe_d
+            pred_t2_only = x2_j * coeffs_t2_only
+            sse_t2_only = ((y - pred_t2_only) ** 2).sum(axis=0)
+
+            # --- Partial F-statistics (Type III / extra sum of squares) ---
+            # Guard against zero SSE_full (perfect fit by the full model)
+            safe_sse_full = np.where(sse_full > 0, sse_full, 1e-30)
+
+            # F for T2*: extra variance explained by adding T2* to S0-only model
+            f_t2 = (sse_s0_only - sse_full) * df_resid_full / safe_sse_full
+            f_t2 = np.clip(f_t2, 0, f_max)
+
+            # F for S0: extra variance explained by adding S0 to T2*-only model
+            f_s0 = (sse_t2_only - sse_full) * df_resid_full / safe_sse_full
+            f_s0 = np.clip(f_s0, 0, f_max)
+
+            f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
             f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
 
-            # T2 Model
-            coeffs_t2 = (comp_betas[:j_echo] * x2[:j_echo, :]).sum(axis=0) / (
-                x2[:j_echo, :] ** 2
-            ).sum(axis=0)
-            pred_t2 = x2[:j_echo] * np.tile(coeffs_t2, (j_echo, 1))
-            sse_t2 = (comp_betas[:j_echo] - pred_t2) ** 2
-            sse_t2 = sse_t2.sum(axis=0)
-            if n_independent_echos is None or n_independent_echos >= j_echo:
-                f_t2 = (alpha - sse_t2) * (j_echo - 1) / (sse_t2)
-            else:
-                f_t2 = (alpha - sse_t2) * (n_independent_echos - 1) / (sse_t2)
-            f_t2[f_t2 > f_max] = f_max
-            f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
-
-            pred_s0_maps[mask_idx, :j_echo, i_comp] = pred_s0.T[mask_idx, :]
-            pred_t2_maps[mask_idx, :j_echo, i_comp] = pred_t2.T[mask_idx, :]
+            # Store partial predictions from the simultaneous model
+            pred_s0_maps[mask_idx, :j_echo, i_comp] = pred_s0_part.T[mask_idx, :]
+            pred_t2_maps[mask_idx, :j_echo, i_comp] = pred_t2_part.T[mask_idx, :]
 
     return f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps
 
