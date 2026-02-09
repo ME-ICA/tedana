@@ -196,15 +196,15 @@ def calculate_f_maps(
                 )  # (j_echo, M, 2)
 
                 # Solve voxelwise OLS for both regressors
-                XtX = np.einsum("emk,eml->mkl", X, X)          # (M, 2, 2)
-                XtX_inv = np.linalg.inv(XtX)                  # (M, 2, 2)
+                XtX = np.einsum("emk,eml->mkl", X, X)  # (M, 2, 2)
+                XtX_inv = np.linalg.inv(XtX)  # (M, 2, 2)
                 XtY = np.einsum("emk,em->mk", X, comp_betas[:j_echo])
                 coeffs = np.einsum("mkl,ml->mk", XtX_inv, XtY)  # (M, 2)
 
                 # Predictions
                 pred = np.einsum("emk,mk->em", X, coeffs)
                 resid = comp_betas[:j_echo] - pred
-                sse_full = (resid ** 2).sum(axis=0)
+                sse_full = (resid**2).sum(axis=0)
 
                 # error DOF
                 dof_error = (
@@ -229,12 +229,12 @@ def calculate_f_maps(
                 f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
                 f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
 
-                pred_s0_maps[mask_idx, :j_echo, i_comp] = (
-                    x1[:j_echo, :] * coeffs[:, 0]
-                ).T[mask_idx, :]
-                pred_t2_maps[mask_idx, :j_echo, i_comp] = (
-                    x2[:j_echo, :] * coeffs[:, 1]
-                ).T[mask_idx, :]
+                pred_s0_maps[mask_idx, :j_echo, i_comp] = (x1[:j_echo, :] * coeffs[:, 0]).T[
+                    mask_idx, :
+                ]
+                pred_t2_maps[mask_idx, :j_echo, i_comp] = (x2[:j_echo, :] * coeffs[:, 1]).T[
+                    mask_idx, :
+                ]
 
             else:
                 # ====================================================
@@ -370,9 +370,7 @@ def calculate_f_maps_simultaneous(
 
     # Compute component-wise parameter estimates across echoes
     # me_betas shape: (n_voxels, n_echos, n_components)
-    me_betas = get_coeffs(
-        data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True
-    )
+    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
@@ -415,21 +413,21 @@ def calculate_f_maps_simultaneous(
                 continue
 
             # Slice data and design matrices to usable echoes
-            y = comp_betas[:j_echo]       # (j_echo, n_voxels)
-            x1_j = x1[:j_echo, :]         # (j_echo, n_voxels)
-            x2_j = x2[:j_echo, :]         # (j_echo, n_voxels)
+            y = comp_betas[:j_echo]  # (j_echo, n_voxels)
+            x1_j = x1[:j_echo, :]  # (j_echo, n_voxels)
+            x2_j = x2[:j_echo, :]  # (j_echo, n_voxels)
 
             # --- Full model: y = x1 * beta_s0 + x2 * beta_t2 ---
             # Compute elements of X^T X (2x2 system per voxel, vectorized)
-            a = (x1_j**2).sum(axis=0)       # sum(x1^2), shape (n_voxels,)
-            b = (x1_j * x2_j).sum(axis=0)   # sum(x1*x2), shape (n_voxels,)
-            d = (x2_j**2).sum(axis=0)        # sum(x2^2), shape (n_voxels,)
+            a = (x1_j**2).sum(axis=0)  # sum(x1^2), shape (n_voxels,)
+            b = (x1_j * x2_j).sum(axis=0)  # sum(x1*x2), shape (n_voxels,)
+            d = (x2_j**2).sum(axis=0)  # sum(x2^2), shape (n_voxels,)
 
-            det = a * d - b * b              # determinant of X^T X, shape (n_voxels,)
+            det = a * d - b * b  # determinant of X^T X, shape (n_voxels,)
 
             # X^T y
-            rhs1 = (x1_j * y).sum(axis=0)   # sum(x1*y), shape (n_voxels,)
-            rhs2 = (x2_j * y).sum(axis=0)   # sum(x2*y), shape (n_voxels,)
+            rhs1 = (x1_j * y).sum(axis=0)  # sum(x1*y), shape (n_voxels,)
+            rhs2 = (x2_j * y).sum(axis=0)  # sum(x2*y), shape (n_voxels,)
 
             # Solve 2x2 system analytically: beta = (X^T X)^{-1} X^T y
             # Guard against singular/near-singular X^T X
@@ -438,8 +436,8 @@ def calculate_f_maps_simultaneous(
             beta_t2_full = (-b * rhs1 + a * rhs2) / safe_det
 
             # Full model partial predictions and residuals
-            pred_s0_part = x1_j * beta_s0_full   # S0 term contribution
-            pred_t2_part = x2_j * beta_t2_full   # T2* term contribution
+            pred_s0_part = x1_j * beta_s0_full  # S0 term contribution
+            pred_t2_part = x2_j * beta_t2_full  # T2* term contribution
             pred_full = pred_s0_part + pred_t2_part
             sse_full = ((y - pred_full) ** 2).sum(axis=0)
 
@@ -1002,7 +1000,7 @@ def compute_signal_minus_noise_t(
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
         signal_ft2_z = np.log10(np.unique(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp]))
-        (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
+        signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp] = stats.ttest_ind(
             signal_ft2_z, noise_ft2_z, equal_var=False
         )
 
