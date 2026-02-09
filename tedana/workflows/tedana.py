@@ -1082,7 +1082,7 @@ def tedana_workflow(
         io_generator.verbose = False
         # Only calculate metrics for the rejected components
         rej_mixing = mixing[:, comps_rejected]
-        rej_comp_names = [comp_names[i] for i in comps_rejected]
+        rej_comp_names = component_table.loc[comps_rejected, "Component"].tolist()
         orth_component_table, _ = metrics.collect.generate_metrics(
             data_cat=data_cat,
             data_optcom=data_optcom,
