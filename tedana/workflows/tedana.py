@@ -1184,12 +1184,11 @@ def tedana_workflow(
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_optcom,
-            mask=mask_denoise,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
+            n_threads=n_threads,
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
         if t2smap is None:
