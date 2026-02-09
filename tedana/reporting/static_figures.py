@@ -15,7 +15,7 @@ matplotlib.use("AGG")
 import matplotlib.pyplot as plt
 from nilearn import masking, plotting
 
-from tedana import io, stats, utils
+from tedana import io, utils
 
 LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger("matplotlib")
