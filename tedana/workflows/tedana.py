@@ -1080,10 +1080,13 @@ def tedana_workflow(
         LGR.info("Generating metrics for TEDORT-orthogonalized mixing matrix")
         orig_verbose = io_generator.verbose
         io_generator.verbose = False
+        # Only calculate metrics for the rejected components
+        rej_mixing = mixing[:, comps_rejected]
+        rej_comp_names = [comp_names[i] for i in comps_rejected]
         orth_component_table, _ = metrics.collect.generate_metrics(
             data_cat=data_cat,
             data_optcom=data_optcom,
-            mixing=mixing,
+            mixing=rej_mixing,
             adaptive_mask=masksum_clf,
             tes=tes,
             n_independent_echos=n_independent_echos,
@@ -1093,6 +1096,7 @@ def tedana_workflow(
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
         )
+        orth_component_table["Component"] = rej_comp_names
         io_generator.verbose = orig_verbose
         io_generator.save_file(orth_component_table, "ICA orthogonalized metrics tsv")
         orth_metric_metadata = metrics.collect.get_metadata(orth_component_table)
