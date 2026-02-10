@@ -807,4 +807,17 @@ def test_integration_t2smap(skip_integration):
     # Compares remaining files with those expected
     with open(fname) as f:
         expected_files = f.read().splitlines()
-    assert sorted(expected_files) == sorted(found_files)
+
+    if sorted(found_files) != sorted(expected_files):
+        expected_not_found = sorted(list(set(expected_files) - set(found_files)))
+        found_not_expected = sorted(list(set(found_files) - set(expected_files)))
+
+        msg = ""
+        if expected_not_found:
+            msg += "\nExpected but not found:\n\t"
+            msg += "\n\t".join(expected_not_found)
+
+        if found_not_expected:
+            msg += "\nFound but not expected:\n\t"
+            msg += "\n\t".join(found_not_expected)
+        raise ValueError(msg)

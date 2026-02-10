@@ -4,99 +4,16 @@ import json
 import os
 from unittest import mock
 
-import nibabel as nib
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
 import requests
 
 from tedana import io as me
-from tedana.tests.test_utils import fnames, tes
 from tedana.tests.utils import data_for_testing_info, get_test_data_path
 
 data_dir = get_test_data_path()
-
-
-def test_new_nii_like():
-    data, ref = me.load_data(fnames, n_echos=len(tes), dummy_scans=0)
-    nimg = me.new_nii_like(ref, data)
-
-    assert isinstance(nimg, nib.Nifti1Image)
-    assert nimg.shape == (39, 50, 33, 3, 5)
-
-
-def test_load_data():
-    fimg = [nib.load(f) for f in fnames]
-    exp_shape = (64350, 3, 5)
-
-    # list of filepath to images
-    d, ref = me.load_data(fnames, n_echos=len(tes), dummy_scans=0)
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
-
-    # list of filepath to images *without n_echos*
-    d, ref = me.load_data(fnames, dummy_scans=0)
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
-
-    # list of filepath to images *with dummy scans*
-    d, ref = me.load_data(fnames, dummy_scans=1)
-    assert d.shape == (exp_shape[0], exp_shape[1], exp_shape[2] - 1)
-    assert isinstance(ref, nib.Nifti1Image)
-    assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
-
-    # list of img_like
-    d, ref = me.load_data(fimg, n_echos=len(tes), dummy_scans=0)
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref == fimg[0]
-
-    # list of img_like *without n_echos*
-    d, ref = me.load_data(fimg, dummy_scans=0)
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref == fimg[0]
-
-    # bad entry
-    fimg_with_bad_item = fimg[:]
-    fimg_with_bad_item[-1] = 5
-    with pytest.raises(TypeError):
-        d, ref = me.load_data(fimg_with_bad_item)
-
-    # unsupported tuple of img_like
-    fimg_tuple = tuple(fimg)
-    with pytest.raises(TypeError):
-        d, ref = me.load_data(fimg_tuple, n_echos=len(tes), dummy_scans=0)
-
-    # tuple of img_like *without n_echos*
-    with pytest.raises(TypeError):
-        d, ref = me.load_data(fimg_tuple, dummy_scans=0)
-
-    # two echos should raise value error
-    with pytest.raises(ValueError):
-        me.load_data(fnames[:2], dummy_scans=0)
-
-    # imagine z-cat img
-    d, ref = me.load_data(fnames[0], n_echos=3, dummy_scans=0)
-    assert d.shape == (21450, 3, 5)
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref.shape == (39, 50, 11, 1)
-
-    # z-cat without n_echos should raise an error
-    with pytest.raises(ValueError):
-        me.load_data(fnames[0], dummy_scans=0)
-
-    # imagine z-cat img in list
-    d, ref = me.load_data(fnames[:1], n_echos=3, dummy_scans=0)
-    assert d.shape == (21450, 3, 5)
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref.shape == (39, 50, 11, 1)
-
-    # z-cat in list without n_echos should raise an error
-    with pytest.raises(ValueError):
-        me.load_data(fnames[:1], dummy_scans=0)
 
 
 # SMOKE TESTS
@@ -112,9 +29,10 @@ def test_smoke_split_ts():
     n_samples = 100
     n_times = 20
     n_components = 6
-    data = np.random.random((n_samples, n_times))
     mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
+    n_samples_in_mask = mask.sum()
+    data = np.random.random((n_samples_in_mask, n_times))
 
     # creating the component table with component as random floats,
     # a "metric," and random classification
@@ -124,10 +42,14 @@ def test_smoke_split_ts():
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
 
-    hikts, resid = me.split_ts(data, mixing, mask, component_table)
+    hikts, resid = me.split_ts(
+        data=data,
+        mixing=mixing,
+        component_table=component_table,
+    )
 
-    assert hikts is not None
-    assert resid is not None
+    assert hikts.shape == (n_samples_in_mask, n_times)
+    assert resid.shape == (n_samples_in_mask, n_times)
 
 
 def test_smoke_write_split_ts():
@@ -136,23 +58,39 @@ def test_smoke_write_split_ts():
     random input and tear them down.
     """
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
-    n_samples, n_times, n_components = 64350, 10, 6
-    data = np.random.random((n_samples, n_times))
-    mixing = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
+
     ref_img = os.path.join(data_dir, "mask.nii.gz")
+    ref_img = nb.load(ref_img)
+    ref_img_4d = nb.Nifti1Image(ref_img.get_fdata()[..., None], ref_img.affine, ref_img.header)
+    ref_img_4d.header.set_zooms(ref_img.header.get_zooms() + (1,))
+    n_samples_in_mask = int(ref_img.get_fdata().sum())
+    n_times, n_components = 10, 6
+
+    mask = np.random.randint(2, size=n_samples_in_mask).astype(bool)
+    data = np.random.random((n_samples_in_mask, n_times))
+    mixing = np.random.random((n_times, n_components))
+
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
-    io_generator = me.OutputGenerator(ref_img)
+    io_generator = me.OutputGenerator(ref_img_4d)
+    io_generator.register_mask(ref_img)
+
     component = np.random.random(n_components)
     metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
     io_generator.verbose = True
+    io_generator.register_mask(ref_img)
 
-    me.write_split_ts(data, mixing, mask, component_table, io_generator)
+    me.write_split_ts(
+        data=data,
+        mixing=mixing,
+        mask=mask,
+        component_table=component_table,
+        io_generator=io_generator,
+    )
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
@@ -164,7 +102,13 @@ def test_smoke_write_split_ts():
 
     io_generator.verbose = False
 
-    me.write_split_ts(data, mixing, mask, component_table, io_generator)
+    me.write_split_ts(
+        data=data,
+        mixing=mixing,
+        mask=mask,
+        component_table=component_table,
+        io_generator=io_generator,
+    )
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
@@ -174,17 +118,220 @@ def test_smoke_write_split_ts():
     os.remove(fname)
 
 
+def test_load_data_nilearn_multi_echo_fastpath(tmp_path):
+    """`load_data_nilearn` should return (Mb, E, T) for multi-echo files."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols = 5
+    n_echos = 2
+
+    # Mask with a few voxels enabled
+    mask_arr = np.zeros(shape3d, dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_arr[3, 1, 0] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+    n_vox = int(mask_bool.sum())
+
+    echo1 = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float64)
+    echo2 = np.random.RandomState(1).rand(*shape3d, n_vols).astype(np.float64)
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti1Image(echo1, affine).to_filename(e1_path)
+    nb.Nifti1Image(echo2, affine).to_filename(e2_path)
+
+    out = me.load_data_nilearn(
+        [str(e1_path), str(e2_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    assert out.shape == (n_vox, n_echos, n_vols)
+    assert out.dtype == np.float32
+
+    expected = np.stack(
+        [echo1.astype(np.float32)[mask_bool], echo2.astype(np.float32)[mask_bool]],
+        axis=1,
+    )
+    assert np.allclose(out, expected)
+
+
+def test_load_data_nilearn_zcat_fastpath(tmp_path):
+    """`load_data_nilearn` should support z-concatenated input (len(data)==1)."""
+    affine = np.eye(4)
+    x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
+    z_cat = n_z * n_echos
+
+    # Mask is defined in the per-echo z-space (x, y, n_z)
+    mask_arr = np.zeros((x, y, n_z), dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+    n_vox = int(mask_bool.sum())
+
+    # Build a z-concat 4D image where each echo has a distinct constant value
+    arr = np.zeros((x, y, z_cat, n_vols), dtype=np.float32)
+    for i_echo in range(n_echos):
+        arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :] = (i_echo + 1) * 10.0
+
+    zcat_path = tmp_path / "zcat.nii.gz"
+    nb.Nifti1Image(arr, affine).to_filename(zcat_path)
+
+    out = me.load_data_nilearn(
+        [str(zcat_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    assert out.shape == (n_vox, n_echos, n_vols)
+
+    expected = []
+    for i_echo in range(n_echos):
+        echo_arr = arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :]
+        expected.append(echo_arr[mask_bool])
+    expected = np.stack(expected, axis=1)
+    assert np.allclose(out, expected)
+
+
+def test_load_data_nilearn_zcat_requires_4d(tmp_path):
+    """z-concatenated inputs must be 4D."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
+
+    bad_path = tmp_path / "zcat_bad.nii.gz"
+    nb.Nifti1Image(np.zeros(shape3d, dtype=np.float32), affine).to_filename(bad_path)
+
+    with pytest.raises(ValueError, match="Expected 4D z-concatenated image"):
+        me.load_data_nilearn([str(bad_path)], mask_img=mask_img, n_echos=2, dtype=np.float32)
+
+
+def test_load_data_nilearn_zcat_mask_shape_mismatch(tmp_path):
+    """z-concatenated inputs should raise if mask doesn't match per-echo slice shape."""
+    affine = np.eye(4)
+    x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
+    z_cat = n_z * n_echos
+
+    # Wrong mask shape (z differs)
+    wrong_mask = nb.Nifti1Image(np.ones((x, y, n_z + 1), dtype=np.uint8), affine)
+
+    arr = np.zeros((x, y, z_cat, n_vols), dtype=np.float32)
+    zcat_path = tmp_path / "zcat.nii.gz"
+    nb.Nifti1Image(arr, affine).to_filename(zcat_path)
+
+    with pytest.raises(ValueError, match="Z-cat echo slice/mask shape mismatch"):
+        me.load_data_nilearn(
+            [str(zcat_path)],
+            mask_img=wrong_mask,
+            n_echos=n_echos,
+            dtype=np.float32,
+        )
+
+
+def test_load_data_nilearn_multi_echo_mask_shape_mismatch_executes_fastpath_check(
+    tmp_path, monkeypatch
+):
+    """Multi-echo inputs with shape mismatch should hit the fast-path check and then fail."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols, n_echos = 5, 2
+
+    echo = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float32)
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti1Image(echo, affine).to_filename(e1_path)
+    nb.Nifti1Image(echo, affine).to_filename(e2_path)
+
+    wrong_mask = nb.Nifti1Image(np.ones((4, 3, 3), dtype=np.uint8), affine)
+
+    # Ensure we fail deterministically in the fallback too (avoid nilearn-specific messages).
+    def _raise_apply_mask(*args, **kwargs):  # noqa:U100
+        raise ValueError("Image/mask shape mismatch")
+
+    monkeypatch.setattr(me.masking, "apply_mask", _raise_apply_mask)
+
+    with pytest.raises(ValueError, match="Image/mask shape mismatch"):
+        me.load_data_nilearn([str(e1_path), str(e2_path)], mask_img=wrong_mask, n_echos=n_echos)
+
+
+def test_load_data_nilearn_multi_echo_requires_4d(tmp_path):
+    """Multi-echo inputs must be 4D; this should error even via fallback."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_echos = 2
+
+    mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
+
+    # 3D (invalid) images
+    arr3d = np.random.RandomState(0).rand(*shape3d).astype(np.float32)
+    e1_path = tmp_path / "echo1_3d.nii.gz"
+    e2_path = tmp_path / "echo2_3d.nii.gz"
+    nb.Nifti1Image(arr3d, affine).to_filename(e1_path)
+    nb.Nifti1Image(arr3d, affine).to_filename(e2_path)
+
+    with pytest.raises(ValueError, match="Expected 4D image"):
+        me.load_data_nilearn([str(e1_path), str(e2_path)], mask_img=mask_img, n_echos=n_echos)
+
+
+def test_load_data_nilearn_multi_echo_fallback_path(tmp_path, monkeypatch):
+    """Force the nilearn fallback path and verify output matches expected masking."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+    n_vols, n_echos = 5, 2
+
+    mask_arr = np.zeros(shape3d, dtype=np.uint8)
+    mask_arr[0, 0, 0] = 1
+    mask_arr[1, 2, 1] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_bool = mask_arr.astype(bool)
+
+    echo1 = np.random.RandomState(0).rand(*shape3d, n_vols).astype(np.float32)
+    echo2 = np.random.RandomState(1).rand(*shape3d, n_vols).astype(np.float32)
+
+    # Save as NIfTI2 to also exercise `_convert_to_nifti1(..., dtype=...)` in fallback.
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti2Image(echo1, affine).to_filename(e1_path)
+    nb.Nifti2Image(echo2, affine).to_filename(e2_path)
+
+    real_load = me.nb.load
+    calls = {"n": 0}
+
+    def _flaky_load(path):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("synthetic load failure to force fallback")
+        return real_load(path)
+
+    monkeypatch.setattr(me.nb, "load", _flaky_load)
+
+    out = me.load_data_nilearn(
+        [str(e1_path), str(e2_path)],
+        mask_img=mask_img,
+        n_echos=n_echos,
+        dtype=np.float32,
+    )
+    expected = np.stack([echo1[mask_bool], echo2[mask_bool]], axis=1).astype(np.float32)
+    assert out.shape == expected.shape
+    assert out.dtype == np.float32
+    assert np.allclose(out, expected)
+
+
 def test_smoke_filewrite():
     """
     Ensures that filewrite fails for no known image type, write a known key.
 
     in both bids and orig formats.
     """
-    n_samples, _, _ = 64350, 10, 6
-    data_1d = np.random.random(n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
+    ref_img = nb.load(ref_img)
+    n_samples_in_mask = int(ref_img.get_fdata().sum())
     io_generator = me.OutputGenerator(ref_img)
+    io_generator.register_mask(ref_img)
 
+    data_1d = np.random.random(n_samples_in_mask)
     with pytest.raises(KeyError):
         io_generator.save_file(data_1d, "")
 
@@ -196,16 +343,6 @@ def test_smoke_filewrite():
             os.remove(fname)
         except OSError:
             print("File not generated!")
-
-
-def test_smoke_load_data():
-    """Ensures that data is loaded when given a random neuroimage."""
-    data = os.path.join(data_dir, "mask.nii.gz")
-    n_echos = 1
-
-    fdata, ref_img = me.load_data(data, n_echos)
-    assert fdata is not None
-    assert ref_img is not None
 
 
 # TODO: "BREAK" AND UNIT TESTS
