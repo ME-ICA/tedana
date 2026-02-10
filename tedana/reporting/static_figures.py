@@ -339,7 +339,7 @@ def _generate_single_component_figure(
         The component number to plot.
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table.
-    mixing : (C x T) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space.
     component_betas_file : :obj:`str`
         Path to the 4D image of the component beta maps.
@@ -408,7 +408,7 @@ def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    mixing : (C x T) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     io_generator : :obj:`tedana.io.OutputGenerator`
