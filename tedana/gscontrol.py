@@ -100,8 +100,8 @@ def gscontrol_raw(
     data_optcom_masked = data_optcom[temporal_mean_mask] - temporal_mean
 
     # Detrend the data using the Legendre basis functions
-    betas = np.linalg.lstsq(legendre_arr, data_optcom_masked.T, rcond=None)[0]
-    optcom_detr = data_optcom_masked - np.dot(betas.T, legendre_arr.T)[0]
+    pes = np.linalg.lstsq(legendre_arr, data_optcom_masked.T, rcond=None)[0]
+    optcom_detr = data_optcom_masked - np.dot(pes.T, legendre_arr.T)[0]
 
     # The spatial global signal is the minimum of the detrended data
     gs_spatial = (optcom_detr).min(axis=1)
@@ -118,8 +118,8 @@ def gscontrol_raw(
     glbase = np.atleast_2d(np.hstack([gs_ts.T, legendre_arr]))
 
     # Project global signal (but not Legendre bases) out of optimally combined data
-    betas = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
-    gs_fitted = np.dot(glbase[:, :1], betas[:1, :]).T
+    pes = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
+    gs_fitted = np.dot(glbase[:, :1], pes[:1, :]).T
     data_optcom_nogs = data_optcom_masked - gs_fitted
 
     # Calculate the variance explained by the global signal
@@ -139,8 +139,8 @@ def gscontrol_raw(
         data_echo_masked -= echo_mean
 
         # Fit regression, then remove global signal
-        betas = np.linalg.lstsq(glbase, data_echo_masked.T, rcond=None)[0]
-        echo_nogs = data_echo_masked - np.dot(glbase[:, :1], betas[:1, :]).T + echo_mean
+        pes = np.linalg.lstsq(glbase, data_echo_masked.T, rcond=None)[0]
+        echo_nogs = data_echo_masked - np.dot(glbase[:, :1], pes[:1, :]).T + echo_mean
         data_cat_nogs[:, echo, :] = utils.unmask(echo_nogs, temporal_mean_mask)
 
     return data_cat_nogs, data_optcom_nogs

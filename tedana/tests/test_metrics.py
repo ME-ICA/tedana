@@ -178,30 +178,33 @@ def test_generate_metrics_fails(testdata1):
         )
 
 
-def test_smoke_calculate_weights():
-    """Smoke test for tedana.metrics.dependence.calculate_weights."""
+def test_smoke_calculate_standardized_parameter_estimates():
+    """Smoke test for tedana.metrics.dependence.calculate_standardized_parameter_estimates."""
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    weights = dependence.calculate_weights(data_optcom=data_optcom, mixing=mixing)
+    weights = dependence.calculate_standardized_parameter_estimates(
+        data_optcom=data_optcom,
+        mixing=mixing,
+    )
     assert weights.shape == (n_voxels, n_components)
 
 
-def test_smoke_calculate_betas():
-    """Smoke test for tedana.metrics.dependence.calculate_betas."""
+def test_smoke_calculate_unstandardized_parameter_estimates():
+    """Smoke test for tedana.metrics.dependence.calculate_unstandardized_parameter_estimates."""
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    betas = dependence.calculate_betas(data=data_optcom, mixing=mixing)
-    assert betas.shape == (n_voxels, n_components)
+    pes = dependence.calculate_unstandardized_parameter_estimates(data=data_optcom, mixing=mixing)
+    assert pes.shape == (n_voxels, n_components)
 
 
 def test_smoke_calculate_psc():
     """Smoke test for tedana.metrics.dependence.calculate_psc."""
     n_voxels, n_volumes, n_components = 1000, 100, 50
     data_optcom = np.random.random((n_voxels, n_volumes))
-    optcom_betas = np.random.random((n_voxels, n_components))
-    psc = dependence.calculate_psc(data_optcom=data_optcom, optcom_betas=optcom_betas)
+    optcom_pes = np.random.random((n_voxels, n_components))
+    psc = dependence.calculate_psc(data_optcom=data_optcom, optcom_pes=optcom_pes)
     assert psc.shape == (n_voxels, n_components)
 
 
@@ -301,15 +304,15 @@ def test_smoke_compute_dice():
 def test_smoke_compute_signal_minus_noise_z():
     """Smoke test for tedana.metrics.dependence.compute_signal_minus_noise_z."""
     n_voxels, n_components = 1000, 50
-    z_maps = np.random.normal(size=(n_voxels, n_components))
-    z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
+    beta_maps = np.random.normal(size=(n_voxels, n_components))
+    beta_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
     f_t2_maps = np.random.random((n_voxels, n_components))
     (
         signal_minus_noise_z,
         signal_minus_noise_p,
     ) = dependence.compute_signal_minus_noise_z(
-        z_maps=z_maps,
-        z_clmaps=z_clmaps,
+        beta_maps=beta_maps,
+        beta_clmaps=beta_clmaps,
         f_t2_maps=f_t2_maps,
         value_threshold=1.96,
     )
@@ -319,15 +322,15 @@ def test_smoke_compute_signal_minus_noise_z():
 def test_smoke_compute_signal_minus_noise_t():
     """Smoke test for tedana.metrics.dependence.compute_signal_minus_noise_t."""
     n_voxels, n_components = 1000, 50
-    z_maps = np.random.normal(size=(n_voxels, n_components))
-    z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
+    beta_maps = np.random.normal(size=(n_voxels, n_components))
+    beta_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
     f_t2_maps = np.random.random((n_voxels, n_components))
     (
         signal_minus_noise_t,
         signal_minus_noise_p,
     ) = dependence.compute_signal_minus_noise_t(
-        z_maps=z_maps,
-        z_clmaps=z_clmaps,
+        beta_maps=beta_maps,
+        beta_clmaps=beta_clmaps,
         f_t2_maps=f_t2_maps,
         value_threshold=1.96,
     )
@@ -387,10 +390,10 @@ def test_smoke_calculate_dependence_metrics():
     n_voxels, n_components = 1000, 50
     f_t2_maps = np.random.random((n_voxels, n_components))
     f_s0_maps = np.random.random((n_voxels, n_components))
-    z_maps = np.random.random((n_voxels, n_components))
+    beta_maps = np.random.random((n_voxels, n_components))
     kappas, rhos = dependence.calculate_dependence_metrics(
         f_t2_maps=f_t2_maps,
         f_s0_maps=f_s0_maps,
-        z_maps=z_maps,
+        beta_maps=beta_maps,
     )
     assert kappas.shape == rhos.shape == (n_components,)

@@ -223,7 +223,7 @@ def plot_component(
     import matplotlib.image as mpimg
     from matplotlib import gridspec
 
-    # Set range to ~1/10th of max positive or negative beta
+    # Set range to ~1/10th of max positive or negative PEs
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
     # nilearn raises a warning when creating a figure from an image with a non-diagonal affine.
@@ -329,7 +329,7 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     Parameters
     ----------
     ts : (S x T) array_like
-        Time series from which to derive ICA betas
+        Time series from which to derive ICA PEs
     mask : (S,) array_like
         Boolean mask array
     component_table : (C x M) :obj:`pandas.DataFrame`
@@ -341,7 +341,7 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
     """
-    # regenerate the beta images
+    # regenerate the PE images
     component_maps_arr = stats.get_coeffs(ts, mixing, mask)
     component_maps_arr = component_maps_arr.reshape(
         io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],

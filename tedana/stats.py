@@ -85,8 +85,8 @@ def get_coeffs(data, x, mask=None, add_const=False):
 
     Returns
     -------
-    betas : (S [x E] x C) :obj:`numpy.ndarray`
-        Array of `S` sample betas for `C` predictors
+    pes : (S [x E] x C) :obj:`numpy.ndarray`
+        Array of `S` sample parameter estimates for `C` predictors
     """
     if data.ndim not in [2, 3]:
         raise ValueError(f"Parameter data should be 2d or 3d, not {data.ndim}d")
@@ -120,14 +120,14 @@ def get_coeffs(data, x, mask=None, add_const=False):
     if add_const:  # add intercept, if specified
         x = np.column_stack([x, np.ones((len(x), 1))])
 
-    betas = np.linalg.lstsq(x, mdata, rcond=None)[0].T
-    if add_const:  # drop beta for intercept, if specified
-        betas = betas[:, :-1]
+    pes = np.linalg.lstsq(x, mdata, rcond=None)[0].T
+    if add_const:  # drop parameter estimate for intercept, if specified
+        pes = pes[:, :-1]
 
     if mask is not None:
-        betas = utils.unmask(betas, mask)
+        pes = utils.unmask(pes, mask)
 
-    return betas
+    return pes
 
 
 def t_to_z(t_values, dof):
@@ -196,7 +196,7 @@ def t_to_z(t_values, dof):
 
 def fit_model(x, y, output_residual=False):
     """
-    Linear regression for a model y = betas * x + error.
+    Linear regression for a model y = pes * x + error.
 
     Parameters
     ----------
@@ -206,13 +206,13 @@ def fit_model(x, y, output_residual=False):
         Time by mixing matrix components for the time series for fitting
     output_residual : :obj:`bool`
         If true, then this just outputs the residual of the fit.
-        If false, then outputs beta fits, sse, and df
+        If false, then outputs parameter estimate fits, sse, and df
 
     Returns
     -------
     residual : (T X C) :obj:`numpy.ndarray`
         The residual time series for the fit (only if output_residual is True)
-    betas : (R X C) :obj:`numpy.ndarray`
+    pes : (R X C) :obj:`numpy.ndarray`
         The magnitude fits for the model (only if output_residual is False)
     sse : (C) :obj:`numpy.ndarray`
         The sum of square error for the model (only if output_residual is False)
@@ -220,18 +220,18 @@ def fit_model(x, y, output_residual=False):
         The degrees of freeom for the model (only if output_residual is False)
         (timepoints - number of regressors)
     """
-    betas, _, _, _ = linalg.lstsq(x, y)
-    # matrix-multiplication on the regressors with the betas -> to create a new 'estimated'
-    # component matrix  = fitted regressors (least squares beta solution * regressors)
-    fitted_regressors = np.matmul(x, betas)
+    pes, _, _, _ = linalg.lstsq(x, y)
+    # matrix-multiplication on the regressors with the PEs -> to create a new 'estimated'
+    # component matrix  = fitted regressors (least squares PE solution * regressors)
+    fitted_regressors = np.matmul(x, pes)
     residual = y - fitted_regressors
     if output_residual:
         return residual
     else:
         # sum the differences between the actual ICA components and the 'estimated'
-        # component matrix (beta-fitted regressors)
+        # component matrix (PE-fitted regressors)
         sse = np.sum(np.square(residual), axis=0)
         # calculate how many individual values [timepoints] are free to vary after
-        # the least-squares solution [beta] betw X & Y is calculated
-        df = y.shape[0] - betas.shape[0]
-        return betas, sse, df
+        # the least-squares solution [PE] betw X & Y is calculated
+        df = y.shape[0] - pes.shape[0]
+        return pes, sse, df

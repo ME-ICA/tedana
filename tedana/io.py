@@ -636,13 +636,13 @@ def denoise_ts(data, mixing, mask, component_table):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
+    pes = get_coeffs(dmdata.T, mixing, mask=None)
+    varexpl = (1 - ((dmdata.T - pes.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data
-    hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
-    lowkts = utils.unmask(betas[:, rej].dot(mixing.T[rej, :]), mask)
+    hikts = utils.unmask(pes[:, acc].dot(mixing.T[acc, :]), mask)
+    lowkts = utils.unmask(pes[:, rej].dot(mixing.T[rej, :]), mask)
     dnts = utils.unmask(data[mask] - lowkts[mask], mask)
     return dnts, hikts, lowkts
 
@@ -777,8 +777,8 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
 
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
     mixing_z = stats.zscore(mixing, axis=0)
-    betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask)
-    fout = io_generator.save_file(betas_oc, "z-scored ICA components img")
+    ts_betas = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask)
+    fout = io_generator.save_file(ts_betas, "z-scored ICA components img")
     del data_optcom_z, mixing_z
     LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
@@ -786,7 +786,7 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
         fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
-        fout = io_generator.save_file(betas_oc[:, acc], "z-scored ICA accepted components img")
+        fout = io_generator.save_file(ts_betas[:, acc], "z-scored ICA accepted components img")
         LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
 
@@ -971,10 +971,10 @@ def split_ts(data, mixing, mask, component_table):
     """
     acc = component_table[component_table.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing, mask)
-    betas = cbetas[mask]
+    pes = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing, mask)
+    pes = pes[mask]
     if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
+        hikts = utils.unmask(pes[:, acc].dot(mixing.T[acc, :]), mask)
     else:
         hikts = None
 

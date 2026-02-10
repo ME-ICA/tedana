@@ -391,14 +391,14 @@ def fit_mixing_to_regressors(
 
     # This is the test for the fit of the full model vs the polort detrending baseline
     # The outputs will be what we use to decide which components to reject
-    betas_full, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
+    _, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
         y=mixing, regressor_models=regressor_models, base_label="base"
     )
 
-    # TODO beta_full_model are the fits to all external regressors and might be useful to save
+    # TODO pes_full_model are the fits to all external regressors and might be useful to save
     # TODO Also consider saving regressor_models or the detrending regressors
-    # betas_full_model = pd.DataFrame(
-    #     data=betas_full.T,
+    # pes_full_model = pd.DataFrame(
+    #     data=pes_full.T,
     #     columns=np.concatenate(
     #         (np.array(detrend_regressors.columns), np.array(exte rnal_regressors.columns))
     #     ),
@@ -525,7 +525,7 @@ def fit_model_with_stats(
     """Fit full and partial models and calculate F stats, R2, and p values.
 
     Math from page 11-14 of https://afni.nimh.nih.gov/pub/dist/doc/manual/3dDeconvolve.pdf
-    Calculates Y=betas*X + error for the base and the full model
+    Calculates Y=pes*X + error for the base and the full model
     F = ((SSE_base-SSE_full)/(DF_base-DF_full)) / (SSE_full/DF_full)
     DF = degrees of freedom
     SSE = sum of squares error
@@ -550,8 +550,8 @@ def fit_model_with_stats(
 
     Returns
     -------
-    betas_full : (C x R) :obj:`numpy.ndarray`
-        The beta fits for the full model (components x regressors)
+    pes_full : (C x R) :obj:`numpy.ndarray`
+        The PE fits for the full model (components x regressors)
     f_vals : (C x M) :obj:`numpy.ndarray`
         The F statistics for the fits to the full and partial models
     p_vals : (C x M) :obj:`numpy.ndarray`
@@ -559,8 +559,8 @@ def fit_model_with_stats(
     r2_vals : (C x M) :obj:`numpy.ndarray`
         The R2 statistics for the fits to the full and partial models
     """
-    betas_base, sse_base, df_base = fit_model(regressor_models[base_label], y)
-    betas_full, sse_full, df_full = fit_model(regressor_models[full_label], y)
+    pes_base, sse_base, df_base = fit_model(regressor_models[base_label], y)
+    pes_full, sse_full, df_full = fit_model(regressor_models[full_label], y)
 
     # larger sample variance / smaller sample variance (F = (SSE1 – SSE2 / m) / SSE2 / n-k,
     # where SSE = residual sum of squares, m = number of restrictions and k = number of
@@ -580,7 +580,7 @@ def fit_model_with_stats(
     r2_vals = 1 - np.divide(sse_full, sse_base)
     print(y.shape)
 
-    return betas_full, f_vals, p_vals, r2_vals
+    return pes_full, f_vals, p_vals, r2_vals
 
 
 def compute_external_regressor_correlations(
