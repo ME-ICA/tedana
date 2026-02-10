@@ -325,7 +325,7 @@ def _generate_single_component_figure(
     compnum,
     component_table,
     mixing,
-    component_betas_img,
+    component_betas_file,
     tr,
     png_cmap,
     out_dir,
@@ -341,8 +341,8 @@ def _generate_single_component_figure(
         Component metric table.
     mixing : (C x T) array_like
         Mixing matrix for converting input data to component space.
-    component_betas_img : :obj:`nibabel.Nifti1Image`
-        4D image of the component beta maps.
+    component_betas_file : :obj:`str`
+        Path to the 4D image of the component beta maps.
     tr : float
         Repetition time of the time series.
     png_cmap : str
@@ -382,6 +382,8 @@ def _generate_single_component_figure(
     plot_name = f"{prefix}comp_{str(compnum).zfill(3)}.png"
     compplot_name = os.path.join(out_dir, "figures", plot_name)
 
+    component_betas_img = nb.load(component_betas_file)
+
     plot_component(
         stat_img=component_betas_img.slicer[..., compnum],
         component_timeseries=component_timeseries,
@@ -417,7 +419,6 @@ def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
         Number of threads to use for parallel processing. Default is 1.
     """
     component_betas_file = io_generator.get_name("ICA components img")
-    component_betas_img = nb.load(component_betas_file)
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
@@ -427,7 +428,7 @@ def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
             compnum=compnum,
             component_table=component_table,
             mixing=mixing,
-            component_betas_img=component_betas_img,
+            component_betas_file=component_betas_file,
             tr=tr,
             png_cmap=png_cmap,
             out_dir=io_generator.out_dir,
