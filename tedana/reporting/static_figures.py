@@ -58,8 +58,8 @@ def carpet_plot(
     ----------
     optcom_ts, denoised_ts, hikts, lowkts : (Mb x T) array_like
         Different types of data to plot, where `Mb` is samples in base mask, and `T` is time.
-    mask : (Mb,) array_like
-        Binary mask image used to apply to the data.
+    mask : img-like
+        Binary mask image used to mask the data.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generator for this workflow
     gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
@@ -662,7 +662,8 @@ def plot_rmse(
     rmse_img = io_generator.get_name("rmse img")
     confounds_file = io_generator.get_name("confounds tsv")
     mask_img = io_generator.get_name("adaptive mask img")
-    mask_img = image.binarize_img(mask_img, threshold=2, two_sided=False, copy_header=True)
+    # At least 2 good echoes
+    mask_img = image.binarize_img(mask_img, threshold=1.5, two_sided=False, copy_header=True)
 
     rmse_data = masking.apply_mask(rmse_img, mask_img)
     rmse_p02, rmse_p98 = np.percentile(rmse_data, [2, 98])
@@ -755,15 +756,17 @@ def plot_adaptive_mask(
     mean_optcom_img = masking.unmask(np.mean(optcom, axis=1), io_generator.mask)
 
     # Concatenate the three masks used in tedana to treat as a probabilistic atlas
+    # At least 1 good echo
     mask_denoise = image.binarize_img(
         adaptive_mask_img,
-        threshold=1,
+        threshold=0.5,
         two_sided=False,
         copy_header=True,
     )
+    # At least 3 good echoes
     mask_clf = image.binarize_img(
         adaptive_mask_img,
-        threshold=3,
+        threshold=2.5,
         two_sided=False,
         copy_header=True,
     )
@@ -1045,16 +1048,12 @@ def plot_decay_variance(
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
-        Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0.
-        For more information on thresholding, see `make_adaptive_mask`.
     """
     mask_img = io_generator.get_name("adaptive mask img")
+    # At least 2 good echoes
     mask_img = image.binarize_img(
         mask_img,
-        threshold=2,
+        threshold=1.5,
         two_sided=False,
         copy_header=True,
     )

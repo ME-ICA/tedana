@@ -425,7 +425,7 @@ def ica_reclassify_workflow(
 
     # Register the base mask for masked data operations
     # Create mask from non-zero voxels in the reference image
-    ref_data = data_optcom.get_fdata()
+    ref_data = np.asanyarray(data_optcom.dataobj)
     # Create mask from voxels that have non-zero values
     mask_data = (ref_data != 0).any(axis=-1).astype(np.int32)
     mask_img = nb.Nifti1Image(mask_data, data_optcom.affine)
@@ -517,6 +517,7 @@ def ica_reclassify_workflow(
     adaptive_mask = io._convert_to_nifti1(adaptive_mask)
     data_optcom = io._convert_to_nifti1(data_optcom)
 
+    # At least 1 good echo
     mask_denoise_img = image.binarize_img(
         adaptive_mask,
         threshold=0.5,

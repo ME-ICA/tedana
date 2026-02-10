@@ -1037,8 +1037,8 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
 
     Parameters
     ----------
-    data : list of str or str
-        List of paths to input files, or a single path for z-concatenated data
+    data : list of str
+        List of paths to input files. May only have one element for z-concatenated data.
     mask_img : nibabel image
         Mask image to apply
     n_echos : int

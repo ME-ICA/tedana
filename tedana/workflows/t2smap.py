@@ -417,7 +417,7 @@ def t2smap_workflow(
 
     # Create an adaptive mask with at least 1 good echo, for denoising
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
-        data_cat,
+        data_without_excluded_vols,
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,

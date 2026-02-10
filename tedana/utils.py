@@ -911,7 +911,6 @@ def load_mask(ref_img, mask=None, t2smap=None):
     from nilearn.masking import apply_mask, compute_epi_mask
 
     from tedana import io
-    from tedana.utils import check_t2s_values
 
     t2s = None
     if mask and not t2smap:
@@ -933,9 +932,11 @@ def load_mask(ref_img, mask=None, t2smap=None):
         LGR.info("Combining user-defined mask and T2* map to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap))
         t2s_loaded = t2s_img.get_fdata()
-        mask = nb.load(mask).get_fdata().astype(np.uint8)
+        # Load and convert user-defined mask to NIfTI1 (e.g., AFNI format)
+        mask_img = io._convert_to_nifti1(nb.load(mask))
+        mask = mask_img.get_fdata().astype(np.uint8)
         mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
-        mask_img = nb.Nifti1Image(mask, ref_img.affine)
+        mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
         t2s = apply_mask(t2s_img, mask_img)
         t2s = check_t2s_values(t2s)
     else:
