@@ -1,6 +1,8 @@
 """Tests for tedana.metrics.dependence."""
 
 import numpy as np
+import pytest
+from scipy import stats
 
 from tedana.metrics import dependence
 
@@ -30,6 +32,68 @@ def test_calculate_varex_correctness():
     varex_single = dependence.calculate_varex(component_maps=component_maps_single)
     assert varex_single.shape == (1,)
     assert np.isclose(varex_single[0], 100.0)
+
+
+def test_calculate_marginal_r2_correctness():
+    """Test numerical correctness of calculate_marginal_r2."""
+    # Create simple test case with known values
+    rng = np.random.default_rng(0)
+    mean = [0, 0]
+    cov = [[1, 0.5], [0.5, 1]]  # corr at about r = 0.5
+    mixing = rng.multivariate_normal(mean, cov, size=100000)
+    mixing = stats.zscore(mixing, axis=0)
+    # corr = np.corrcoef(mixing)[0, 1]
+    # shared_variance = 100 * (corr**2)  # 25% of variance is shared
+
+    data_optcom = np.sum(mixing, axis=1)[None, :]
+    data_optcom = stats.zscore(data_optcom, axis=1)
+
+    varex = dependence.calculate_marginal_r2(data_optcom=data_optcom, mixing=mixing)
+    # 100% + (2 * 25%) = 150%
+    assert np.isclose(varex.sum(), 150.0, atol=5)
+    # they contribute equally to the variance explained, so 75% each
+    assert np.isclose(varex[0], varex[1])
+
+    with pytest.raises(ValueError):
+        dependence.calculate_marginal_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
+
+def test_calculate_semipartial_r2_smoke():
+    """Test smoke test of calculate_semipartial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert semipartial_r2.shape == (n_components,)
+
+    with pytest.raises(ValueError):
+        dependence.calculate_semipartial_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
+
+
+def test_calculate_partial_r2_smoke():
+    """Test smoke test of calculate_partial_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    partial_r2 = dependence.calculate_partial_r2(
+        semipartial_r2=semipartial_r2,
+        total_r2=total_r2,
+    )
+    assert partial_r2.shape == (n_components,)
+
+
+def test_calculate_total_r2_smoke():
+    """Test smoke test of calculate_total_r2."""
+    n_voxels, n_components, n_volumes = 1000, 10, 100
+    data_optcom = np.random.random((n_voxels, n_volumes))
+    mixing = np.random.random((n_volumes, n_components))
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    assert np.isscalar(total_r2)
+
+    with pytest.raises(ValueError):
+        dependence.calculate_total_r2(data_optcom=data_optcom[:, :-1], mixing=mixing)
 
 
 def test_calculate_z_maps_correctness():
@@ -168,11 +232,8 @@ def test_generate_decision_table_score_correctness():
     countsig_ft2 = np.array([10, 20, 30, 40, 50])  # Higher is better
 
     d_table_score = dependence.generate_decision_table_score(
-        kappa=kappa,
-        dice_ft2=dice_ft2,
-        signal_minus_noise_t=signal_minus_noise_t,
-        countnoise=countnoise,
-        countsig_ft2=countsig_ft2,
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+        ascending=[countnoise],
     )
 
     # Component with index 4 should have the best score (lowest value)
@@ -184,17 +245,42 @@ def test_generate_decision_table_score_correctness():
 
     # Test with single component
     d_table_single = dependence.generate_decision_table_score(
-        kappa=np.array([1.0]),
-        dice_ft2=np.array([0.5]),
-        signal_minus_noise_t=np.array([2.0]),
-        countnoise=np.array([10]),
-        countsig_ft2=np.array([20]),
+        descending=[np.array([1.0]), np.array([0.5]), np.array([2.0]), np.array([20])],
+        ascending=[np.array([10])],
     )
     assert d_table_single.shape == (1,)
     # Single component: all metrics rank as 1, inverted ranks are 0
     # countnoise rank is 1 (not inverted)
     # Mean of [0, 0, 0, 1, 0] = 1/5 = 0.2
     assert np.isclose(d_table_single[0], 0.2)
+
+    # Use only descending metrics
+    d_table_descending = dependence.generate_decision_table_score(
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+    )
+    # Component with index 4 should have the best score (lowest value)
+    # because it has highest kappa, dice, signal-noise, countsig and lowest countnoise
+    assert np.argmin(d_table_descending) == 4
+    # Component with index 0 should have worst score (highest value)
+    assert np.argmax(d_table_descending) == 0
+
+    # Use only ascending metrics
+    d_table_ascending = dependence.generate_decision_table_score(
+        ascending=[countnoise],
+    )
+    # Component with index 4 should have the best score (lowest value)
+    # because it has lowest countnoise
+    assert np.argmin(d_table_ascending) == 4
+    # Component with index 0 should have worst score (highest value)
+    assert np.argmax(d_table_ascending) == 0
+
+    with pytest.raises(ValueError, match="At least one of"):
+        dependence.generate_decision_table_score(descending=[], ascending=[])
+    with pytest.raises(ValueError, match="All metric arrays must be 1-D"):
+        dependence.generate_decision_table_score(
+            descending=[np.array([1.0, 2.0])],
+            ascending=[np.array([10])],
+        )
 
 
 def test_compute_countsignal_correctness():
@@ -224,20 +310,20 @@ def test_compute_countnoise_correctness():
     # Create test data
     stat_maps = np.array([[3.0, 1.0], [2.5, 0.5], [1.0, 2.5], [-2.5, -1.5]])
     stat_cl_maps = np.array([[1, 0], [1, 0], [0, 1], [0, 0]])
-    stat_thresh = 1.95
+    stat_thresh = 1.96
 
     countnoise = dependence.compute_countnoise(
-        stat_maps=stat_maps, stat_cl_maps=stat_cl_maps, stat_thresh=stat_thresh
+        stat_maps=stat_maps, stat_cl_maps=stat_cl_maps, value_threshold=stat_thresh
     )
 
     # For component 0: abs(stat_maps[:, 0]) = [3.0, 2.5, 1.0, 2.5]
-    # Values > 1.95: [3.0, 2.5, 2.5] at indices [0, 1, 3]
+    # Values > 1.96: [3.0, 2.5, 2.5] at indices [0, 1, 3]
     # stat_cl_maps at these indices: [1, 1, 0]
     # Noise voxels (>thresh and not in cluster): only index 3
     # Count: 1
 
     # For component 1: abs(stat_maps[:, 1]) = [1.0, 0.5, 2.5, 1.5]
-    # Values > 1.95: [2.5] at index [2]
+    # Values > 1.96: [2.5] at index [2]
     # stat_cl_maps at index 2: 1 (in cluster)
     # Noise voxels: 0
 

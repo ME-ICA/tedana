@@ -60,6 +60,9 @@ def test_smoke_generate_metrics(testdata1):
         "signal-noise_t",
         "variance explained",
         "normalized variance explained",
+        "marginal R-squared",
+        "partial R-squared",
+        "semi-partial R-squared",
         "d_table_score",
         "kappa_rho_difference",
     ]
@@ -94,10 +97,10 @@ def test_smoke_generate_metrics(testdata1):
     assert isinstance(component_table, pd.DataFrame)
     # new_mixing should have flipped signs compared to mixing.
     # multiplying by "optimal sign" will flip the signs back so it should match
-    assert (
-        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4)
-        == np.round(testdata1["mixing"], 4)
-    ).all()
+    assert np.allclose(
+        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4),
+        np.round(testdata1["mixing"], 4),
+    )
 
 
 def test_generate_metrics_fails(testdata1):
@@ -202,19 +205,10 @@ def test_smoke_calculate_psc():
     assert psc.shape == (n_voxels, n_components)
 
 
-def test_smoke_calculate_z_maps():
-    """Smoke test for tedana.metrics.dependence.calculate_z_maps."""
-    n_voxels, n_components = 1000, 50
-    weights = np.random.random((n_voxels, n_components))
-    z_maps = dependence.calculate_z_maps(weights=weights, z_max=4)
-    assert z_maps.shape == (n_voxels, n_components)
-
-
 def test_smoke_calculate_f_maps():
     """Smoke test for tedana.metrics.dependence.calculate_f_maps."""
     n_voxels, n_echos, n_volumes, n_components = 1000, 5, 100, 50
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
-    z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
     # The ordering is random, but make sure the adaptive mask always includes values of 1-5
     adaptive_mask = np.random.permutation(
@@ -231,7 +225,6 @@ def test_smoke_calculate_f_maps():
     tes = np.array([15, 25, 35, 45, 55])
     f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -242,7 +235,6 @@ def test_smoke_calculate_f_maps():
     # rerunning with n_independent_echos=3
     f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
-        z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -319,7 +311,7 @@ def test_smoke_compute_signal_minus_noise_z():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        value_threshold=1.96,
     )
     assert signal_minus_noise_z.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -337,7 +329,7 @@ def test_smoke_compute_signal_minus_noise_t():
         z_maps=z_maps,
         z_clmaps=z_clmaps,
         f_t2_maps=f_t2_maps,
-        z_thresh=1.95,
+        value_threshold=1.96,
     )
     assert signal_minus_noise_t.shape == signal_minus_noise_p.shape == (n_components,)
 
@@ -358,7 +350,7 @@ def test_smoke_compute_countnoise():
     countnoise = dependence.compute_countnoise(
         stat_maps=stat_maps,
         stat_cl_maps=stat_cl_maps,
-        stat_thresh=1.95,
+        value_threshold=1.96,
     )
     assert countnoise.shape == (n_components,)
 
@@ -372,11 +364,8 @@ def test_smoke_generate_decision_table_score():
     countnoise = np.random.randint(0, n_voxels, size=n_components)
     countsig_ft2 = np.random.randint(0, n_voxels, size=n_components)
     decision_table_score = dependence.generate_decision_table_score(
-        kappa=kappa,
-        dice_ft2=dice_ft2,
-        signal_minus_noise_t=signal_minus_noise_t,
-        countnoise=countnoise,
-        countsig_ft2=countsig_ft2,
+        descending=[kappa, dice_ft2, signal_minus_noise_t, countsig_ft2],
+        ascending=[countnoise],
     )
     assert decision_table_score.shape == (n_components,)
 

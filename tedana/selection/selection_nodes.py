@@ -342,8 +342,8 @@ def dec_left_op_right(
                 f"left2={left2}, right2={right2}, op2={op2}"
             )
 
-    # If any of the values for the second boolean statement are set
-    if left3 or right3 or op3:
+    # If any of the values for the third boolean statement are set
+    if left3 is not None or right3 is not None or op3 is not None:
         if is_compound == 0:
             raise ValueError(
                 "left_op_right is includes parameters for a third conditional "
@@ -351,7 +351,7 @@ def dec_left_op_right(
                 "second statement"
             )
         # Check if they're all set & use them all or raise an error
-        if left3 and right3 and op3:
+        if left3 is not None and right3 is not None and op3 is not None:
             is_compound = 3
             left3_scale, left3, right3_scale, right3 = confirm_valid_conditional(
                 left3_scale, left3, right3_scale, right3, op3
@@ -429,7 +429,7 @@ def dec_left_op_right(
             # statement 1 is now the combination of the first two conditional statements
             statement1 = decision_boolean.copy()
             # statement 2 is now the third conditional statement
-            statement2 = eval(f"(left3_scale*left3_val) {op2} (right3_scale * right3_val)")
+            statement2 = eval(f"(left3_scale*left3_val) {op3} (right3_scale * right3_val)")
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
 
@@ -1832,11 +1832,8 @@ def calc_revised_meanmetricrank_guesses(
         tmp_countnoise = selector.component_table_.loc[comps2use, "countnoise"].to_numpy()
         tmp_countsig_ft2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
-            kappa=tmp_kappa,
-            dice_ft2=tmp_dice_ft2,
-            signal_minus_noise_t=tmp_signal_m_noise_t,
-            countnoise=tmp_countnoise,
-            countsig_ft2=tmp_countsig_ft2,
+            descending=[tmp_kappa, tmp_dice_ft2, tmp_signal_m_noise_t, tmp_countsig_ft2],
+            ascending=[tmp_countnoise],
         )
         selector.component_table_[f"d_table_score_node{selector.current_node_idx_}"] = np.nan
         selector.component_table_.loc[

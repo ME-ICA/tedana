@@ -101,6 +101,20 @@ def dependency_resolver(
         if escape_counter >= 10:
             LGR.warning("dependency_resolver in infinite loop. Escaping early.")
             break
+
+    # Check for deprecated metrics and raise an error if they are used
+    deprecated_metrics = {
+        "map Z": "map weight",
+        "map Z clusterized": "map weight clusterized",
+    }
+    msg = []
+    for metric in deprecated_metrics:
+        if metric in required_metrics:
+            msg.append(f"{metric}: Use {deprecated_metrics[metric]} instead.")
+    if msg:
+        msg = "\n\t- ".join(msg)
+        raise ValueError(f"The following metrics are no longer supported:\n\t- {msg}")
+
     return required_metrics
 
 
@@ -158,3 +172,54 @@ def flip_components(*args: npt.NDArray, signs: npt.NDArray) -> npt.NDArray:
         )
     # correct mixing & weights signs based on spatial distribution tails
     return [arg * signs for arg in args]
+
+
+def get_value_thresholds(
+    *,
+    maps: np.ndarray,
+    proportion_threshold: float = None,
+    value_threshold: float = None,
+) -> np.ndarray:
+    """Get value thresholds for maps.
+
+    Parameters
+    ----------
+    maps : (M x C) array_like
+        Maps for which to calculate thresholds.
+    proportion_threshold : float, optional
+        Percentile threshold to determine from absolute values of maps. Values between 0 and 100.
+        Only one of value_threshold or proportion_threshold should be provided.
+        Default is None.
+    value_threshold : float, optional
+        Value threshold to convert into a component-length array of thresholds.
+        Only one of value_threshold or proportion_threshold should be provided.
+        Default is None.
+
+    Returns
+    -------
+    value_threshold : (C) array_like
+        Value thresholds for each map.
+    """
+    # One threshold must be provided, but not both
+    if (value_threshold is not None) != (proportion_threshold is None):
+        raise ValueError("Only one of value_threshold or proportion_threshold should be provided")
+
+    n_components = maps.shape[1]
+    if proportion_threshold is not None:
+        if proportion_threshold > 100 or proportion_threshold < 0:
+            raise ValueError("proportion_threshold must be between 0 and 100")
+
+        if np.lib.NumpyVersion(np.__version__) >= "1.22.0":
+            kwargs = {"method": "higher"}
+        else:
+            kwargs = {"interpolation": "higher"}
+
+        value_threshold = np.percentile(
+            np.abs(maps),
+            proportion_threshold,
+            axis=0,
+            **kwargs,
+        )
+    else:
+        value_threshold = np.full(n_components, value_threshold)
+    return value_threshold
