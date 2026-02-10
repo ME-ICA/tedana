@@ -35,6 +35,14 @@
             "map beta S0 clusterized",
             "map FS0 clusterized"
         ],
+        "spearman_FT2_beta": [
+            "map weight",
+            "map FT2"
+        ],
+        "spearman_FS0_beta": [
+            "map weight",
+            "map FS0"
+        ],
         "signal-noise_t": [
             "map weight",
             "map weight clusterized",

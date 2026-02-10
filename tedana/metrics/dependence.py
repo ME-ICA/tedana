@@ -622,6 +622,34 @@ def compute_dice(
     return dice_values
 
 
+def compute_spearmans_rho(
+    *,
+    maps1: np.ndarray,
+    maps2: np.ndarray,
+) -> np.ndarray:
+    """Compute the Spearman's rank correlation coefficient between two unthresholded maps.
+
+    Parameters
+    ----------
+    maps1, maps2 : (S x C) array_like
+        Unthresholded maps.
+
+    Returns
+    -------
+    rho_values : (C) array_like
+        Spearman's rank correlation coefficient between the two maps.
+    """
+    if maps1.shape != maps2.shape:
+        raise ValueError("Maps must have the same shape.")
+
+    n_components = maps1.shape[1]
+    rho_values = np.zeros(n_components)
+    # Loop over components to avoid memory issues
+    for i_comp in range(n_components):
+        rho_values[i_comp] = stats.spearmanr(maps1[:, i_comp], maps2[:, i_comp])[0]
+    return rho_values
+
+
 def compute_signal_minus_noise_z(
     *,
     z_maps: np.ndarray,
