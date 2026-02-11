@@ -90,6 +90,17 @@ def _get_parser():
         default=[],
     )
     optional.add_argument(
+        "--tree",
+        dest="tree",
+        help=(
+            "Decision tree to use for reclassification. "
+            "You may use a packaged tree (tedana_orig, meica, minimal) or supply a JSON "
+            "file which matches the decision tree file specification. "
+            "If not provided, the decision tree from the previous tedana run will be used."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--config",
         dest="config",
         help="File naming configuration.",
@@ -209,6 +220,7 @@ def _main(argv=None):
         tag_accept=args.tag_accept,
         tag_reject=args.tag_reject,
         out_dir=args.out_dir,
+        tree=args.tree,
         config=args.config,
         prefix=args.prefix,
         convention=args.convention,
@@ -232,6 +244,7 @@ def ica_reclassify_workflow(
     tag_accept=[],
     tag_reject=[],
     out_dir=".",
+    tree=None,
     config="auto",
     convention="bids",
     prefix="",
@@ -267,6 +280,11 @@ def ica_reclassify_workflow(
         Will be applied to all listed rejected components, even if they were already rejected.
     out_dir : :obj:`str`, optional
         Output directory.
+    tree : :obj:`str` or None, optional
+        Decision tree to use for reclassification. Can be a packaged tree
+        (tedana_orig, meica, minimal) or a user-supplied JSON file that matches the
+        decision tree file specification. If None, the decision tree from the previous
+        tedana run will be used. Default is None.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data. Default is 0.
     tedort : :obj:`bool`, optional
@@ -359,8 +377,11 @@ def ica_reclassify_workflow(
     else:
         rej = ()
 
-    if (not accept) and (not reject):
-        raise ValueError("Must manually accept or reject at least one component")
+    if (not accept) and (not reject) and (tree is None):
+        raise ValueError(
+            "Must manually accept or reject at least one component, "
+            "or provide a decision tree via --tree."
+        )
 
     in_both = []
     for a in acc:
@@ -427,8 +448,9 @@ def ica_reclassify_workflow(
         old_registry=ioh.registry,
     )
 
-    # Make a new selector with the added files
-    selector = selection.component_selector.ComponentSelector(previous_tree_fname)
+    # Make a new selector with the specified or previous tree
+    tree_fname = tree if tree is not None else previous_tree_fname
+    selector = selection.component_selector.ComponentSelector(tree_fname, out_dir)
 
     if accept:
         selector.add_manual(accept, "accepted", classification_tags=tag_accept)
