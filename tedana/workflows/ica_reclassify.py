@@ -450,7 +450,7 @@ def ica_reclassify_workflow(
 
     # Make a new selector with the specified or previous tree
     tree_fname = tree if tree is not None else previous_tree_fname
-    selector = selection.component_selector.ComponentSelector(tree_fname)
+    selector = selection.component_selector.ComponentSelector(tree_fname, out_dir)
 
     if accept:
         selector.add_manual(accept, "accepted", classification_tags=tag_accept)
