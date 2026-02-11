@@ -378,7 +378,7 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
             expl_text = "other classification"
 
         # Title will include variance from component_table
-        comp_var = f"{component_table.loc[compnum, 'variance explained']:.2f}"
+        comp_var = f"{component_table.loc[compnum, 'marginal R-squared']:.2f}"
         comp_kappa = f"{component_table.loc[compnum, 'kappa']:.2f}"
         comp_rho = f"{component_table.loc[compnum, 'rho']:.2f}"
 
