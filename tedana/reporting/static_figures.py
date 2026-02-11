@@ -423,7 +423,13 @@ def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
 
-    Parallel(n_jobs=n_threads)(
+    # Normalize n_threads to joblib semantics: None/<=0 means use all cores
+    if n_threads is None or n_threads <= 0:
+        n_jobs = -1
+    else:
+        n_jobs = n_threads
+
+    Parallel(n_jobs=n_jobs)(
         delayed(_generate_single_component_figure)(
             compnum=compnum,
             component_table=component_table,
