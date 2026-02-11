@@ -9,12 +9,13 @@ import matplotlib
 import nibabel as nb
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
 from nilearn import masking, plotting
 
-from tedana import io, stats, utils
+from tedana import io, utils
 
 LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger("matplotlib")
@@ -320,7 +321,83 @@ def plot_component(
     plt.close(fig)
 
 
-def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
+def _generate_single_component_figure(
+    compnum,
+    component_table,
+    mixing,
+    component_betas_file,
+    tr,
+    png_cmap,
+    out_dir,
+    prefix,
+):
+    """Generate a figure for a single component.
+
+    Parameters
+    ----------
+    compnum : int
+        The component number to plot.
+    component_table : (C x M) :obj:`pandas.DataFrame`
+        Component metric table.
+    mixing : (T x C) array_like
+        Mixing matrix for converting input data to component space.
+    component_betas_file : :obj:`str`
+        Path to the 4D image of the component beta maps.
+    tr : float
+        Repetition time of the time series.
+    png_cmap : str
+        Colormap to use for the spatial map.
+    out_dir : str
+        Output directory path.
+    prefix : str
+        Prefix for the output file name.
+    """
+    classification = component_table.loc[compnum, "classification"]
+    classification_tags = str(component_table.loc[compnum, "classification_tags"])
+
+    color_map = {"accepted": "g", "rejected": "r", "ignored": "k"}
+    line_color = color_map.get(classification, "0.75")
+
+    if classification in color_map:
+        expl_text = f"{classification} reason(s): {classification_tags}"
+    else:
+        expl_text = "other classification"
+
+    # Title will include variance from component_table
+    comp_var = f"{component_table.loc[compnum, 'variance explained']:.2f}"
+    comp_kappa = f"{component_table.loc[compnum, 'kappa']:.2f}"
+    comp_rho = f"{component_table.loc[compnum, 'rho']:.2f}"
+
+    plt_title = (
+        f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
+        f"rho: {comp_rho}, {expl_text}"
+    )
+
+    component_timeseries = mixing[:, compnum]
+
+    # Get fft and freqs for this component
+    # adapted from @dangom
+    spectrum, freqs = utils.get_spectrum(component_timeseries, tr)
+
+    plot_name = f"{prefix}comp_{str(compnum).zfill(3)}.png"
+    compplot_name = os.path.join(out_dir, "figures", plot_name)
+
+    component_betas_img = nb.load(component_betas_file)
+
+    plot_component(
+        stat_img=component_betas_img.slicer[..., compnum],
+        component_timeseries=component_timeseries,
+        power_spectrum=spectrum,
+        frequencies=freqs,
+        tr=tr,
+        classification_color=line_color,
+        png_cmap=png_cmap,
+        title=plt_title,
+        out_file=compplot_name,
+    )
+
+
+def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -328,90 +405,43 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
 
     Parameters
     ----------
-    ts : (S x T) array_like
-        Time series from which to derive ICA betas
-    mask : (S,) array_like
-        Boolean mask array
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    mixing : (C x T) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
+    png_cmap : str
+        Colormap to use for the spatial map.
+    n_threads : int, optional
+        Number of threads to use for parallel processing. Default is 1.
     """
-    # regenerate the beta images
-    component_maps_arr = stats.get_coeffs(ts, mixing, mask)
-    component_maps_arr = component_maps_arr.reshape(
-        io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
-    )
+    component_betas_file = io_generator.get_name("ICA components img")
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
 
-    # Remove trailing ';' from rationale column
-    # component_table["rationale"] = component_table["rationale"].str.rstrip(";")
-    for compnum in component_table.index.values:
-        if component_table.loc[compnum, "classification"] == "accepted":
-            line_color = "g"
-            expl_text = "accepted reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
+    # Normalize n_threads to joblib semantics: None/<=0 means use all cores
+    if n_threads is None or n_threads <= 0:
+        n_jobs = -1
+    else:
+        n_jobs = n_threads
 
-        elif component_table.loc[compnum, "classification"] == "rejected":
-            line_color = "r"
-            expl_text = "rejected reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
-
-        elif component_table.loc[compnum, "classification"] == "ignored":
-            line_color = "k"
-            expl_text = "ignored reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
-
-        else:
-            # Classification not added
-            # If new, this will keep code running
-            line_color = "0.75"
-            expl_text = "other classification"
-
-        # Title will include variance from component_table
-        comp_var = f"{component_table.loc[compnum, 'variance explained']:.2f}"
-        comp_kappa = f"{component_table.loc[compnum, 'kappa']:.2f}"
-        comp_rho = f"{component_table.loc[compnum, 'rho']:.2f}"
-
-        plt_title = (
-            f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
-            f"rho: {comp_rho}, {expl_text}"
-        )
-        component_img = nb.Nifti1Image(
-            component_maps_arr[:, :, :, compnum],
-            affine=io_generator.reference_img.affine,
-            header=io_generator.reference_img.header,
-        )
-
-        component_timeseries = mixing[:, compnum]
-
-        # Get fft and freqs for this component
-        # adapted from @dangom
-        spectrum, freqs = utils.get_spectrum(component_timeseries, tr)
-
-        plot_name = f"{io_generator.prefix}comp_{str(compnum).zfill(3)}.png"
-        compplot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
-
-        plot_component(
-            stat_img=component_img,
-            component_timeseries=component_timeseries,
-            power_spectrum=spectrum,
-            frequencies=freqs,
+    Parallel(n_jobs=n_jobs)(
+        delayed(_generate_single_component_figure)(
+            compnum=compnum,
+            component_table=component_table,
+            mixing=mixing,
+            component_betas_file=component_betas_file,
             tr=tr,
-            classification_color=line_color,
             png_cmap=png_cmap,
-            title=plt_title,
-            out_file=compplot_name,
+            out_dir=io_generator.out_dir,
+            prefix=io_generator.prefix,
         )
+        for compnum in component_table.index.values
+    )
 
 
 def pca_results(criteria, n_components, all_varex, io_generator):
