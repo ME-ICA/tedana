@@ -105,7 +105,7 @@ def calculate_betas(
             data_std = np.std(data, axis=-1, keepdims=True)
             data_z = stats.zscore(data, axis=-1)
             betas = (data_z @ mixing) / dof
-            betas = betas * data_std.squeeze()
+            betas *= data_std
 
         else:
             # (M x E x T)
@@ -117,7 +117,7 @@ def calculate_betas(
                 data_z = stats.zscore(data_e, axis=-1)
 
                 betas[:, i_echo, :] = (data_z @ mixing) / dof
-                betas[:, i_echo, :] *= data_std.squeeze()
+                betas[:, i_echo, :] *= data_std
 
     return betas
 
@@ -179,6 +179,7 @@ def calculate_f_maps(
     *,
     data_cat: np.ndarray,
     mixing: np.ndarray,
+    me_betas: np.ndarray,
     adaptive_mask: np.ndarray,
     tes: np.ndarray,
     n_independent_echos=None,
@@ -192,6 +193,9 @@ def calculate_f_maps(
         Multi-echo data, already masked.
     mixing : (T x C) array_like
         Mixing matrix
+    me_betas : (Mb x E x C) array_like
+        Component-wise, unstandardized parameter estimates from the regression
+        of the multi-echo data against component time series.
     adaptive_mask : (M) array_like
         Adaptive mask, where each voxel's value is the number of echoes with
         "good signal". Limited to masked voxels.
@@ -215,9 +219,9 @@ def calculate_f_maps(
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
 
-    # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
-    n_voxels, n_echos, n_components = me_betas.shape
+    n_voxels, n_echos, _ = data_cat.shape
+    n_components = mixing.shape[1]
+
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
 

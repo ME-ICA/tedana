@@ -190,12 +190,13 @@ def generate_metrics(
             mixing=mixing,
             use_multivariate=use_multivariate,
         )
-        if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(
-                data=data_cat,
-                mixing=mixing,
-                use_multivariate=use_multivariate,
-            )
+
+    if "map echo betas" in required_metrics:
+        metric_maps["map echo betas"] = dependence.calculate_betas(
+            data=data_cat,
+            mixing=mixing,
+            use_multivariate=use_multivariate,
+        )
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
@@ -222,6 +223,7 @@ def generate_metrics(
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat=data_cat,
             mixing=mixing,
+            me_betas=metric_maps["map echo betas"],
             adaptive_mask=adaptive_mask,
             tes=tes,
             n_independent_echos=n_independent_echos,

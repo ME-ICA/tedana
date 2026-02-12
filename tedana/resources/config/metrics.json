@@ -79,12 +79,14 @@
             "mixing",
             "tes",
             "data_cat",
+            "map echo betas",
             "adaptive_mask"
         ],
         "map FS0": [
             "mixing",
             "tes",
             "data_cat",
+            "map echo betas",
             "adaptive_mask"
         ],
         "map univariate Z statistics": [
@@ -97,6 +99,10 @@
         ],
         "map optcom betas": [
             "data_optcom",
+            "mixing"
+        ],
+        "map echo betas": [
+            "data_cat",
             "mixing"
         ],
         "map percent signal change": [
