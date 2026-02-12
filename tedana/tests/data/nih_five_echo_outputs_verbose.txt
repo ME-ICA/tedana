@@ -18,6 +18,8 @@ sub-01_desc-ICAS0_stat-F_statmap.nii.gz
 sub-01_desc-ICAT2_stat-F_statmap.nii.gz
 sub-01_desc-ICA_mixing.tsv
 sub-01_desc-ICA_stat-z_components.nii.gz
+sub-01_desc-ICAOrth_metrics.json
+sub-01_desc-ICAOrth_metrics.tsv
 sub-01_desc-PCAAveragingWeights_components.nii.gz
 sub-01_desc-PCAS0_stat-F_statmap.nii.gz
 sub-01_desc-PCAT2_stat-F_statmap.nii.gz

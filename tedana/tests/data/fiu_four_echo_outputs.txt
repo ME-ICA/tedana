@@ -16,12 +16,16 @@ sub-01_desc-tedana_registry.json
 sub-01_desc-ICACrossComponent_metrics.json
 sub-01_desc-ICA_status_table.tsv
 sub-01_desc-ICA_decision_tree.json
+sub-01_desc-ICAMIRDenoised_metrics.json
+sub-01_desc-ICAMIRDenoised_metrics.tsv
 sub-01_desc-ICAS0_stat-F_statmap.nii.gz
 sub-01_desc-ICAT2_stat-F_statmap.nii.gz
 sub-01_desc-ICA_mixing.tsv
 sub-01_desc-ICA_stat-z_components.nii.gz
 sub-01_desc-T1likeEffect_min.nii.gz
 sub-01_desc-adaptiveGoodSignal_mask.nii.gz
+sub-01_desc-confounds_metrics.json
+sub-01_desc-confounds_metrics.tsv
 sub-01_desc-globalSignal_map.nii.gz
 sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
