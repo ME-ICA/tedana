@@ -210,7 +210,7 @@ def test_smoke_calculate_f_maps():
     n_voxels, n_echos, n_volumes, n_components = 1000, 5, 100, 50
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
     mixing = np.random.random((n_volumes, n_components))
-    me_betas = np.random.random((n_echos, n_volumes, n_components))
+    me_betas = np.random.random((n_voxels, n_echos, n_components))
     # The ordering is random, but make sure the adaptive mask always includes values of 1-5
     adaptive_mask = np.random.permutation(
         np.concatenate(
