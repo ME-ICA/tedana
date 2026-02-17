@@ -11,7 +11,10 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def getfbounds(n_independent_sources):
+def getfbounds(
+    n_independent_sources: int,
+    estimate_simultaneously: bool = False,
+):
     """
     Get F-statistic boundaries based on number of echos.
 
@@ -21,6 +24,13 @@ def getfbounds(n_independent_sources):
         The number of independent sources to calculate DOF for goodness of fit metrics (fstat).
         Typically the number of echos in the multi-echo data
         May be a lower value for EPTI acquisitions.
+    estimate_simultaneously : :obj:`bool`
+        If True, estimate the S0 and T2* models simultaneously.
+        If False, estimate the S0 and T2* models separately.
+        This affects the degrees of freedom for the F-statistic.
+        If True, the degrees of freedom are n_independent_sources - 2.
+        If False, the degrees of freedom are n_independent_sources - 1.
+        Default: False.
 
     Returns
     -------
@@ -28,9 +38,10 @@ def getfbounds(n_independent_sources):
         F-statistic thresholds for alphas of 0.05, 0.025, and 0.01,
         respectively.
     """
-    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(n_independent_sources - 1))
-    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_independent_sources - 1))
-    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_independent_sources - 1))
+    n_rm = 2 if estimate_simultaneously else 1
+    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(n_independent_sources - n_rm))
+    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_independent_sources - n_rm))
+    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_independent_sources - n_rm))
     return f05, f025, f01
 
 
