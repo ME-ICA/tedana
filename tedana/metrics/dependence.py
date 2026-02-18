@@ -839,9 +839,6 @@ def generate_decision_table_score(
     metrics in ``ascending`` are ranked so that lower values receive lower
     (better) scores. The ranks are then averaged per component.
 
-    TODO: Generalize this to allow any set of metrics, identified as 'ascending' or 'descending'
-    metrics.
-
     Parameters
     ----------
     ascending : list of (C,) array_like, optional
