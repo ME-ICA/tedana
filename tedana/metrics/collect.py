@@ -356,6 +356,26 @@ def generate_metrics(
             axis=0,
         )
 
+    if "spearman_FT2_beta" in required_metrics:
+        LGR.info(
+            "Calculating Spearman's rank correlation coefficient between squared standardized "
+            "parameter estimate maps and T2* F-statistic maps"
+        )
+        component_table["spearman_FT2_beta"] = dependence.compute_spearmans_rho(
+            maps1=metric_maps["map weight"] ** 2,
+            maps2=metric_maps["map FT2"],
+        )
+
+    if "spearman_FS0_beta" in required_metrics:
+        LGR.info(
+            "Calculating Spearman's rank correlation coefficient between squared standardized "
+            "parameter estimate maps and S0 F-statistic maps"
+        )
+        component_table["spearman_FS0_beta"] = dependence.compute_spearmans_rho(
+            maps1=metric_maps["map weight"] ** 2,
+            maps2=metric_maps["map FS0"],
+        )
+
     if "signal-noise_t" in required_metrics:
         LGR.info("Calculating signal-noise t-statistics")
         RepLGR.info(
