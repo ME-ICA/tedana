@@ -46,7 +46,7 @@ Thus, the model becomes :math:`{\Delta}S(TE_k) = {\bar{S}(TE_k)} * X`, where we
 fit X to the data using regression and evaluate model fit.
 
 For TEDPCA/TEDICA, we use regression to get parameter estimates (raw PEs; not
-standardized beta values) for component time-series against echo-specific data,
+standardized betas) for component time-series against echo-specific data,
 and substitute those PEs for :math:`{\bar{S}(TE_k)}`.
 Thus, to assess the TE-independence of a component, we use the model
 :math:`PE(TE_k) = {\bar{S}(TE_k)} * X`, fit X to the data, and evaluate model

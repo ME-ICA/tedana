@@ -368,9 +368,9 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
         iv_arr = np.repeat(x, n_vols, axis=0)
 
         # Log-linear fit
-        betas = np.linalg.lstsq(iv_arr, log_data, rcond=None)[0]
-        t2s = 1.0 / betas[1, :].T
-        s0 = np.exp(betas[0, :]).T
+        pes = np.linalg.lstsq(iv_arr, log_data, rcond=None)[0]
+        t2s = 1.0 / pes[1, :].T
+        s0 = np.exp(pes[0, :]).T
 
         t2s_asc_maps[voxel_idx, i_echo] = t2s
         s0_asc_maps[voxel_idx, i_echo] = s0
