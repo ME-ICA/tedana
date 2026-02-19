@@ -305,6 +305,9 @@ class OutputGenerator:
         name : str
             Full file path for output file.
 
+        mask : nibabel.Nifti1Image
+            A 3D NIfTI1 format image with the same number of True values as values in the only or second dimension of data.
+            Used to expand data into a 3D volume for saving.
         Notes
         -----
         Will coerce 64-bit float and int arrays into 32-bit arrays.
