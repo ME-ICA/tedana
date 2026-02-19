@@ -300,14 +300,16 @@ class OutputGenerator:
         data : nibabel.Nifti1Image or (Mb,) array_like or (Mb x T) array_like
             Data to save to a file.
             If this is img_like then it is treated as unmasked data.
-            If this is array_like, it will be expanded to a 3D volume using the mask in the io_generator or the provided mask.
+            If this is array_like, it will be expanded to a 3D volume using the mask in the
+            io_generator or the provided mask.
             Data to save to a file.
         name : str
             Full file path for output file.
-
-        mask : nibabel.Nifti1Image
-            A 3D NIfTI1 format image with the same number of True values as values in the only or second dimension of data.
+        mask : (Mb,) array_like
+            A boolean array with the same number of True values as values in the only or
+            second dimension of data.
             Used to expand data into a 3D volume for saving.
+
         Notes
         -----
         Will coerce 64-bit float and int arrays into 32-bit arrays.
@@ -331,8 +333,11 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        if mask:
-            mask = unmask(mask, io_generator.mask)
+        if isinstance(mask, np.ndarray):
+            mask = masking.unmask(mask, self.mask)
+        elif mask is None:
+            mask = self.mask
+
         img = masking.unmask(data.T, mask)
         if img.ndim == 4:
             # Only set the TR for 4D images.
@@ -799,8 +804,8 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
 
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
     mixing_z = stats.zscore(mixing, axis=0)
-    betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask)
-    fout = io_generator.save_file(betas_oc, "z-scored ICA components img")
+    betas_oc = get_coeffs(data_optcom_z, mixing_z)
+    fout = io_generator.save_file(betas_oc, "z-scored ICA components img", mask=mask)
     del data_optcom_z, mixing_z
     LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 

@@ -772,19 +772,14 @@ def tedana_workflow(
 
         if fittype == "curvefit":
             io_generator.save_file(
-                utils.unmask(failures, mask_denoise).astype(np.uint8),
+                failures.astype(np.uint8),
                 "fit failures img",
+                mask=mask_denoise,
             )
             if verbose:
-                io_generator.save_file(
-                    utils.unmask(t2s_var, mask_denoise),
-                    "t2star variance img",
-                )
-                io_generator.save_file(utils.unmask(s0_var, mask_denoise), "s0 variance img")
-                io_generator.save_file(
-                    utils.unmask(t2s_s0_covar, mask_denoise),
-                    "t2star-s0 covariance img",
-                )
+                io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+                io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
 
         del failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -797,12 +792,11 @@ def tedana_workflow(
         del masksum_masked
 
         t2s_full = utils.unmask(t2s_full, mask_denoise)
-        s0_full = utils.unmask(s0_full, mask_denoise)
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
-        io_generator.save_file(s0_full, "s0 img")
+        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
         del s0_full
 
         if verbose:
@@ -866,7 +860,7 @@ def tedana_workflow(
             low_mem=low_mem,
         )
         if verbose:
-            io_generator.save_file(utils.unmask(data_reduced, mask_clf), "whitened img")
+            io_generator.save_file(data_reduced, "whitened img", mask=mask_clf)
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
