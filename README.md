@@ -184,6 +184,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="20%"><a href="https://katielamar.github.io/"><img src="https://avatars.githubusercontent.com/u/65981856?v=4?s=100" width="100px;" alt="Katie Lamar"/><br /><sub><b>Katie Lamar</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=katielamar" title="Code">💻</a> <a href="#design-katielamar" title="Design">🎨</a> <a href="#ideas-katielamar" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="20%"><a href="https://marlyr.github.io/"><img src="https://avatars.githubusercontent.com/u/75410817?v=4?s=100" width="100px;" alt="Marly Rubin"/><br /><sub><b>Marly Rubin</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=marlyr" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/mauspad"><img src="https://avatars.githubusercontent.com/u/84593296?v=4?s=100" width="100px;" alt="Xue"/><br /><sub><b>Xue</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mauspad" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 
