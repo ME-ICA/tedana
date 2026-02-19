@@ -930,9 +930,8 @@ def plot_heatmap(
         finite_row = row[np.isfinite(row)]
         if finite_row.size < 2:
             reasons.add("insufficient finite values")
-        else:
-            if np.std(finite_row) == 0:
-                reasons.add("zero variance")
+        elif np.std(finite_row) == 0:
+            reasons.add("zero variance")
 
         if reasons:
             problematic[reg_name] = reasons
