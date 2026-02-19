@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from tedana import io, metrics, utils
 from tedana.reporting import pca_results as plot_pca_results
 from tedana.selection import kundu_tedpca
-from tedana.stats import computefeats2
+from tedana.stats import get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -210,8 +210,9 @@ def tedpca(
     )
     data = data_optcom[mask, :]
 
-    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    # Do not z-score the data if using MAPCA
+    if algorithm not in ["mdl", "aic", "kic"]:
+        data = stats.zscore(data, axis=-1)  # z-score over time
 
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
@@ -320,23 +321,23 @@ def tedpca(
 
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
-        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
+        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data)
     else:
         # If algorithm is kundu or kundu-stablize component metrics
         # are calculated without dimensionality estimation and
         # reduction and then kundu identifies components that are
         # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
 
     # Compute Kappa and Rho for PCA comps
@@ -380,7 +381,10 @@ def tedpca(
     component_table["normalized variance explained"] = varex_norm * 100
 
     # write component maps to 4D image
-    comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts, mask), mask)
+    data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
+    comp_ts_z = stats.zscore(comp_ts, axis=0)
+    comp_maps = utils.unmask(get_coeffs(data_optcom_z, comp_ts_z), mask)
+    del data_optcom_z, comp_ts_z
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
@@ -451,6 +455,5 @@ def tedpca(
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
-    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return kept_data, n_components

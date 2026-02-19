@@ -77,7 +77,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
         "signal-noise_t",
         "signal-noise_p",
         "d_table_score",
-        "kappa ratio",
+        "varex kappa ratio",
         "rationale",
         "d_table_score_scrub",
     ]
@@ -235,8 +235,9 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     fig.yaxis.axis_label = "Rho"
     fig.toolbar.logo = None
     fig.legend.background_fill_alpha = 0.5
+    fig.legend.border_line_alpha = 0
     fig.legend.orientation = "horizontal"
-    fig.legend.location = "bottom_right"
+    fig.legend.location = "top_right"
     return fig
 
 
@@ -327,7 +328,14 @@ def _create_sorted_plt(
     return fig
 
 
-def _create_varexp_pie_plt(comptable_cds):
+def _create_varexp_pie_plt(comptable_cds, n_total, n_accepted, n_rejected):
+
+    data = comptable_cds.data
+    varexp = np.array(data["varexp"])
+    classif = np.array(data["classif"])
+
+    varexp_accepted = float(varexp[classif == "accepted"].sum())
+    varexp_rejected = 100 - varexp_accepted
 
     pie_hovertool = models.HoverTool(
         tooltips=[
@@ -366,6 +374,56 @@ def _create_varexp_pie_plt(comptable_cds):
     )
     fig.add_glyph(circle)
 
+    center_text = (
+        f"Total: {n_total}\n"
+        f"Accept: {n_accepted}/{varexp_accepted:.1f}%\n"
+        f"Reject: {n_rejected}/{varexp_rejected:.1f}%"
+    )
+
+    center_label = models.Label(
+        x=0,
+        y=1,
+        text=center_text,
+        text_align="center",
+        text_baseline="middle",
+        text_font_size="12pt",
+    )
+    fig.add_layout(center_label)
+
+    callback = models.CustomJS(
+        args=dict(source=comptable_cds),
+        code="""
+        if (window._tedana_key_handler_added) {
+            return;
+        }
+        window._tedana_key_handler_added = true;
+
+        document.addEventListener('keydown', function(e) {
+            const key = e.key;
+            const N = source.get_length();
+            if (!N) return;
+
+            let idx = 0;
+            if (source.selected.indices.length > 0) {
+                idx = source.selected.indices[0];
+            }
+
+            if (key === "ArrowLeft") {
+                idx = (idx + 1) % N;
+            } else if (key === "ArrowRight") {
+                idx = (idx - 1 + N) % N;
+            } else {
+                return;
+            }
+
+            source.selected.indices = [idx];
+            source.change.emit();
+        });
+    """,
+    )
+
+    fig.js_on_event(events.Tap, callback)
+
     return fig
 
 
@@ -401,7 +459,7 @@ def _tap_callback(comptable_cds, div_content, io_generator):
 
 def _link_figures(fig, comptable_ds, div_content, io_generator):
     """
-    Links figures and adds interaction on mouse-click.
+    Links figures and adds interaction on selection change.
 
     Parameters
     ----------
@@ -424,7 +482,10 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
         Same as input figure, but with a linked method to
         its Tap event.
     """
-    fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
+    cb = _tap_callback(comptable_ds, div_content, io_generator)
+    fig.js_on_event(events.Tap, cb)
+    comptable_ds.selected.js_on_change("indices", cb)
+
     return fig
 
 

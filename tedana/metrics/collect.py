@@ -16,7 +16,7 @@ from tedana.metrics._utils import (
     determine_signs,
     flip_components,
 )
-from tedana.stats import getfbounds
+from tedana.stats import getfbounds, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -132,6 +132,7 @@ def generate_metrics(
     # use either the inputted number of indie echoes or the total number of echoes
     # to calculate the threshold for f tests
     f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
+    proportion_threshold = 95  # top 5% of voxels for standardized parameter estimate maps
 
     # Get reference image from io_generator
     ref_img = io_generator.reference_img
@@ -158,7 +159,7 @@ def generate_metrics(
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
     if "map weight" in required_metrics:
-        LGR.info("Calculating weight maps")
+        LGR.info("Calculating standardized parameter estimate maps for optimally combined data")
         metric_maps["map weight"] = dependence.calculate_weights(
             data_optcom=data_optcom,
             mixing=mixing,
@@ -168,9 +169,14 @@ def generate_metrics(
         metric_maps["map weight"], mixing = flip_components(
             metric_maps["map weight"], mixing, signs=signs
         )
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map weight"] ** 2, mask),
+                f"{label} component weights img",
+            )
 
     if "map optcom betas" in required_metrics:
-        LGR.info("Calculating parameter estimate maps for optimally combined data")
+        LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")
         metric_maps["map optcom betas"] = dependence.calculate_betas(
             data=data_optcom,
             mixing=mixing,
@@ -189,21 +195,22 @@ def generate_metrics(
             optcom_betas=metric_maps["map optcom betas"],
         )
 
-    if "map Z" in required_metrics:
-        LGR.info("Calculating z-statistic maps")
-        metric_maps["map Z"] = dependence.calculate_z_maps(weights=metric_maps["map weight"])
-
-        if io_generator.verbose:
-            io_generator.save_file(
-                utils.unmask(metric_maps["map Z"] ** 2, mask),
-                f"{label} component weights img",
-            )
+    if "map univariate Z statistics" in required_metrics:
+        LGR.info("Calculating univariate z-statistic maps")
+        # The univariate z-statistic maps are the result of a voxelwise univariate
+        # (i.e., one component at a time) regression of the optimally combined data on each
+        # component in the mixing matrix.
+        # This works around the fragility of z-statistics when there are many components and
+        # few degrees of freedom.
+        metric_maps["map univariate Z statistics"] = voxelwise_univariate_zstats(
+            data=data_optcom,
+            mixing=mixing,
+        )
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat=data_cat,
-            z_maps=metric_maps["map Z"],
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
@@ -224,32 +231,31 @@ def generate_metrics(
                 f"{label} component F-S0 img",
             )
 
-    if "map Z clusterized" in required_metrics:
-        LGR.info("Thresholding z-statistic maps")
-        z_thresh = 1.95
-        metric_maps["map Z clusterized"] = dependence.threshold_map(
-            maps=metric_maps["map Z"],
+    if "map weight clusterized" in required_metrics:
+        LGR.info("Thresholding standardized parameter estimate maps")
+        metric_maps["map weight clusterized"] = dependence.threshold_map(
+            maps=metric_maps["map weight"],
             mask=mask,
             ref_img=ref_img,
-            threshold=z_thresh,
+            proportion_threshold=proportion_threshold,
         )
 
     if "map FT2 clusterized" in required_metrics:
-        LGR.info("Calculating T2* F-statistic maps")
+        LGR.info("Thresholding T2* F-statistic maps")
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
             ref_img=ref_img,
-            threshold=f_thresh,
+            value_threshold=f_thresh,
         )
 
     if "map FS0 clusterized" in required_metrics:
-        LGR.info("Calculating S0 F-statistic maps")
+        LGR.info("Thresholding S0 F-statistic maps")
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
             ref_img=ref_img,
-            threshold=f_thresh,
+            value_threshold=f_thresh,
         )
 
     # Intermediate metrics
@@ -290,7 +296,7 @@ def generate_metrics(
         component_table["kappa"], component_table["rho"] = dependence.calculate_dependence_metrics(
             f_t2_maps=metric_maps["map FT2"],
             f_s0_maps=metric_maps["map FS0"],
-            z_maps=metric_maps["map Z"],
+            z_maps=metric_maps["map weight"],
         )
 
     # Generic metrics
@@ -304,6 +310,28 @@ def generate_metrics(
         LGR.info("Calculating normalized variance explained")
         component_table["normalized variance explained"] = dependence.calculate_varex(
             component_maps=metric_maps["map weight"],
+        )
+
+    if "marginal R-squared" in required_metrics:
+        LGR.info("Calculating marginal R-squared")
+        component_table["marginal R-squared"] = dependence.calculate_marginal_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "semi-partial R-squared" in required_metrics:
+        LGR.info("Calculating semi-partial R-squared")
+        component_table["semi-partial R-squared"] = dependence.calculate_semipartial_r2(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
+
+    if "partial R-squared" in required_metrics:
+        LGR.info("Calculating partial R-squared")
+        total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+        component_table["partial R-squared"] = dependence.calculate_partial_r2(
+            semipartial_r2=component_table["semi-partial R-squared"],
+            total_r2=total_r2,
         )
 
     # Spatial metrics
@@ -340,9 +368,10 @@ def generate_metrics(
             component_table["signal-noise_t"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_t(
-            z_maps=metric_maps["map Z"],
-            z_clmaps=metric_maps["map Z clusterized"],
+            z_maps=metric_maps["map weight"],
+            z_clmaps=metric_maps["map weight clusterized"],
             f_t2_maps=metric_maps["map FT2"],
+            proportion_threshold=proportion_threshold,
         )
 
     if "signal-noise_z" in required_metrics:
@@ -357,9 +386,10 @@ def generate_metrics(
             component_table["signal-noise_z"],
             component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_z(
-            z_maps=metric_maps["map Z"],
-            z_clmaps=metric_maps["map Z clusterized"],
+            z_maps=metric_maps["map weight"],
+            z_clmaps=metric_maps["map weight clusterized"],
             f_t2_maps=metric_maps["map FT2"],
+            proportion_threshold=proportion_threshold,
         )
 
     if "countnoise" in required_metrics:
@@ -369,19 +399,24 @@ def generate_metrics(
             "calculated for each component."
         )
         component_table["countnoise"] = dependence.compute_countnoise(
-            stat_maps=metric_maps["map Z"],
-            stat_cl_maps=metric_maps["map Z clusterized"],
+            stat_maps=metric_maps["map weight"],
+            stat_cl_maps=metric_maps["map weight clusterized"],
+            proportion_threshold=proportion_threshold,
         )
 
     # Composite metrics
     if "d_table_score" in required_metrics:
         LGR.info("Calculating decision table score")
         component_table["d_table_score"] = dependence.generate_decision_table_score(
-            kappa=component_table["kappa"],
-            dice_ft2=component_table["dice_FT2"],
-            signal_minus_noise_t=component_table["signal-noise_t"],
-            countnoise=component_table["countnoise"],
-            countsig_ft2=component_table["countsigFT2"],
+            descending=[
+                component_table["kappa"].values,
+                component_table["dice_FT2"].values,
+                component_table["signal-noise_t"].values,
+                component_table["countsigFT2"].values,
+            ],
+            ascending=[
+                component_table["countnoise"].values,
+            ],
         )
 
     if "kappa_rho_difference" in required_metrics:
@@ -449,6 +484,9 @@ def generate_metrics(
         "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
+        "marginal R-squared",
+        "partial R-squared",
+        "semi-partial R-squared",
         "countsigFT2",
         "countsigFS0",
         "dice_FT2",
@@ -458,7 +496,8 @@ def generate_metrics(
         "signal-noise_z",
         "signal-noise_p",
         "d_table_score",
-        "kappa ratio",
+        "kappa_rho_difference",
+        "varex kappa ratio",
         "d_table_score_scrub",
         "external fit",
         "classification",
@@ -514,8 +553,12 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
         metric_metadata["variance explained"] = {
             "LongName": "Variance explained",
             "Description": (
-                "Variance explained in the optimally combined data of "
-                "each component. On a scale from 0 to 100."
+                "The square of the parameter estimates from the regression of the mean-centered, "
+                "but not z-scored, optimally combined data against the component time series, "
+                "divided by the sum of the squares of the parameter estimates. "
+                "This metric reflects relative participation in the fitted model, "
+                "not unique or marginal explanatory power. "
+                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }
@@ -530,6 +573,44 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "-0.999 and 0.999, and then the Fisher's z-transform is applied to the parameter "
                 "estimates. This is then used to calculate the variance explained for each "
                 "component. On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "marginal R-squared" in component_table:
+        metric_metadata["marginal R-squared"] = {
+            "LongName": "Marginal R-squared",
+            "Description": (
+                "Marginal R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component without "
+                "controlling for other components. "
+                "Mathematically, it is equivalent to 100 * the squared correlation "
+                "between the component time series and the data, averaged over voxels. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "partial R-squared" in component_table:
+        metric_metadata["partial R-squared"] = {
+            "LongName": "Partial R-squared",
+            "Description": (
+                "Partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "the other components out of the data *and* the component itself. "
+                "It is a conditional effect size. "
+                "On a scale from 0 to 100."
+            ),
+            "Units": "percent",
+        }
+    if "semi-partial R-squared" in component_table:
+        metric_metadata["semi-partial R-squared"] = {
+            "LongName": "Semi-partial R-squared",
+            "Description": (
+                "Semi-partial R-squared for each component in the optimally combined data. "
+                "This is equivalent to the variance explained by each component after regressing "
+                "out the other components from the target component. "
+                "It indicates the incremental increase in R-squared when adding the target "
+                "component to the model. "
+                "On a scale from 0 to 100."
             ),
             "Units": "percent",
         }
@@ -608,6 +689,14 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
+    if "kappa_rho_difference" in component_table:
+        metric_metadata["kappa_rho_difference"] = {
+            "LongName": "Kappa-rho difference",
+            "Description": (
+                "Proportion of pseudo-F-statistics that is dominated by either kappa or rho."
+            ),
+            "Units": "percent",
+        }
     if "original_classification" in component_table:
         metric_metadata["original_classification"] = {
             "LongName": "Original classification",
@@ -651,8 +740,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "This column label was replaced with classification_tags in late 2022"
             ),
         }
-    if "kappa ratio" in component_table:
-        metric_metadata["kappa ratio"] = {
+    if "varex kappa ratio" in component_table:
+        metric_metadata["varex kappa ratio"] = {
             "LongName": "Kappa ratio",
             "Description": (
                 "Ratio score calculated by dividing range of kappa "
