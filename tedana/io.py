@@ -331,7 +331,8 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        mask = mask or self.mask
+        if mask:
+            mask = unmask(mask, io_generator.mask)
         img = masking.unmask(data.T, mask)
         if img.ndim == 4:
             # Only set the TR for 4D images.
