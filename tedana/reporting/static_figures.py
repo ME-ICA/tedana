@@ -802,7 +802,7 @@ def plot_adaptive_mask(
             linewidths=1.5,
         )
         ob.add_contours(
-            base_mask,
+            io_generator.mask,
             threshold=0.2,
             levels=[0.5],
             colors=[color_dict["Initial mask only"]],
