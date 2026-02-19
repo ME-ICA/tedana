@@ -389,9 +389,9 @@ def tedpca(
     # write component maps to 4D image
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
     comp_ts_z = stats.zscore(comp_ts, axis=0)
-    comp_maps = utils.unmask(get_coeffs(data_optcom_z, comp_ts_z), mask)
+    comp_maps = get_coeffs(data_optcom_z, comp_ts_z)
     del data_optcom_z, comp_ts_z
-    io_generator.save_file(comp_maps, "z-scored PCA components img")
+    io_generator.save_file(comp_maps, "z-scored PCA components img", mask=mask)
 
     # Select components using decision tree
     if algorithm == "kundu":

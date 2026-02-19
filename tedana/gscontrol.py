@@ -107,7 +107,7 @@ def gscontrol_raw(
     # The spatial global signal is the minimum of the detrended data
     gs_spatial = (optcom_detr).min(axis=1)
     gs_spatial -= gs_spatial.mean()
-    io_generator.save_file(utils.unmask(gs_spatial, temporal_mean_mask), "gs img")
+    io_generator.save_file(gs_spatial, "gs img", mask=temporal_mean_mask)
 
     # Find time course of the spatial global signal
     # Make basis with the Legendre basis
@@ -128,8 +128,7 @@ def gscontrol_raw(
     LGR.info(f"Variance in optimally combined data explained by global signal: {varexpl:.02f}%")
 
     data_optcom_nogs += temporal_mean
-    data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
-    io_generator.save_file(data_optcom_nogs, "removed gs combined img")
+    io_generator.save_file(data_optcom_nogs, "removed gs combined img", mask=temporal_mean_mask)
 
     # Project global signal (but not Legendre bases) out of each echo
     data_cat_nogs = data_cat.copy()  # don't overwrite data_cat
@@ -258,7 +257,7 @@ def minimum_image_regression(
     mehk_ts = np.dot(comp_pes[:, acc], mixing[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io_generator.save_file(utils.unmask(t1_map, mask), "t1 like img")
+    io_generator.save_file(t1_map, "t1 like img", mask=mask)
     t1_map = t1_map[:, np.newaxis]
 
     # Find the global signal based on the T1-like effect
@@ -280,7 +279,7 @@ def minimum_image_regression(
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_no_t1_gs + resid) * optcom_std)
-    io_generator.save_file(utils.unmask(medn_ts, mask), "mir denoised img")
+    io_generator.save_file(medn_ts, "mir denoised img", mask=mask)
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mixing_not1gs = mixing.T - np.dot(np.linalg.lstsq(gs_ts.T, mixing, rcond=None)[0].T, gs_ts)
@@ -293,10 +292,11 @@ def minimum_image_regression(
 
     if io_generator.verbose:
         hik_ts = mehk_no_t1_gs * optcom_std  # rescale
-        io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
+        io_generator.save_file(hik_ts, "ICA accepted mir denoised img", mask=mask)
 
         comp_pes_norm = np.linalg.lstsq(mixing_not1gs_z.T, data_optcom_z.T, rcond=None)[0].T
         io_generator.save_file(
-            utils.unmask(comp_pes_norm[:, 2:], mask),
+            comp_pes_norm[:, 2:],
             "ICA accepted mir component weights img",
+            mask=mask,
         )
