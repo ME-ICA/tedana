@@ -297,7 +297,10 @@ class OutputGenerator:
 
         Parameters
         ----------
-        data : img_like
+        data : nibabel.Nifti1Image or (Mb,) array_like or (Mb x T) array_like
+            Data to save to a file.
+            If this is img_like then it is treated as unmasked data.
+            If this is array_like, it will be expanded to a 3D volume using the mask in the io_generator or the provided mask.
             Data to save to a file.
         name : str
             Full file path for output file.
