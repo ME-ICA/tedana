@@ -1076,6 +1076,32 @@ def tedana_workflow(
             "series."
         )
 
+        # Generate a new component table from the orthogonalized mixing matrix
+        LGR.info("Generating metrics for TEDORT-orthogonalized mixing matrix")
+        orig_verbose = io_generator.verbose
+        io_generator.verbose = False
+        # Only calculate metrics for the rejected components
+        rej_mixing = mixing[:, comps_rejected]
+        rej_comp_names = component_table.loc[comps_rejected, "Component"].tolist()
+        orth_component_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=rej_mixing,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            n_independent_echos=n_independent_echos,
+            io_generator=io_generator,
+            label="ICA",
+            metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
+        )
+        orth_component_table["Component"] = rej_comp_names
+        io_generator.verbose = orig_verbose
+        io_generator.save_file(orth_component_table, "ICA orthogonalized metrics tsv")
+        orth_metric_metadata = metrics.collect.get_metadata(orth_component_table)
+        io_generator.save_file(orth_metric_metadata, "ICA orthogonalized metrics json")
+
     io.writeresults(
         data_optcom,
         mask=mask_denoise,
@@ -1085,7 +1111,7 @@ def tedana_workflow(
     )
 
     if "mir" in gscontrol:
-        gsc.minimum_image_regression(
+        mir_mixing = gsc.minimum_image_regression(
             data_optcom=data_optcom,
             mixing=mixing,
             mask=mask_denoise,
@@ -1094,8 +1120,95 @@ def tedana_workflow(
             io_generator=io_generator,
         )
 
+        # Generate a new component table from the MIR-denoised mixing matrix
+        LGR.info("Generating metrics for MIR-denoised mixing matrix")
+        orig_verbose = io_generator.verbose
+        io_generator.verbose = False
+        mir_component_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=mir_mixing,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            n_independent_echos=n_independent_echos,
+            io_generator=io_generator,
+            label="ICA",
+            metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
+        )
+        io_generator.verbose = orig_verbose
+        io_generator.save_file(mir_component_table, "ICA MIR metrics tsv")
+        mir_metric_metadata = metrics.collect.get_metadata(mir_component_table)
+        io_generator.save_file(mir_metric_metadata, "ICA MIR metrics json")
+
     if verbose:
         io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
+
+    # Compute dependence metrics for external regressors
+    if external_regressors is not None:
+        ext_regressor_names = external_regressors.columns.tolist()
+        LGR.info(
+            "Computing dependence metrics for external regressors: "
+            f"{', '.join(ext_regressor_names)}"
+        )
+        orig_verbose = io_generator.verbose
+        io_generator.verbose = False
+        ext_regressor_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=external_regressors.values,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            n_independent_echos=n_independent_echos,
+            io_generator=io_generator,
+            label="ICA",
+            metrics=["kappa", "rho", "normalized variance explained", "marginal R-squared"],
+            use_multivariate=False,
+        )
+        io_generator.verbose = orig_verbose
+
+        ext_regressor_table["Component"] = ext_regressor_names
+        ext_regressor_table = ext_regressor_table.rename(
+            columns={"Component": "Regressor"},
+        )
+        io_generator.save_file(ext_regressor_table, "external regressors metrics tsv")
+        ext_regressor_metadata = metrics.collect.get_metadata(ext_regressor_table)
+        io_generator.save_file(ext_regressor_metadata, "external regressors metrics json")
+
+    # Compute dependence metrics for gscontrol confound time series
+    confounds_path = io_generator.get_name("confounds tsv")
+    if op.isfile(confounds_path):
+        confounds_df = pd.read_table(confounds_path)
+        # Exclude RMSE columns (decay fit statistics, not regressors)
+        confound_cols = [c for c in confounds_df.columns if not c.startswith("rmse_")]
+        if confound_cols:
+            confound_names = confounds_df[confound_cols].columns.tolist()
+            LGR.info(
+                "Computing dependence metrics for confound time series: "
+                f"{', '.join(confound_names)}"
+            )
+            orig_verbose = io_generator.verbose
+            io_generator.verbose = False
+            confound_table, _ = metrics.collect.generate_metrics(
+                data_cat=data_cat,
+                data_optcom=data_optcom,
+                mixing=confounds_df[confound_cols].values,
+                adaptive_mask=masksum_clf,
+                tes=tes,
+                n_independent_echos=n_independent_echos,
+                io_generator=io_generator,
+                label="ICA",
+                metrics=["kappa", "rho", "normalized variance explained", "marginal R-squared"],
+                use_multivariate=False,
+            )
+            io_generator.verbose = orig_verbose
+
+            confound_table["Component"] = confound_names
+            confound_table = confound_table.rename(columns={"Component": "Regressor"})
+            io_generator.save_file(confound_table, "confounds metrics tsv")
+            confound_metadata = metrics.collect.get_metadata(confound_table)
+            io_generator.save_file(confound_metadata, "confounds metrics json")
 
     # Write out registry of outputs
     io_generator.save_self()

@@ -19,6 +19,7 @@ def calculate_weights(
     *,
     data_optcom: np.ndarray,
     mixing: np.ndarray,
+    use_multivariate: bool = True,
 ) -> np.ndarray:
     """Calculate standardized parameter estimates between data and mixing matrix.
 
@@ -28,6 +29,10 @@ def calculate_weights(
         Optimally combined data, already masked.
     mixing : (T x C) array_like
         Mixing matrix
+    use_multivariate : bool
+        Whether to use multivariate (using all regressors in ``mixing`` in a single model)
+        or univariate (using one regressor at a time) regression for metrics.
+        Default is True.
 
     Returns
     -------
@@ -36,10 +41,19 @@ def calculate_weights(
         the mixing matrix.
     """
     assert data_optcom.shape[1] == mixing.shape[0]
+
+    # Z-score over time
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=-1)
-    # compute standardized parameter estimates
-    weights = get_coeffs(data_optcom, mixing)
+
+    if use_multivariate:
+        # Multivariate OLS
+        weights = get_coeffs(data_optcom, mixing)
+    else:
+        dof = mixing.shape[0] - 1
+
+        # Univariate OLS
+        weights = (data_optcom @ mixing) / dof
     return weights
 
 
@@ -47,33 +61,63 @@ def calculate_betas(
     *,
     data: np.ndarray,
     mixing: np.ndarray,
+    use_multivariate: bool = True,
 ) -> np.ndarray:
     """Calculate unstandardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
     data : (M [x E] x T) array_like
-        Data to calculate betas for
+        Data for which to calculate parameter estimates.
     mixing : (T x C) array_like
-        Mixing matrix
+        Mixing matrix (already z-scored over time).
+    use_multivariate : bool
+        Whether to use multivariate (using all regressors in ``mixing`` in a single model)
+        or univariate (using one regressor at a time) regression for metrics.
+        Default is True.
 
     Returns
     -------
     betas : (M [x E] x C) array_like
-        Unstandardized parameter estimates
+        Unstandardized parameter estimates for data against mixing matrix.
     """
-    if data.ndim == 2:
-        data_optcom = data
-        assert data_optcom.shape[1] == mixing.shape[0]
-        # mean-center optimally-combined data
-        data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-        # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
-        betas = get_coeffs(data_optcom_dm, mixing)
+    if use_multivariate:
+        # Multivariate OLS
+        if data.ndim == 2:
+            # (M x T)
+            assert data.shape[1] == mixing.shape[0]
+            # mean-center optimally-combined data
+            data_dm = data - data.mean(axis=-1, keepdims=True)
+            # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
+            betas = get_coeffs(data_dm, mixing)
 
+        else:
+            # (M x E x T)
+            betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
+            for n_echo in range(data.shape[1]):
+                betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
     else:
-        betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
-        for n_echo in range(data.shape[1]):
-            betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+        # Univariate OLS
+        dof = mixing.shape[0] - 1
+
+        if data.ndim == 2:
+            # (M x T)
+            data_std = np.std(data, axis=-1, keepdims=True)
+            data_z = stats.zscore(data, axis=-1)
+            betas = (data_z @ mixing) / dof
+            betas *= data_std
+
+        else:
+            # (M x E x T)
+            betas = np.zeros((data.shape[0], data.shape[1], mixing.shape[1]))
+
+            for i_echo in range(data.shape[1]):
+                data_e = data[:, i_echo, :]
+                data_std = np.std(data_e, axis=-1, keepdims=True)
+                data_z = stats.zscore(data_e, axis=-1)
+
+                betas[:, i_echo, :] = (data_z @ mixing) / dof
+                betas[:, i_echo, :] *= data_std
 
     return betas
 
@@ -135,6 +179,7 @@ def calculate_f_maps(
     *,
     data_cat: np.ndarray,
     mixing: np.ndarray,
+    me_betas: np.ndarray,
     adaptive_mask: np.ndarray,
     tes: np.ndarray,
     n_independent_echos=None,
@@ -148,6 +193,9 @@ def calculate_f_maps(
         Multi-echo data, already masked.
     mixing : (T x C) array_like
         Mixing matrix
+    me_betas : (Mb x E x C) array_like
+        Component-wise, unstandardized parameter estimates from the regression
+        of the multi-echo data against component time series.
     adaptive_mask : (M) array_like
         Adaptive mask, where each voxel's value is the number of echoes with
         "good signal". Limited to masked voxels.
@@ -171,9 +219,9 @@ def calculate_f_maps(
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
 
-    # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
-    n_voxels, n_echos, n_components = me_betas.shape
+    n_voxels, n_echos, _ = data_cat.shape
+    n_components = mixing.shape[1]
+
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
 

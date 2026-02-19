@@ -231,9 +231,41 @@
         "orig": "ica_mir_mixing",
         "bidsv1.5.0": "desc-ICAMIRDenoised_mixing"
     },
+    "ICA MIR metrics tsv": {
+        "orig": "ica_mir_metrics",
+        "bidsv1.5.0": "desc-ICAMIRDenoised_metrics"
+    },
+    "ICA MIR metrics json": {
+        "orig": "ica_mir_metrics",
+        "bidsv1.5.0": "desc-ICAMIRDenoised_metrics"
+    },
     "ICA orthogonalized mixing tsv": {
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
+    },
+    "ICA orthogonalized metrics tsv": {
+        "orig": "ica_orth_metrics",
+        "bidsv1.5.0": "desc-ICAOrth_metrics"
+    },
+    "ICA orthogonalized metrics json": {
+        "orig": "ica_orth_metrics",
+        "bidsv1.5.0": "desc-ICAOrth_metrics"
+    },
+    "external regressors metrics tsv": {
+        "orig": "external_regressor_metrics",
+        "bidsv1.5.0": "desc-external_metrics"
+    },
+    "external regressors metrics json": {
+        "orig": "external_regressor_metrics",
+        "bidsv1.5.0": "desc-external_metrics"
+    },
+    "confounds metrics tsv": {
+        "orig": "confounds_metrics",
+        "bidsv1.5.0": "desc-confounds_metrics"
+    },
+    "confounds metrics json": {
+        "orig": "confounds_metrics",
+        "bidsv1.5.0": "desc-confounds_metrics"
     },
     "registry json": {
         "orig": "registry",
