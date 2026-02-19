@@ -86,8 +86,11 @@ def generate_metrics(
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
     dependency_config = io.load_json(dependency_config)
 
-    if metrics is None:
-        metrics = ["map weight"]
+    metrics = metrics or []
+    if "map weight" not in metrics:
+        metrics.append("map weight")
+    if "map optcom betas" not in metrics:
+        metrics.append("map optcom betas")
 
     if external_regressors is not None:
         if external_regressor_config is None:
@@ -273,7 +276,14 @@ def generate_metrics(
 
     # Back to maps
     if "map beta T2 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
+        LGR.info(
+            "Thresholding unstandardized parameter estimate maps to match T2* F-statistic maps"
+        )
+        LGR.warning(
+            "We do not recommend using the 'map beta T2 clusterized' metric, "
+            "as unstandardized PE maps confound effect size and data scale. "
+            "Use 'map SPE T2 clusterized' instead."
+        )
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
             n_sig_voxels=component_table["countsigFT2"],
@@ -282,9 +292,34 @@ def generate_metrics(
         )
 
     if "map beta S0 clusterized" in required_metrics:
-        LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
+        LGR.info(
+            "Thresholding unstandardized parameter estimate maps to match S0 F-statistic maps"
+        )
+        LGR.warning(
+            "We do not recommend using the 'map beta S0 clusterized' metric, "
+            "as unstandardized PE maps confound effect size and data scale. "
+            "Use 'map SPE S0 clusterized' instead."
+        )
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
+            n_sig_voxels=component_table["countsigFS0"],
+            mask=mask,
+            ref_img=ref_img,
+        )
+
+    if "map SPE T2 clusterized" in required_metrics:
+        LGR.info("Thresholding standardized parameter estimate maps to match T2* F-statistic maps")
+        metric_maps["map SPE T2 clusterized"] = dependence.threshold_to_match(
+            maps=metric_maps["map weight"],
+            n_sig_voxels=component_table["countsigFT2"],
+            mask=mask,
+            ref_img=ref_img,
+        )
+
+    if "map SPE S0 clusterized" in required_metrics:
+        LGR.info("Thresholding standardized parameter estimate maps to match S0 F-statistic maps")
+        metric_maps["map SPE S0 clusterized"] = dependence.threshold_to_match(
+            maps=metric_maps["map weight"],
             n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
             ref_img=ref_img,
@@ -301,13 +336,23 @@ def generate_metrics(
 
     # Generic metrics
     if "variance explained" in required_metrics:
-        LGR.info("Calculating variance explained")
+        LGR.info(
+            "Calculating coefficient energy (variance explained) from "
+            "unstandardized parameter estimate maps"
+        )
+        LGR.warning(
+            "We do not recommend using the 'variance explained' metric, as unstandardized PE maps "
+            "confound effect size and data scale. Use 'normalized variance explained' instead."
+        )
         component_table["variance explained"] = dependence.calculate_varex(
             component_maps=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
-        LGR.info("Calculating normalized variance explained")
+        LGR.info(
+            "Calculating coefficient energy (variance explained) from "
+            "standardized parameter estimate maps"
+        )
         component_table["normalized variance explained"] = dependence.calculate_varex(
             component_maps=metric_maps["map weight"],
         )
@@ -337,7 +382,12 @@ def generate_metrics(
     # Spatial metrics
     if "dice_FT2" in required_metrics:
         LGR.info(
-            "Calculating DSI between thresholded T2* F-statistic and optimal combination beta maps"
+            "Calculating DSI between thresholded T2* F-statistic and "
+            "optimal combination unstandardized parameter estimate maps"
+        )
+        LGR.warning(
+            "We do not recommend using the 'dice_FT2' metric, as unstandardized PE maps "
+            "confound effect size and data scale. Use 'dice_FT2_SPE' instead."
         )
         component_table["dice_FT2"] = dependence.compute_dice(
             clmaps1=metric_maps["map beta T2 clusterized"],
@@ -348,10 +398,36 @@ def generate_metrics(
     if "dice_FS0" in required_metrics:
         LGR.info(
             "Calculating DSI between thresholded S0 F-statistic and "
-            "optimal combination beta maps"
+            "optimal combination unstandardized parameter estimate maps"
+        )
+        LGR.warning(
+            "We do not recommend using the 'dice_FS0' metric, as unstandardized PE maps "
+            "confound effect size and data scale. Use 'dice_FS0_SPE' instead."
         )
         component_table["dice_FS0"] = dependence.compute_dice(
             clmaps1=metric_maps["map beta S0 clusterized"],
+            clmaps2=metric_maps["map FS0 clusterized"],
+            axis=0,
+        )
+
+    if "dice_FT2_SPE" in required_metrics:
+        LGR.info(
+            "Calculating DSI between thresholded T2* F-statistic and "
+            "optimal combination standardized parameter estimate maps"
+        )
+        component_table["dice_FT2_SPE"] = dependence.compute_dice(
+            clmaps1=metric_maps["map SPE T2 clusterized"],
+            clmaps2=metric_maps["map FT2 clusterized"],
+            axis=0,
+        )
+
+    if "dice_FS0_SPE" in required_metrics:
+        LGR.info(
+            "Calculating DSI between thresholded S0 F-statistic and "
+            "optimal combination standardized parameter estimate maps"
+        )
+        component_table["dice_FS0_SPE"] = dependence.compute_dice(
+            clmaps1=metric_maps["map SPE S0 clusterized"],
             clmaps2=metric_maps["map FS0 clusterized"],
             axis=0,
         )
@@ -490,7 +566,9 @@ def generate_metrics(
         "countsigFT2",
         "countsigFS0",
         "dice_FT2",
+        "dice_FT2_SPE",
         "dice_FS0",
+        "dice_FS0_SPE",
         "countnoise",
         "signal-noise_t",
         "signal-noise_z",
@@ -637,7 +715,16 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "LongName": "T2 model beta map-F-statistic map Dice similarity index",
             "Description": (
                 "Dice value of cluster-extent thresholded maps of "
-                "T2-model betas and F-statistics."
+                "T2-model F-statistics and unstandardized parameter estimate maps."
+            ),
+            "Units": "arbitrary",
+        }
+    if "dice_FT2_SPE" in component_table:
+        metric_metadata["dice_FT2_SPE"] = {
+            "LongName": "T2 model SPE map-F-statistic map Dice similarity index",
+            "Description": (
+                "Dice value of cluster-extent thresholded maps of "
+                "T2-model F-statistics and standardized parameter estimate maps (SPEs)."
             ),
             "Units": "arbitrary",
         }
@@ -646,7 +733,16 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "LongName": ("S0 model beta map-F-statistic map Dice similarity index"),
             "Description": (
                 "Dice value of cluster-extent thresholded maps of "
-                "S0-model betas and F-statistics."
+                "S0-model F-statistics and unstandardized parameter estimate maps."
+            ),
+            "Units": "arbitrary",
+        }
+    if "dice_FS0_SPE" in component_table:
+        metric_metadata["dice_FS0_SPE"] = {
+            "LongName": "S0 model SPE map-F-statistic map Dice similarity index",
+            "Description": (
+                "Dice value of cluster-extent thresholded maps of "
+                "S0-model F-statistics and standardized parameter estimate maps (SPEs)."
             ),
             "Units": "arbitrary",
         }
