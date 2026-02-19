@@ -6,6 +6,7 @@ import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
+from nilearn.masking import unmask
 
 from tedana import io, utils
 from tedana.metrics import collect, dependence, external
@@ -83,12 +84,16 @@ def test_smoke_generate_metrics(testdata1):
         dummy_scans=0,
     )
 
+    mask_clf = testdata1["adaptive_mask"].copy()
+    mask_clf[mask_clf < 3] = 0
+    mask_clf = mask_clf.astype(bool)
+
     component_table, new_mixing = collect.generate_metrics(
-        data_cat=testdata1["data_cat"],
-        data_optcom=testdata1["data_optcom"],
+        data_cat=testdata1["data_cat"][mask_clf, ...],
+        data_optcom=testdata1["data_optcom"][mask_clf, :],
         mixing=testdata1["mixing"],
-        adaptive_mask=testdata1["adaptive_mask"],
-        mask_img=testdata1["generator"].mask,
+        adaptive_mask=testdata1["adaptive_mask"][mask_clf],
+        mask_img=unmask(mask_clf, testdata1["generator"].mask),
         tes=testdata1["tes"],
         io_generator=testdata1["generator"],
         label="ICA",
