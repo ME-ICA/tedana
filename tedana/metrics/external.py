@@ -625,9 +625,8 @@ def compute_external_regressor_correlations(
         series = mixing[col].to_numpy(dtype=float)
         if not np.isfinite(series).all():
             problematic_mixing.append(f"{col} (non-finite values)")
-        else:
-            if np.nanstd(series) == 0:
-                problematic_mixing.append(f"{col} (zero variance)")
+        elif np.nanstd(series) == 0:
+            problematic_mixing.append(f"{col} (zero variance)")
 
     if problematic_external or problematic_mixing:
         msg_parts = [
