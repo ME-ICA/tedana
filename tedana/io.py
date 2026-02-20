@@ -321,6 +321,19 @@ class OutputGenerator:
         elif not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
 
+        if isinstance(mask, np.ndarray):
+            if mask.ndim != 1:
+                raise ValueError("Mask must be 1D")
+            if mask.sum() != data.shape[0]:
+                raise ValueError(
+                    f"Mask must have the same number of True values {mask.sum()} as "
+                    f"data has rows {data.shape[0]}."
+                )
+            mask = masking.unmask(mask, self.mask)
+
+        elif mask is None:
+            mask = self.mask
+
         if data.ndim not in (1, 2):
             raise TypeError(f"Data must have number of dimensions in (1, 2), not {data.ndim}")
 
@@ -333,11 +346,6 @@ class OutputGenerator:
             data = np.float32(data)
 
         # Make new img and save
-        if isinstance(mask, np.ndarray):
-            mask = masking.unmask(mask, self.mask)
-        elif mask is None:
-            mask = self.mask
-
         img = masking.unmask(data.T, mask)
         if img.ndim == 4:
             # Only set the TR for 4D images.
