@@ -821,7 +821,11 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
         fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
-        fout = io_generator.save_file(betas_oc[:, acc], "z-scored ICA accepted components img")
+        fout = io_generator.save_file(
+            betas_oc[:, acc],
+            "z-scored ICA accepted components img",
+            mask=mask,
+        )
         LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
 

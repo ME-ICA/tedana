@@ -128,7 +128,8 @@ def gscontrol_raw(
     LGR.info(f"Variance in optimally combined data explained by global signal: {varexpl:.02f}%")
 
     data_optcom_nogs += temporal_mean
-    io_generator.save_file(data_optcom_nogs, "removed gs combined img", mask=temporal_mean_mask)
+    data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
+    io_generator.save_file(data_optcom_nogs, "removed gs combined img")
 
     # Project global signal (but not Legendre bases) out of each echo
     data_cat_nogs = data_cat.copy()  # don't overwrite data_cat
