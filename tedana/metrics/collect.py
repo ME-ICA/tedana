@@ -28,6 +28,8 @@ def generate_metrics(
     data_optcom: npt.NDArray,
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
+    t2smap: npt.NDArray,
+    s0map: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
     n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
@@ -35,6 +37,7 @@ def generate_metrics(
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
+    n_threads: int = 1,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
@@ -70,6 +73,8 @@ def generate_metrics(
         A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
+    n_threads : int
+        Number of cores to use for parallel processing.
 
     Returns
     -------
@@ -88,6 +93,13 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
+
+    if (
+        ("map optcom betas" in metrics)
+        and ("map echo betas" not in metrics)
+        and io_generator.verbose
+    ):
+        metrics.append("map echo betas")
 
     if external_regressors is not None:
         if external_regressor_config is None:
@@ -125,6 +137,8 @@ def generate_metrics(
     data_cat = data_cat[mask, ...]
     data_optcom = data_optcom[mask, :]
     adaptive_mask = adaptive_mask[mask]
+    s0map = s0map[mask]
+    t2smap = t2smap[mask]
 
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
@@ -181,11 +195,52 @@ def generate_metrics(
             data=data_optcom,
             mixing=mixing,
         )
-        if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(
-                data=data_cat,
-                mixing=mixing,
-            )
+
+    if "map echo betas" in required_metrics:
+        LGR.info("Calculating unstandardized parameter estimate maps for echo-wise data")
+        metric_maps["map echo betas"] = dependence.calculate_betas(
+            data=data_cat,
+            mixing=mixing,
+        )
+
+    if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics) or ("r2_full" in required_metrics):
+        LGR.info("Calculating kappa*, rho*, and r2_full")
+        kappa_star, rho_star, f_t2star, f_s0, r2_full = dependence.compute_te_variance(
+            echowise_pes=metric_maps["map echo betas"],
+            tes=tes,
+            s0_hat=s0map,
+            t2s_hat=t2smap,
+            adaptive_mask=adaptive_mask,
+            spatial_weights=metric_maps["map weight"] ** 2,
+        )
+        component_table["kappa_star"] = kappa_star
+        component_table["rho_star"] = rho_star
+        component_table["f_t2star"] = f_t2star
+        component_table["f_s0"] = f_s0
+        component_table["r2_full"] = r2_full
+
+    if (
+        ("p_t2" in required_metrics)
+        or ("p_s0" in required_metrics)
+        or ("kappa_star_perm" in required_metrics)
+        or ("rho_star_perm" in required_metrics)
+    ):
+        LGR.info("Running permutation test for spatially-specific TE-dependence (p_t2, p_s0)")
+        kappa_star_perm, rho_star_perm, p_t2, p_s0 = dependence.compute_te_variance_permutation(
+            echowise_pes=metric_maps["map echo betas"],
+            tes=tes,
+            s0_hat=s0map,
+            t2s_hat=t2smap,
+            adaptive_mask=adaptive_mask,
+            spatial_weights=metric_maps["map weight"] ** 2,
+            n_perm=1000,
+            n_threads=n_threads,
+            seed=42,
+        )
+        component_table["kappa_star_perm"] = kappa_star_perm
+        component_table["rho_star_perm"] = rho_star_perm
+        component_table["p_t2"] = p_t2
+        component_table["p_s0"] = p_s0
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
@@ -297,6 +352,16 @@ def generate_metrics(
             f_t2_maps=metric_maps["map FT2"],
             f_s0_maps=metric_maps["map FS0"],
             z_maps=metric_maps["map weight"],
+        )
+
+    if ("kappa_dominance" in required_metrics) or ("rho_dominance" in required_metrics):
+        LGR.info("Calculating kappa and rho dominance")
+        (
+            component_table["kappa_dominance"],
+            component_table["rho_dominance"],
+        ) = dependence.compute_kappa_rho_dominance(
+            kappa=component_table["kappa"],
+            rho=component_table["rho"],
         )
 
     # Generic metrics
