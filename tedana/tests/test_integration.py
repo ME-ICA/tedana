@@ -7,10 +7,10 @@ import os.path as op
 import re
 import shutil
 import subprocess
+from importlib.resources import files
 
 import pandas as pd
 import pytest
-from pkg_resources import resource_filename
 
 from tedana.io import InputHarvester
 from tedana.tests.utils import data_for_testing_info, download_test_data
@@ -212,7 +212,7 @@ def test_integration_five_echo(skip_integration):
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/nih_five_echo_outputs_verbose.txt")
+    fn = files("tedana") / "tests/data/nih_five_echo_outputs_verbose.txt"
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
     check_integration_outputs(fn, out_dir, max_expected_comp=-1)
@@ -254,7 +254,7 @@ def test_integration_four_echo(skip_integration):
     )
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
+    fn = files("tedana") / "tests/data/fiu_four_echo_outputs.txt"
 
     check_integration_outputs(fn, out_dir)
 
@@ -310,7 +310,7 @@ def test_integration_three_echo(skip_integration, caplog):
     assert "DEPRECATION WARNING" in caplog.text
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    fn = files("tedana") / "tests/data/cornell_three_echo_outputs.txt"
     check_integration_outputs(
         fn, out_dir, max_expected_comp=64, extra_expected_files=["tedana_call.sh"]
     )
@@ -340,12 +340,12 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
         ica_method="robustica",
         tedpca=n_components,
         n_robust_runs=4,
-        tree=resource_filename("tedana", "tests/data/reject_all_tree.json"),
+        tree=files("tedana") / "tests/data/reject_all_tree.json",
         verbose=True,
     )
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_verbose_outputs.txt")
+    fn = files("tedana") / "tests/data/cornell_three_echo_verbose_outputs.txt"
     # Files for accepted components are not expected because all components are rejected
     # Files for PCA component estimation are not expected because a fixed # of comps was specified
     unexpected_files = [
@@ -370,12 +370,12 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
         debug=True,
         mixing_file=os.path.join(test_data_path, "desc_ICA_mixing_static.tsv"),
         overwrite=True,
-        tree=resource_filename("tedana", "tests/data/reject_all_tree.json"),
+        tree=files("tedana") / "tests/data/reject_all_tree.json",
         t2smap=os.path.join(out_dir, "T2starmap.nii.gz"),
     )
 
     # compare the generated output files. There are 68 components in the predefined mixing matrix
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_verbose_outputs.txt")
+    fn = files("tedana") / "tests/data/cornell_three_echo_verbose_outputs.txt"
     # The since using a mixing matrix and skipping PCA,
     # the same files from the previous iteration are excluded
     # Also excluding counfounds, which is generated with the T2* map estimate,
@@ -437,16 +437,14 @@ def test_integration_three_echo_external_regressors_single_model(skip_integratio
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tree=resource_filename("tedana", tree_name),
-        external_regressors=resource_filename(
-            "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
-        ),
+        tree=files("tedana") / tree_name,
+        external_regressors=files("tedana") / "tests/data/external_regress_Ftest_3echo.tsv",
         low_mem=True,
         tedpca=0.9,
     )
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    fn = files("tedana") / "tests/data/cornell_three_echo_outputs.txt"
     # Files for PCA component estimation are not expected because a fixed % variance was specified
     unexpected_files = [
         "desc-PCACrossComponent_metrics.json",
@@ -488,16 +486,14 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tree=resource_filename("tedana", tree_name),
-        external_regressors=resource_filename(
-            "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
-        ),
+        tree=files("tedana") / tree_name,
+        external_regressors=files("tedana") / "tests/data/external_regress_Ftest_3echo.tsv",
         mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
         low_mem=True,
     )
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_preset_mixing_outputs.txt")
+    fn = files("tedana") / "tests/data/cornell_three_echo_preset_mixing_outputs.txt"
     check_integration_outputs(
         fn,
         out_dir,
@@ -561,7 +557,7 @@ def test_integration_reclassify_quiet_csv(skip_integration):
 
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
-    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -589,7 +585,7 @@ def test_integration_reclassify_quiet_spaces(skip_integration):
 
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
-    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -616,7 +612,7 @@ def test_integration_reclassify_quiet_string(skip_integration):
 
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
-    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -651,7 +647,7 @@ def test_integration_reclassify_debug(skip_integration):
 
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
-    fn = resource_filename("tedana", "tests/data/reclassify_debug_out.txt")
+    fn = files("tedana") / "tests/data/reclassify_debug_out.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -707,7 +703,7 @@ def test_integration_reclassify_run_twice(skip_integration):
         overwrite=True,
         no_reports=True,
     )
-    fn = resource_filename("tedana", "tests/data/reclassify_run_twice.txt")
+    fn = files("tedana") / "tests/data/reclassify_run_twice.txt"
     check_integration_outputs(fn, out_dir, n_logs=2)
     component_table = pd.read_csv(op.join(out_dir, "desc-tedana_metrics.tsv"), sep="\t")
     assert set(component_table.loc[1]["classification_tags"].split(",")) == {
@@ -738,7 +734,7 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
     )
     assert "No accepted components remaining after manual classification!" in caplog.text
 
-    fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
+    fn = files("tedana") / "tests/data/reclassify_no_bold.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -763,7 +759,7 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
     )
     assert "No accepted components remaining after manual classification!" in caplog.text
 
-    fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
+    fn = files("tedana") / "tests/data/reclassify_no_bold.txt"
     check_integration_outputs(fn, out_dir)
 
 
@@ -797,7 +793,7 @@ def test_integration_t2smap(skip_integration):
     t2smap_cli._main(args)
 
     # compare the generated output files
-    fname = resource_filename("tedana", "tests/data/nih_five_echo_outputs_t2smap.txt")
+    fname = files("tedana") / "tests/data/nih_five_echo_outputs_t2smap.txt"
     # Gets filepaths generated by integration test
     found_files = [
         os.path.relpath(f, out_dir)
