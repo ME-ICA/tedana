@@ -274,6 +274,16 @@ def _get_parser():
         default=DEFAULT_N_MAX_RESTART,
     )
     optional.add_argument(
+        "--simultaneous-dependence-metrics",
+        dest="simultaneous_dependence_metrics",
+        action="store_true",
+        help=(
+            "Estimate the TE-dependence and TE-independence models simultaneously."
+            "This is only useful for acquisitions with many echoes, like EPTI."
+        ),
+        default=False,
+    )
+    optional.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
@@ -424,6 +434,7 @@ def tedana_workflow(
     fixed_seed=DEFAULT_SEED,
     maxit=DEFAULT_N_MAX_ITER,
     maxrestart=DEFAULT_N_MAX_RESTART,
+    simultaneous_dependence_metrics=False,
     tedort=False,
     gscontrol=None,
     no_reports=False,
@@ -531,6 +542,10 @@ def tedana_workflow(
         fixed seed will be updated and ICA will be run again. If convergence
         is achieved before maxrestart attempts, ICA will finish early.
         Default is 10.
+    simultaneous_dependence_metrics : :obj:`bool`, optional
+        Estimate the TE-dependence and TE-independence models simultaneously.
+        This is only useful for acquisitions with many echoes, like EPTI.
+        Default is False.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -885,6 +900,7 @@ def tedana_workflow(
             io_generator,
             tes=tes,
             n_independent_echos=n_independent_echos,
+            estimate_simultaneously=simultaneous_dependence_metrics,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
@@ -935,6 +951,7 @@ def tedana_workflow(
                 adaptive_mask=masksum_clf,
                 tes=tes,
                 n_independent_echos=n_independent_echos,
+                estimate_simultaneously=simultaneous_dependence_metrics,
                 io_generator=io_generator,
                 label="ICA",
                 metrics=necessary_metrics,
@@ -994,6 +1011,7 @@ def tedana_workflow(
             adaptive_mask=masksum_clf,
             tes=tes,
             n_independent_echos=n_independent_echos,
+            estimate_simultaneously=simultaneous_dependence_metrics,
             io_generator=io_generator,
             label="ICA",
             metrics=necessary_metrics,

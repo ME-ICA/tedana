@@ -30,6 +30,7 @@ def generate_metrics(
     adaptive_mask: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
     n_independent_echos: int = None,
+    estimate_simultaneously: bool = False,
     io_generator: io.OutputGenerator,
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
@@ -58,6 +59,11 @@ def generate_metrics(
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
+    estimate_simultaneously : bool
+        If True, estimate the S0 and T2* models simultaneously.
+        If False, estimate the S0 and T2* models separately.
+        This should only be used for acquisitions with many echoes (e.g., EPTI).
+        Default: False.
     io_generator : tedana.io.OutputGenerator
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
@@ -131,7 +137,10 @@ def generate_metrics(
 
     # use either the inputted number of indie echoes or the total number of echoes
     # to calculate the threshold for f tests
-    f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
+    f_thresh, _, _ = getfbounds(
+        n_independent_sources=(n_independent_echos or len(tes)),
+        estimate_simultaneously=estimate_simultaneously,
+    )
     proportion_threshold = 95  # top 5% of voxels for standardized parameter estimate maps
 
     # Get reference image from io_generator
@@ -215,6 +224,7 @@ def generate_metrics(
             adaptive_mask=adaptive_mask,
             tes=tes,
             n_independent_echos=n_independent_echos,
+            estimate_simultaneously=estimate_simultaneously,
         )
         metric_maps["map FT2"] = m_t2
         metric_maps["map FS0"] = m_s0
