@@ -24,6 +24,7 @@ def test_get_metadata():
             "signal-noise_p": [0.01, 0.001],
             "d_table_score": [5.0, 3.0],
             "d_table_score_scrub": [4.0, 2.0],
+            "kappa proportion": [0.5, 0.4],
             "marginal R-squared": [0.3, 0.25],
             "partial R-squared": [0.2, 0.15],
             "semi-partial R-squared": [0.1, 0.05],
@@ -51,6 +52,7 @@ def test_get_metadata():
     assert "signal-noise_t" in metadata
     assert "signal-noise_p" in metadata
     assert "d_table_score" in metadata
+    assert "kappa proportion" in metadata
     assert "classification" in metadata
     assert "rationale" in metadata
     assert "optimal sign" in metadata

@@ -68,6 +68,10 @@
             "kappa",
             "rho"
         ],
+        "kappa proportion": [
+            "kappa",
+            "rho"
+        ],
         "d_table_score": [
             "kappa",
             "dice_FT2",

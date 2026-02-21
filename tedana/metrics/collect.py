@@ -426,6 +426,13 @@ def generate_metrics(
             rho=component_table["rho"],
         )
 
+    if "kappa proportion" in required_metrics:
+        LGR.info("Calculating kappa proportion")
+        component_table["kappa proportion"] = dependence.compute_kappa_proportion(
+            kappa=component_table["kappa"],
+            rho=component_table["rho"],
+        )
+
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
@@ -695,6 +702,12 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Description": (
                 "Proportion of pseudo-F-statistics that is dominated by either kappa or rho."
             ),
+            "Units": "percent",
+        }
+    if "kappa proportion" in component_table:
+        metric_metadata["kappa proportion"] = {
+            "LongName": "Kappa proportion",
+            "Description": "Proportion of pseudo-F-statistics that is dominated by kappa.",
             "Units": "percent",
         }
     if "original_classification" in component_table:
