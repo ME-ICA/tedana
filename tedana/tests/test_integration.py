@@ -18,7 +18,7 @@ from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.ica_reclassify import ica_reclassify_workflow
 
-# Need to see if a no BOLD warning occurred
+# Need to see if a no accepted components warning occurred
 LOGGER = logging.getLogger(__name__)
 # Added a testing logger to output whether or not testing data were downlaoded
 TestLGR = logging.getLogger("TESTING")
@@ -358,7 +358,7 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
     check_integration_outputs(fn, out_dir, max_expected_comp=-1, unexpected_files=unexpected_files)
-    assert "No BOLD components found with robustICA mixing matrix" in caplog.text
+    assert "No accepted components found with robustICA mixing matrix" in caplog.text
 
     # Rerun in the same dir with supplied mixing matrix & tree that results in no accepted comps
     # This is also the test that supplies a t2smap
@@ -392,7 +392,7 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
         extra_expected_files=extra_expected_files,
         unexpected_files=unexpected_files,
     )
-    assert "No BOLD components found with user-provided ICA mixing matrix." in caplog.text
+    assert "No accepted components found with user-provided ICA mixing matrix." in caplog.text
 
     # TODO When a test is rerun in the same directory, overwrite, only overwrite existing files.
     #      Decide if it should also delete existing files from a previous iteration.
