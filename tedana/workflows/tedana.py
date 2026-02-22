@@ -265,7 +265,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=(
-            "Maximum number of attempts for ICA. If ICA "
+            "Maximum number of restart attempts for ICA. If ICA "
             "fails to converge, the fixed seed will be "
             "updated and ICA will be run again. If "
             "convergence is achieved before maxrestart "
@@ -527,9 +527,12 @@ def tedana_workflow(
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
-        Maximum number of attempts for ICA. If ICA fails to converge, the
-        fixed seed will be updated and ICA will be run again. If convergence
-        is achieved before maxrestart attempts, ICA will finish early.
+        Maximum number of restarted decompositions to perform with different random seeds if ICA
+        fails to converge or if no accepted components are found.
+        If no accepted components are found, the fixed seed will be updated and ICA will be run
+        again.
+        If convergence is achieved before maxrestart attempts, ICA will finish early.
+        ICA will stop running if there is convergence prior to reaching this limit.
         Default is 10.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
