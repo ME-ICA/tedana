@@ -5,8 +5,6 @@ import logging
 import numpy as np
 from scipy import linalg, stats
 
-from tedana import utils
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
@@ -68,9 +66,8 @@ def voxelwise_univariate_zstats(data, mixing):
     return zstat
 
 
-def get_coeffs(data, x, mask=None, add_const=False):
-    """
-    Perform least-squares fit of `x` against `data`.
+def get_coeffs(data, x, add_const=False):
+    """Perform least-squares fit of `x` against `data`.
 
     Parameters
     ----------
@@ -78,8 +75,6 @@ def get_coeffs(data, x, mask=None, add_const=False):
         Array where `S` is samples, `E` is echoes, and `T` is time
     x : (T [x C]) array_like
         Array where `T` is time and `C` is predictor variables
-    mask : (S [x E]) array_like
-        Boolean mask array
     add_const : bool, optional
         Add intercept column to `x` before fitting. Default: False
 
@@ -98,19 +93,6 @@ def get_coeffs(data, x, mask=None, add_const=False):
             f"match first dimension of x ({x.shape[0]})"
         )
 
-    # mask data and flip (time x samples)
-    if mask is not None:
-        if mask.ndim not in [1, 2]:
-            raise ValueError(f"Parameter data should be 1d or 2d, not {mask.ndim}d")
-        elif data.shape[0] != mask.shape[0]:
-            raise ValueError(
-                f"First dimensions of data ({data.shape[0]}) and "
-                f"mask ({mask.shape[0]}) do not match"
-            )
-        mdata = data[mask, :].T
-    else:
-        mdata = data.T
-
     # coerce x to >=2d
     x = np.atleast_2d(x)
 
@@ -120,12 +102,9 @@ def get_coeffs(data, x, mask=None, add_const=False):
     if add_const:  # add intercept, if specified
         x = np.column_stack([x, np.ones((len(x), 1))])
 
-    betas = np.linalg.lstsq(x, mdata, rcond=None)[0].T
+    betas = np.linalg.lstsq(x, data.T, rcond=None)[0].T
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
-
-    if mask is not None:
-        betas = utils.unmask(betas, mask)
 
     return betas
 

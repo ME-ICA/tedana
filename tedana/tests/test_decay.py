@@ -2,6 +2,7 @@
 
 import os.path as op
 
+import nibabel as nb
 import numpy as np
 import pytest
 
@@ -16,10 +17,9 @@ def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
     in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
     mask_file = op.join(get_test_data_path(), "mask.nii.gz")
-    data, _ = io.load_data(in_files, n_echos=len(tes))
+    data = io.load_data_nilearn(in_files, mask_img=nb.load(mask_file), n_echos=len(tes))
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         methods=["dropout", "decay"],
     )
     fittype = "loglin"
@@ -56,10 +56,10 @@ def test_fit_decay_ts(testdata1):
     masked_data = testdata1["data"][testdata1["mask"], ...]
     masked_adaptive_mask = testdata1["adaptive_mask"][testdata1["mask"]]
     t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
-        masked_data,
-        testdata1["tes"],
-        masked_adaptive_mask,
-        testdata1["fittype"],
+        data=masked_data,
+        tes=testdata1["tes"],
+        adaptive_mask=masked_adaptive_mask,
+        fittype=testdata1["fittype"],
     )
     assert t2s.ndim == 2
     assert s0.ndim == 2

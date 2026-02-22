@@ -4,6 +4,7 @@ import random
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from numpy.matlib import repmat
 
 from tedana.stats import fit_model, get_coeffs, getfbounds, voxelwise_univariate_zstats
@@ -45,23 +46,14 @@ def test_get_coeffs():
     data[0, :] = np.arange(0, 200, 5)
     data[1, :] = np.arange(0, 200, 5)
     x = np.arange(0, 40)[:, np.newaxis]
-    mask = np.array([True, False])
 
-    betas = get_coeffs(data, x, mask=None, add_const=False)
+    betas = get_coeffs(data, x, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5.0, 5.0]))
 
-    betas = get_coeffs(data, x, mask=None, add_const=True)
+    betas = get_coeffs(data, x, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5.0, 5.0]))
-
-    betas = get_coeffs(data, x, mask=mask, add_const=False)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5, 0]))
-
-    betas = get_coeffs(data, x, mask=mask, add_const=True)
-    betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5, 0]))
 
 
 def test_break_get_coeffs():
@@ -73,30 +65,24 @@ def test_break_get_coeffs():
     n_samples, n_echos, n_vols, n_comps = 10000, 5, 100, 50
     data = np.empty((n_samples, n_vols))
     x = np.empty((n_vols, n_comps))
-    mask = np.empty(n_samples)
 
     data = np.empty(n_samples)
     with pytest.raises(ValueError):
-        get_coeffs(data, x, mask, add_const=False)
+        get_coeffs(data, x, add_const=False)
 
     data = np.empty((n_samples, n_vols))
     x = np.empty(n_vols)
     with pytest.raises(ValueError):
-        get_coeffs(data, x, mask, add_const=False)
+        get_coeffs(data, x, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols + 1))
     x = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError):
-        get_coeffs(data, x, mask, add_const=False)
+    with pytest.raises(ValueError, match="does not match first dimension of x"):
+        get_coeffs(data, x, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols))
-    mask = np.empty((n_samples, n_echos, n_vols))
-    with pytest.raises(ValueError):
-        get_coeffs(data, x, mask, add_const=False)
-
-    mask = np.empty((n_samples + 1, n_echos))
-    with pytest.raises(ValueError):
-        get_coeffs(data, x, mask, add_const=False)
+    with pytest.raises((LinAlgError, ValueError), match="3-dimensional array given"):
+        get_coeffs(data, x, add_const=False)
 
 
 def test_smoke_get_coeffs():
@@ -104,11 +90,9 @@ def test_smoke_get_coeffs():
     n_samples, _, n_times, n_components = 100, 5, 20, 6
     data_2d = np.random.random((n_samples, n_times))
     x = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
 
     assert get_coeffs(data_2d, x) is not None
     # assert get_coeffs(data_3d, x) is not None TODO: submit an issue for the bug
-    assert get_coeffs(data_2d, x, mask=mask) is not None
     assert get_coeffs(data_2d, x, add_const=True) is not None
 
 
