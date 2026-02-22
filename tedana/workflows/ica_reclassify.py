@@ -8,8 +8,10 @@ import os.path as op
 import sys
 from glob import glob
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
+from nilearn import image, masking
 
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, rica, selection, utils
@@ -410,12 +412,6 @@ def ica_reclassify_workflow(
     else:
         data_optcom = ioh.get_file_contents("combined img")
 
-    if verbose:
-        LGR.debug("Loading input 4D data")
-        data_cat = ioh.get_file_contents("input img")
-        # Extract the data from the nibabel objects
-        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat), dummy_scans=dummy_scans)
-
     io_generator = io.OutputGenerator(
         data_optcom,
         convention=convention,
@@ -426,6 +422,26 @@ def ica_reclassify_workflow(
         out_dir=out_dir,
         old_registry=ioh.registry,
     )
+
+    # Register the base mask for masked data operations
+    # Create mask from non-zero voxels in the reference image
+    ref_data = np.asanyarray(data_optcom.dataobj)
+    # Create mask from voxels that have non-zero values
+    mask_data = (ref_data != 0).any(axis=-1).astype(np.int32)
+    mask_img = nb.Nifti1Image(mask_data, data_optcom.affine)
+    io_generator.register_mask(mask_img)
+
+    if verbose:
+        LGR.debug("Loading input 4D data")
+        data_cat_paths = ioh.get_file_path("input img")
+        # Load the data from file paths
+        data_cat = io.load_data_nilearn(
+            data_cat_paths,
+            mask_img=io_generator.mask,
+            n_echos=len(data_cat_paths),
+        )
+        if dummy_scans > 0:
+            data_cat = data_cat[:, :, dummy_scans:]
 
     # Make a new selector with the added files
     selector = selection.component_selector.ComponentSelector(previous_tree_fname)
@@ -497,10 +513,19 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    adaptive_mask = utils.reshape_niimg(adaptive_mask)
-    mask_denoise = adaptive_mask >= 1
-    data_optcom = utils.reshape_niimg(data_optcom)
+    # Convert to NIfTI1 format if needed (e.g., AFNI format)
+    adaptive_mask = io._convert_to_nifti1(adaptive_mask)
+    data_optcom = io._convert_to_nifti1(data_optcom)
+
+    # At least 1 good echo
+    mask_denoise_img = image.binarize_img(
+        adaptive_mask,
+        threshold=0.5,
+        two_sided=False,
+        copy_header=True,
+    )
+    mask_denoise = masking.apply_mask(mask_denoise_img, io_generator.mask).astype(bool)
+    data_optcom = masking.apply_mask(data_optcom, io_generator.mask).T
 
     # TODO: make a better result-writing function
     # #############################################!!!!
@@ -585,13 +610,12 @@ def ica_reclassify_workflow(
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
-            mask=mask_denoise,
+            mask=mask_denoise_img,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
             data_optcom,
-            mask=mask_denoise,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,

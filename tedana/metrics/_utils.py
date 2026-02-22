@@ -138,6 +138,8 @@ def determine_signs(weights: npt.NDArray, axis: int = 0) -> npt.NDArray:
     """
     # compute skews to determine signs based on unnormalized weights,
     signs = stats.skew(weights, axis=axis)
+    # Handle NaN values and zeros
+    signs = np.nan_to_num(signs, nan=1.0)
     signs[signs == 0] = 1  # Default to not flipping
     signs /= np.abs(signs)
     return signs.astype(int)

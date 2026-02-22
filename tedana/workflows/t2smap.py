@@ -7,7 +7,6 @@ import os.path as op
 import sys
 
 import numpy as np
-from nilearn.masking import compute_epi_mask
 from threadpoolctl import threadpool_limits
 
 from tedana import __version__, combine, decay, io, utils
@@ -380,29 +379,27 @@ def t2smap_workflow(
     if isinstance(data, str):
         data = [data]
 
-    LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat, ref_img = io.load_data(data, n_echos=n_echos, dummy_scans=dummy_scans)
+    # Initialize OutputGenerator with reference image
+    # XXX: This doesn't support AFNI data yet.
+    ref_img = io.load_ref_img(data=data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
         out_dir=out_dir,
         prefix=prefix,
         config="auto",
-        make_figures=False,
         overwrite=overwrite,
         verbose=verbose,
     )
-    n_echos, n_vols = data_cat.shape[1], data_cat.shape[2]
-    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
-    if mask is None:
-        LGR.info(
-            "Computing initial mask from the first echo using nilearn's compute_epi_mask function."
-        )
-        first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
-        mask = compute_epi_mask(first_echo_img)
-    else:
-        LGR.info("Using user-defined mask")
+    mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None)
+    io_generator.register_mask(mask_img)
+
+    LGR.info(f"Loading input data: {[f for f in data]}")
+    data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
+
+    n_samp, n_echos, n_vols = data_cat.shape
+    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     # Create mask for volumes to use based on exclude indices
     if n_exclude > 0 and np.max(exclude_idx) > n_vols:
@@ -416,38 +413,48 @@ def t2smap_workflow(
         use_volumes[exclude_idx] = False
         data_without_excluded_vols = data_cat[:, :, use_volumes]
     else:
-        data_without_excluded_vols = data_cat
+        data_without_excluded_vols = data_cat.copy()
 
-    mask, masksum = utils.make_adaptive_mask(
+    # Create an adaptive mask with at least 1 good echo, for denoising
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_without_excluded_vols,
-        mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
     )
-    data_without_excluded_vols_masked = data_without_excluded_vols[mask, ...]
-    masksum_masked = masksum[mask]
+    LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
+    io_generator.save_file(masksum_denoise, "adaptive mask img")
 
-    LGR.info("Computing adaptive T2* map")
+    LGR.info("Computing T2* map")
+    data_without_excluded_vols = data_without_excluded_vols[mask_denoise, ...]
+    masksum_masked = masksum_denoise[mask_denoise]
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
     t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
-        data=data_without_excluded_vols_masked,
+        data=data_without_excluded_vols,
         tes=tes,
         adaptive_mask=masksum_masked,
         fittype=fittype,
         n_threads=n_threads,
     )
-    del data_without_excluded_vols_masked
+    del data_without_excluded_vols
 
     if fittype == "curvefit":
-        io_generator.save_file(utils.unmask(failures, mask).astype(np.uint8), "fit failures img")
+        io_generator.save_file(
+            failures.astype(np.uint8),
+            "fit failures img",
+            mask=mask_denoise,
+        )
         if verbose:
-            io_generator.save_file(utils.unmask(t2s_var, mask), "t2star variance img")
-            io_generator.save_file(utils.unmask(s0_var, mask), "s0 variance img")
-            io_generator.save_file(utils.unmask(t2s_s0_covar, mask), "t2star-s0 covariance img")
+            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+            io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+            io_generator.save_file(
+                t2s_s0_covar,
+                "t2star-s0 covariance img",
+                mask=mask_denoise,
+            )
 
     # Delete unused variables
-    del data_without_excluded_vols, failures, t2s_var, s0_var, t2s_s0_covar
+    del failures, t2s_var, s0_var, t2s_s0_covar
 
     t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
         t2s=t2s_full,
@@ -457,10 +464,10 @@ def t2smap_workflow(
     )
     del masksum_masked
 
-    t2s_full = utils.unmask(t2s_full, mask)
-    s0_full = utils.unmask(s0_full, mask)
-    t2s_limited = utils.unmask(t2s_limited, mask)
-    s0_limited = utils.unmask(s0_limited, mask)
+    t2s_full = utils.unmask(t2s_full, mask_denoise)
+    s0_full = utils.unmask(s0_full, mask_denoise)
+    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+    s0_limited = utils.unmask(s0_limited, mask_denoise)
 
     io_generator.save_file(s0_full, "s0 img")
     del s0_full
@@ -469,32 +476,29 @@ def t2smap_workflow(
     rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
         data=data_cat,
         tes=tes,
-        adaptive_mask=masksum,
+        adaptive_mask=masksum_denoise,
         t2s=t2s_limited,
         s0=s0_limited,
         fitmode=fitmode,
     )
     io_generator.save_file(rmse_map, "rmse img")
     io_generator.save_file(rmse_df, "confounds tsv")
-    io_generator.save_file(
-        s0_limited,
-        "limited s0 img",
-    )
+    io_generator.save_file(s0_limited, "limited s0 img")
     del s0_limited
-    io_generator.save_file(
-        utils.millisec2sec(t2s_limited),
-        "limited t2star img",
-    )
+    io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
     del t2s_limited
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
-    data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
-
-    io_generator.save_file(
-        utils.millisec2sec(t2s_full),
-        "t2star img",
+    data_optcom = combine.make_optcom(
+        data_cat,
+        tes,
+        masksum_denoise,
+        t2s=t2s_full,
+        combmode=combmode,
     )
+
+    io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file

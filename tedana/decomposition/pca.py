@@ -6,6 +6,7 @@ from numbers import Number
 import numpy as np
 import pandas as pd
 from mapca import MovingAveragePCA
+from nilearn import masking
 from scipy import stats
 from sklearn.decomposition import PCA
 
@@ -23,12 +24,13 @@ def low_mem_pca(data):
 
     Parameters
     ----------
-    data : (S [*E] x T) array_like
-        Optimally combined (S x T) or full multi-echo (S*E x T) data.
+    data : (Mc [*E] x T) array_like
+        Optimally combined (Mc x T) or full multi-echo (Mc*E x T) data, where `Mc` is
+        samples in classification mask, `E` is echos, and `T` is time
 
     Returns
     -------
-    u : (S [*E] x C) array_like
+    u : (Mc [*E] x C) array_like
         Component weight map for each component.
     s : (C,) array_like
         Variance explained for each component.
@@ -65,13 +67,14 @@ def tedpca(
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
+    data_cat : (Mb x E x T) array_like
         Input functional data
-    data_optcom : (S x T) array_like
+    data_optcom : (Mb x T) array_like
         Optimally combined time series data
-    mask : (S,) array_like
-        Boolean mask array
-    adaptive_mask : (S,) array_like
+    mask : (Mb,) array_like
+        Boolean mask array. This is more restrictive than the base mask (M), so
+        additional masking and unmasking will take place within the function.
+    adaptive_mask : (Mb,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -107,8 +110,9 @@ def tedpca(
 
     Returns
     -------
-    kept_data : (S x T) :obj:`numpy.ndarray`
-        Dimensionally reduced optimally combined functional data
+    kept_data : (Mc x T) :obj:`numpy.ndarray`
+        Dimensionally reduced optimally combined functional data,
+        where `Mc` is samples in classification mask, `T` is time.
     n_components : :obj:`int`
         Number of components retained from PCA decomposition
 
@@ -148,9 +152,9 @@ def tedpca(
 
             - Nonsignificant :math:`{\kappa}` and :math:`{\rho}`.
             - Nonsignificant variance explained.
+
     Generated Files
     ---------------
-
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
@@ -215,8 +219,9 @@ def tedpca(
         data = stats.zscore(data, axis=-1)  # z-score over time
 
     if algorithm in ["mdl", "aic", "kic"]:
-        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
-        mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+        # Use un-normalized data for maPCA to match GIFT results
+        data_img = masking.unmask(utils.unmask(data, mask).T, io_generator.mask)
+        mask_img = masking.unmask(mask, io_generator.mask)
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
         _ = ma_pca.fit_transform(data_img, mask_img)
 
@@ -356,10 +361,11 @@ def tedpca(
     ]
     # Even if user inputted, don't fit external_regressors to PCA components
     component_table, comp_ts = metrics.collect.generate_metrics(
-        data_cat=data_cat,
-        data_optcom=data_optcom,
+        data_cat=data_cat[mask, ...],
+        data_optcom=data_optcom[mask, :],
         mixing=comp_ts,
-        adaptive_mask=adaptive_mask,
+        adaptive_mask=adaptive_mask[mask],
+        mask_img=masking.unmask(mask, io_generator.mask),
         tes=tes,
         n_independent_echos=n_independent_echos,
         io_generator=io_generator,
@@ -383,9 +389,9 @@ def tedpca(
     # write component maps to 4D image
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
     comp_ts_z = stats.zscore(comp_ts, axis=0)
-    comp_maps = utils.unmask(get_coeffs(data_optcom_z, comp_ts_z), mask)
+    comp_maps = get_coeffs(data_optcom_z, comp_ts_z)
     del data_optcom_z, comp_ts_z
-    io_generator.save_file(comp_maps, "z-scored PCA components img")
+    io_generator.save_file(comp_maps, "z-scored PCA components img", mask=mask)
 
     # Select components using decision tree
     if algorithm == "kundu":

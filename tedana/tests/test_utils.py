@@ -4,11 +4,10 @@ import random
 from os.path import dirname
 from os.path import join as pjoin
 
-import nibabel as nib
 import numpy as np
 import pytest
 
-from tedana import io, utils
+from tedana import utils
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), "data")
@@ -62,23 +61,14 @@ def test_andb():
         utils.andb([rs.randint(10, size=(10, 10)), rs.randint(10, size=(20, 20))])
 
 
-def test_reshape_niimg():
-    fimg = nib.load(fnames[0])
-    exp_shape = (64350, 5)
-
-    # load filepath to image
-    assert utils.reshape_niimg(fnames[0]).shape == exp_shape
-    # load img_like object
-    assert utils.reshape_niimg(fimg).shape == exp_shape
-    # load array
-    assert utils.reshape_niimg(fimg.get_fdata()).shape == exp_shape
-
-
 def test_make_adaptive_mask(caplog):
     """Test tedana.utils.make_adaptive_mask with different methods."""
+    from nilearn.masking import apply_mask
+
     # load data make masks
     mask_file = pjoin(datadir, "mask.nii.gz")
-    data = io.load_data(fnames, n_echos=len(tes))[0]
+    data = np.stack([apply_mask(f, mask_file).T for f in fnames], axis=1)
+    n_voxels_in_mask = data.shape[0]
 
     # Add in simulated values
     base_val = np.mean(data[:, 0, :])  # mean value of first echo
@@ -115,12 +105,11 @@ def test_make_adaptive_mask(caplog):
     # Just dropout method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 3
@@ -128,21 +117,20 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 3
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 1817, 4427, 43130]))
+    assert np.allclose(counts, np.array([12568, 1815, 4402, 43169]))
     assert "voxels in user-defined mask do not have good signal" in caplog.text
 
     # Just decay method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["decay"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -153,17 +141,16 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985  # This method can't flag first echo as bad
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+    assert np.allclose(counts, np.array([969, 4366, 5974, 50645]))
 
     # Dropout and decay methods combined
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout", "decay"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -171,20 +158,19 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 1
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+    assert np.allclose(counts, np.array([12568, 3113, 6233, 40040]))
 
     # Adding "none" should have no effect
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["dropout", "decay", "none"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 2
@@ -192,20 +178,19 @@ def test_make_adaptive_mask(caplog):
     assert adaptive_mask[idx + 3] == 1
     assert adaptive_mask[idx + 4] == 0
     assert adaptive_mask[idx + 5] == 0
-    assert mask.sum() == 49374
+    assert mask.sum() == 49386
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+    assert np.allclose(counts, np.array([12568, 3113, 6233, 40040]))
 
     # Just "none"
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
-        mask=mask_file,
         threshold=1,
         methods=["none"],
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 3
     assert adaptive_mask[idx + 1] == 3
@@ -216,17 +201,20 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
+    assert np.allclose(counts, np.array([969, 1412, 1196, 58377]))
     assert "No methods provided for adaptive mask generation." in caplog.text
 
     # testing n_independent_echos
     # This should match "decay" from above, except all voxels with 3 good echoes should now have 5
     # since two echoes were added that should not have caused more decay
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=3
+        data5,
+        threshold=1,
+        methods=["decay"],
+        n_independent_echos=3,
     )
 
-    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert mask.shape == adaptive_mask.shape == (n_voxels_in_mask,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert adaptive_mask[idx] == 5
     assert adaptive_mask[idx + 1] == 2
@@ -237,46 +225,29 @@ def test_make_adaptive_mask(caplog):
     assert mask.sum() == 60985  # This method can't flag first echo as bad
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 5]))
-    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+    assert np.allclose(counts, np.array([969, 4366, 5974, 50645]))
     # 4366 + 5973 = 10399 (i.e. voxels with 1 or 2 good echoes are flagged here)
     assert (
-        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "10340 voxels (17.0%) have fewer than 3.0 good voxels. "
         "These voxels will be used in all analyses, "
         "but might not include 3 independent echo measurements."
     ) in caplog.text
 
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=4
+        data5,
+        threshold=1,
+        methods=["decay"],
+        n_independent_echos=4,
     )
 
     assert (
-        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "10340 voxels (17.0%) have fewer than 3.0 good voxels. "
         "The degrees of freedom for fits across echoes will remain 4 even if "
         "there might be fewer independent echo measurements."
     ) in caplog.text
 
 
 # SMOKE TESTS
-
-
-def test_smoke_reshape_niimg():
-    """Ensure that reshape_niimg returns reasonable objects with random inputs.
-
-    in the correct format.
-
-    Note: reshape_niimg could take in 3D or 4D array.
-    """
-    data_3d = np.random.random((100, 5, 20))
-    data_4d = np.random.random((100, 5, 20, 50))
-
-    assert utils.reshape_niimg(data_3d) is not None
-    assert utils.reshape_niimg(data_4d) is not None
-
-    with pytest.raises(TypeError):
-        utils.reshape_niimg(5)
-
-    with pytest.raises(ValueError):
-        utils.reshape_niimg("/path/to/nonexistent/file")
 
 
 def test_smoke_make_adaptive_mask():
@@ -290,9 +261,8 @@ def test_smoke_make_adaptive_mask():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data, mask=mask, methods=["dropout", "decay"]) is not None
+    assert utils.make_adaptive_mask(data, methods=["dropout", "decay"]) is not None
 
 
 def test_smoke_unmask():
@@ -302,10 +272,11 @@ def test_smoke_unmask():
 
     Note: unmask could take in 1D or 2D or 3D arrays.
     """
-    data_1d = np.random.random(100)
-    data_2d = np.random.random((100, 5))
-    data_3d = np.random.random((100, 5, 20))
     mask = np.random.randint(2, size=100)
+    n_samples_in_mask = mask.sum()
+    data_1d = np.random.random(n_samples_in_mask)
+    data_2d = np.random.random((n_samples_in_mask, 5))
+    data_3d = np.random.random((n_samples_in_mask, 5, 20))
 
     assert utils.unmask(data_1d, mask) is not None
     assert utils.unmask(data_2d, mask) is not None
@@ -359,16 +330,142 @@ def test_smoke_threshold_map():
     min_cluster_size = random.randint(1, 100)
 
     threshold = random.random()
-    mask = np.random.randint(2, size=1000)
 
     assert utils.threshold_map(img, min_cluster_size) is not None
 
     # test threshold_map with different optional parameters
     assert utils.threshold_map(img, min_cluster_size, threshold=threshold) is not None
-    assert utils.threshold_map(img, min_cluster_size, mask=mask) is not None
     assert utils.threshold_map(img, min_cluster_size, binarize=False) is not None
     assert utils.threshold_map(img, min_cluster_size, sided="one") is not None
     assert utils.threshold_map(img, min_cluster_size, sided="bi") is not None
+
+
+def test_threshold_map_4d_thresholds_per_volume():
+    """Ensure threshold_map supports 4D input + per-volume thresholds."""
+    img = np.zeros((5, 5, 5, 2), dtype=float)
+    img[2, 2, 2, 0] = 0.9
+    img[1, 1, 1, 1] = 0.6
+
+    out = utils.threshold_map(img, min_cluster_size=1, threshold=[0.8, 0.7], binarize=True)
+    assert out.shape == img.shape
+    assert out[2, 2, 2, 0] is True or out[2, 2, 2, 0] is np.True_
+    assert out[1, 1, 1, 1] is False or out[1, 1, 1, 1] is np.False_
+
+    # Scalar threshold should be broadcast to all volumes
+    out2 = utils.threshold_map(img, min_cluster_size=1, threshold=0.8, binarize=True)
+    assert out2.shape == img.shape
+    assert out2[2, 2, 2, 0] is True or out2[2, 2, 2, 0] is np.True_
+    assert out2[1, 1, 1, 1] is False or out2[1, 1, 1, 1] is np.False_
+
+    # Wrong-length thresholds should error
+    with pytest.raises(ValueError):
+        utils.threshold_map(img, min_cluster_size=1, threshold=[0.5], binarize=True)
+
+
+def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
+    """`load_mask` should load a user mask and return a NIfTI1 image."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.uint8)
+    mask_arr[2, 2, 2] = 1
+    # Use NIfTI2 to exercise conversion to NIfTI1
+    mask_img = nb.Nifti2Image(mask_arr, affine)
+    mask_path = tmp_path / "mask.nii.gz"
+    mask_img.to_filename(mask_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=None)
+    assert isinstance(out_mask_img, nb.Nifti1Image)
+    assert out_t2s is None
+    assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
+
+
+def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
+    """`load_mask` should build a mask from nonzero T2* and return masked T2* in ms."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    # Single non-zero voxel, in seconds (per BIDS): 0.02s -> 20ms
+    t2s_arr = np.zeros(shape, dtype=np.float32)
+    t2s_arr[1, 1, 1] = 0.02
+    t2s_img = nb.Nifti1Image(t2s_arr, affine)
+    t2s_path = tmp_path / "t2smap.nii.gz"
+    t2s_img.to_filename(t2s_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=str(t2s_path))
+    assert isinstance(out_mask_img, nb.Nifti1Image)
+    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
+    assert out_mask_arr.dtype == np.uint8
+    assert int(out_mask_arr.sum()) == 1
+    assert out_mask_arr[1, 1, 1] == 1
+    assert out_t2s is not None
+    assert np.asarray(out_t2s).shape == (1,)
+    assert np.allclose(out_t2s[0], 20.0)
+
+
+def test_load_mask_combines_mask_and_t2smap(tmp_path):
+    """If both mask and T2* map are provided, T2* zeros should zero-out the mask."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.uint8)
+    mask_arr[1, 1, 1] = 1
+    mask_arr[2, 2, 2] = 1
+    mask_img = nb.Nifti1Image(mask_arr, affine)
+    mask_path = tmp_path / "mask.nii.gz"
+    mask_img.to_filename(mask_path)
+
+    # Only one of the masked voxels has non-zero T2*
+    t2s_arr = np.zeros(shape, dtype=np.float32)
+    t2s_arr[1, 1, 1] = 0.03  # seconds -> 30ms
+    t2s_img = nb.Nifti1Image(t2s_arr, affine)
+    t2s_path = tmp_path / "t2smap.nii.gz"
+    t2s_img.to_filename(t2s_path)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=str(t2s_path))
+    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
+    assert int(out_mask_arr.sum()) == 1
+    assert out_mask_arr[1, 1, 1] == 1
+    assert out_mask_arr[2, 2, 2] == 0
+    assert np.asarray(out_t2s).shape == (1,)
+    assert np.allclose(out_t2s[0], 30.0)
+
+
+def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
+    """If neither mask nor T2* map are provided, `compute_epi_mask(ref_img)` is used."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    sentinel_mask = nb.Nifti1Image(np.ones(shape, dtype=np.uint8), affine)
+    called = {"n": 0, "arg": None}
+
+    def _fake_compute_epi_mask(arg):
+        called["n"] += 1
+        called["arg"] = arg
+        return sentinel_mask
+
+    # `compute_epi_mask` is imported inside `utils.load_mask`, so patch the module attr.
+    import nilearn.masking as nm
+
+    monkeypatch.setattr(nm, "compute_epi_mask", _fake_compute_epi_mask)
+
+    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=None)
+    assert called["n"] == 1
+    assert called["arg"] is ref_img
+    assert out_mask_img is sentinel_mask
+    assert out_t2s is None
 
 
 def test_create_legendre_polynomial_basis_set():

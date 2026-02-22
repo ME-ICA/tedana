@@ -4,6 +4,7 @@ import logging
 import os.path as op
 from typing import Dict, List, Tuple, Union
 
+import nibabel as nb
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -29,6 +30,7 @@ def generate_metrics(
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
+    mask_img: nb.Nifti1Image,
     n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
     label: str,
@@ -40,14 +42,14 @@ def generate_metrics(
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
-        Input data, where `S` is samples, `E` is echos, and `T` is time
-    data_optcom : (S x T) array_like
+    data_cat : (Mb x E x T) array_like
+        Input data, where `Mb` is samples in base mask, `E` is echos, and `T` is time
+    data_optcom : (Mb x T) array_like
         Optimally combined data
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data_cat`
-    adaptive_mask : (S) array_like
+    adaptive_mask : (Mb) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel.
         This mask may be thresholded; for example, with values less than 3 set to 0.
@@ -118,14 +120,6 @@ def generate_metrics(
             "match."
         )
 
-    # Derive mask from thresholded adaptive mask
-    mask = adaptive_mask >= 3
-
-    # Apply masks before anything else
-    data_cat = data_cat[mask, ...]
-    data_optcom = data_optcom[mask, :]
-    adaptive_mask = adaptive_mask[mask]
-
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
 
@@ -133,9 +127,6 @@ def generate_metrics(
     # to calculate the threshold for f tests
     f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
     proportion_threshold = 95  # top 5% of voxels for standardized parameter estimate maps
-
-    # Get reference image from io_generator
-    ref_img = io_generator.reference_img
 
     required_metrics = dependency_resolver(
         dependency_config["dependencies"],
@@ -171,8 +162,9 @@ def generate_metrics(
         )
         if io_generator.verbose:
             io_generator.save_file(
-                utils.unmask(metric_maps["map weight"] ** 2, mask),
+                metric_maps["map weight"] ** 2,
                 f"{label} component weights img",
+                mask=mask_img,
             )
 
     if "map optcom betas" in required_metrics:
@@ -223,20 +215,21 @@ def generate_metrics(
 
         if io_generator.verbose:
             io_generator.save_file(
-                utils.unmask(metric_maps["map FT2"], mask),
+                metric_maps["map FT2"],
                 f"{label} component F-T2 img",
+                mask=mask_img,
             )
             io_generator.save_file(
-                utils.unmask(metric_maps["map FS0"], mask),
+                metric_maps["map FS0"],
                 f"{label} component F-S0 img",
+                mask=mask_img,
             )
 
     if "map weight clusterized" in required_metrics:
         LGR.info("Thresholding standardized parameter estimate maps")
         metric_maps["map weight clusterized"] = dependence.threshold_map(
             maps=metric_maps["map weight"],
-            mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             proportion_threshold=proportion_threshold,
         )
 
@@ -244,8 +237,7 @@ def generate_metrics(
         LGR.info("Thresholding T2* F-statistic maps")
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
-            mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             value_threshold=f_thresh,
         )
 
@@ -253,8 +245,7 @@ def generate_metrics(
         LGR.info("Thresholding S0 F-statistic maps")
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
-            mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
             value_threshold=f_thresh,
         )
 
@@ -277,8 +268,7 @@ def generate_metrics(
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
             n_sig_voxels=component_table["countsigFT2"],
-            mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
         )
 
     if "map beta S0 clusterized" in required_metrics:
@@ -286,8 +276,7 @@ def generate_metrics(
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
             n_sig_voxels=component_table["countsigFS0"],
-            mask=mask,
-            ref_img=ref_img,
+            mask_img=mask_img,
         )
 
     # Dependence metrics
@@ -454,24 +443,27 @@ def generate_metrics(
             if write_betas:
                 echo_betas = betas[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_betas, mask),
+                    echo_betas,
                     f"echo weight {label} map split img",
                     echo=(i_echo + 1),
+                    mask=mask_img,
                 )
 
             if write_t2s0:
                 echo_pred_t2_maps = pred_t2_maps[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_pred_t2_maps, mask),
+                    echo_pred_t2_maps,
                     f"echo T2 {label} split img",
                     echo=(i_echo + 1),
+                    mask=mask_img,
                 )
 
                 echo_pred_s0_maps = pred_s0_maps[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_pred_s0_maps, mask),
+                    echo_pred_s0_maps,
                     f"echo S0 {label} split img",
                     echo=(i_echo + 1),
+                    mask=mask_img,
                 )
 
     # Reorder component table columns based on previous tedana versions
