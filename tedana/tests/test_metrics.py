@@ -2,9 +2,11 @@
 
 import os.path as op
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
+from nilearn.masking import unmask
 
 from tedana import io, utils
 from tedana.metrics import collect, dependence, external
@@ -22,15 +24,15 @@ def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
     in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
     mask_file = op.join(get_test_data_path(), "mask.nii.gz")
-    data_cat, ref_img = io.load_data(in_files, n_echos=len(tes))
+    data_cat = io.load_data_nilearn(in_files, mask_img=nb.load(mask_file), n_echos=len(tes))
     _, adaptive_mask = utils.make_adaptive_mask(
         data_cat,
-        mask=mask_file,
         methods=["dropout", "decay"],
     )
     data_optcom = np.mean(data_cat, axis=1)
     mixing = np.random.random((data_optcom.shape[1], 3))
-    io_generator = io.OutputGenerator(ref_img)
+    io_generator = io.OutputGenerator(mask_file)
+    io_generator.register_mask(mask_file)
 
     # includes adaptive_mask_cut and mixing_cut which are used for ValueError tests
     #  for when dimensions do not align
@@ -82,11 +84,16 @@ def test_smoke_generate_metrics(testdata1):
         dummy_scans=0,
     )
 
+    mask_clf = testdata1["adaptive_mask"].copy()
+    mask_clf[mask_clf < 3] = 0
+    mask_clf = mask_clf.astype(bool)
+
     component_table, new_mixing = collect.generate_metrics(
-        data_cat=testdata1["data_cat"],
-        data_optcom=testdata1["data_optcom"],
+        data_cat=testdata1["data_cat"][mask_clf, ...],
+        data_optcom=testdata1["data_optcom"][mask_clf, :],
         mixing=testdata1["mixing"],
-        adaptive_mask=testdata1["adaptive_mask"],
+        adaptive_mask=testdata1["adaptive_mask"][mask_clf],
+        mask_img=unmask(mask_clf, testdata1["generator"].mask),
         tes=testdata1["tes"],
         io_generator=testdata1["generator"],
         label="ICA",
@@ -125,6 +132,7 @@ def test_generate_metrics_fails(testdata1):
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
             adaptive_mask=testdata1["adaptive_mask"],
+            mask_img=testdata1["generator"].mask,
             tes=testdata1["tes"],
             io_generator=testdata1["generator"],
             label="ICA",
@@ -141,6 +149,7 @@ def test_generate_metrics_fails(testdata1):
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
             adaptive_mask=testdata1["adaptive_mask_cut"],
+            mask_img=testdata1["generator"].mask,
             tes=testdata1["tes"],
             io_generator=testdata1["generator"],
             label="ICA",
@@ -156,6 +165,7 @@ def test_generate_metrics_fails(testdata1):
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
             adaptive_mask=testdata1["adaptive_mask"],
+            mask_img=testdata1["generator"].mask,
             tes=testdata1["tes"][0:2],
             io_generator=testdata1["generator"],
             label="ICA",
@@ -171,6 +181,7 @@ def test_generate_metrics_fails(testdata1):
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing_cut"],
             adaptive_mask=testdata1["adaptive_mask"],
+            mask_img=testdata1["generator"].mask,
             tes=testdata1["tes"],
             io_generator=testdata1["generator"],
             label="ICA",
