@@ -466,6 +466,8 @@ def ica_reclassify_workflow(
 
     # Make a new selector with the specified or previous tree
     tree_fname = tree if tree is not None else previous_tree_fname
+    if tree_fname != previous_tree_fname:
+        LGR.info(f"Using new decision tree: {tree_fname}")
     selector = selection.component_selector.ComponentSelector(tree_fname, out_dir)
 
     if accept:
@@ -496,7 +498,6 @@ def ica_reclassify_workflow(
         to_copy.append("has gs combined img")
 
     for tc in to_copy:
-        print(tc)
         io_generator.save_file(ioh.get_file_contents(tc), tc)
 
     # calculate the fit of rejected to accepted components to use as a quality measure
