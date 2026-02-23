@@ -25,9 +25,7 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Argument parser follow template provided by RalphyZ
-    # https://stackoverflow.com/a/43456577
-    optional = parser._action_groups.pop()
+
     required = parser.add_argument_group("Required Arguments")
     required.add_argument(
         "-d",
@@ -36,11 +34,9 @@ def _get_parser():
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Multi-echo dataset for analysis. May be a "
-            "single file with spatially concatenated data "
-            "or a set of echo-specific files, in the same "
-            "order as the TEs are listed in the -e "
-            "argument."
+            "Multi-echo dataset for analysis. "
+            "A set of echo-specific files in ascending order. "
+            "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
     )
@@ -51,12 +47,14 @@ def _get_parser():
         metavar="TE",
         type=float,
         help=(
-            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
             "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
         ),
         required=True,
     )
-    optional.add_argument(
+
+    outputs = parser.add_argument_group("Output Control")
+    outputs.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -64,22 +62,14 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    optional.add_argument(
-        "--mask",
-        dest="mask",
-        metavar="FILE",
-        type=lambda x: is_valid_file(parser, x),
-        help=(
-            "Binary mask of voxels to include in TE "
-            "Dependent ANAlysis. Must be in the same "
-            "space as `data`."
-        ),
-        default=None,
+    outputs.add_argument(
+        "--prefix",
+        dest="prefix",
+        type=str,
+        help="Prefix for filenames generated.",
+        default="",
     )
-    optional.add_argument(
-        "--prefix", dest="prefix", type=str, help="Prefix for filenames generated.", default=""
-    )
-    optional.add_argument(
+    outputs.add_argument(
         "--convention",
         dest="convention",
         action="store",
@@ -87,14 +77,31 @@ def _get_parser():
         help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
     )
-    optional.add_argument(
+    outputs.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    outputs.add_argument(
+        "--overwrite",
+        "-f",
+        dest="overwrite",
+        action="store_true",
+        help="Force overwriting of files.",
+        default=False,
+    )
+
+    masking = parser.add_argument_group("Temporal and Spatial Masking")
+    masking.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
     )
-    optional.add_argument(
+    masking.add_argument(
         "--exclude",
         dest="exclude",
         type=str,
@@ -110,7 +117,19 @@ def _get_parser():
         ),
         default=None,
     )
-    optional.add_argument(
+    masking.add_argument(
+        "--mask",
+        dest="mask",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "Binary mask of voxels to include in TE "
+            "Dependent ANAlysis. Must be in the same "
+            "space as `data`."
+        ),
+        default=None,
+    )
+    masking.add_argument(
         "--masktype",
         dest="masktype",
         required=False,
@@ -120,7 +139,9 @@ def _get_parser():
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
-    optional.add_argument(
+
+    decay = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
+    decay.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -135,21 +156,19 @@ def _get_parser():
         ),
         default="loglin",
     )
-    optional.add_argument(
+    decay.add_argument(
         "--fitmode",
         dest="fitmode",
         action="store",
         choices=["all", "ts"],
         help=(
             "Monoexponential model fitting scheme. "
-            '"all" means that the model is fit, per voxel, '
-            "across all timepoints. "
-            '"ts" means that the model is fit, per voxel '
-            "and per timepoint."
+            '"all" means that the model is fit, per voxel, across all timepoints. '
+            '"ts" means that the model is fit, per voxel and per timepoint.'
         ),
         default="all",
     )
-    optional.add_argument(
+    decay.add_argument(
         "--combmode",
         dest="combmode",
         action="store",
@@ -157,54 +176,61 @@ def _get_parser():
         help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
         default="t2s",
     )
-    optional.add_argument(
+
+    experimental = parser.add_argument_group("Experimental Features")
+    experimental.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
         type=int,
         help=(
-            "Number of independent echoes to use in goodness of fit metrics (fstat)."
-            "Primarily used for EPTI acquisitions."
+            "Number of independent echoes to use in goodness of fit metrics (fstat). "
+            "Primarily used for EPTI acquisitions. "
             "If not provided, number of echoes will be used."
         ),
         default=None,
     )
-    optional.add_argument(
+
+    performance = parser.add_argument_group("Performance Control")
+    performance.add_argument(
         "--n-threads",
         dest="n_threads",
         type=int,
         action="store",
         help=(
-            "Number of threads to use. Used by "
-            "threadpoolctl to set the parameter outside "
-            "of the workflow function. Higher numbers of "
-            "threads tend to slow down performance on "
-            "typical datasets."
+            "Number of threads to use. "
+            "Used by threadpoolctl to set the parameter outside of the workflow function. "
+            "Higher numbers of threads tend to slow down performance on typical datasets."
         ),
         default=1,
     )
-    optional.add_argument(
-        "--debug", dest="debug", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument(
-        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument(
-        "--verbose",
-        dest="verbose",
+    performance.add_argument(
+        "--debug",
+        dest="debug",
         action="store_true",
-        help="Generate intermediate and additional files.",
+        help=(
+            "Logs in the terminal will have increased verbosity, "
+            "and will also be written into a TSV file in the output directory."
+        ),
         default=False,
     )
-    optional.add_argument(
-        "--overwrite",
-        "-f",
-        dest="overwrite",
+
+    # Hidden arguments
+    parser.add_argument(
+        "--quiet",
+        dest="quiet",
+        help=argparse.SUPPRESS,
         action="store_true",
-        help="Force overwriting of files.",
         default=False,
     )
-    parser._action_groups.append(optional)
+
+    # Version argument
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"tedana v{__version__}",
+    )
     return parser
 
 

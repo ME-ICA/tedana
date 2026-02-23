@@ -54,8 +54,6 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    from tedana import __version__
-
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     required = parser.add_argument_group("Required Arguments")
@@ -325,20 +323,20 @@ def _get_parser():
         help="File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done.",
         default=None,
     )
-    decomposition.add_argument(
+
+    experimental = parser.add_argument_group("Experimental Features")
+    experimental.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
         type=int,
         help=(
-            "Number of independent echoes to use in goodness of fit metrics (fstat)."
-            "Primarily used for EPTI acquisitions."
+            "Number of independent echoes to use in goodness of fit metrics (fstat). "
+            "Primarily used for EPTI acquisitions. "
             "If not provided, number of echoes will be used."
         ),
         default=None,
     )
-
-    experimental = parser.add_argument_group("Experimental Features")
     experimental.add_argument(
         "--tedort",
         dest="tedort",
