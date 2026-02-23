@@ -175,7 +175,6 @@ def _get_parser():
     experimental_args.add_argument(
         "--gscontrol",
         dest="gscontrol",
-        required_args=False,
         nargs="+",
         help=(
             "Perform additional denoising to remove spatially diffuse noise. "
