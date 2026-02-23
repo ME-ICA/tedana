@@ -56,8 +56,8 @@ def _get_parser():
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    required = parser.add_argument_group("Required Arguments")
-    required.add_argument(
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
         "-d",
         dest="data",
         nargs="+",
@@ -70,7 +70,7 @@ def _get_parser():
         ),
         required=True,
     )
-    required.add_argument(
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -83,8 +83,8 @@ def _get_parser():
         required=True,
     )
 
-    outputs = parser.add_argument_group("Output Control")
-    outputs.add_argument(
+    output_args = parser.add_argument_group("Output Control")
+    output_args.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -92,48 +92,45 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--prefix",
         dest="prefix",
         type=str,
         help="Prefix for filenames generated.",
         default="",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--convention",
         dest="convention",
-        action="store",
         choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
+        help="Filenaming convention. bids will use the latest BIDS derivatives version.",
         default="bids",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--no-reports",
         dest="no_reports",
         action="store_true",
         help=(
-            "Creates a figures folder with static component "
-            "maps, timecourse plots and other diagnostic "
-            "images and displays these in an interactive "
-            "reporting framework"
+            "Disables creation of a figures folder with static component maps, timecourse plots, "
+            "and other diagnostic images and displays these in an interactive reporting framework."
         ),
         default=False,
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--png-cmap",
         dest="png_cmap",
         type=str,
         help="Colormap for figures",
         default="coolwarm",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--verbose",
         dest="verbose",
         action="store_true",
         help="Generate intermediate and additional files.",
         default=False,
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--overwrite",
         "-f",
         dest="overwrite",
@@ -142,15 +139,15 @@ def _get_parser():
         default=False,
     )
 
-    masking = parser.add_argument_group("Temporal and Spatial Masking")
-    masking.add_argument(
+    masking_args = parser.add_argument_group("Temporal and Spatial Masking")
+    masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
     )
-    masking.add_argument(
+    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
@@ -164,22 +161,19 @@ def _get_parser():
         ),
         default=None,
     )
-    masking.add_argument(
+    masking_args.add_argument(
         "--masktype",
         dest="masktype",
-        required=False,
-        action="store",
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
 
-    decay = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
-    decay.add_argument(
+    decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
+    decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        action="store",
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
@@ -189,15 +183,14 @@ def _get_parser():
         ),
         default="loglin",
     )
-    decay.add_argument(
+    decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        action="store",
         choices=["t2s"],
         help="Combination scheme for TEs: t2s (Posse 1999)",
         default="t2s",
     )
-    decay.add_argument(
+    decay_args.add_argument(
         "--t2smap",
         dest="t2smap",
         metavar="FILE",
@@ -210,8 +203,8 @@ def _get_parser():
         default=None,
     )
 
-    decomposition = parser.add_argument_group("Component Selection")
-    decomposition.add_argument(
+    decomposition_args = parser.add_argument_group("Component Selection")
+    decomposition_args.add_argument(
         "--tedpca",
         dest="tedpca",
         type=check_tedpca_value,
@@ -231,7 +224,7 @@ def _get_parser():
         ),
         default="aic",
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--tree",
         dest="tree",
         help=(
@@ -241,7 +234,7 @@ def _get_parser():
         ),
         default="tedana_orig",
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--external",
         dest="external_regressors",
         type=lambda x: is_valid_file(parser, x),
@@ -255,7 +248,7 @@ def _get_parser():
         ),
         default=None,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--ica-method",
         "--ica_method",
         dest="ica_method",
@@ -270,7 +263,7 @@ def _get_parser():
         type=str.lower,
         default=DEFAULT_ICA_METHOD,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -283,7 +276,7 @@ def _get_parser():
         ),
         default=DEFAULT_SEED,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--n-robust-runs",
         "--n_robust_runs",
         dest="n_robust_runs",
@@ -295,7 +288,7 @@ def _get_parser():
         ),
         default=DEFAULT_N_ROBUST_RUNS,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--maxit",
         dest="maxit",
         metavar="INT",
@@ -303,7 +296,7 @@ def _get_parser():
         help="Maximum number of iterations for ICA.",
         default=DEFAULT_N_MAX_ITER,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--maxrestart",
         dest="maxrestart",
         metavar="INT",
@@ -315,7 +308,7 @@ def _get_parser():
         ),
         default=DEFAULT_N_MAX_RESTART,
     )
-    decomposition.add_argument(
+    decomposition_args.add_argument(
         "--mix",
         dest="mixing_file",
         metavar="FILE",
@@ -324,8 +317,8 @@ def _get_parser():
         default=None,
     )
 
-    experimental = parser.add_argument_group("Experimental Features")
-    experimental.add_argument(
+    experimental_args = parser.add_argument_group("Experimental Features")
+    experimental_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
@@ -337,18 +330,16 @@ def _get_parser():
         ),
         default=None,
     )
-    experimental.add_argument(
+    experimental_args.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
         help="Orthogonalize rejected components w.r.t. accepted components prior to denoising.",
         default=False,
     )
-    experimental.add_argument(
+    experimental_args.add_argument(
         "--gscontrol",
         dest="gscontrol",
-        required=False,
-        action="store",
         nargs="+",
         help=(
             "Perform additional denoising to remove spatially diffuse noise. "
@@ -358,8 +349,8 @@ def _get_parser():
         default="",
     )
 
-    performance = parser.add_argument_group("Performance Control")
-    performance.add_argument(
+    performance_args = parser.add_argument_group("Performance Control")
+    performance_args.add_argument(
         "--lowmem",
         dest="low_mem",
         action="store_true",
@@ -369,11 +360,10 @@ def _get_parser():
         ),
         default=False,
     )
-    performance.add_argument(
+    performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
         type=int,
-        action="store",
         help=(
             "Number of threads to use. "
             "Used by threadpoolctl to set the parameter outside of the workflow function. "
@@ -381,7 +371,7 @@ def _get_parser():
         ),
         default=1,
     )
-    performance.add_argument(
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",

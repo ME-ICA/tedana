@@ -26,8 +26,8 @@ def _get_parser():
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    required = parser.add_argument_group("Required Arguments")
-    required.add_argument(
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
         "-d",
         dest="data",
         nargs="+",
@@ -40,7 +40,7 @@ def _get_parser():
         ),
         required=True,
     )
-    required.add_argument(
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -53,8 +53,8 @@ def _get_parser():
         required=True,
     )
 
-    outputs = parser.add_argument_group("Output Control")
-    outputs.add_argument(
+    output_args = parser.add_argument_group("Output Control")
+    output_args.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -62,14 +62,14 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--prefix",
         dest="prefix",
         type=str,
         help="Prefix for filenames generated.",
         default="",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--convention",
         dest="convention",
         action="store",
@@ -77,14 +77,14 @@ def _get_parser():
         help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--verbose",
         dest="verbose",
         action="store_true",
         help="Generate intermediate and additional files.",
         default=False,
     )
-    outputs.add_argument(
+    output_args.add_argument(
         "--overwrite",
         "-f",
         dest="overwrite",
@@ -93,15 +93,15 @@ def _get_parser():
         default=False,
     )
 
-    masking = parser.add_argument_group("Temporal and Spatial Masking")
-    masking.add_argument(
+    masking_args = parser.add_argument_group("Temporal and Spatial Masking")
+    masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
     )
-    masking.add_argument(
+    masking_args.add_argument(
         "--exclude",
         dest="exclude",
         type=str,
@@ -117,7 +117,7 @@ def _get_parser():
         ),
         default=None,
     )
-    masking.add_argument(
+    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
@@ -129,7 +129,7 @@ def _get_parser():
         ),
         default=None,
     )
-    masking.add_argument(
+    masking_args.add_argument(
         "--masktype",
         dest="masktype",
         required=False,
@@ -140,8 +140,8 @@ def _get_parser():
         default=["dropout"],
     )
 
-    decay = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
-    decay.add_argument(
+    decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
+    decay_args.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -156,7 +156,7 @@ def _get_parser():
         ),
         default="loglin",
     )
-    decay.add_argument(
+    decay_args.add_argument(
         "--fitmode",
         dest="fitmode",
         action="store",
@@ -168,7 +168,7 @@ def _get_parser():
         ),
         default="all",
     )
-    decay.add_argument(
+    decay_args.add_argument(
         "--combmode",
         dest="combmode",
         action="store",
@@ -177,8 +177,8 @@ def _get_parser():
         default="t2s",
     )
 
-    experimental = parser.add_argument_group("Experimental Features")
-    experimental.add_argument(
+    experimental_args = parser.add_argument_group("Experimental Features")
+    experimental_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
@@ -191,8 +191,8 @@ def _get_parser():
         default=None,
     )
 
-    performance = parser.add_argument_group("Performance Control")
-    performance.add_argument(
+    performance_args = parser.add_argument_group("Performance Control")
+    performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
         type=int,
@@ -204,7 +204,7 @@ def _get_parser():
         ),
         default=1,
     )
-    performance.add_argument(
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -229,7 +229,7 @@ def _get_parser():
         "-v",
         "--version",
         action="version",
-        version=f"tedana v{__version__}",
+        version=f"t2smap v{__version__}",
     )
     return parser
 
