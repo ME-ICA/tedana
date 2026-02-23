@@ -72,7 +72,6 @@ def _get_parser():
     output_args.add_argument(
         "--convention",
         dest="convention",
-        action="store",
         choices=["orig", "bids"],
         help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
@@ -97,6 +96,7 @@ def _get_parser():
     masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
+        metavar="INT",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
@@ -132,8 +132,6 @@ def _get_parser():
     masking_args.add_argument(
         "--masktype",
         dest="masktype",
-        required=False,
-        action="store",
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
         choices=["dropout", "decay", "none"],
@@ -144,7 +142,6 @@ def _get_parser():
     decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        action="store",
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
@@ -159,7 +156,6 @@ def _get_parser():
     decay_args.add_argument(
         "--fitmode",
         dest="fitmode",
-        action="store",
         choices=["all", "ts"],
         help=(
             "Monoexponential model fitting scheme. "
@@ -171,7 +167,6 @@ def _get_parser():
     decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        action="store",
         choices=["t2s", "paid"],
         help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
         default="t2s",
@@ -195,8 +190,8 @@ def _get_parser():
     performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
+        metavar="INT",
         type=int,
-        action="store",
         help=(
             "Number of threads to use. "
             "Used by threadpoolctl to set the parameter outside of the workflow function. "

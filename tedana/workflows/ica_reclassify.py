@@ -48,6 +48,7 @@ def _get_parser():
     selection_args.add_argument(
         "--manacc",
         dest="manual_accept",
+        metavar="INT",
         nargs="+",
         help=(
             "Component indices to accept (zero-indexed). "
@@ -60,6 +61,7 @@ def _get_parser():
     selection_args.add_argument(
         "--manrej",
         dest="manual_reject",
+        metavar="INT",
         nargs="+",
         help=(
             "Component indices to reject (zero-indexed). "
@@ -72,6 +74,7 @@ def _get_parser():
     selection_args.add_argument(
         "--tagacc",
         dest="tag_accept",
+        metavar="TAG",
         nargs="+",
         help=(
             "Classification tag(s) to add to accepted components. "
@@ -84,6 +87,7 @@ def _get_parser():
     selection_args.add_argument(
         "--tagrej",
         dest="tag_reject",
+        metavar="TAG",
         nargs="+",
         help=(
             "Classification tag(s) to add to rejected components. "
@@ -129,7 +133,8 @@ def _get_parser():
         action="store_true",
         help=(
             "Disables creation of a figures folder with static component maps, timecourse plots, "
-            "and other diagnostic images and displays these in an interactive reporting framework."
+            "and other diagnostic images. "
+            "Also disables the generation of a dynamic report."
         ),
         default=False,
     )
@@ -159,6 +164,7 @@ def _get_parser():
     masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
+        metavar="INT",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
@@ -189,6 +195,7 @@ def _get_parser():
     performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
+        metavar="INT",
         type=int,
         help=(
             "Number of threads to use. "

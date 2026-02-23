@@ -112,7 +112,8 @@ def _get_parser():
         action="store_true",
         help=(
             "Disables creation of a figures folder with static component maps, timecourse plots, "
-            "and other diagnostic images and displays these in an interactive reporting framework."
+            "and other diagnostic images. "
+            "Also disables the generation of a dynamic report."
         ),
         default=False,
     )
@@ -143,6 +144,7 @@ def _get_parser():
     masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
+        metavar="INT",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
@@ -237,6 +239,7 @@ def _get_parser():
     decomposition_args.add_argument(
         "--external",
         dest="external_regressors",
+        metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
             "File containing external regressors to compare to ICA component be used in the "
@@ -363,6 +366,7 @@ def _get_parser():
     performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
+        metavar="INT",
         type=int,
         help=(
             "Number of threads to use. "
