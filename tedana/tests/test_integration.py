@@ -819,7 +819,7 @@ def test_integration_t2smap(skip_integration):
         raise ValueError(msg)
 
 
-def test_integration_reclassify_new_tree(skip_integration, caplog):
+def test_integration_reclassify_new_tree(skip_integration):
     if skip_integration:
         pytest.skip("Skip reclassify new tree")
 
