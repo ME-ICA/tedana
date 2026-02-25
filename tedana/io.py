@@ -1162,9 +1162,12 @@ def _convert_to_nifti1(img, dtype=None):
     else:
         data = np.asarray(img.dataobj, dtype=dtype)
     affine = img.affine
+    zooms = img.header.get_zooms()
 
     # Try to preserve header information where possible
-    return nb.Nifti1Image(data, affine)
+    new_img = nb.Nifti1Image(data, affine)
+    new_img.header.set_zooms(zooms)
+    return new_img
 
 
 def load_ref_img(data, n_echos):
@@ -1195,6 +1198,7 @@ def load_ref_img(data, n_echos):
         # image manually. Use a header copy with dimensions updated to match the ref array,
         # since the original header describes the full z-concatenated volume.
         ref_img = nb.Nifti1Image(arr, data_img.affine)
+        ref_img.header.set_zooms(data_img.header.get_zooms())
 
     else:
         ref_img = nb.load(data[0])
