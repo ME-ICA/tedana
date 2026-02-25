@@ -918,8 +918,9 @@ def load_mask(ref_img, mask=None, t2smap=None):
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = nb.load(mask)
-        # Convert to NIfTI1 if needed (e.g., AFNI format)
-        mask_img = io._convert_to_nifti1(mask_img)
+        # Convert mask to binary (assuming non-zero values indicate mask inclusion)
+        mask = mask_img.get_fdata() > 0
+        mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
     elif t2smap and not mask:
         LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap))
@@ -934,7 +935,8 @@ def load_mask(ref_img, mask=None, t2smap=None):
         t2s_loaded = t2s_img.get_fdata()
         # Load and convert user-defined mask to NIfTI1 (e.g., AFNI format)
         mask_img = io._convert_to_nifti1(nb.load(mask))
-        mask = mask_img.get_fdata().astype(np.uint8)
+        # Convert mask to binary (assuming non-zero values indicate mask inclusion)
+        mask = mask_img.get_fdata() > 0
         mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
         mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
         t2s = apply_mask(t2s_img, mask_img)
