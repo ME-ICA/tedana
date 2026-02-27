@@ -222,7 +222,7 @@ def plot_component(
     import matplotlib.image as mpimg
     from matplotlib import gridspec
 
-    # Set range to ~1/10th of max positive or negative beta
+    # Set range to ~1/10th of max positive or negative PEs
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
     # nilearn raises a warning when creating a figure from an image with a non-diagonal affine.
@@ -328,7 +328,7 @@ def comp_figures(ts, component_table, mixing, io_generator, png_cmap):
     Parameters
     ----------
     ts : (Mb x T) array_like
-        Time series from which to derive ICA betas, where `Mb` is samples in base mask,
+        Time series from which to derive ICA PEs, where `Mb` is samples in base mask,
         and `T` is time
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for

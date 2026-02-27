@@ -671,13 +671,13 @@ def denoise_ts(data, mixing, mask, component_table):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing)
-    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
+    pes = get_coeffs(dmdata.T, mixing)
+    varexpl = (1 - ((dmdata.T - pes.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data (already in masked space)
-    hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
-    lowkts = utils.unmask(betas[:, rej].dot(mixing.T[rej, :]), mask)
+    hikts = utils.unmask(pes[:, acc].dot(mixing.T[acc, :]), mask)
+    lowkts = utils.unmask(pes[:, rej].dot(mixing.T[rej, :]), mask)
     dnts = utils.unmask(mdata, mask) - lowkts
     return dnts, hikts, lowkts
 
@@ -808,21 +808,21 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
 
     ts_pes = get_coeffs(data_optcom, mixing)
     fout = io_generator.save_file(ts_pes, "ICA components img")
-    LGR.info(f"Writing full ICA coefficient feature set: {fout}")
+    LGR.info(f"Writing components' unstandardized parameter estimate maps: {fout}")
 
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
     mixing_z = stats.zscore(mixing, axis=0)
-    betas_oc = get_coeffs(data_optcom_z, mixing_z)
-    fout = io_generator.save_file(betas_oc, "z-scored ICA components img", mask=mask)
+    ts_betas = get_coeffs(data_optcom_z, mixing_z)
+    fout = io_generator.save_file(ts_betas, "z-scored ICA components img", mask=mask)
     del data_optcom_z, mixing_z
-    LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
+    LGR.info(f"Writing components' standardized parameter estimate maps: {fout}")
 
     if len(acc) != 0:
         fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         fout = io_generator.save_file(
-            betas_oc[:, acc],
+            ts_betas[:, acc],
             "z-scored ICA accepted components img",
             mask=mask,
         )
@@ -902,9 +902,9 @@ def split_ts(data, mixing, component_table):
     """
     acc = component_table[component_table.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing)
+    pes = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing)
     if len(acc) != 0:
-        hikts = cbetas[:, acc].dot(mixing.T[acc, :])
+        hikts = pes[:, acc].dot(mixing.T[acc, :])
     else:
         hikts = None
 
