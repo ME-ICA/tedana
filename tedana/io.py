@@ -18,11 +18,17 @@ import numpy as np
 import pandas as pd
 import requests
 from nilearn import masking
-from nilearn.image import check_niimg
+from nilearn import __version__ as nilearn_version
+from packaging.version import Version
 from scipy import stats
 
 from tedana import utils
 from tedana.stats import get_coeffs
+
+if Version(nilearn_version) >= Version("0.14.0"):
+    from nilearn.image import check_niimg
+else:
+    from nilearn._utils.niimg_conversions import check_niimg
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
