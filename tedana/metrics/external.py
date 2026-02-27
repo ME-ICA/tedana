@@ -578,7 +578,7 @@ def fit_model_with_stats(
     # the error ratio from 1: R² = SSR (fitted model)/SST(total or model base) =
     # Σ (Y_pred-Y_actual)**2 / Σ (Y_pred-Y_actual)**2
     r2_vals = 1 - np.divide(sse_full, sse_base)
-    print(y.shape)
+    LGR.debug("Shape of response variable y in fit_model_with_stats: %s", y.shape)
 
     return pes_full, f_vals, p_vals, r2_vals
 

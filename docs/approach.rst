@@ -357,7 +357,7 @@ These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_
   For more information on how TE-dependence and TE-independence models are
   estimated, see :ref:`dependence models`.
 
-The grey lines below shows how parameter estimates (a.k.a. PEs)
+The grey lines below show how parameter estimates (a.k.a. PEs)
 change with echo time, for one voxel and one component.
 The blue and red lines show the predicted values for the :math:`S_0` and
 :math:`T_2^*` models, respectively, for the same voxel and component.
