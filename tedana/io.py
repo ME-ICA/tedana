@@ -25,7 +25,7 @@ from scipy import stats
 from tedana import utils
 from tedana.stats import get_coeffs
 
-if Version(nilearn_version) >= Version("0.14.0"):
+if Version(nilearn_version) >= Version("0.13.0"):
     from nilearn.image import check_niimg
 else:
     from nilearn._utils.niimg_conversions import check_niimg
