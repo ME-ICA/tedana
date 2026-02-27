@@ -652,7 +652,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "LongName": "S0 model PE map-F-statistic map Dice similarity index",
             "Description": (
                 "Dice value of cluster-extent thresholded versions of "
-                "standardized parameter estimate and S0-model F-statistic maps."
+                "parameter estimate (PE) and S0-model F-statistic maps."
             ),
             "Units": "arbitrary",
         }
