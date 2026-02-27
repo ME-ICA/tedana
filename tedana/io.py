@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import requests
 from nilearn import masking
-from nilearn._utils.niimg_conversions import check_niimg
+from nilearn.image import check_niimg
 from scipy import stats
 
 from tedana import utils
@@ -385,7 +385,7 @@ class OutputGenerator:
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
 
         # Replace blanks with numpy NaN
-        deblanked = data.replace("", np.nan)
+        deblanked = data.replace("", np.nan).infer_objects(copy=False)
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
     def add_df_to_file(self, data, description, **kwargs):

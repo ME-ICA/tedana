@@ -23,9 +23,9 @@ API
    :template: function.rst
    :toctree: generated/
 
-   tedana.workflows.tedana_workflow
-   tedana.workflows.ica_reclassify_workflow
-   tedana.workflows.t2smap_workflow
+   tedana_workflow
+   ica_reclassify_workflow
+   t2smap_workflow
 
 
 .. _api_decay_ref:
@@ -44,8 +44,8 @@ API
    :template: function.rst
    :toctree: generated/
 
-   tedana.decay.fit_decay
-   tedana.decay.fit_decay_ts
+   fit_decay
+   fit_decay_ts
 
 
 .. _api_combine_ref:
@@ -64,7 +64,7 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.combine.make_optcom
+   make_optcom
 
 
 .. _api_decomposition_ref:
@@ -83,8 +83,8 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.decomposition.tedpca
-   tedana.decomposition.tedica
+   tedpca
+   tedica
 
 
 .. _api_metrics_ref:
@@ -103,9 +103,9 @@ API
    :toctree: generated/
    :template: module.rst
 
-   tedana.metrics.collect
-   tedana.metrics.dependence
-   tedana.metrics.external
+   collect
+   dependence
+   external
 
 
 .. _api_selection_ref:
@@ -124,22 +124,22 @@ API
    :toctree: generated/
    :template: class.rst
 
-   tedana.selection.component_selector.ComponentSelector
-   tedana.selection.component_selector.TreeError
+   component_selector.ComponentSelector
+   component_selector.TreeError
 
    :template: function.rst
 
-   tedana.selection.component_selector.load_config
-   tedana.selection.component_selector.validate_tree
+   component_selector.load_config
+   component_selector.validate_tree
 
 .. autosummary::
    :toctree: generated/
    :template: module.rst
 
-   tedana.selection.selection_nodes
-   tedana.selection.selection_utils
-   tedana.selection.tedica
-   tedana.selection.tedpca
+   selection_nodes
+   selection_utils
+   tedica
+   tedpca
 
 
 
@@ -159,8 +159,8 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.gscontrol.gscontrol_raw
-   tedana.gscontrol.minimum_image_regression
+   gscontrol_raw
+   minimum_image_regression
 
 
 .. _api_io_ref:
@@ -179,23 +179,22 @@ API
    :toctree: generated/
    :template: class.rst
 
-   tedana.io.OutputGenerator
-   tedana.io.InputHarvester
-   tedana.io.CustomEncoder
+   OutputGenerator
+   InputHarvester
+   CustomEncoder
 
    :template: function.rst
 
-   tedana.io.load_data
-   tedana.io.load_json
-   tedana.io.get_fields
-   tedana.io.new_nii_like
-   tedana.io.prep_data_for_json
-   tedana.io.add_decomp_prefix
-   tedana.io.denoise_ts
-   tedana.io.split_ts
-   tedana.io.write_split_ts
-   tedana.io.writeresults
-   tedana.io.writeresults_echoes
+   load_data_nilearn
+   load_json
+   get_fields
+   prep_data_for_json
+   add_decomp_prefix
+   denoise_ts
+   split_ts
+   write_split_ts
+   writeresults
+   writeresults_echoes
 
 .. _api_stats_ref:
 
@@ -213,13 +212,13 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.reporting.html_report.generate_report
-   tedana.reporting.quality_metrics.calculate_rejected_components_impact
-   tedana.reporting.static_figures.comp_figures
-   tedana.reporting.static_figures.pca_results
-   tedana.reporting.static_figures.plot_t2star_and_s0
-   tedana.reporting.static_figures.plot_rmse
-   tedana.reporting.static_figures.plot_adaptive_mask
+   html_report.generate_report
+   quality_metrics.calculate_rejected_components_impact
+   static_figures.comp_figures
+   static_figures.pca_results
+   static_figures.plot_t2star_and_s0
+   static_figures.plot_rmse
+   static_figures.plot_adaptive_mask
 
 .. _api_reporting_ref:
 
@@ -237,9 +236,9 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.stats.get_coeffs
-   tedana.stats.voxelwise_univariate_zstats
-   tedana.stats.getfbounds
+   get_coeffs
+   voxelwise_univariate_zstats
+   getfbounds
 
 
 .. _api_bibtex_ref:
@@ -258,12 +257,12 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.bibtex.find_braces
-   tedana.bibtex.reduce_idx
-   tedana.bibtex.index_bibtex_identifiers
-   tedana.bibtex.find_citations
-   tedana.bibtex.reduce_references
-   tedana.bibtex.get_description_references
+   find_braces
+   reduce_idx
+   index_bibtex_identifiers
+   find_citations
+   reduce_references
+   get_description_references
 
 
 .. _api_utils_ref:
@@ -282,11 +281,11 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.utils.andb
-   tedana.utils.dice
-   tedana.utils.get_spectrum
-   tedana.utils.make_adaptive_mask
-   tedana.utils.threshold_map
-   tedana.utils.unmask
-   tedana.utils.sec2millisec
-   tedana.utils.millisec2sec
+   andb
+   dice
+   get_spectrum
+   make_adaptive_mask
+   threshold_map
+   unmask
+   sec2millisec
+   millisec2sec
