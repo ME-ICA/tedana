@@ -610,6 +610,36 @@ def compute_external_regressor_correlations(
     if external_regressors.shape[0] != mixing.shape[0]:
         raise ValueError("DataFrames must have the same number of rows (time points).")
 
+    # Identify regressors/components that will yield non-finite correlations
+    # (e.g., constant or non-finite time series).
+    problematic_external: list[str] = []
+    for col in external_regressors.columns:
+        series = external_regressors[col].to_numpy(dtype=float)
+        if not np.isfinite(series).all():
+            problematic_external.append(f"{col} (non-finite values)")
+        elif np.nanstd(series) == 0:
+            problematic_external.append(f"{col} (zero variance)")
+
+    problematic_mixing: list[str] = []
+    for col in mixing.columns:
+        series = mixing[col].to_numpy(dtype=float)
+        if not np.isfinite(series).all():
+            problematic_mixing.append(f"{col} (non-finite values)")
+        elif np.nanstd(series) == 0:
+            problematic_mixing.append(f"{col} (zero variance)")
+
+    if problematic_external or problematic_mixing:
+        msg_parts = [
+            "Non-finite correlations may occur due to constant or non-finite time series.",
+        ]
+        if problematic_external:
+            msg_parts.append(
+                "External regressors: " + ", ".join(sorted(problematic_external)) + "."
+            )
+        if problematic_mixing:
+            msg_parts.append("ICA components: " + ", ".join(sorted(problematic_mixing)) + ".")
+        LGR.warning(" ".join(msg_parts))
+
     # Convert DataFrames to numpy arrays
     arr_regressors = external_regressors.values
     arr_mixing = mixing.values

@@ -267,7 +267,7 @@ divided by the sum of the squares of the parameter estimates.
 
 
 normalized variance explained
-============================
+=============================
 :func:`tedana.metrics.dependence.calculate_varex_norm`
 
 The "normalized variance explained" by each component is calculated as the
@@ -292,6 +292,7 @@ averaged over voxels.
 
 This represents the variance in the data explained by each component
 without controlling for other components.
+
 partial R-squared
 =================
 :func:`tedana.metrics.dependence.calculate_partial_r2`

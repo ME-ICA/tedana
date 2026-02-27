@@ -13,7 +13,7 @@ def test__combine_t2s():
     tes = np.array([[10, 20, 30]])  # 1 x E
 
     # Voxel- and volume-wise T2* estimates
-    t2s = np.random.random((n_voxels, n_trs, 1))  # M x T x 1
+    t2s = np.random.random((n_voxels, n_trs, 1))  # Mb x T x 1
     comb = combine._combine_t2s(data, tes, t2s)
     assert comb.shape == (n_voxels, n_trs)
 
