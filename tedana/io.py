@@ -17,8 +17,8 @@ import nibabel as nb
 import numpy as np
 import pandas as pd
 import requests
-from nilearn import masking
 from nilearn import __version__ as nilearn_version
+from nilearn import masking
 from packaging.version import Version
 from scipy import stats
 
