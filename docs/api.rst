@@ -26,6 +26,11 @@ API
    tedana_workflow
    ica_reclassify_workflow
    t2smap_workflow
+   parser_utils.check_tedpca_value
+   parser_utils.check_n_robust_runs_value
+   parser_utils.is_valid_file
+   parser_utils.parse_manual_list_int
+   parser_utils.parse_manual_list_str
 
 
 .. _api_decay_ref:
@@ -46,6 +51,11 @@ API
 
    fit_decay
    fit_decay_ts
+   monoexponential
+   fit_monoexponential
+   fit_loglinear
+   modify_t2s_s0_maps
+   rmse_of_fit_decay_ts
 
 
 .. _api_combine_ref:
@@ -85,6 +95,8 @@ API
 
    tedpca
    tedica
+   r_ica
+   f_ica
 
 
 .. _api_metrics_ref:
@@ -142,7 +154,6 @@ API
    tedpca
 
 
-
 .. _api_gscontrol_ref:
 
 **********************************************
@@ -195,8 +206,14 @@ API
    write_split_ts
    writeresults
    writeresults_echoes
+   download_json
+   load_ref_img
+   versiontuple
+   str_to_component_list
+   fname_to_component_list
 
-.. _api_stats_ref:
+
+.. _api_reporting_ref:
 
 ********************************************
 :mod:`tedana.reporting`: Reporting functions
@@ -219,8 +236,14 @@ API
    static_figures.plot_t2star_and_s0
    static_figures.plot_rmse
    static_figures.plot_adaptive_mask
+   static_figures.carpet_plot
+   static_figures.plot_component
+   static_figures.plot_gscontrol
+   static_figures.plot_heatmap
+   static_figures.plot_decay_variance
 
-.. _api_reporting_ref:
+
+.. _api_stats_ref:
 
 ******************************************
 :mod:`tedana.stats`: Statistical functions
@@ -239,6 +262,8 @@ API
    get_coeffs
    voxelwise_univariate_zstats
    getfbounds
+   fit_model
+   t_to_z
 
 
 .. _api_bibtex_ref:
@@ -289,3 +314,13 @@ API
    unmask
    sec2millisec
    millisec2sec
+   load_mask
+   create_legendre_polynomial_basis_set
+   parse_volume_indices
+   check_t2s_values
+   check_te_values
+   setup_loggers
+   teardown_loggers
+   get_resource_path
+   get_system_version_info
+   log_newsletter_info
