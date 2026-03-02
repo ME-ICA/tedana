@@ -584,6 +584,7 @@ def check_t2s_values(t2s_map):
     Notes
     -----
     The heuristic used is:
+
     - If median non-zero T2* < 1: values are assumed to be in seconds (correct
       per BIDS), converted to milliseconds and returned
     - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
@@ -777,11 +778,13 @@ def check_te_values(te_values):
     Notes
     -----
     The heuristic used is:
+
     - If all TE values are between 0 and 1: values are assumed to be in seconds
       (correct per BIDS), converted to milliseconds and returned
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
       deprecation warning is logged, and values are returned as-is
     - Mixed values or negative values raise an error
+
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):

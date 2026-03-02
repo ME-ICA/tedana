@@ -95,8 +95,8 @@ API
 
    tedpca
    tedica
-   r_ica
-   f_ica
+   ica.r_ica
+   ica.f_ica
 
 
 .. _api_metrics_ref:
