@@ -313,22 +313,22 @@ def test_validate_tree_warnings(caplog):
         "a classification tag that was not predefined"
     ) in caplog.text
     assert (
-        r"['nochange', 'random2'] in node 1 of the decision tree includes a classification"
+        r"['nochange', 'random2'] in node 2 of the decision tree includes a classification"
         in caplog.text
     )
     assert (
-        r"['random2notpredefined'] in node 1 of the decision tree "
+        r"['random2notpredefined'] in node 2 of the decision tree "
         "includes a classification tag that was not predefined"
     ) in caplog.text
     assert (
-        r"['random2notpredefined'] in node 2 of the decision tree includes "
+        r"['random2notpredefined'] in node 3 of the decision tree includes "
         "a classification label that was not predefined"
     ) in caplog.text
     assert (
-        r"['Random2_NotPredefined'] in node 2 of the decision tree "
+        r"['Random2_NotPredefined'] in node 3 of the decision tree "
         "includes a classification tag that was not predefined"
     ) in caplog.text
-    assert (r"Node 3 includes the 'log_extra_report' parameter.") in caplog.text
+    assert (r"Node 4 includes the 'log_extra_report' parameter.") in caplog.text
     assert (
         "External regressor dictionary 1 includes fields "
         r"that are not used or logged ['extra field']"
