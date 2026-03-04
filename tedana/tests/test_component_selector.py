@@ -60,7 +60,7 @@ def dicts_to_test(treechoice):
         "unused_key": "There can be added keys that are valid, but aren't used",
         "necessary_metrics": ["kappa", "rho"],
         "intermediate_classifications": ["random1"],
-        "classification_tags": ["Random1"],
+        "classification_tags": ["Random1", "Likely BOLD"],
         "external_regressor_config": [
             {
                 "regress_ID": "nuisance",

@@ -156,6 +156,7 @@ def validate_tree(tree: Dict) -> Dict:
         default_classifications
     )
     all_decide_comps = set(tree.get("intermediate_classifications")) | set(default_decide_comps)
+    all_tagset = set()
     for i, node in enumerate(tree["nodes"]):
         # Make sure each function defined in a node exists
         try:
@@ -240,12 +241,21 @@ def validate_tree(tree: Dict) -> Dict:
                 tagset.update({node["kwargs"]["tag_if_false"]})
             if "tag" in node.get("kwargs").keys():
                 tagset.update({node["kwargs"]["tag"]})
+
+            all_tagset.update(tagset)
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
                     f"{sorted(tagset)} in node {i} of the decision tree includes a classification "
                     "tag that was not predefined"
                 )
+
+    unused_tags = set(tree.get("classification_tags")) - all_tagset
+    if unused_tags:
+        LGR.warning(
+            "The following classification tags are defined for the decision tree, "
+            f"but are not used in any node: {', '.join(sorted(unused_tags))}"
+        )
 
     # If there is an external_regressor_config field, validate it
     if tree["external_regressor_config"] is not None:
