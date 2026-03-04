@@ -110,6 +110,22 @@ def dicts_to_test(treechoice):
             {
                 "functionname": "dec_left_op_right",
                 "parameters": {
+                    "if_true": "accepted",
+                    "if_false": "nochange",
+                    "decide_comps": "all",
+                    "op": ">",
+                    "left": "kappa",
+                    "right": "rho",
+                },
+                "kwargs": {
+                    "right_scale": 2,
+                    "log_extra_info": "random1 if Kappa>2*Rho",
+                    "tag_if_true": "Likely BOLD",
+                },
+            },
+            {
+                "functionname": "dec_left_op_right",
+                "parameters": {
                     "if_true": "random2",
                     "if_false": "nochange",
                     "decide_comps": "all",

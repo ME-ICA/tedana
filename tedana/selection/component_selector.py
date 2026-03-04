@@ -252,7 +252,7 @@ def validate_tree(tree: Dict) -> Dict:
 
     unused_tags = set(tree.get("classification_tags")) - all_tagset
     if unused_tags:
-        LGR.warning(
+        raise TreeError(
             "The following classification tags are defined for the decision tree, "
             f"but are not used in any node: {', '.join(sorted(unused_tags))}"
         )
