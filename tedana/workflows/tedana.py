@@ -919,19 +919,19 @@ def tedana_workflow(
                 n_vols=n_vols,
                 n_independent_echos=n_independent_echos,
             )
-            n_accepted_comps = selector.n_accepted_comps_
+            n_likely_bold_comps = selector.n_likely_bold_comps_
 
-            if n_accepted_comps == 0:
+            if n_likely_bold_comps == 0:
                 if ica_method.lower() == "robustica":
-                    LGR.warning("No accepted components found with robustICA mixing matrix.")
+                    LGR.warning("No BOLD components found with robustICA mixing matrix.")
                     keep_restarting = False
                 elif n_restarts >= maxrestart:
                     LGR.warning(
-                        "No accepted components found, but maximum number of restarts reached."
+                        "No BOLD components found, but maximum number of restarts reached."
                     )
                     keep_restarting = False
                 else:
-                    LGR.warning("No accepted components found. Re-attempting ICA.")
+                    LGR.warning("No BOLD components found. Re-attempting ICA.")
                     # If we're going to restart, temporarily allow force overwrite
                     io_generator.overwrite = True
                     # Create a re-initialized selector object if rerunning
@@ -979,8 +979,8 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
         )
 
-        if selector.n_accepted_comps_ == 0:
-            LGR.warning("No accepted components found with user-provided ICA mixing matrix.")
+        if selector.n_likely_bold_comps_ == 0:
+            LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
 
     if ica_method.lower() == "robustica":
         # If robustica was used, store number of iterations where ICA failed
@@ -1018,8 +1018,8 @@ def tedana_workflow(
         }
     io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if selector.n_accepted_comps_ == 0:
-        LGR.warning("No accepted components detected! Please check data and results!")
+    if selector.n_likely_bold_comps_ == 0:
+        LGR.warning("No BOLD components detected! Please check data and results!")
 
     # TODO: un-hack separate component_table
     component_table = selector.component_table_
