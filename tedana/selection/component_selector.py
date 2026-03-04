@@ -147,11 +147,16 @@ def validate_tree(tree: Dict) -> Dict:
             f"Decision tree includes fields that are not used or logged {sorted(unused_keys)}"
         )
 
+    # Check for required classification tags
+    if "Likely BOLD" not in set(tree.get("classification_tags")):
+        raise TreeError("The classification tag 'Likely BOLD' is required for all decision trees.")
+
     # Combine the default classifications with the user inputted classifications
     all_classifications = set(tree.get("intermediate_classifications")) | set(
         default_classifications
     )
     all_decide_comps = set(tree.get("intermediate_classifications")) | set(default_decide_comps)
+    all_tagset = set()
     for i, node in enumerate(tree["nodes"]):
         # Make sure each function defined in a node exists
         try:
@@ -161,7 +166,7 @@ def validate_tree(tree: Dict) -> Dict:
             err_msg += f"Node {i} has invalid functionname parameter: {node.get('functionname')}\n"
             continue
 
-        # Get a functions parameters and compare to parameters defined in the tree
+        # Get a function's parameters and compare to parameters defined in the tree
         pos = {p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty}
         kwargs = set(sig.parameters.keys()) - pos
 
@@ -192,16 +197,14 @@ def validate_tree(tree: Dict) -> Dict:
                     f"{invalid_kwargs}\n"
                 )
 
-        # Gather all the classification labels used in each tree both for
-        # changing classifications and for decide_comps which defines which
-        # component classifications to use in each node then make sure these
-        # classifications are in the predefined list.
-        # It's important to require a predefined list of classifications
-        # beccuse spelling inconsistencies cause problems and are hard to
-        # catch. For example if a node is applied to "provisionalaccept"
-        # nodes, but a previous node classified components as
-        # "provisionalaccepted" they won't be included and there might not
-        # be any other warnings
+        # Gather all the classification labels used in each tree both for changing classifications
+        # and for decide_comps which defines which component classifications to use in each node,
+        # then make sure these classifications are in the predefined list.
+        # It's important to require a predefined list of classifications because spelling
+        # inconsistencies cause problems and are hard to catch.
+        # For example, if a node is applied to "provisionalaccept" nodes, but a previous node
+        # classified components as "provisionalaccepted", they won't be included and there might
+        # not be any other warnings.
         compclass = set()
         if "if_true" in node.get("parameters").keys():
             tmp_comp = node["parameters"]["if_true"]
@@ -238,12 +241,21 @@ def validate_tree(tree: Dict) -> Dict:
                 tagset.update({node["kwargs"]["tag_if_false"]})
             if "tag" in node.get("kwargs").keys():
                 tagset.update({node["kwargs"]["tag"]})
+
+            all_tagset.update(tagset)
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
                     f"{sorted(tagset)} in node {i} of the decision tree includes a classification "
                     "tag that was not predefined"
                 )
+
+    unused_tags = set(tree.get("classification_tags")) - all_tagset
+    if unused_tags:
+        raise TreeError(
+            "The following classification tags are defined for the decision tree, "
+            f"but are not used in any node: {', '.join(sorted(unused_tags))}"
+        )
 
     # If there is an external_regressor_config field, validate it
     if tree["external_regressor_config"] is not None:
