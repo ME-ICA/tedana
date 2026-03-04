@@ -128,7 +128,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it, n_threads=1):
         Number of components retained from PCA decomposition.
     fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results.
-    n_robust_runs : :obj: `int'
+    n_robust_runs : :obj:`int`
         selected number of robust runs when robustica is used. Default is 30.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.

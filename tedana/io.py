@@ -17,12 +17,18 @@ import nibabel as nb
 import numpy as np
 import pandas as pd
 import requests
+from nilearn import __version__ as nilearn_version
 from nilearn import masking
-from nilearn._utils.niimg_conversions import check_niimg
+from packaging.version import Version
 from scipy import stats
 
 from tedana import utils
 from tedana.stats import get_coeffs
+
+if Version(nilearn_version) >= Version("0.13.0"):
+    from nilearn.image import check_niimg
+else:
+    from nilearn._utils.niimg_conversions import check_niimg
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -385,7 +391,7 @@ class OutputGenerator:
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
 
         # Replace blanks with numpy NaN
-        deblanked = data.replace("", np.nan)
+        deblanked = data.replace("", np.nan).infer_objects(copy=False)
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
     def add_df_to_file(self, data, description, **kwargs):
@@ -1162,9 +1168,12 @@ def _convert_to_nifti1(img, dtype=None):
     else:
         data = np.asarray(img.dataobj, dtype=dtype)
     affine = img.affine
+    zooms = img.header.get_zooms()
 
     # Try to preserve header information where possible
-    return nb.Nifti1Image(data, affine)
+    new_img = nb.Nifti1Image(data, affine)
+    new_img.header.set_zooms(zooms)
+    return new_img
 
 
 def load_ref_img(data, n_echos):
@@ -1195,6 +1204,7 @@ def load_ref_img(data, n_echos):
         # image manually. Use a header copy with dimensions updated to match the ref array,
         # since the original header describes the full z-concatenated volume.
         ref_img = nb.Nifti1Image(arr, data_img.affine)
+        ref_img.header.set_zooms(data_img.header.get_zooms())
 
     else:
         ref_img = nb.load(data[0])

@@ -4,7 +4,6 @@ import logging
 import os.path as op
 import platform
 import sys
-import warnings
 from typing import Union
 
 import numpy as np
@@ -321,12 +320,9 @@ def dice(arr1, arr2, axis=None):
             "Please check your component table for dice columns with 0-values."
         )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, message="invalid value encountered in true_divide"
-        )
-        dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
-    dsi = np.nan_to_num(dsi)
+    numerator = 2.0 * intersection.sum(axis=axis)
+    dsi = np.zeros_like(numerator, dtype=float)
+    np.divide(numerator, arr_sum, out=dsi, where=arr_sum != 0)
 
     return dsi
 
@@ -389,11 +385,10 @@ def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="b
     min_cluster_size : int
         Minimum cluster size (in voxels)
     threshold : float or None or (V,) array_like, optional
-        Cluster-defining threshold for img.
-        - If None (default), assume img is already thresholded.
-        - If float, the same threshold is used for all volumes.
-        - If array_like and img is 4D, must have length equal to the number of volumes
-          (last dimension), and each threshold is applied to the corresponding volume.
+        Cluster-defining threshold for img. If None (default), assume img is already
+        thresholded. If float, the same threshold is used for all volumes. If array_like
+        and img is 4D, it must have length equal to the number of volumes in the last
+        dimension; each threshold is applied to the corresponding volume.
     binarize : bool, optional
         Default is True.
     sided : {'bi', 'two', 'one'}, optional
@@ -589,6 +584,7 @@ def check_t2s_values(t2s_map):
     Notes
     -----
     The heuristic used is:
+
     - If median non-zero T2* < 1: values are assumed to be in seconds (correct
       per BIDS), converted to milliseconds and returned
     - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
@@ -782,11 +778,13 @@ def check_te_values(te_values):
     Notes
     -----
     The heuristic used is:
+
     - If all TE values are between 0 and 1: values are assumed to be in seconds
       (correct per BIDS), converted to milliseconds and returned
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
       deprecation warning is logged, and values are returned as-is
     - Mixed values or negative values raise an error
+
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):
@@ -918,8 +916,9 @@ def load_mask(ref_img, mask=None, t2smap=None):
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = nb.load(mask)
-        # Convert to NIfTI1 if needed (e.g., AFNI format)
-        mask_img = io._convert_to_nifti1(mask_img)
+        # Convert mask to binary (assuming non-zero values indicate mask inclusion)
+        mask = mask_img.get_fdata() > 0
+        mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
     elif t2smap and not mask:
         LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap))
@@ -934,7 +933,8 @@ def load_mask(ref_img, mask=None, t2smap=None):
         t2s_loaded = t2s_img.get_fdata()
         # Load and convert user-defined mask to NIfTI1 (e.g., AFNI format)
         mask_img = io._convert_to_nifti1(nb.load(mask))
-        mask = mask_img.get_fdata().astype(np.uint8)
+        # Convert mask to binary (assuming non-zero values indicate mask inclusion)
+        mask = mask_img.get_fdata() > 0
         mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
         mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
         t2s = apply_mask(t2s_img, mask_img)
