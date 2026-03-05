@@ -91,7 +91,10 @@ def _combine_paid(data, tes, report=True):
         )
 
     n_vols = data.shape[-1]
-    snr = data.mean(axis=-1) / data.std(axis=-1)
+    mean_signal = data.mean(axis=-1)
+    signal_std = data.std(axis=-1)
+    snr = np.zeros_like(mean_signal, dtype=float)
+    np.divide(mean_signal, signal_std, out=snr, where=signal_std != 0)
     alpha = snr * tes
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     combined = np.average(data, axis=1, weights=alpha)

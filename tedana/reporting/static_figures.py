@@ -80,12 +80,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Optimally Combined Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -93,12 +95,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Denoised Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -106,12 +110,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="High-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -119,12 +125,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Low-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")
     )
+    plt.close(fig)
 
     if (gscontrol is not None) and ("gsr" in gscontrol):
         optcom_with_gs_img = io_generator.get_name("has gs combined img")
@@ -134,6 +142,7 @@ def carpet_plot(
             mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
@@ -144,6 +153,7 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_optcom_nogsr.svg",
             )
         )
+        plt.close(fig)
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
@@ -153,6 +163,7 @@ def carpet_plot(
             mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
@@ -163,6 +174,7 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_denoised_mir.svg",
             )
         )
+        plt.close(fig)
 
         if io_generator.verbose:
             mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
@@ -172,6 +184,7 @@ def carpet_plot(
                 mask,
                 figure=fig,
                 axes=ax,
+                standardize="zscore_sample",
                 title="High-Kappa Data (Post-MIR)",
             )
             fig.tight_layout()
@@ -182,6 +195,7 @@ def carpet_plot(
                     f"{io_generator.prefix}carpet_accepted_mir.svg",
                 )
             )
+            plt.close(fig)
 
 
 def plot_component(
@@ -590,6 +604,7 @@ def plot_t2star_and_s0(
     ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+    plt.close(fig)
 
     # Only plot S0 data if the file exists
     if s0_exists:
@@ -605,6 +620,7 @@ def plot_t2star_and_s0(
         ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
         fig.tight_layout()
         fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+        plt.close(fig)
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
@@ -934,10 +950,96 @@ def plot_heatmap(
     corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
+    # Identify regressors that are likely to trigger non-finite correlations/distances.
+    # This typically happens when a regressor's correlation pattern across components
+    # is constant (zero variance) or contains non-finite values.
+    problematic: dict[str, set[str]] = {}
+    for reg_name in regressors:
+        row = corr_df.loc[reg_name].values
+        reasons: set[str] = set()
+        if not np.isfinite(row).all():
+            reasons.add("non-finite values")
+
+        finite_row = row[np.isfinite(row)]
+        if finite_row.size < 2:
+            reasons.add("insufficient finite values")
+        elif np.std(finite_row) == 0:
+            reasons.add("zero variance")
+
+        if reasons:
+            problematic[reg_name] = reasons
+
+    def _format_problematic(problematic_dict: dict[str, set[str]], max_items: int = 20) -> str:
+        if not problematic_dict:
+            return ""
+        items = []
+        for name in sorted(problematic_dict.keys()):
+            why = ", ".join(sorted(problematic_dict[name]))
+            items.append(f"{name} ({why})")
+        extra = ""
+        if len(items) > max_items:
+            extra = f" (+{len(items) - max_items} more)"
+            items = items[:max_items]
+        return " Problematic regressors: " + "; ".join(items) + extra + "."
+
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
+    if not np.isfinite(corr).all():
+        nonfinite_rows = np.where(~np.isfinite(corr).all(axis=1))[0]
+        for row_idx in nonfinite_rows:
+            reg_name = regressors[row_idx]
+            problematic.setdefault(reg_name, set()).add("non-finite correlations")
+
+    warn_suffix = _format_problematic(problematic)
+
+    if not np.isfinite(corr).all():
+        warnings.warn(
+            (
+                "Non-finite correlations detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 0 (uncorrelated) to allow clustering "
+                "to proceed." + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+        np.fill_diagonal(corr, 1.0)
+
     pdist_uncondensed = 1.0 - corr
+    if not np.isfinite(pdist_uncondensed).all():
+        warnings.warn(
+            (
+                "Non-finite distances detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 1 to allow clustering to proceed."
+                + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        pdist_uncondensed = np.nan_to_num(pdist_uncondensed, nan=1.0, posinf=1.0, neginf=1.0)
+
     pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
+    if not np.isfinite(pdist_condensed).all():
+        warnings.warn(
+            (
+                "Non-finite condensed distances detected when clustering regressors "
+                "for the heatmap. "
+                "These values will be replaced with the maximum finite distance to allow "
+                "clustering "
+                "to proceed." + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        finite_vals = pdist_condensed[np.isfinite(pdist_condensed)]
+        fill_val = float(finite_vals.max()) if finite_vals.size else 1.0
+        pdist_condensed = np.nan_to_num(
+            pdist_condensed,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
+        )
+
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)

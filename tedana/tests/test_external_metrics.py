@@ -4,6 +4,7 @@ import logging
 import os.path as op
 import re
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -745,3 +746,32 @@ def test_compute_external_regressor_correlations_validation():
             external_regressors=pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}),
             mixing=pd.DataFrame({"c": [1, 2], "d": [3, 4]}),
         )
+
+
+def test_compute_external_regressor_correlations_warns_on_problematic_columns(caplog):
+    """Warn when external regressors or mixing columns are constant/non-finite."""
+    external_regressors = pd.DataFrame(
+        {
+            "const_reg": [1.0, 1.0, 1.0, 1.0],
+            "nan_reg": [0.0, np.nan, 0.0, 0.0],
+            "ok_reg": [0.0, 1.0, 0.5, -0.5],
+        }
+    )
+    mixing = pd.DataFrame(
+        {
+            "ICA_00": [1.0, 1.0, 1.0, 1.0],
+            "ICA_01": [0.1, 0.2, 0.3, 0.4],
+        }
+    )
+
+    caplog.set_level(logging.WARNING, logger="GENERAL")
+
+    external.compute_external_regressor_correlations(
+        external_regressors=external_regressors,
+        mixing=mixing,
+    )
+
+    assert "Non-finite correlations may occur" in caplog.text
+    assert "External regressors: const_reg (zero variance)" in caplog.text
+    assert "nan_reg (non-finite values)" in caplog.text
+    assert "ICA components: ICA_00 (zero variance)" in caplog.text
