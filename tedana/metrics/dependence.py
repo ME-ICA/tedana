@@ -939,7 +939,7 @@ def compute_te_variance(
     s0_hat: np.ndarray,
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
-    spatial_weights: np.ndarray | None = None,
+    spatial_weights: np.ndarray,
     t2s_min: float = 5.0,
     t2s_max: float = 500.0,
 ):
@@ -967,9 +967,8 @@ def compute_te_variance(
     adaptive_mask : (n_voxels,) array of int
         Number of valid echoes per voxel (used to truncate echo-wise fits
         and compute voxel-wise degrees of freedom).
-    spatial_weights : (n_voxels, n_comps) array, optional
+    spatial_weights : (n_voxels, n_comps) array
         Voxel weights for aggregation (e.g., component loadings squared).
-        If None, equal weighting is used.
     t2s_min : float, optional
         Minimum valid T2* value in milliseconds. Voxels with T2* below this
         are excluded as unrealistic. Default is 5.0 ms.
@@ -1374,10 +1373,10 @@ def compute_te_variance_permutation(
     s0_hat: np.ndarray,
     t2s_hat: np.ndarray,
     adaptive_mask: np.ndarray,
-    spatial_weights: np.ndarray | None = None,
+    spatial_weights: np.ndarray,
     n_perm: int = 1000,
     n_threads: int = 1,
-    seed: int | None = None,
+    seed: int = 42,
     t2s_min: float = 5.0,
     t2s_max: float = 500.0,
 ):
@@ -1401,9 +1400,8 @@ def compute_te_variance_permutation(
         Baseline T2* estimates. If 2D, averaged over volumes.
     adaptive_mask : (n_voxels,) array of int
         Number of valid echoes per voxel.
-    spatial_weights : (n_voxels, n_comps) array, optional
+    spatial_weights : (n_voxels, n_comps) array
         Voxel weights for aggregation (e.g., component loadings).
-        If None, equal weighting is used.
     n_perm : int, optional
         Number of permutations for null distribution. Default is 1000.
     t2s_min : float, optional
@@ -1416,7 +1414,7 @@ def compute_te_variance_permutation(
         Number of parallel jobs. Default is 1 (sequential).
         Set to -1 to use all available cores.
     seed : int, optional
-        Random seed for reproducibility.
+        Random seed for reproducibility. Default is 42.
 
     Returns
     -------
