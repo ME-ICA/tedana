@@ -5,8 +5,6 @@
     "necessary_metrics": [
         "kappa",
         "rho",
-        "kappa_dominance",
-        "rho_dominance",
         "kappa_star_perm",
         "rho_star_perm",
         "p_t2",
