@@ -818,10 +818,11 @@ def tedana_workflow(
 
         t2s_full = utils.unmask(t2s_full, mask_denoise)
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_full = utils.unmask(s0_full, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
-        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
+        io_generator.save_file(s0_full, "s0 img")
 
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
@@ -870,13 +871,13 @@ def tedana_workflow(
     if mixing_file is None:
         # Identify and remove thermal noise from data
         data_reduced, n_components = decomposition.tedpca(
-            data_cat,
-            data_optcom,
-            mask_clf,
-            t2s_full,
-            s0_full,
-            masksum_clf,
-            io_generator,
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mask=mask_clf,
+            t2smap=t2s_full,
+            s0map=s0_full,
+            adaptive_mask=masksum_clf,
+            io_generator=io_generator,
             tes=tes,
             n_independent_echos=n_independent_echos,
             algorithm=tedpca,
@@ -926,8 +927,8 @@ def tedana_workflow(
                 data_cat=data_cat[mask_clf, ...],
                 data_optcom=data_optcom[mask_clf, :],
                 mixing=mixing,
-                t2smap=t2s_full,
-                s0map=s0_full,
+                t2smap=t2s_full[mask_clf],
+                s0map=s0_full[mask_clf],
                 adaptive_mask=masksum_clf[mask_clf],
                 mask_img=unmask(mask_clf, io_generator.mask),
                 tes=tes,
@@ -989,8 +990,8 @@ def tedana_workflow(
             data_cat=data_cat[mask_clf, ...],
             data_optcom=data_optcom[mask_clf, :],
             mixing=mixing,
-            t2smap=t2s_full,
-            s0map=s0_full,
+            t2smap=t2s_full[mask_clf],
+            s0map=s0_full[mask_clf],
             adaptive_mask=masksum_clf[mask_clf],
             mask_img=unmask(mask_clf, io_generator.mask),
             tes=tes,
