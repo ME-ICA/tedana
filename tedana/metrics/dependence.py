@@ -1563,8 +1563,8 @@ def compute_te_variance_permutation(
         )
 
         # Data (fixed, never permuted): Y and y'y
-        Y = echowise_pes[vox_idx, :n_e, :]  # (n_vox_ne, n_e, n_comps)
-        yty = np.sum(Y**2, axis=1)  # (n_vox_ne, n_comps)
+        y = echowise_pes[vox_idx, :n_e, :]  # (n_vox_ne, n_e, n_comps)
+        yty = np.sum(y**2, axis=1)  # (n_vox_ne, n_comps)
         weights = spatial_weights[vox_idx, :]  # (n_vox_ne, n_comps)
 
         # Basis function norms (permutation just reindexes these)
@@ -1575,7 +1575,7 @@ def compute_te_variance_permutation(
             "n_vox": n_vox_ne,
             "phi_s0": phi_s0,
             "phi_t2": phi_t2,
-            "Y": Y,
+            "Y": y,
             "yty": yty,
             "weights": weights,
             "phi_s0_norm_sq": phi_s0_norm_sq,
@@ -1679,13 +1679,13 @@ def compute_te_variance_permutation(
                 phi_s0 = phi_s0[perm]
                 phi_s0_norm_sq = phi_s0_norm_sq[perm]
 
-            Y = data["Y"]
+            y = data["Y"]
             yty = data["yty"]
             weights = data["weights"]
 
             # Compute dot products
-            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y, optimize=True)
-            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
+            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, y, optimize=True)
+            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, y, optimize=True)
 
             # SSE for T2*-only model (local phi_t2)
             sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq[:, None]
