@@ -1122,12 +1122,20 @@ def compute_te_variance(
         echowise_pes.shape[0] == s0_hat.shape[0] == t2s_hat.shape[0] == adaptive_mask.shape[0]
     ):
         raise ValueError(
-            "echowise_pes, s0_hat, t2s_hat, and adaptive_mask must have the same number of voxels"
+            f"echowise_pes ({echowise_pes.shape[0]}), s0_hat ({s0_hat.shape[0]}), "
+            f"t2s_hat ({t2s_hat.shape[0]}), and adaptive_mask ({adaptive_mask.shape[0]}) "
+            "must have the same number of voxels"
         )
     if not s0_hat.ndim == t2s_hat.ndim:
-        raise ValueError("s0_hat and t2s_hat must have the same number of dimensions")
+        raise ValueError(
+            f"s0_hat ({s0_hat.ndim}) and t2s_hat ({t2s_hat.ndim}) must have the same number of "
+            "dimensions"
+        )
     if echowise_pes.shape[1] != len(tes):
-        raise ValueError("echowise_pes and tes must have the same number of echoes")
+        raise ValueError(
+            f"echowise_pes ({echowise_pes.shape[1]}) and tes ({len(tes)}) must have the same "
+            "number of echoes"
+        )
 
     n_voxels, n_echos, n_comps = echowise_pes.shape
     tes = np.asarray(tes, dtype=np.float64)
