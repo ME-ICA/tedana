@@ -366,8 +366,8 @@ def tedpca(
         data_cat=data_cat[mask, ...],
         data_optcom=data_optcom[mask, :],
         mixing=comp_ts,
-        t2smap=t2smap[mask],
-        s0map=s0map[mask],
+        t2smap=t2smap,  # already masked
+        s0map=s0map,  # already masked
         adaptive_mask=adaptive_mask[mask],
         mask_img=masking.unmask(mask, io_generator.mask),
         tes=tes,
