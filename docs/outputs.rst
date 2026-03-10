@@ -329,6 +329,7 @@ information for an individual component. One can hover over any pie chart wedge
 or data point in the summary view to see additional information about a
 component. Clicking on a component will select the component and the additional
 information will appear to the right.
+The left and right arrow keys cycle through compononents in the order they appear on the pie chart.
 
 .. image:: /_static/rep01_overallview.png
   :align: center
@@ -380,12 +381,15 @@ selection results. It includes four different plots.
   :height: 400px
 
 * **Variance Explained Plot:** This pie plot provides a summary of how much variance is explained
-  by each individual component, as well as the total variance explained by each of the two
-  classification categories (i.e., accepted, rejected). In this plot, each component is
-  represented as a wedge, whose size is directly related to the amount of variance explained. The
-  color of the wedge inform us about the classification status of the component. For this view,
-  components are sorted by classification first, and inside each classification group by variance
-  explained.
+  by each individual component.
+  In this plot, each component is represented as a wedge,
+  whose size is directly related to the amount of variance explained.
+  The color of the wedge is the classification status of the component.
+  For this view, components are sorted by classification first,
+  and inside each classification group by variance explained.
+  The center of the plot shows the total number of components,
+  the number of components that are accepted or rejected,
+  and the relative variance explained by all the accepted or rejected components.
 
 .. image:: /_static/rep01_varexpPie.png
   :align: center
@@ -408,14 +412,20 @@ component (selected in the summary view, see below). It includes three different
   very high magnitude volumes, that is a sign non-steady state volumes were not removed
   before running ``tedana``. Keeping these volumes might results in a suboptimal ICA
   results. ``tedana`` should be run without any initial non-steady state volumes.
+  The title of this plot shows the component number, the classification status, the rationale tags,
+  the variance explained by the component, and the kappa and rho values.
+
+
 
 .. image:: /_static/rep01_tsPlot.png
   :align: center
   :height: 150px
 
-* **Component beta map:** This plot shows the map of the beta coefficients associated with
-  a given component (selected in the summary view). The colorbar represents the amplitude
-  of the beta coefficients. The same weights could be flipped postive/negative so relative
+* **Component beta map:** This plot shows the map of the relative beta coefficients associated with
+  a given component (selected in the summary view).
+  If one wants to look at these maps in more detail, they can be found in the
+  ``z-scored ICA components img`` file (see :ref:`output-filename-descriptions`).
+  The same weights could be flipped postive/negative so relative
   values are more relevant that what is very positive vs negative.
   Plausibly BOLD-weighted components should have larger hotspots in area that follow
   cortical or cerebellar brain structure. Hotspots in ventricles, on the edges of the
@@ -455,35 +465,36 @@ figures.
 
 The table below includes information about all available interactions
 
-.. |Reset| image:: /_static/rep01_tool_reset.png
+.. |Pan| image:: /_static/rep01_tool_pan.png
   :height: 25px
 
 .. |WZoom| image:: /_static/rep01_tool_wheelzoom.png
   :height: 25px
 
-.. |BZoom| image:: /_static/rep01_tool_areazoom.png
-  :height: 25px
-
-.. |CHair| image:: /_static/rep01_tool_crosshair.png
-  :height: 25px
-
-.. |Pan| image:: /_static/rep01_tool_pan.png
-  :height: 25px
-
-.. |Hover| image:: /_static/rep01_tool_hover.png
-  :height: 25px
-
-.. |Sel| image:: /_static/rep01_tool_select.png
+.. |Tap| image:: /_static/rep01_tool_tap.png
   :height: 25px
 
 .. |Save| image:: /_static/rep01_tool_save.png
   :height: 25px
 
+.. |Reset| image:: /_static/rep01_tool_reset.png
+  :height: 25px
+
+.. |Hover| image:: /_static/rep01_tool_hover.png
+  :height: 25px
+
+.. |CHair| image:: /_static/rep01_tool_crosshair.png
+  :height: 25px
+
+.. |BZoom| image:: /_static/rep01_tool_areazoom.png
+  :height: 25px
+
+
 ============  =======  =======================================================
 Interaction   Icon     Description
 ============  =======  =======================================================
-Reset         |Reset|  Resets the data bounds of the plot to their values when
-                       the plot was initially created.
+Pan           |Pan|    Allows the user to pan a plot by left-dragging a mouse
+                       across the plot region.
 
 Wheel Zoom    |WZoom|  Zoom the plot in and out, centered on the current
                        mouse location.
@@ -491,21 +502,21 @@ Wheel Zoom    |WZoom|  Zoom the plot in and out, centered on the current
 Box Zoom      |BZoom|  Define a rectangular region of a plot to zoom to by
                        dragging the mouse over the plot region.
 
-Crosshair     |CHair|  Draws a crosshair annotation over the plot, centered on
-                       the current mouse position
+Tap           |Tap|    Select a component by clicking a dot or wedge.
+                       Once a component is selected, the plots
+                       forming the individual component view update to show
+                       component specific information.
 
-Pan           |Pan|    Allows the user to pan a plot by left-dragging a mouse
-                       across the plot region.
+Save          |Save|   Saves an image reproduction of the plot in PNG format.
+
+Reset         |Reset|  Resets the data bounds of the plot to their values when
+                       the plot was initially created.
 
 Hover         |Hover|  If active, the plot displays informational tooltips
                        whenever the cursor is directly over a plot element.
 
-Selection     |Sel|    Allows user to select components by tapping on the dot
-                       or wedge that represents them. Once a component is
-                       selected, the plots forming the individual component
-                       view update to show component specific information.
-
-Save          |Save|   Saves an image reproduction of the plot in PNG format.
+Crosshair     |CHair|  Draws a crosshair annotation over the plot, centered on
+                       the current mouse position
 ============  =======  =======================================================
 
 .. note::
@@ -566,11 +577,13 @@ Below the carpet plots is a summary plot of the adaptive mask.
 
 This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
 
-- **Base**: The base mask, either provided by the user or generated automatically using ``compute_epi_mask``.
+- **Initial mask only**: The initla mask, either provided by the user or generated automatically using ``compute_epi_mask``.
 - **Optimal combination**: The mask used for optimal combination and denoising.
   This corresponds to values greater than or equal to 1 (at least 1 good echo) in the adaptive mask.
 - **Classification**: The mask used for the decomposition and component classification steps.
   This corresponds to values greather than or equal to 3 (at least 3 good echoes) in the adaptive mask.
+  Both the denoised and optimally combined outputs will include all voxels in the "optimal combination" mask,
+  but only voxels in the "classification" mask will be included in the ICA decomposition and component classification steps.
 
 .. image:: /_static/adaptive_mask.png
   :align: center
@@ -592,6 +605,9 @@ It is important to note that the histogram is limited from 0 to the 98th percent
   :align: center
   :height: 400px
 
+.. image:: /_static/s0_plots.png
+  :align: center
+  :height: 400px
 
 *********************
 Decay Model Fit Plots

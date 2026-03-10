@@ -267,8 +267,8 @@ divided by the sum of the squares of the parameter estimates.
 
 
 normalized variance explained
-============================
-:func:`tedana.metrics.dependence.calculate_varex_norm`
+=============================
+:func:`tedana.metrics.dependence.calculate_varex`
 
 The "normalized variance explained" by each component is calculated as the
 square of the standardized parameter estimates from the regression of the z-scored
@@ -278,7 +278,7 @@ divided by the sum of the squares of the standardized parameter estimates.
 This is not actually a measure of normalized variance explained.
 
 In the tedpca metrics, "normalized variance explained" actually comes from
-the fitted PCA object's explained_variance_ratio_ attribute,
+the fitted PCA object's ``explained_variance_ratio_`` attribute,
 and the TEDANA-calculated value is retained as "estimated normalized variance explained".
 
 
@@ -292,6 +292,7 @@ averaged over voxels.
 
 This represents the variance in the data explained by each component
 without controlling for other components.
+
 partial R-squared
 =================
 :func:`tedana.metrics.dependence.calculate_partial_r2`

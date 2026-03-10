@@ -108,6 +108,7 @@ def download_test_data(osf_id, test_data_path):
 
     try:
         datainfo = requests.get(f"https://osf.io/metadata/{osf_id}/?format=datacite-json")
+        datainfo.raise_for_status()
     except Exception:
         if len(listdir(test_data_path)) == 0:
             raise ConnectionError(
@@ -120,7 +121,6 @@ def download_test_data(osf_id, test_data_path):
                 "but cannot validate that local copy is up-to-date"
             )
             return
-    datainfo.raise_for_status()
     metadata = json.loads(datainfo.content)
     # 'dates' is a list with all udpates to the file, the last item in the list
     # is the most recent and the 'date' field in the list is the date of the last
