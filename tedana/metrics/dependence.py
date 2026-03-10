@@ -5,9 +5,9 @@ import typing
 
 import nibabel as nb
 import numpy as np
+from joblib import Parallel, delayed
 from nilearn import masking
 from scipy import stats
-from joblib import Parallel, delayed
 from tqdm import tqdm, trange
 
 from tedana import utils
@@ -1222,22 +1222,22 @@ def compute_te_variance(
             )
 
         # Extract echo-wise parameter estimates for this batch: (n_vox_batch, n_e, n_comps)
-        Y = echowise_pes[voxel_indices, :n_e, :]
+        y = echowise_pes[voxel_indices, :n_e, :]
 
         # Compute SSE for single-predictor models using closed-form OLS
         # For y = x*b + e, b = (x'y)/(x'x), SSE = y'y - (x'y)^2/(x'x)
 
         # y'y for all voxels/components: (n_vox_batch, n_comps)
-        yty = np.sum(Y**2, axis=1)
+        yty = np.sum(y**2, axis=1)
 
         # S0-only model: SSE_s0 = y'y - (phi_s0'y)^2 / (phi_s0'phi_s0)
         phi_s0_norm_sq = np.sum(phi_s0**2, axis=1, keepdims=True)  # (n_vox_batch, 1)
-        phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y)  # (n_vox_batch, n_comps)
+        phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, y)  # (n_vox_batch, n_comps)
         sse_s0 = yty - (phi_s0_dot_y**2) / phi_s0_norm_sq
 
         # T2*-only model: SSE_t2 = y'y - (phi_t2'y)^2 / (phi_t2'phi_t2)
         phi_t2_norm_sq = np.sum(phi_t2**2, axis=1, keepdims=True)  # (n_vox_batch, 1)
-        phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y)  # (n_vox_batch, n_comps)
+        phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, y)  # (n_vox_batch, n_comps)
         sse_t2 = yty - (phi_t2_dot_y**2) / phi_t2_norm_sq
 
         # Full model: need to solve 2x2 normal equations per voxel
@@ -1283,7 +1283,7 @@ def compute_te_variance(
 
         # Compute total sum of squares (variance around mean) for R²
         # SST = Σ(y - ȳ)² = y'y - (Σy)²/n = yty - sum_y²/n_e
-        sum_y = np.sum(Y, axis=1)  # (n_vox_batch, n_comps)
+        sum_y = np.sum(y, axis=1)  # (n_vox_batch, n_comps)
         sst = yty - (sum_y**2) / n_e
 
         # R² = 1 - SSE_full / SST (coefficient of determination)
