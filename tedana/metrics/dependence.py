@@ -1611,13 +1611,13 @@ def compute_te_variance_permutation(
                 phi_t2 = phi_t2[perm]
                 phi_t2_norm_sq = phi_t2_norm_sq[perm]
 
-            Y = data["Y"]
+            y = data["Y"]
             yty = data["yty"]
             weights = data["weights"]
 
             # Compute dot products
-            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, Y, optimize=True)
-            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, Y, optimize=True)
+            phi_s0_dot_y = np.einsum("ve,vec->vc", phi_s0, y, optimize=True)
+            phi_t2_dot_y = np.einsum("ve,vec->vc", phi_t2, y, optimize=True)
 
             # SSE for S0-only model (local phi_s0)
             sse_s0 = yty - (phi_s0_dot_y**2) / phi_s0_norm_sq[:, None]
