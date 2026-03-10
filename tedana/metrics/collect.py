@@ -193,7 +193,11 @@ def generate_metrics(
             mixing=mixing,
         )
 
-    if ("kappa_star" in required_metrics) or ("rho_star" in required_metrics) or ("r2_full" in required_metrics):
+    if (
+        ("kappa_star" in required_metrics)
+        or ("rho_star" in required_metrics)
+        or ("r2_full" in required_metrics)
+    ):
         LGR.info("Calculating kappa*, rho*, and r2_full")
         kappa_star, rho_star, f_t2star, f_s0, r2_full = dependence.compute_te_variance(
             echowise_pes=metric_maps["map echo betas"],

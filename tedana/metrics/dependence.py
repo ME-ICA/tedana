@@ -1538,12 +1538,7 @@ def compute_te_variance_permutation(
         t2s_hat = np.mean(t2s_hat, axis=1)
 
     # Identify valid voxels (positive S0 and T2* within realistic bounds)
-    valid_voxel = (
-        (adaptive_mask >= 3)
-        & (s0_hat > 0)
-        & (t2s_hat >= t2s_min)
-        & (t2s_hat <= t2s_max)
-    )
+    valid_voxel = (adaptive_mask >= 3) & (s0_hat > 0) & (t2s_hat >= t2s_min) & (t2s_hat <= t2s_max)
 
     # Precompute everything that doesn't change with permutation, grouped by n_e
     # This is the key optimization: we only recompute dot products during permutation
