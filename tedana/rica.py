@@ -397,7 +397,7 @@ RICA_FILE_PATTERNS = [
     "S0map.nii",
     "rmse_statmap.nii",
     # Orig convention files
-    "betas_OC.nii.gz",
+    "ica_components.nii.gz",
     "cross_component_metrics.json",
     "t2svG.nii",
     "s0vG.nii",
@@ -625,14 +625,30 @@ class RicaHandler(http.server.SimpleHTTPRequestHandler):
                 dirs[:] = []
 
             for name in filenames:
-                if any(p in name for p in RICA_FILE_PATTERNS) and not (
-                    "_components.nii.gz" in name and "stat-z" in name
-                ) and not (
-                    "_components.nii.gz" in name and "echo-" in name
-                ) and not (
-                    "_components.nii.gz" in name
-                    and "_desc-ICA_" not in name
-                    and "betas_OC" not in name
+                components_suffix = "_components.nii.gz"
+                is_components_file = name.endswith(components_suffix)
+                is_stat_z = is_components_file and "stat-z" in name
+                is_echo_component = is_components_file and "echo-" in name
+
+                # A "primary" ICA components file has exactly `_desc-ICA` before
+                # the suffix, e.g., `*_desc-ICA_components.nii.gz`. Derived files
+                # like `*_desc-ICAAccepted_components.nii.gz` will not match.
+                has_exact_desc_ica = False
+                if is_components_file:
+                    prefix = name[: -len(components_suffix)]
+                    has_exact_desc_ica = prefix.endswith("_desc-ICA")
+
+                allow_components_file = (
+                    not is_components_file
+                    or has_exact_desc_ica
+                    or "ica_components.nii.gz" in name
+                )
+
+                if (
+                    any(p in name for p in RICA_FILE_PATTERNS)
+                    and not is_stat_z
+                    and not is_echo_component
+                    and allow_components_file
                 ):
                     f = root_path / name
                     files.append(f.relative_to(cwd).as_posix())
