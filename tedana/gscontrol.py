@@ -30,9 +30,10 @@ def gscontrol_raw(
 
     Parameters
     ----------
-    data_cat : (S x E x T) array_like
-        Input functional data
-    data_optcom : (S x T) array_like
+    data_cat : (Mb x E x T) array_like
+        Input functional data, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
+    data_optcom : (Mb x T) array_like
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
         Number of echos in data. Should be the same as ``E`` dimension of ``data_cat``
@@ -44,9 +45,9 @@ def gscontrol_raw(
 
     Returns
     -------
-    data_cat_nogs : (S x E x T) array_like
+    data_cat_nogs : (Mb x E x T) array_like
         Input ``data_cat`` with global signal removed from time series.
-    data_optcom_nogs : (S x T) array_like
+    data_optcom_nogs : (Mb x T) array_like
         Input ``data_optcom`` with global signal removed from time series.
 
     Notes
@@ -106,7 +107,7 @@ def gscontrol_raw(
     # The spatial global signal is the minimum of the detrended data
     gs_spatial = (optcom_detr).min(axis=1)
     gs_spatial -= gs_spatial.mean()
-    io_generator.save_file(utils.unmask(gs_spatial, temporal_mean_mask), "gs img")
+    io_generator.save_file(gs_spatial, "gs img", mask=temporal_mean_mask)
 
     # Find time course of the spatial global signal
     # Make basis with the Legendre basis
@@ -162,12 +163,12 @@ def minimum_image_regression(
 
     Parameters
     ----------
-    data_optcom : (S x T) array_like
+    data_optcom : (Mb x T) array_like
         Optimally combined time series data
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where ``C``
         is components and ``T`` is the same as in ``data_optcom``
-    mask : (S,) array_like
+    mask : (Mb,) array_like
         Boolean mask array
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
@@ -257,7 +258,7 @@ def minimum_image_regression(
     mehk_ts = np.dot(comp_pes[:, acc], mixing[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io_generator.save_file(utils.unmask(t1_map, mask), "t1 like img")
+    io_generator.save_file(t1_map, "t1 like img", mask=mask)
     t1_map = t1_map[:, np.newaxis]
 
     # Find the global signal based on the T1-like effect
@@ -279,7 +280,7 @@ def minimum_image_regression(
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_no_t1_gs + resid) * optcom_std)
-    io_generator.save_file(utils.unmask(medn_ts, mask), "mir denoised img")
+    io_generator.save_file(medn_ts, "mir denoised img", mask=mask)
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mixing_not1gs = mixing.T - np.dot(np.linalg.lstsq(gs_ts.T, mixing, rcond=None)[0].T, gs_ts)
@@ -292,10 +293,11 @@ def minimum_image_regression(
 
     if io_generator.verbose:
         hik_ts = mehk_no_t1_gs * optcom_std  # rescale
-        io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
+        io_generator.save_file(hik_ts, "ICA accepted mir denoised img", mask=mask)
 
         comp_pes_norm = np.linalg.lstsq(mixing_not1gs_z.T, data_optcom_z.T, rcond=None)[0].T
         io_generator.save_file(
-            utils.unmask(comp_pes_norm[:, 2:], mask),
+            comp_pes_norm[:, 2:],
             "ICA accepted mir component weights img",
+            mask=mask,
         )

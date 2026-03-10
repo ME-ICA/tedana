@@ -12,7 +12,7 @@ import pandas as pd
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-from nilearn import masking, plotting
+from nilearn import image, masking, plotting
 
 from tedana import io, stats, utils
 
@@ -28,13 +28,13 @@ def _trim_edge_zeros(arr):
 
     Parameters
     ----------
-    ndarray : (S x T) array_like
-        an array with signal, surrounded by slices that contain only zeros
-        that should be removed.
+    ndarray : (Mb x T) array_like
+        an array with signal, surrounded by slices that contain only zeros that should be removed,
+        where `Mb` is samples in base mask, and `T` is time.
 
     Returns
     -------
-    ndarray : (S x T) array_like
+    ndarray : (Mb x T) array_like
         an array with reduced dimensions, such that the array contains only
         non_zero values from edge to edge.
     """
@@ -56,10 +56,10 @@ def carpet_plot(
 
     Parameters
     ----------
-    optcom_ts, denoised_ts, hikts, lowkts : (S x T) array_like
-        Different types of data to plot.
-    mask : (S,) array-like
-        Binary mask used to apply to the data.
+    optcom_ts, denoised_ts, hikts, lowkts : (Mb x T) array_like
+        Different types of data to plot, where `Mb` is samples in base mask, and `T` is time.
+    mask : img-like
+        Binary mask image used to mask the data.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generator for this workflow
     gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
@@ -68,73 +68,81 @@ def carpet_plot(
         pertinent outputs from those steps.
         Default is None.
     """
-    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
-    optcom_img = io.new_nii_like(io_generator.reference_img, optcom_ts)
-    dn_img = io.new_nii_like(io_generator.reference_img, denoised_ts)
-    hik_img = io.new_nii_like(io_generator.reference_img, hikts)
-    lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
+    optcom_img = masking.unmask(optcom_ts.T, io_generator.mask)
+    dn_img = masking.unmask(denoised_ts.T, io_generator.mask)
+    hik_img = masking.unmask(hikts.T, io_generator.mask)
+    lowk_img = masking.unmask(lowkts.T, io_generator.mask)
 
     # Carpet plots
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         optcom_img,
-        mask_img,
+        mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Optimally Combined Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         dn_img,
-        mask_img,
+        mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Denoised Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         hik_img,
-        mask_img,
+        mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="High-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         lowk_img,
-        mask_img,
+        mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Low-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")
     )
+    plt.close(fig)
 
     if (gscontrol is not None) and ("gsr" in gscontrol):
         optcom_with_gs_img = io_generator.get_name("has gs combined img")
         fig, ax = plt.subplots(figsize=(14, 7))
         plotting.plot_carpet(
             optcom_with_gs_img,
-            mask_img,
+            mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
@@ -145,15 +153,17 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_optcom_nogsr.svg",
             )
         )
+        plt.close(fig)
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
         fig, ax = plt.subplots(figsize=(14, 7))
         plotting.plot_carpet(
             mir_denoised_img,
-            mask_img,
+            mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
@@ -164,15 +174,17 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_denoised_mir.svg",
             )
         )
+        plt.close(fig)
 
         if io_generator.verbose:
             mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
             fig, ax = plt.subplots(figsize=(14, 7))
             plotting.plot_carpet(
                 mir_denoised_img,
-                mask_img,
+                mask,
                 figure=fig,
                 axes=ax,
+                standardize="zscore_sample",
                 title="High-Kappa Data (Post-MIR)",
             )
             fig.tight_layout()
@@ -183,6 +195,7 @@ def carpet_plot(
                     f"{io_generator.prefix}carpet_accepted_mir.svg",
                 )
             )
+            plt.close(fig)
 
 
 def plot_component(
@@ -246,7 +259,7 @@ def plot_component(
             resampling_interpolation="nearest",
         )
 
-    display.annotate(size=30)
+    display.annotate(size=20)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
@@ -320,7 +333,7 @@ def plot_component(
     plt.close(fig)
 
 
-def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
+def comp_figures(ts, component_table, mixing, io_generator, png_cmap):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -328,11 +341,10 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
 
     Parameters
     ----------
-    ts : (S x T) array_like
-        Time series from which to derive ICA betas
-    mask : (S,) array_like
-        Boolean mask array
-    component_table : (C x M) :obj:`pandas.DataFrame`
+    ts : (Mb x T) array_like
+        Time series from which to derive ICA betas, where `Mb` is samples in base mask,
+        and `T` is time
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     mixing : (C x T) array_like
@@ -342,10 +354,9 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
         Output Generator object to use for this workflow
     """
     # regenerate the beta images
-    component_maps_arr = stats.get_coeffs(ts, mixing, mask)
-    component_maps_arr = component_maps_arr.reshape(
-        io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
-    )
+    component_maps_arr = stats.get_coeffs(ts, mixing)
+    component_maps_arr = masking.unmask(component_maps_arr.T, io_generator.mask)
+    component_maps_arr = component_maps_arr.get_fdata()
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
@@ -557,7 +568,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
 def plot_t2star_and_s0(
     *,
     io_generator: io.OutputGenerator,
-    mask: np.ndarray,
+    mask: nb.Nifti1Image,
 ) -> None:
     """Create T2* and S0 maps and histograms.
 
@@ -565,12 +576,11 @@ def plot_t2star_and_s0(
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow
-    mask : (S,) :obj:`numpy.ndarray`
-        Binary mask used to apply to the data.
+    mask : img
+        Binary mask image used to apply to the data.
     """
     t2star_img = io_generator.get_name("t2star img")
     s0_img = io_generator.get_name("s0 img")
-    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
 
     # Check if S0 image exists, add message to log if not
@@ -582,7 +592,7 @@ def plot_t2star_and_s0(
         )
 
     # Plot histograms
-    t2star_data = masking.apply_mask(t2star_img, mask_img)
+    t2star_data = masking.apply_mask(t2star_img, mask)
     t2s_p02, t2s_p98 = np.percentile(t2star_data, [2, 98])
     t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
 
@@ -594,10 +604,11 @@ def plot_t2star_and_s0(
     ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+    plt.close(fig)
 
     # Only plot S0 data if the file exists
     if s0_exists:
-        s0_data = masking.apply_mask(s0_img, mask_img)
+        s0_data = masking.apply_mask(s0_img, mask)
         s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
         s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
 
@@ -609,6 +620,7 @@ def plot_t2star_and_s0(
         ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
         fig.tight_layout()
         fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+        plt.close(fig)
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
@@ -653,7 +665,6 @@ def plot_t2star_and_s0(
 def plot_rmse(
     *,
     io_generator: io.OutputGenerator,
-    adaptive_mask: np.ndarray,
 ):
     """Plot the residual mean squared error map and time series for the monoexponential model fit.
 
@@ -661,17 +672,14 @@ def plot_rmse(
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
-        A mask where each value is the number of good echoes.
-        Since the T2* and S0 estimations require a minimum of 2 good echoes,
-        the outputted plots will only include mask values of at least 2.
     """
     import pandas as pd
 
     rmse_img = io_generator.get_name("rmse img")
     confounds_file = io_generator.get_name("confounds tsv")
-    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
-    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+    mask_img = io_generator.get_name("adaptive mask img")
+    # At least 2 good echoes
+    mask_img = image.binarize_img(mask_img, threshold=1.5, two_sided=False, copy_header=True)
 
     rmse_data = masking.apply_mask(rmse_img, mask_img)
     rmse_p02, rmse_p98 = np.percentile(rmse_data, [2, 98])
@@ -742,7 +750,6 @@ def plot_rmse(
 def plot_adaptive_mask(
     *,
     optcom: np.ndarray,
-    base_mask: np.ndarray,
     io_generator: io.OutputGenerator,
 ):
     """Create a figure to show the adaptive mask.
@@ -753,49 +760,69 @@ def plot_adaptive_mask(
 
     Parameters
     ----------
-    optcom : (S x T) :obj:`numpy.ndarray`
-        Optimal combination of components.
+    optcom : (Mb x T) :obj:`numpy.ndarray`
+        Optimal combination of components, where `Mb` is samples in base mask, and `T` is time.
         The mean image over time is used as the underlay for the figure.
-    base_mask : (S,) :obj:`numpy.ndarray`
-        Base mask used in tedana.
-        This is the original mask either provided by the user or generated with `compute_epi_mask`.
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
     """
     from matplotlib.lines import Line2D
-    from nilearn import image
 
     adaptive_mask_img = io_generator.get_name("adaptive mask img")
-    mean_optcom_img = io.new_nii_like(io_generator.reference_img, np.mean(optcom, axis=1))
+    mean_optcom_img = masking.unmask(np.mean(optcom, axis=1), io_generator.mask)
 
     # Concatenate the three masks used in tedana to treat as a probabilistic atlas
-    base_mask = io.new_nii_like(io_generator.reference_img, base_mask)
-    mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
-    mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
-    all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
-    # Set values to 0.5 for probabilistic atlas plotting
-    all_masks = image.math_img("img * 0.5", img=all_masks)
+    # At least 1 good echo
+    mask_denoise = image.binarize_img(
+        adaptive_mask_img,
+        threshold=0.5,
+        two_sided=False,
+        copy_header=True,
+    )
+    # At least 3 good echoes
+    mask_clf = image.binarize_img(
+        adaptive_mask_img,
+        threshold=2.5,
+        two_sided=False,
+        copy_header=True,
+    )
 
-    cmap = plt.cm.gist_rainbow
-    discrete_cmap = cmap.resampled(3)  # colors matching the mask lines in the image
     color_dict = {
-        "Base": discrete_cmap(0),
-        "Optimal combination": discrete_cmap(0.4),
-        "Classification": discrete_cmap(0.9),
+        "Initial mask only": "#DC267F",
+        "Optimal combination & Initial": "#FFB000",
+        "Classification, OC & Initial": "#648FFF",
     }
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        ob = plotting.plot_prob_atlas(
-            maps_img=all_masks,
-            bg_img=mean_optcom_img,
-            view_type="contours",
-            threshold=0.2,
+        ob = plotting.plot_epi(
+            epi_img=mean_optcom_img,
             annotate=False,
             draw_cross=False,
-            cmap=cmap,
+            colorbar=False,
             display_mode="mosaic",
-            cut_coords=4,
+            cut_coords=5,
+        )
+        ob.add_contours(
+            mask_clf,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Classification, OC & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            mask_denoise,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Optimal combination & Initial"]],
+            linewidths=1.5,
+        )
+        ob.add_contours(
+            io_generator.mask,
+            threshold=0.2,
+            levels=[0.5],
+            colors=[color_dict["Initial mask only"]],
+            linewidths=1.5,
         )
 
     legend_elements = []
@@ -807,15 +834,21 @@ def plot_adaptive_mask(
     width = fig.get_size_inches()[0]
 
     ob.frame_axes.set_zorder(100)
-    ob.frame_axes.legend(
+    legend = ob.frame_axes.legend(
         handles=legend_elements,
-        facecolor="white",
+        facecolor="black",
         ncols=3,
-        loc="lower center",
+        loc="lower right",
         fancybox=True,
         shadow=True,
         fontsize=width,
     )
+
+    legend.get_frame().set_visible(False)
+
+    for text in legend.get_texts():
+        text.set_color("white")
+
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
 
@@ -917,10 +950,96 @@ def plot_heatmap(
     corr_df = correlation_df.copy()
     regressors = corr_df.index.tolist()
 
+    # Identify regressors that are likely to trigger non-finite correlations/distances.
+    # This typically happens when a regressor's correlation pattern across components
+    # is constant (zero variance) or contains non-finite values.
+    problematic: dict[str, set[str]] = {}
+    for reg_name in regressors:
+        row = corr_df.loc[reg_name].values
+        reasons: set[str] = set()
+        if not np.isfinite(row).all():
+            reasons.add("non-finite values")
+
+        finite_row = row[np.isfinite(row)]
+        if finite_row.size < 2:
+            reasons.add("insufficient finite values")
+        elif np.std(finite_row) == 0:
+            reasons.add("zero variance")
+
+        if reasons:
+            problematic[reg_name] = reasons
+
+    def _format_problematic(problematic_dict: dict[str, set[str]], max_items: int = 20) -> str:
+        if not problematic_dict:
+            return ""
+        items = []
+        for name in sorted(problematic_dict.keys()):
+            why = ", ".join(sorted(problematic_dict[name]))
+            items.append(f"{name} ({why})")
+        extra = ""
+        if len(items) > max_items:
+            extra = f" (+{len(items) - max_items} more)"
+            items = items[:max_items]
+        return " Problematic regressors: " + "; ".join(items) + extra + "."
+
     # Perform hierarchical clustering on rows
     corr = corr_df.T.corr().values
+    if not np.isfinite(corr).all():
+        nonfinite_rows = np.where(~np.isfinite(corr).all(axis=1))[0]
+        for row_idx in nonfinite_rows:
+            reg_name = regressors[row_idx]
+            problematic.setdefault(reg_name, set()).add("non-finite correlations")
+
+    warn_suffix = _format_problematic(problematic)
+
+    if not np.isfinite(corr).all():
+        warnings.warn(
+            (
+                "Non-finite correlations detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 0 (uncorrelated) to allow clustering "
+                "to proceed." + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+        np.fill_diagonal(corr, 1.0)
+
     pdist_uncondensed = 1.0 - corr
+    if not np.isfinite(pdist_uncondensed).all():
+        warnings.warn(
+            (
+                "Non-finite distances detected when clustering regressors for the heatmap. "
+                "These values will be replaced with 1 to allow clustering to proceed."
+                + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        pdist_uncondensed = np.nan_to_num(pdist_uncondensed, nan=1.0, posinf=1.0, neginf=1.0)
+
     pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
+    if not np.isfinite(pdist_condensed).all():
+        warnings.warn(
+            (
+                "Non-finite condensed distances detected when clustering regressors "
+                "for the heatmap. "
+                "These values will be replaced with the maximum finite distance to allow "
+                "clustering "
+                "to proceed." + warn_suffix
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        finite_vals = pdist_condensed[np.isfinite(pdist_condensed)]
+        fill_val = float(finite_vals.max()) if finite_vals.size else 1.0
+        pdist_condensed = np.nan_to_num(
+            pdist_condensed,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
+        )
+
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)
@@ -1043,7 +1162,6 @@ def _correlate_dataframes(df1, df2):
 def plot_decay_variance(
     *,
     io_generator: io.OutputGenerator,
-    adaptive_mask: np.ndarray,
 ):
     """Plot the variance of the T2* and S0 estimates.
 
@@ -1051,14 +1169,15 @@ def plot_decay_variance(
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
-        Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0.
-        For more information on thresholding, see `make_adaptive_mask`.
     """
-    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
-    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+    mask_img = io_generator.get_name("adaptive mask img")
+    # At least 2 good echoes
+    mask_img = image.binarize_img(
+        mask_img,
+        threshold=1.5,
+        two_sided=False,
+        copy_header=True,
+    )
 
     names = [
         "stat-variance_desc-t2star_statmap",

@@ -12,7 +12,7 @@ from glob import glob
 
 import numpy as np
 import pandas as pd
-from nilearn.masking import compute_epi_mask
+from nilearn.masking import unmask
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
@@ -650,8 +650,53 @@ def tedana_workflow(
     LGR.info("Initializing and validating component selection tree")
     selector = ComponentSelector(tree, out_dir)
 
+    # Initialize OutputGenerator with reference image
+    ref_img = io.load_ref_img(data=data, n_echos=n_echos)
+    io_generator = io.OutputGenerator(
+        ref_img,
+        convention=convention,
+        out_dir=out_dir,
+        prefix=prefix,
+        config="auto",
+        overwrite=overwrite,
+        verbose=verbose,
+    )
+
+    if t2smap is not None and op.isfile(t2smap):
+        t2smap_file = io_generator.get_name("t2star img")
+        t2smap = op.abspath(t2smap)
+        # Allow users to re-run on same folder
+        if t2smap != t2smap_file:
+            shutil.copyfile(t2smap, t2smap_file)
+    elif t2smap is not None:
+        raise OSError("Argument 't2smap' must be an existing file.")
+
+    if s0map is not None and op.isfile(s0map):
+        s0map_file = io_generator.get_name("s0 img")
+        s0map = op.abspath(s0map)
+        # Allow users to re-run on same folder
+        if s0map != s0map_file:
+            shutil.copyfile(s0map, s0map_file)
+    elif s0map is not None:
+        raise OSError("Argument 's0map' must be an existing file.")
+
+    RepLGR.info(
+        "TE-dependence analysis was performed on input data using the tedana workflow "
+        "\\citep{dupre2021te}."
+    )
+
+    mask_img, t2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap)
+    if t2s_limited is not None:
+        t2s_full = t2s_limited.copy()
+
+    io_generator.register_mask(mask_img)
+
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat, ref_img = io.load_data(data, n_echos=n_echos, dummy_scans=dummy_scans)
+    data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
+
+    if s0map is not None:
+        s0_full = io.load_data_nilearn(s0map, mask_img=mask_img, n_echos=n_echos)
+        s0_limited = s0_full.copy()
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
@@ -668,16 +713,6 @@ def tedana_workflow(
                 dummy_scans=dummy_scans,
             )
         )
-
-    io_generator = io.OutputGenerator(
-        ref_img,
-        convention=convention,
-        out_dir=out_dir,
-        prefix=prefix,
-        config="auto",
-        overwrite=overwrite,
-        verbose=verbose,
-    )
 
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
@@ -722,69 +757,9 @@ def tedana_workflow(
     elif mixing_file is not None:
         raise OSError("Argument '--mix' must be an existing file.")
 
-    if t2smap is not None and op.isfile(t2smap):
-        t2smap_file = io_generator.get_name("t2star img")
-        t2smap = op.abspath(t2smap)
-        # Allow users to re-run on same folder
-        if t2smap != t2smap_file:
-            shutil.copyfile(t2smap, t2smap_file)
-    elif t2smap is not None:
-        raise OSError("Argument 't2smap' must be an existing file.")
-
-    if s0map is not None and op.isfile(s0map):
-        s0map_file = io_generator.get_name("s0 img")
-        s0map = op.abspath(s0map)
-        if s0map != s0map_file:
-            shutil.copyfile(s0map, s0map_file)
-    elif s0map is not None:
-        raise OSError("Argument 's0map' must be an existing file.")
-
-    RepLGR.info(
-        "TE-dependence analysis was performed on input data using the tedana workflow "
-        "\\citep{dupre2021te}."
-    )
-
-    if mask and not t2smap:
-        # TODO: add affine check
-        LGR.info("Using user-defined mask")
-        RepLGR.info("A user-defined mask was applied to the data.")
-        mask = utils.reshape_niimg(mask).astype(int)
-    elif t2smap and not mask:
-        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.check_t2s_values(t2s_loaded)
-        t2s_full = t2s_limited.copy()
-        mask = (t2s_limited != 0).astype(int)
-    elif t2smap and mask:
-        LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_loaded = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.check_t2s_values(t2s_loaded)
-        t2s_full = t2s_limited.copy()
-        mask = utils.reshape_niimg(mask).astype(int)
-        mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
-    else:
-        LGR.warning(
-            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
-            "Most external pipelines include more reliable masking functions. "
-            "It is strongly recommended to provide an external mask, "
-            "and to visually confirm that mask accurately conforms to data boundaries."
-        )
-        first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
-        mask = compute_epi_mask(first_echo_img).get_fdata()
-        mask = utils.reshape_niimg(mask).astype(int)
-        RepLGR.info(
-            "An initial mask was generated from the first echo using "
-            "nilearn's compute_epi_mask function."
-        )
-
-    if s0map is not None:
-        s0_full = utils.reshape_niimg(s0map)
-        s0_limited = s0_full.copy()
-
     # Create an adaptive mask with at least 1 good echo, for denoising
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_cat,
-        mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
@@ -795,6 +770,7 @@ def tedana_workflow(
     # Create an adaptive mask with at least 3 good echoes, for classification
     masksum_clf = masksum_denoise.copy()
     masksum_clf[masksum_clf < 3] = 0
+    mask_denoise = mask_denoise.astype(bool)
     mask_clf = masksum_clf.astype(bool)
     RepLGR.info(
         "A two-stage masking procedure was applied, in which a liberal mask "
@@ -805,6 +781,7 @@ def tedana_workflow(
     )
     LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
+    # XXX: Probably should account for S0 map here.
     if t2smap is None:
         LGR.info("Computing T2* map")
         data_masked = data_cat[mask_denoise, ...]
@@ -820,19 +797,14 @@ def tedana_workflow(
 
         if fittype == "curvefit":
             io_generator.save_file(
-                utils.unmask(failures, mask_denoise).astype(np.uint8),
+                failures.astype(np.uint8),
                 "fit failures img",
+                mask=mask_denoise,
             )
             if verbose:
-                io_generator.save_file(
-                    utils.unmask(t2s_var, mask_denoise),
-                    "t2star variance img",
-                )
-                io_generator.save_file(utils.unmask(s0_var, mask_denoise), "s0 variance img")
-                io_generator.save_file(
-                    utils.unmask(t2s_s0_covar, mask_denoise),
-                    "t2star-s0 covariance img",
-                )
+                io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+                io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
 
         del failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -845,12 +817,11 @@ def tedana_workflow(
         del masksum_masked
 
         t2s_full = utils.unmask(t2s_full, mask_denoise)
-        s0_full = utils.unmask(s0_full, mask_denoise)
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
-        io_generator.save_file(s0_full, "s0 img")
+        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
 
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
@@ -914,7 +885,7 @@ def tedana_workflow(
             low_mem=low_mem,
         )
         if verbose:
-            io_generator.save_file(utils.unmask(data_reduced, mask_clf), "whitened img")
+            io_generator.save_file(data_reduced, "whitened img", mask=mask_clf)
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -952,12 +923,13 @@ def tedana_workflow(
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
             component_table, mixing = metrics.collect.generate_metrics(
-                data_cat=data_cat,
-                data_optcom=data_optcom,
+                data_cat=data_cat[mask_clf, ...],
+                data_optcom=data_optcom[mask_clf, :],
                 mixing=mixing,
-                t2smap=t2s_full,
-                s0map=s0_full,
-                adaptive_mask=masksum_clf,
+                t2smap=t2s_full[mask_clf],
+                s0map=s0_full[mask_clf],
+                adaptive_mask=masksum_clf[mask_clf],
+                mask_img=unmask(mask_clf, io_generator.mask),
                 tes=tes,
                 n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
@@ -1014,12 +986,13 @@ def tedana_workflow(
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
         component_table, mixing = metrics.collect.generate_metrics(
-            data_cat=data_cat,
-            data_optcom=data_optcom,
+            data_cat=data_cat[mask_clf, ...],
+            data_optcom=data_optcom[mask_clf, :],
             mixing=mixing,
-            t2smap=t2s_full,
-            s0map=s0_full,
-            adaptive_mask=masksum_clf,
+            t2smap=t2s_full[mask_clf],
+            s0map=s0_full[mask_clf],
+            adaptive_mask=masksum_clf[mask_clf],
+            mask_img=unmask(mask_clf, io_generator.mask),
             tes=tes,
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
@@ -1191,6 +1164,7 @@ def tedana_workflow(
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
+        mask_denoise_img = unmask(mask_denoise, io_generator.mask)
         data_denoised, data_accepted, data_rejected = io.denoise_ts(
             data_optcom,
             mixing,
@@ -1200,7 +1174,6 @@ def tedana_workflow(
 
         reporting.static_figures.plot_adaptive_mask(
             optcom=data_optcom,
-            base_mask=mask,
             io_generator=io_generator,
         )
         reporting.static_figures.carpet_plot(
@@ -1208,28 +1181,28 @@ def tedana_workflow(
             denoised_ts=data_denoised,
             hikts=data_accepted,
             lowkts=data_rejected,
-            mask=mask_denoise,
+            mask=mask_denoise_img,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
             data_optcom,
-            mask=mask_denoise,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
-        reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
+        reporting.static_figures.plot_t2star_and_s0(
+            io_generator=io_generator,
+            mask=mask_denoise_img,
+        )
         if t2smap is None:
             reporting.static_figures.plot_rmse(
                 io_generator=io_generator,
-                adaptive_mask=masksum_denoise,
             )
             if fittype == "curvefit" and verbose:
                 reporting.static_figures.plot_decay_variance(
                     io_generator=io_generator,
-                    adaptive_mask=masksum_denoise,
                 )
 
         if gscontrol:

@@ -326,6 +326,10 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
     # Load the component table
     comptable_path = io_generator.get_name("ICA metrics tsv")
     comptable_cds = df._create_data_struct(comptable_path)
+    component_table = pd.read_csv(comptable_path, sep="\t")
+    n_total = len(component_table)
+    n_accepted = (component_table["classification"] == "accepted").sum()
+    n_rejected = (component_table["classification"] == "rejected").sum()
 
     # Load the cross component metrics, including the kappa & rho elbows
     cross_component_metrics_path = io_generator.get_name("ICA cross component metrics json")
@@ -393,7 +397,12 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
         y_label="Rho",
         elbow=rho_elbow,
     )
-    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds)
+    varexp_pie_plot = df._create_varexp_pie_plt(
+        comptable_cds,
+        n_total=n_total,
+        n_accepted=n_accepted,
+        n_rejected=n_rejected,
+    )
 
     # Create clustering plot
     if cluster_labels is not None:
