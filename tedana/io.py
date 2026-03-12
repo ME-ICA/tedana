@@ -19,7 +19,6 @@ import pandas as pd
 import requests
 from nilearn import __version__ as nilearn_version
 from nilearn import masking
-from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image.image import new_img_like
 from packaging.version import Version
 from scipy import stats
