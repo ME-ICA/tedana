@@ -4,7 +4,7 @@
     "report": "If you are publishing results using this tree, you are doing something wrong. ",
     "necessary_metrics": [],
     "intermediate_classifications": [],
-    "classification_tags": ["Rejected just because"],
+    "classification_tags": ["Rejected just because", "Likely BOLD"],
     "nodes": [
         {
             "functionname": "manual_classify",
@@ -15,6 +15,14 @@
                 "tag": "Rejected just because"
             },
             "_comment": "All components are labeled as 'rejected'."
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "accepted", "decide_comps": "unclassified"},
+            "kwargs": {
+                "tag": "Likely BOLD"
+            },
+            "_comment": "All unclassified components are labeled as 'Likely BOLD'. This will have no effect, but is necessary for the validator to pass."
         }
     ]
 }

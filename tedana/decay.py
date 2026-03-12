@@ -5,7 +5,6 @@ import os
 from typing import List, Literal, Tuple
 
 import numpy as np
-import numpy.matlib
 import pandas as pd
 import scipy
 from joblib import Parallel, delayed
@@ -681,8 +680,8 @@ def rmse_of_fit_decay_ts(
         use_vox = adaptive_mask == n_good_echoes
         data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
-            s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
-            t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
+            s0_echo = np.tile(s0[use_vox][:, np.newaxis], (1, n_vols))
+            t2s_echo = np.tile(t2s[use_vox][:, np.newaxis], (1, n_vols))
         elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
@@ -701,8 +700,15 @@ def rmse_of_fit_decay_ts(
             )
         rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
 
-    rmse_map = np.nanmean(rmse, axis=1)
-    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sum_map = np.nansum(rmse, axis=1)
+    rmse_count_map = np.sum(~np.isnan(rmse), axis=1)
+    rmse_map = np.full(rmse_sum_map.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_map, rmse_count_map, out=rmse_map, where=rmse_count_map > 0)
+
+    rmse_sum_ts = np.nansum(rmse, axis=0)
+    rmse_count_ts = np.sum(~np.isnan(rmse), axis=0)
+    rmse_timeseries = np.full(rmse_sum_ts.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_ts, rmse_count_ts, out=rmse_timeseries, where=rmse_count_ts > 0)
     rmse_sd_timeseries = np.nanstd(rmse, axis=0)
     rmse_percentiles_timeseries = np.nanpercentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
 
