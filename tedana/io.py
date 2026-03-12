@@ -19,6 +19,7 @@ import pandas as pd
 import requests
 from nilearn import masking
 from nilearn._utils.niimg_conversions import check_niimg
+from nilearn.image.image import new_img_like
 from scipy import stats
 
 from tedana import utils
@@ -217,7 +218,7 @@ class OutputGenerator:
             The mask image to register.
         """
         if isinstance(mask, str):
-            mask = nb.load(mask)
+            mask = _convert_to_nifti1(nb.load(mask), max_dim=3)
         self.mask = mask
 
     def get_name(self, description, **kwargs):
@@ -458,7 +459,7 @@ class InputHarvester:
     loaders = {
         "json": lambda f: load_json(f),
         "tsv": lambda f: pd.read_csv(f, delimiter="\t"),
-        "img": lambda f: nb.load(f),
+        "img": lambda f: _convert_to_nifti1(nb.load(f)),
     }
 
     def __init__(self, path):
@@ -1102,7 +1103,7 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
             "please comment on https://github.com/ME-ICA/tedana/issues/1313."
         )
         # z-cat data
-        data_img = nb.load(data[0])
+        data_img = _convert_to_nifti1(nb.load(data[0]))
         n_z = data_img.shape[2] // n_echos
         # Load full z-concatenated data once, then slice per echo in numpy.
         arr = np.asarray(data_img.dataobj, dtype=dtype)
@@ -1119,7 +1120,7 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
     else:
         # Fast path: direct indexing (avoids nilearn overhead)
         try:
-            masked = [_mask_4d(nb.load(f)) for f in data]
+            masked = [_mask_4d(_convert_to_nifti1(nb.load(f))) for f in data]
             return np.stack(masked, axis=1)
         except Exception:
             # Slow, robust fallback
@@ -1135,13 +1136,25 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
             return np.stack(masked, axis=1)
 
 
-def _convert_to_nifti1(img, dtype=None):
+def _convert_to_nifti1(img, dtype=None, max_dim=None):
     """Convert any nibabel image to NIfTI1Image format.
 
     Parameters
     ----------
     img : nibabel image
         Input image in any nibabel-supported format
+
+    dtype : type or None
+        The data type to use when creating the numpy array
+        Default is None (Keep the datatype the same)
+
+    max_dim : int or None
+        If the inputted data has more than max_dims dimensions,
+        if those excess dimensions are all of length 1, remove them.
+        Otherwise raise an error.
+        This addresses an issue where nibabel reads in 3D AFNI volumes
+        with 4th dimension of length 1,
+        which inters with nilearn functionality
 
     Returns
     -------
@@ -1167,6 +1180,18 @@ def _convert_to_nifti1(img, dtype=None):
     # Try to preserve header information where possible
     new_img = nb.Nifti1Image(data, affine)
     new_img.header.set_zooms(zooms)
+
+    if max_dim:
+        img_shape = new_img.header.get_data_shape()
+        if len(img_shape) >= 4:
+            if np.sum(img_shape[3:]) == len(img_shape) - 3:
+                # if all the dimensions beyond the first 3 are of length 1, convert to 3D
+                img_data = np.squeeze(new_img.get_fdata(), axis=tuple(range(3, len(img_shape))))
+                tmp_img = new_img_like(new_img, img_data)
+                new_img = tmp_img
+            else:
+                raise ValueError(f"{img.get_filename()} has more than {max_dim} dimensions")
+
     return new_img
 
 
@@ -1191,7 +1216,7 @@ def load_ref_img(data, n_echos):
     """
     if len(data) == 1:
         # z-cat data
-        data_img = nb.load(data[0])
+        data_img = _convert_to_nifti1(nb.load(data[0]))
         n_z = data_img.shape[2] // n_echos
         arr = data_img.slicer[:, :, :n_z, :].get_fdata()
         # Using slicer to create the image messes up the affine, so we need to create the
