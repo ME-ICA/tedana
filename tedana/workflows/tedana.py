@@ -54,15 +54,10 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    from tedana import __version__
-
-    verstr = f"tedana v{__version__}"
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Argument parser follow template provided by RalphyZ
-    # https://stackoverflow.com/a/43456577
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group("Required Arguments")
-    required.add_argument(
+
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
         "-d",
         dest="data",
         nargs="+",
@@ -71,12 +66,11 @@ def _get_parser():
         help=(
             "Multi-echo dataset for analysis. "
             "A set of echo-specific files in ascending order. "
-            "The TEs of the data should match "
-            "the TEs listed in the -e argument."
+            "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
     )
-    required.add_argument(
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -88,7 +82,9 @@ def _get_parser():
         ),
         required=True,
     )
-    optional.add_argument(
+
+    output_args = parser.add_argument_group("Output Control")
+    output_args.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -96,74 +92,121 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    optional.add_argument(
+    output_args.add_argument(
+        "--prefix",
+        dest="prefix",
+        type=str,
+        help="Prefix for filenames generated.",
+        default="",
+    )
+    output_args.add_argument(
+        "--convention",
+        dest="convention",
+        choices=["orig", "bids"],
+        help="Filenaming convention. bids will use the latest BIDS derivatives version.",
+        default="bids",
+    )
+    output_args.add_argument(
+        "--no-reports",
+        dest="no_reports",
+        action="store_true",
+        help=(
+            "Disables creation of a figures folder with static component maps, timecourse plots, "
+            "and other diagnostic images. "
+            "Also disables the generation of a dynamic report."
+        ),
+        default=False,
+    )
+    output_args.add_argument(
+        "--png-cmap",
+        dest="png_cmap",
+        type=str,
+        help="Colormap for figures",
+        default="coolwarm",
+    )
+    output_args.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    output_args.add_argument(
+        "--overwrite",
+        "-f",
+        dest="overwrite",
+        action="store_true",
+        help="Force overwriting of files.",
+        default=False,
+    )
+
+    masking_args = parser.add_argument_group("Temporal and Spatial Masking")
+    masking_args.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        metavar="INT",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Binary mask of voxels to include in TE "
-            "Dependent ANAlysis. Must be in the same "
-            "space as `data`. If an explicit mask is not "
-            "provided, then Nilearn's compute_epi_mask "
-            "function will be used to derive a mask "
-            "from the first echo's data. "
+            "Binary mask of voxels to include in TE Dependent ANAlysis. "
+            "Must be in the same space as `data`. "
+            "If an explicit mask is not provided, then Nilearn's compute_epi_mask "
+            "function will be used to derive a mask from the first echo's data. "
             "Providing a mask is recommended."
         ),
         default=None,
     )
-    optional.add_argument(
-        "--prefix", dest="prefix", type=str, help="Prefix for filenames generated.", default=""
-    )
-    optional.add_argument(
-        "--convention",
-        dest="convention",
-        action="store",
-        choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
-        default="bids",
-    )
-    optional.add_argument(
-        "--dummy-scans",
-        dest="dummy_scans",
-        type=int,
-        help="Number of dummy scans to remove from the beginning of the data.",
-        default=0,
-    )
-    optional.add_argument(
+    masking_args.add_argument(
         "--masktype",
         dest="masktype",
-        required=False,
-        action="store",
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
-    optional.add_argument(
+
+    decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
+    decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        action="store",
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
-            '"loglin" means that a linear model is fit '
-            "to the log of the data. "
-            '"curvefit" means that a more computationally '
-            "demanding monoexponential model is fit "
+            '"loglin" means that a linear model is fit to the log of the data. '
+            '"curvefit" means that a more computationally demanding monoexponential model is fit '
             "to the raw data. "
         ),
         default="loglin",
     )
-    optional.add_argument(
+    decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        action="store",
         choices=["t2s"],
-        help=("Combination scheme for TEs: t2s (Posse 1999)"),
+        help="Combination scheme for TEs: t2s (Posse 1999)",
         default="t2s",
     )
-    optional.add_argument(
+    decay_args.add_argument(
+        "--t2smap",
+        dest="t2smap",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "Precalculated T2* map in the same space as the input data. "
+            "Values should be in seconds (per BIDS convention). "
+            "Maps in milliseconds are auto-detected and handled with a warning."
+        ),
+        default=None,
+    )
+
+    decomposition_args = parser.add_argument_group("Component Selection")
+    decomposition_args.add_argument(
         "--tedpca",
         dest="tedpca",
         type=check_tedpca_value,
@@ -173,72 +216,70 @@ def _get_parser():
             "String ('mdl', 'kic', 'aic', 'kundu', or 'kundu-stabilize'); "
             "floating-point value in the range (0.0, 1.0); "
             "positive integer value. "
-            "PCA decomposition with the mdl, kic and aic options "
-            "are based on a Moving Average (stationary Gaussian) process, "
-            "and are ordered from most to least aggressive. "
-            "'kundu' or 'kundu-stabilize' are legacy selection methods "
-            "that were distributed with MEICA. "
-            "Floating-point inputs select components based on the "
-            "cumulative variance explained. "
-            "Integer inputs select the specificed number of components. "
+            "PCA decomposition with the mdl, kic and aic options are based on a Moving Average "
+            "(stationary Gaussian) process, and are ordered from most to least aggressive. "
+            "'kundu' or 'kundu-stabilize' are legacy selection methods that were distributed with "
+            "MEICA. "
+            "Floating-point inputs select components based on the cumulative variance explained. "
+            "Integer inputs select the specified number of components. "
             "Default: 'aic'."
         ),
         default="aic",
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--tree",
         dest="tree",
         help=(
-            "Decision tree to use. You may use a "
-            "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
-            "file which matches the decision tree file "
-            "specification. Minimal still being tested with more "
-            "details in docs"
+            "Decision tree to use. You may use a packaged tree (tedana_orig, meica, minimal) or "
+            "supply a JSON file which matches the decision tree file specification. "
+            "Minimal still being tested with more details in docs"
         ),
         default="tedana_orig",
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--external",
         dest="external_regressors",
+        metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
             "File containing external regressors to compare to ICA component be used in the "
-            "decision tree. For example, to identify components fit head motion time series. "
+            "decision tree. "
+            "For example, to identify components fit head motion time series. "
             "The file must be a TSV file with the same number of rows as the number of volumes in "
-            "the input data. Column labels and statistical tests are defined with external_labels."
+            "the input data. "
+            "Column labels and statistical tests are defined with external_labels."
         ),
         default=None,
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--ica-method",
         "--ica_method",
         dest="ica_method",
         help=(
             "The applied ICA method. "
             "fastica runs FastICA from sklearn once with the seed value. "
-            "robustica will run FastICA n_robust_runs times and uses "
-            "clustering methods to overcome the randomness of the FastICA algorithm. "
+            "robustica will run FastICA n_robust_runs times and uses clustering methods to "
+            "overcome the randomness of the FastICA algorithm. "
             "robustica will be slower."
         ),
         choices=["robustica", "fastica"],
         type=str.lower,
         default=DEFAULT_ICA_METHOD,
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
         type=int,
         help=(
-            "Value used for random initialization of ICA "
-            "algorithm. Set to an integer value for "
-            "reproducible ICA results. Set to -1 for "
-            "varying results across ICA calls. This "
-            "applies to both fastica and robustica methods."
+            "Value used for random initialization of ICA algorithm. "
+            "Set to an integer value for reproducible ICA results. "
+            "Set to -1 for varying results across ICA calls. "
+            "This applies to both fastica and robustica methods."
         ),
         default=DEFAULT_SEED,
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--n-robust-runs",
         "--n_robust_runs",
         dest="n_robust_runs",
@@ -246,160 +287,121 @@ def _get_parser():
         type=check_n_robust_runs_value,
         help=(
             "The number of times robustica will run. "
-            "This is only effective when ica_method is "
-            "set to robustica."
+            "This is only effective when ica_method is set to robustica."
         ),
         default=DEFAULT_N_ROBUST_RUNS,
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--maxit",
         dest="maxit",
         metavar="INT",
         type=int,
-        help=("Maximum number of iterations for ICA."),
+        help="Maximum number of iterations for ICA.",
         default=DEFAULT_N_MAX_ITER,
     )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--maxrestart",
         dest="maxrestart",
         metavar="INT",
         type=int,
         help=(
-            "Maximum number of attempts for ICA. If ICA "
-            "fails to converge, the fixed seed will be "
-            "updated and ICA will be run again. If "
-            "convergence is achieved before maxrestart "
-            "attempts, ICA will finish early."
+            "Maximum number of attempts for ICA. "
+            "If ICA fails to converge, the fixed seed will be updated and ICA will be run again. "
+            "If convergence is achieved before maxrestart attempts, ICA will finish early."
         ),
         default=DEFAULT_N_MAX_RESTART,
     )
-    optional.add_argument(
-        "--tedort",
-        dest="tedort",
-        action="store_true",
-        help=("Orthogonalize rejected components w.r.t. accepted components prior to denoising."),
-        default=False,
-    )
-    optional.add_argument(
-        "--gscontrol",
-        dest="gscontrol",
-        required=False,
-        action="store",
-        nargs="+",
-        help=(
-            "Perform additional denoising to remove "
-            "spatially diffuse noise. "
-            "This argument can be single value or a space "
-            "delimited list."
-        ),
-        choices=["mir", "gsr"],
-        default="",
-    )
-    optional.add_argument(
-        "--no-reports",
-        dest="no_reports",
-        action="store_true",
-        help=(
-            "Creates a figures folder with static component "
-            "maps, timecourse plots and other diagnostic "
-            "images and displays these in an interactive "
-            "reporting framework"
-        ),
-        default=False,
-    )
-    optional.add_argument(
-        "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
-    )
-    optional.add_argument(
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        help="Generate intermediate and additional files.",
-        default=False,
-    )
-    optional.add_argument(
-        "--lowmem",
-        dest="low_mem",
-        action="store_true",
-        help=(
-            "Enables low-memory processing, including the "
-            "use of IncrementalPCA. May increase workflow "
-            "duration."
-        ),
-        default=False,
-    )
-    optional.add_argument(
-        "--n-threads",
-        dest="n_threads",
-        type=int,
-        action="store",
-        help=(
-            "Number of threads to use. Used by "
-            "threadpoolctl to set the parameter outside "
-            "of the workflow function. Higher numbers of "
-            "threads tend to slow down performance on "
-            "typical datasets."
-        ),
-        default=1,
-    )
-    optional.add_argument(
-        "--debug",
-        dest="debug",
-        action="store_true",
-        help=(
-            "Logs in the terminal will have increased "
-            "verbosity, and will also be written into "
-            "a .tsv file in the output directory."
-        ),
-        default=False,
-    )
-    optional.add_argument(
-        "--t2smap",
-        dest="t2smap",
-        metavar="FILE",
-        type=lambda x: is_valid_file(parser, x),
-        help=(
-            "Precalculated T2* map in the same space as the input data. "
-            "Values should be in seconds (per BIDS convention). Maps in milliseconds "
-            "are auto-detected and handled with a warning."
-        ),
-        default=None,
-    )
-    optional.add_argument(
+    decomposition_args.add_argument(
         "--mix",
         dest="mixing_file",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
-        help=("File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done."),
+        help="File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done.",
         default=None,
     )
 
-    optional.add_argument(
-        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument(
-        "--overwrite",
-        "-f",
-        dest="overwrite",
-        action="store_true",
-        help="Force overwriting of files.",
-        default=False,
-    )
-
-    optional.add_argument(
+    experimental_args = parser.add_argument_group("Experimental Features")
+    experimental_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
         type=int,
         help=(
-            "Number of independent echoes to use in goodness of fit metrics (fstat)."
-            "Primarily used for EPTI acquisitions."
+            "Number of independent echoes to use in goodness of fit metrics (fstat). "
+            "Primarily used for EPTI acquisitions. "
             "If not provided, number of echoes will be used."
         ),
         default=None,
     )
-    optional.add_argument("-v", "--version", action="version", version=verstr)
-    parser._action_groups.append(optional)
+    experimental_args.add_argument(
+        "--tedort",
+        dest="tedort",
+        action="store_true",
+        help="Orthogonalize rejected components w.r.t. accepted components prior to denoising.",
+        default=False,
+    )
+    experimental_args.add_argument(
+        "--gscontrol",
+        dest="gscontrol",
+        nargs="+",
+        help=(
+            "Perform additional denoising to remove spatially diffuse noise. "
+            "This argument can be a single value or a space-delimited list."
+        ),
+        choices=["mir", "gsr"],
+        default="",
+    )
+
+    performance_args = parser.add_argument_group("Performance Control")
+    performance_args.add_argument(
+        "--lowmem",
+        dest="low_mem",
+        action="store_true",
+        help=(
+            "Enables low-memory processing, including the use of IncrementalPCA. "
+            "May increase workflow duration."
+        ),
+        default=False,
+    )
+    performance_args.add_argument(
+        "--n-threads",
+        dest="n_threads",
+        metavar="INT",
+        type=int,
+        help=(
+            "Number of threads to use. "
+            "Used by threadpoolctl to set the parameter outside of the workflow function. "
+            "Higher numbers of threads tend to slow down performance on typical datasets."
+        ),
+        default=1,
+    )
+    performance_args.add_argument(
+        "--debug",
+        dest="debug",
+        action="store_true",
+        help=(
+            "Logs in the terminal will have increased verbosity, "
+            "and will also be written into a TSV file in the output directory."
+        ),
+        default=False,
+    )
+
+    # Hidden arguments
+    parser.add_argument(
+        "--quiet",
+        dest="quiet",
+        help=argparse.SUPPRESS,
+        action="store_true",
+        default=False,
+    )
+
+    # Version argument
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"tedana v{__version__}",
+    )
 
     return parser
 
