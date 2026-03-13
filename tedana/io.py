@@ -1187,7 +1187,7 @@ def _convert_to_nifti1(img, dtype=None, max_dim=None):
     new_img = nb.Nifti1Image(data, affine)
     new_img.header.set_zooms(zooms)
 
-    if max_dim & (new_img.ndim > max_dim):
+    if max_dim and (new_img.ndim > max_dim):
         if np.mean(new_img.header.get_data_shape()[max_dim:]) == 1:
             # if all the dimensions beyond the first 3 are of length 1, convert to 3D
             img_data = np.squeeze(new_img.get_fdata(), axis=tuple(range(max_dim, new_img.ndim)))
