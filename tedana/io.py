@@ -19,7 +19,6 @@ import pandas as pd
 import requests
 from nilearn import __version__ as nilearn_version
 from nilearn import masking
-from nilearn.image.image import new_img_like
 from packaging.version import Version
 from scipy import stats
 
@@ -1188,11 +1187,8 @@ def _convert_to_nifti1(img, dtype=None, max_dim=None):
     new_img.header.set_zooms(zooms)
 
     if max_dim and (new_img.ndim > max_dim):
-        if np.mean(new_img.header.get_data_shape()[max_dim:]) == 1:
-            # if all the dimensions beyond the first 3 are of length 1, convert to 3D
-            img_data = np.squeeze(new_img.get_fdata(), axis=tuple(range(max_dim, new_img.ndim)))
-            new_img = new_img_like(new_img, img_data)
-        else:
+        new_img = nb.funcs.squeeze_image(new_img)
+        if new_img.ndim > max_dim:
             raise ValueError(f"{img.get_filename()} has more than {max_dim} dimensions")
 
     return new_img
