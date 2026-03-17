@@ -170,22 +170,28 @@ def _get_parser():
         default=0,
     )
 
-    experimental_args = parser.add_argument_group("Experimental Features")
-    experimental_args.add_argument(
+    denoising_args = parser.add_argument_group("Additional Denoising Options")
+    denoising_args.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
-        help="Orthogonalize rejected components w.r.t. accepted components prior to denoising.",
+        help=(
+            "Orthogonalize rejected components w.r.t. accepted components prior to denoising. "
+            "This is a conservative option where shared variance between accepted and rejected "
+            "components will be retained in the denoised data."
+        ),
         default=False,
     )
-    experimental_args.add_argument(
+    denoising_args.add_argument(
         "--gscontrol",
         dest="gscontrol",
         nargs="+",
         help=(
             "Perform additional denoising to remove spatially diffuse noise. "
-            "This argument can be single value or a space delimited list. "
-            "'gsr' will only work if the previous tedana run used --gscontrol gsr."
+            '"gsr" regresses out the global signal of all voxels in the mask. '
+            '"mir" is Minimum Image Regression with the goal of reducing T1-like effects. '
+            "The positive and negative effects of using these options are unclear. "
+            "This argument can be a single value or a space-delimited list."
         ),
         choices=["gsr", "mir"],
         default="",

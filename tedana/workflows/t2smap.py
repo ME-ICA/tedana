@@ -94,30 +94,6 @@ def _get_parser():
 
     masking_args = parser.add_argument_group("Temporal and Spatial Masking")
     masking_args.add_argument(
-        "--dummy-scans",
-        dest="dummy_scans",
-        metavar="INT",
-        type=int,
-        help="Number of dummy scans to remove from the beginning of the data.",
-        default=0,
-    )
-    masking_args.add_argument(
-        "--exclude",
-        dest="exclude",
-        type=str,
-        help=(
-            "Volume indices to exclude from adaptive mask generation and T2* and S0 estimation, "
-            "but which will be retained in the optimally combined data. "
-            "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
-            "or a mix of the two (e.g., '0,5:10,15'). "
-            "Indices are 0-based. "
-            "As in Python lists, ranges are start-inclusive and end-exclusive "
-            "(for example, '0:5' includes the first [0] through fifth [4] timepoints). "
-            "Default is to not exclude any volumes."
-        ),
-        default=None,
-    )
-    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
@@ -145,6 +121,30 @@ def _get_parser():
         ),
         choices=["dropout", "decay", "none"],
         default=["dropout"],
+    )
+    masking_args.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        metavar="INT",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+    masking_args.add_argument(
+        "--exclude",
+        dest="exclude",
+        type=str,
+        help=(
+            "Volume indices to exclude from adaptive mask generation and T2* and S0 estimation, "
+            "but which will be retained in the optimally combined data. "
+            "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
+            "or a mix of the two (e.g., '0,5:10,15'). "
+            "Indices are 0-based. "
+            "As in Python lists, ranges are start-inclusive and end-exclusive "
+            "(for example, '0:5' includes the first [0] through fifth [4] timepoints). "
+            "Default is to not exclude any volumes."
+        ),
+        default=None,
     )
 
     decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")

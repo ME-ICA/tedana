@@ -142,14 +142,6 @@ def _get_parser():
 
     masking_args = parser.add_argument_group("Temporal and Spatial Masking")
     masking_args.add_argument(
-        "--dummy-scans",
-        dest="dummy_scans",
-        metavar="INT",
-        type=int,
-        help="Number of dummy scans to remove from the beginning of the data.",
-        default=0,
-    )
-    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
@@ -177,6 +169,14 @@ def _get_parser():
         ),
         choices=["dropout", "decay", "none"],
         default=["dropout"],
+    )
+    masking_args.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        metavar="INT",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
     )
 
     decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
