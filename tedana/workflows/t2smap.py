@@ -123,9 +123,11 @@ def _get_parser():
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Binary mask of voxels to include in TE "
-            "Dependent ANAlysis. Must be in the same "
-            "space as `data`."
+            "Binary mask of voxels to include in TE Dependent ANAlysis. "
+            "Must be in the same space as `data`. "
+            "If an explicit mask is not provided, then Nilearn's compute_epi_mask "
+            "function will be used to derive a mask from the first echo's data. "
+            "Providing a mask is recommended."
         ),
         default=None,
     )
@@ -135,12 +137,12 @@ def _get_parser():
         nargs="+",
         help=(
             "Method(s) by which to define the adaptive mask. "
-            "The adaptive mask starts with the from --mask. "
-            "It identifies voxels that are good data in all vs a subset of echoes. "
-            "dropout removes voxels with much lower voxels than other voxels within each echo. "
-            "decay removes voxels where the raw signal doesn't decay across echoes. "
-            "users can input one or both models."
-            ),
+            "The adaptive mask starts with the mask from '--mask', when provided. "
+            "It identifies voxels that have good data in all vs a subset of echoes. "
+            '"dropout" removes voxels with much lower voxels than other voxels within each echo. '
+            '"decay" removes voxels where the raw signal does not decay across echoes. '
+            "Users can specify one, both, or neither of the models."
+        ),
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
@@ -179,8 +181,8 @@ def _get_parser():
         default="t2s",
     )
 
-    experimental_args = parser.add_argument_group("Experimental Features")
-    experimental_args.add_argument(
+    decomposition_args = parser.add_argument_group("Component Selection")
+    decomposition_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",

@@ -167,7 +167,14 @@ def _get_parser():
         "--masktype",
         dest="masktype",
         nargs="+",
-        help="Method(s) by which to define the adaptive mask.",
+        help=(
+            "Method(s) by which to define the adaptive mask. "
+            "The adaptive mask starts with the mask from '--mask', when provided. "
+            "It identifies voxels that have good data in all vs a subset of echoes. "
+            '"dropout" removes voxels with much lower voxels than other voxels within each echo. '
+            '"decay" removes voxels where the raw signal does not decay across echoes. '
+            "Users can specify one, both, or neither of the models."
+        ),
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
@@ -319,9 +326,7 @@ def _get_parser():
         help="File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done.",
         default=None,
     )
-
-    experimental_args = parser.add_argument_group("Experimental Features")
-    experimental_args.add_argument(
+    decomposition_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
@@ -333,25 +338,28 @@ def _get_parser():
         ),
         default=None,
     )
-    experimental_args.add_argument(
+
+    denoising_args = parser.add_argument_group("Additional Denoising Options")
+    denoising_args.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
         help=(
-        "Orthogonalize rejected components w.r.t. accepted components prior to denoising. "
-        "Conservative option where shared variance between accepted & rejected components will be retained."
+            "Orthogonalize rejected components w.r.t. accepted components prior to denoising. "
+            "This is a conservative option where shared variance between accepted and rejected "
+            "components will be retained in the denoised data."
         ),
         default=False,
     )
-    experimental_args.add_argument(
+    denoising_args.add_argument(
         "--gscontrol",
         dest="gscontrol",
         nargs="+",
         help=(
             "Perform additional denoising to remove spatially diffuse noise. "
-            "gsr regresses out the global signal of all voxels in the mask. "
-            "mir is Minimum Image Regression with the goal of reducing T1-like effects. "
-            "The positive and negative effects of using these options are unclear."
+            '"gsr" regresses out the global signal of all voxels in the mask. '
+            '"mir" is Minimum Image Regression with the goal of reducing T1-like effects. '
+            "The positive and negative effects of using these options are unclear. "
             "This argument can be a single value or a space-delimited list."
         ),
         choices=["mir", "gsr"],
