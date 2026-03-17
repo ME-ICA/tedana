@@ -328,7 +328,7 @@ def _get_parser():
         type=int,
         help=(
             "Number of independent echoes to use in goodness of fit metrics (fstat). "
-            "Primarily used for EPTI acquisitions. "
+            "Primarily used for EPTI acquisitions, which have dependency across echoes."
             "If not provided, number of echoes will be used."
         ),
         default=None,
@@ -337,7 +337,10 @@ def _get_parser():
         "--tedort",
         dest="tedort",
         action="store_true",
-        help="Orthogonalize rejected components w.r.t. accepted components prior to denoising.",
+        help=(
+        "Orthogonalize rejected components w.r.t. accepted components prior to denoising. "
+        "Conservative option where shared variance between accepted & rejected components will be retained."
+        ),
         default=False,
     )
     experimental_args.add_argument(
@@ -346,6 +349,9 @@ def _get_parser():
         nargs="+",
         help=(
             "Perform additional denoising to remove spatially diffuse noise. "
+            "gsr regresses out the global signal of all voxels in the mask. "
+            "mir is Minimum Image Regression with the goal of reducing T1-like effects. "
+            "The positive and negative effects of using these options are unclear."
             "This argument can be a single value or a space-delimited list."
         ),
         choices=["mir", "gsr"],

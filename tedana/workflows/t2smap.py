@@ -133,7 +133,14 @@ def _get_parser():
         "--masktype",
         dest="masktype",
         nargs="+",
-        help="Method(s) by which to define the adaptive mask.",
+        help=(
+            "Method(s) by which to define the adaptive mask. "
+            "The adaptive mask starts with the from --mask. "
+            "It identifies voxels that are good data in all vs a subset of echoes. "
+            "dropout removes voxels with much lower voxels than other voxels within each echo. "
+            "decay removes voxels where the raw signal doesn't decay across echoes. "
+            "users can input one or both models."
+            ),
         choices=["dropout", "decay", "none"],
         default=["dropout"],
     )
@@ -180,7 +187,7 @@ def _get_parser():
         type=int,
         help=(
             "Number of independent echoes to use in goodness of fit metrics (fstat). "
-            "Primarily used for EPTI acquisitions. "
+            "Primarily used for EPTI acquisitions, which have dependency across echoes."
             "If not provided, number of echoes will be used."
         ),
         default=None,
