@@ -103,7 +103,7 @@ def _get_parser():
         "--convention",
         dest="convention",
         choices=["orig", "bids"],
-        help="Filenaming convention. bids will use the latest BIDS derivatives version.",
+        help='Filenaming convention. "bids" will use the latest BIDS derivatives version.',
         default="bids",
     )
     output_args.add_argument(
@@ -121,7 +121,7 @@ def _get_parser():
         "--png-cmap",
         dest="png_cmap",
         type=str,
-        help="Colormap for figures",
+        help="Colormap for figures.",
         default="coolwarm",
     )
     output_args.add_argument(
@@ -196,7 +196,7 @@ def _get_parser():
         "--combmode",
         dest="combmode",
         choices=["t2s"],
-        help="Combination scheme for TEs: t2s (Posse 1999)",
+        help='Combination scheme for TEs: "t2s" (Posse 1999)',
         default="t2s",
     )
     decay_args.add_argument(
@@ -220,16 +220,16 @@ def _get_parser():
         help=(
             "Method by which to select number of components in TEDPCA. "
             "This can be one of the following: "
-            "String ('mdl', 'kic', 'aic', 'kundu', or 'kundu-stabilize'); "
+            'String ("mdl", "kic", "aic", "kundu", or "kundu-stabilize"); '
             "floating-point value in the range (0.0, 1.0); "
             "positive integer value. "
             "PCA decomposition with the mdl, kic and aic options are based on a Moving Average "
             "(stationary Gaussian) process, and are ordered from most to least aggressive. "
-            "'kundu' or 'kundu-stabilize' are legacy selection methods that were distributed with "
+            '"kundu" or "kundu-stabilize" are legacy selection methods that were distributed with '
             "MEICA. "
             "Floating-point inputs select components based on the cumulative variance explained. "
             "Integer inputs select the specified number of components. "
-            "Default: 'aic'."
+            'Default: "aic".'
         ),
         default="aic",
     )
@@ -264,10 +264,10 @@ def _get_parser():
         dest="ica_method",
         help=(
             "The applied ICA method. "
-            "fastica runs FastICA from sklearn once with the seed value. "
-            "robustica will run FastICA n_robust_runs times and uses clustering methods to "
+            '"fastica" runs FastICA from sklearn once with the seed value. '
+            '"robustica" will run FastICA n_robust_runs times and uses clustering methods to '
             "overcome the randomness of the FastICA algorithm. "
-            "robustica will be slower."
+            '"robustica" will be slower.'
         ),
         choices=["robustica", "fastica"],
         type=str.lower,
@@ -333,7 +333,7 @@ def _get_parser():
         type=int,
         help=(
             "Number of independent echoes to use in goodness of fit metrics (fstat). "
-            "Primarily used for EPTI acquisitions, which have dependency across echoes."
+            "Primarily used for EPTI acquisitions, which have dependency across echoes. "
             "If not provided, number of echoes will be used."
         ),
         default=None,

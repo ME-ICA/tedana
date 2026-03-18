@@ -73,7 +73,7 @@ def _get_parser():
         "--convention",
         dest="convention",
         choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
+        help='Filenaming convention. "bids" will use the latest BIDS derivatives version.',
         default="bids",
     )
     output_args.add_argument(
@@ -154,10 +154,8 @@ def _get_parser():
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
-            '"loglin" means that a linear model is fit '
-            "to the log of the data. "
-            '"curvefit" means that a more computationally '
-            "demanding monoexponential model is fit "
+            '"loglin" means that a linear model is fit to the log of the data. '
+            '"curvefit" means that a more computationally demanding monoexponential model is fit '
             "to the raw data. "
         ),
         default="loglin",
@@ -177,7 +175,7 @@ def _get_parser():
         "--combmode",
         dest="combmode",
         choices=["t2s", "paid"],
-        help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
+        help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
         default="t2s",
     )
 
@@ -189,7 +187,7 @@ def _get_parser():
         type=int,
         help=(
             "Number of independent echoes to use in goodness of fit metrics (fstat). "
-            "Primarily used for EPTI acquisitions, which have dependency across echoes."
+            "Primarily used for EPTI acquisitions, which have dependency across echoes. "
             "If not provided, number of echoes will be used."
         ),
         default=None,

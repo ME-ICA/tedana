@@ -124,7 +124,7 @@ def _get_parser():
         "--convention",
         dest="convention",
         choices=["orig", "bids"],
-        help="Filenaming convention. bids will use the latest BIDS derivatives version.",
+        help='Filenaming convention. "bids" will use the latest BIDS derivatives version.',
         default="bids",
     )
     output_args.add_argument(
@@ -142,7 +142,7 @@ def _get_parser():
         "--png-cmap",
         dest="png_cmap",
         type=str,
-        help="Colormap for figures",
+        help="Colormap for figures.",
         default="coolwarm",
     )
     output_args.add_argument(
