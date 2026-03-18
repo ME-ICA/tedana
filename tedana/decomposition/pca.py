@@ -58,6 +58,7 @@ def tedpca(
     io_generator,
     tes,
     n_independent_echos=None,
+    estimate_simultaneously=False,
     algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
@@ -87,6 +88,11 @@ def tedpca(
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
+    estimate_simultaneously : :obj:`bool`, optional
+        If True, estimate the S0 and T2* models simultaneously.
+        If False, estimate the S0 and T2* models separately.
+        This should only be used for acquisitions with many echoes (e.g., EPTI).
+        Default: False.
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
@@ -368,6 +374,7 @@ def tedpca(
         mask_img=masking.unmask(mask, io_generator.mask),
         tes=tes,
         n_independent_echos=n_independent_echos,
+        estimate_simultaneously=estimate_simultaneously,
         io_generator=io_generator,
         label="PCA",
         external_regressors=None,
