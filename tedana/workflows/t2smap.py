@@ -25,38 +25,36 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Argument parser follow template provided by RalphyZ
-    # https://stackoverflow.com/a/43456577
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group("Required Arguments")
-    required.add_argument(
+
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
         "-d",
         dest="data",
         nargs="+",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Multi-echo dataset for analysis. May be a "
-            "single file with spatially concatenated data "
-            "or a set of echo-specific files, in the same "
-            "order as the TEs are listed in the -e "
-            "argument."
+            "Multi-echo dataset for analysis. "
+            "A set of echo-specific files in ascending order. "
+            "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
     )
-    required.add_argument(
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
         metavar="TE",
         type=float,
         help=(
-            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
             "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
         ),
         required=True,
     )
-    optional.add_argument(
+
+    output_args = parser.add_argument_group("Output Control")
+    output_args.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -64,37 +62,75 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    optional.add_argument(
+    output_args.add_argument(
+        "--prefix",
+        dest="prefix",
+        type=str,
+        help="Prefix for filenames generated.",
+        default="",
+    )
+    output_args.add_argument(
+        "--convention",
+        dest="convention",
+        choices=["orig", "bids"],
+        help='Filenaming convention. "bids" will use the latest BIDS derivatives version.',
+        default="bids",
+    )
+    output_args.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    output_args.add_argument(
+        "--overwrite",
+        "-f",
+        dest="overwrite",
+        action="store_true",
+        help="Force overwriting of files.",
+        default=False,
+    )
+
+    masking_args = parser.add_argument_group("Temporal and Spatial Masking")
+    masking_args.add_argument(
         "--mask",
         dest="mask",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Binary mask of voxels to include in TE "
-            "Dependent ANAlysis. Must be in the same "
-            "space as `data`."
+            "Binary mask of voxels to include in TE Dependent ANAlysis. "
+            "Must be in the same space as `data`. "
+            "If an explicit mask is not provided, then Nilearn's compute_epi_mask "
+            "function will be used to derive a mask from the first echo's data. "
+            "Providing a mask is recommended."
         ),
         default=None,
     )
-    optional.add_argument(
-        "--prefix", dest="prefix", type=str, help="Prefix for filenames generated.", default=""
+    masking_args.add_argument(
+        "--masktype",
+        dest="masktype",
+        nargs="+",
+        help=(
+            "Method(s) by which to define the adaptive mask. "
+            "The adaptive mask starts with the mask from '--mask', when provided. "
+            "It identifies voxels that have good data in all vs a subset of echoes. "
+            '"dropout" removes voxels with much lower voxels than other voxels within each echo. '
+            '"decay" removes voxels where the raw signal does not decay across echoes. '
+            "Users can specify one, both, or neither of the models."
+        ),
+        choices=["dropout", "decay", "none"],
+        default=["dropout"],
     )
-    optional.add_argument(
-        "--convention",
-        dest="convention",
-        action="store",
-        choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
-        default="bids",
-    )
-    optional.add_argument(
+    masking_args.add_argument(
         "--dummy-scans",
         dest="dummy_scans",
+        metavar="INT",
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
     )
-    optional.add_argument(
+    masking_args.add_argument(
         "--exclude",
         dest="exclude",
         type=str,
@@ -110,101 +146,93 @@ def _get_parser():
         ),
         default=None,
     )
-    optional.add_argument(
-        "--masktype",
-        dest="masktype",
-        required=False,
-        action="store",
-        nargs="+",
-        help="Method(s) by which to define the adaptive mask.",
-        choices=["dropout", "decay", "none"],
-        default=["dropout"],
-    )
-    optional.add_argument(
+
+    decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
+    decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        action="store",
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
-            '"loglin" means that a linear model is fit '
-            "to the log of the data. "
-            '"curvefit" means that a more computationally '
-            "demanding monoexponential model is fit "
+            '"loglin" means that a linear model is fit to the log of the data. '
+            '"curvefit" means that a more computationally demanding monoexponential model is fit '
             "to the raw data. "
         ),
         default="loglin",
     )
-    optional.add_argument(
+    decay_args.add_argument(
         "--fitmode",
         dest="fitmode",
-        action="store",
         choices=["all", "ts"],
         help=(
             "Monoexponential model fitting scheme. "
-            '"all" means that the model is fit, per voxel, '
-            "across all timepoints. "
-            '"ts" means that the model is fit, per voxel '
-            "and per timepoint."
+            '"all" means that the model is fit, per voxel, across all timepoints. '
+            '"ts" means that the model is fit, per voxel and per timepoint.'
         ),
         default="all",
     )
-    optional.add_argument(
+    decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        action="store",
         choices=["t2s", "paid"],
-        help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
+        help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
         default="t2s",
     )
-    optional.add_argument(
+
+    decomposition_args = parser.add_argument_group("Component Selection")
+    decomposition_args.add_argument(
         "--n-independent-echos",
         dest="n_independent_echos",
         metavar="INT",
         type=int,
         help=(
-            "Number of independent echoes to use in goodness of fit metrics (fstat)."
-            "Primarily used for EPTI acquisitions."
+            "Number of independent echoes to use in goodness of fit metrics (fstat). "
+            "Primarily used for EPTI acquisitions, which have dependency across echoes. "
             "If not provided, number of echoes will be used."
         ),
         default=None,
     )
-    optional.add_argument(
+
+    performance_args = parser.add_argument_group("Performance Control")
+    performance_args.add_argument(
         "--n-threads",
         dest="n_threads",
+        metavar="INT",
         type=int,
-        action="store",
         help=(
-            "Number of threads to use. Used by "
-            "threadpoolctl to set the parameter outside "
-            "of the workflow function. Higher numbers of "
-            "threads tend to slow down performance on "
-            "typical datasets."
+            "Number of threads to use. "
+            "Used by threadpoolctl to set the parameter outside of the workflow function. "
+            "Higher numbers of threads tend to slow down performance on typical datasets."
         ),
         default=1,
     )
-    optional.add_argument(
-        "--debug", dest="debug", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument(
-        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument(
-        "--verbose",
-        dest="verbose",
+    performance_args.add_argument(
+        "--debug",
+        dest="debug",
         action="store_true",
-        help="Generate intermediate and additional files.",
+        help=(
+            "Logs in the terminal will have increased verbosity, "
+            "and will also be written into a TSV file in the output directory."
+        ),
         default=False,
     )
-    optional.add_argument(
-        "--overwrite",
-        "-f",
-        dest="overwrite",
+
+    # Hidden arguments
+    parser.add_argument(
+        "--quiet",
+        dest="quiet",
+        help=argparse.SUPPRESS,
         action="store_true",
-        help="Force overwriting of files.",
         default=False,
     )
-    parser._action_groups.append(optional)
+
+    # Version argument
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"t2smap v{__version__}",
+    )
     return parser
 
 
