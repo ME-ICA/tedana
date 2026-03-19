@@ -817,3 +817,23 @@ def test_integration_t2smap(skip_integration):
             msg += "\nFound but not expected:\n\t"
             msg += "\n\t".join(found_not_expected)
         raise ValueError(msg)
+
+
+def test_integration_reclassify_new_tree(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify new tree")
+
+    test_data_path = guarantee_reclassify_data()
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../outputs/reclassify/new_tree"))
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    ica_reclassify_workflow(
+        reclassify_raw_registry(),
+        tree="tedana_orig",
+        out_dir=out_dir,
+        no_reports=True,
+    )
+
+    fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
+    check_integration_outputs(fn, out_dir)
