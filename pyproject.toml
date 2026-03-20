@@ -23,7 +23,7 @@ license = {file = "LICENSE"}
 requires-python = ">=3.9"
 dependencies = [
     "bokeh>=3.0.0",
-    "mapca>=0.0.4",
+    "mapca>=0.0.7",
     "matplotlib>=3.7",
     "nibabel>=2.5.1",
     "nilearn>=0.11.0",
