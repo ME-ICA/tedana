@@ -3692,7 +3692,7 @@ requires-dist = [
     { name = "mapca", specifier = ">=0.0.4" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "nibabel", specifier = ">=2.5.1" },
-    { name = "nilearn", specifier = ">=0.10.3" },
+    { name = "nilearn", specifier = ">=0.11.0" },
     { name = "numpy", specifier = ">=1.21" },
     { name = "pandas", specifier = ">=2.0" },
     { name = "pep8-naming", marker = "extra == 'all'", specifier = ">=0.14" },
