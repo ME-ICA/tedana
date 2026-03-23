@@ -239,15 +239,15 @@ def tedpca(
 
         # Extract number of components and variance explained for logging and plotting
         n_aic = aic["n_components"]
-        aic_varexp = np.round(aic["explained_variance_total"], 3)
+        aic_varexp = np.round(100 * aic["explained_variance_total"], 2)
         n_kic = kic["n_components"]
-        kic_varexp = np.round(kic["explained_variance_total"], 3)
+        kic_varexp = np.round(100 * kic["explained_variance_total"], 2)
         n_mdl = mdl["n_components"]
-        mdl_varexp = np.round(mdl["explained_variance_total"], 3)
+        mdl_varexp = np.round(100 * mdl["explained_variance_total"], 2)
         n_varex_90 = varex_90["n_components"]
-        varex_90_varexp = np.round(varex_90["explained_variance_total"], 3)
+        varex_90_varexp = np.round(100 * varex_90["explained_variance_total"], 2)
         n_varex_95 = varex_95["n_components"]
-        varex_95_varexp = np.round(varex_95["explained_variance_total"], 3)
+        varex_95_varexp = np.round(100 * varex_95["explained_variance_total"], 2)
         all_varex = np.round(all_comps["explained_variance_total"], 3)
 
         # Print out the results
