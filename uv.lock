@@ -1696,7 +1696,7 @@ wheels = [
 
 [[package]]
 name = "mapca"
-version = "0.0.6"
+version = "0.0.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nibabel" },
@@ -1712,9 +1712,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/d0/6e25a01c26ef46b9c43fb010f275d5e36864b054f744248c9b513cfcddd9/mapca-0.0.6.tar.gz", hash = "sha256:38c727c779e1868c0b17a95777004a5a28076aab40e51e50d972db0a26decf25", size = 27892, upload-time = "2025-10-17T15:42:33.546Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/2e/5ce35a6fa61bdc8aa59dff521bc1ce8aa3dcd5f49de6588831e19b087291/mapca-0.0.7.tar.gz", hash = "sha256:29b39c049cd69925c795ba99a5c50876fdae20fc2d32b22c4f2b4d2a74372014", size = 28114, upload-time = "2026-03-20T21:43:13.712Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/0c/3df66635634ec17d46455d2baf3ffdebbaf80bce6dc63263e34f3673b494/mapca-0.0.6-py3-none-any.whl", hash = "sha256:5f018d8cb2c47b631dc1ed21f569a2439eb302d129fa41874d8e64b145911993", size = 31297, upload-time = "2025-10-17T15:42:32.694Z" },
+    { url = "https://files.pythonhosted.org/packages/18/e4/5e20b516ff2ddedd92f7943f3f6dda89bb3a08ac06f57ff6633e2be54a7f/mapca-0.0.7-py3-none-any.whl", hash = "sha256:f67b5c37e6adc0d2ccac6c6b1686f250c81690159a87fc7c3801524b19f34339", size = 31682, upload-time = "2026-03-20T21:43:12.586Z" },
 ]
 
 [[package]]
@@ -3689,10 +3689,10 @@ requires-dist = [
     { name = "flake8-unused-arguments", marker = "extra == 'tests'", specifier = ">=0.0.13" },
     { name = "flake8-use-fstring", marker = "extra == 'all'", specifier = ">=1.4" },
     { name = "flake8-use-fstring", marker = "extra == 'tests'", specifier = ">=1.4" },
-    { name = "mapca", specifier = ">=0.0.4" },
+    { name = "mapca", specifier = ">=0.0.7" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "nibabel", specifier = ">=2.5.1" },
-    { name = "nilearn", specifier = ">=0.10.3" },
+    { name = "nilearn", specifier = ">=0.11.0" },
     { name = "numpy", specifier = ">=1.21" },
     { name = "pandas", specifier = ">=2.0" },
     { name = "pep8-naming", marker = "extra == 'all'", specifier = ">=0.14" },
