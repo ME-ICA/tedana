@@ -158,9 +158,9 @@ If ``fittype`` is "curvefit"
 ===========================================================================  =====================================================
 Key: Filename                                                                Content
 ===========================================================================  =====================================================
-"t2star variance img": stat-variance_desc-t2star_statmap                     Variance of the T2* estimates.
-"s0 variance img": stat-variance_desc-s0_statmap                             Variance of the S0 estimates.
-"t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap           Covariance of the T2* and S0 estimates.
+"t2star variance img": stat-variance_desc-t2star_statmap.nii.gz              Variance of the T2* estimates.
+"s0 variance img": stat-variance_desc-s0_statmap.nii.gz                      Variance of the S0 estimates.
+"t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap.nii.gz    Covariance of the T2* and S0 estimates.
 ===========================================================================  =====================================================
 
 If ``tedort`` is True
