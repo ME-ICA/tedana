@@ -55,6 +55,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
         # divide-by-zero errors
         ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
         alpha[ax0_idx, :, ax2_idx] = 1.0
+
     combined = np.average(data, axis=1, weights=alpha)
     return combined
 
