@@ -259,8 +259,11 @@ def tedpca(
 
         LGR.info("Explained variance based on different criteria:")
         LGR.info(
-            f"AIC: {np.round(100 * aic_varexp, 2)}% | KIC: {np.round(100 * kic_varexp, 2)}% | MDL: {np.round(100 * mdl_varexp, 2)}% | "
-            f"90% varexp: {np.round(100 * varex_90_varexp, 2)}% | 95% varexp: {np.round(100 * varex_95_varexp, 2)}%"
+            f"AIC: {np.round(100 * aic_varexp, 2)}% | ",
+            f"KIC: {np.round(100 * kic_varexp, 2)}% | ",
+            f"MDL: {np.round(100 * mdl_varexp, 2)}% | ",
+            f"90% varexp: {np.round(100 * varex_90_varexp, 2)}% | ",
+            f"95% varexp: {np.round(100 * varex_95_varexp, 2)}% | ",
         )
 
         pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
