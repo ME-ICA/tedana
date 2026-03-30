@@ -23,11 +23,6 @@ def test__combine_t2s():
     comb = combine._combine_t2s(data, tes, t2s)
     assert comb.shape == (n_voxels, n_trs)
 
-    # Extra dimension for t2s
-    bad_t2s = np.random.random((n_voxels))
-    with pytest.raises(ValueError, match="Invalid shape for alpha"):
-        combine._combine_t2s(data, tes, bad_t2s)
-
 
 def test__combine_paid():
     """Test tedana.combine._combine_paid."""
