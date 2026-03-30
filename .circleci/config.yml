@@ -6,30 +6,6 @@ version: 2.1
 orbs:
   codecov: codecov/codecov@5.2.1
 jobs:
-  unittest_39:
-    docker:
-      - image: cimg/python:3.9
-    working_directory: /tmp/src/tedana
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - tox-py39-latest-v1-{{ checksum "uv.lock" }}
-            - tox-py39-latest-v1-
-      - run:
-          name: Running unit tests
-          command: |
-            uvx tox -e py39-latest
-            mkdir /tmp/src/coverage
-            mv .coverage /tmp/src/coverage/.coverage.py39
-      - save_cache:
-          key: tox-py39-latest-v1-{{ checksum "uv.lock" }}
-          paths:
-            - .tox
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - src/coverage/.coverage.py39
 
   unittest_310:
     docker:
@@ -152,14 +128,14 @@ jobs:
 
   three-echo:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
           keys:
-            - tox-py39-three-echo-v1-{{ checksum "uv.lock" }}
-            - tox-py39-three-echo-v1-
+            - tox-py310-three-echo-v1-{{ checksum "uv.lock" }}
+            - tox-py310-three-echo-v1-
       - run:
           name: Running integration tests
           command: |
@@ -167,7 +143,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.three-echo
       - save_cache:
-          key: tox-py39-three-echo-v1-{{ checksum "uv.lock" }}
+          key: tox-py310-three-echo-v1-{{ checksum "uv.lock" }}
           paths:
             - .tox
       - persist_to_workspace:
@@ -183,14 +159,14 @@ jobs:
 
   four-echo:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
           keys:
-            - tox-py39-four-echo-v1-{{ checksum "uv.lock" }}
-            - tox-py39-four-echo-v1-
+            - tox-py310-four-echo-v1-{{ checksum "uv.lock" }}
+            - tox-py310-four-echo-v1-
       - run:
           name: Running integration tests
           command: |
@@ -198,7 +174,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.four-echo
       - save_cache:
-          key: tox-py39-four-echo-v1-{{ checksum "uv.lock" }}
+          key: tox-py310-four-echo-v1-{{ checksum "uv.lock" }}
           paths:
             - .tox
       - persist_to_workspace:
@@ -214,14 +190,14 @@ jobs:
 
   five-echo:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
           keys:
-            - tox-py39-five-echo-v1-{{ checksum "uv.lock" }}
-            - tox-py39-five-echo-v1-
+            - tox-py310-five-echo-v1-{{ checksum "uv.lock" }}
+            - tox-py310-five-echo-v1-
       - run:
           name: Running integration tests
           command: |
@@ -229,7 +205,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.five-echo
       - save_cache:
-          key: tox-py39-five-echo-v1-{{ checksum "uv.lock" }}
+          key: tox-py310-five-echo-v1-{{ checksum "uv.lock" }}
           paths:
             - .tox
       - persist_to_workspace:
@@ -245,14 +221,14 @@ jobs:
 
   reclassify:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
           keys:
-            - tox-py39-reclassify-v1-{{ checksum "uv.lock" }}
-            - tox-py39-reclassify-v1-
+            - tox-py310-reclassify-v1-{{ checksum "uv.lock" }}
+            - tox-py310-reclassify-v1-
       - run:
           name: Running integration tests
           command: |
@@ -260,7 +236,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.reclassify
       - save_cache:
-          key: tox-py39-reclassify-v1-{{ checksum "uv.lock" }}
+          key: tox-py310-reclassify-v1-{{ checksum "uv.lock" }}
           paths:
             - .tox
       - persist_to_workspace:
@@ -276,14 +252,14 @@ jobs:
 
   t2smap:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
           keys:
-            - tox-py39-t2smap-v1-{{ checksum "uv.lock" }}
-            - tox-py39-t2smap-v1-
+            - tox-py310-t2smap-v1-{{ checksum "uv.lock" }}
+            - tox-py310-t2smap-v1-
       - run:
           name: Running integration tests
           command: |
@@ -291,7 +267,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.t2smap
       - save_cache:
-          key: tox-py39-t2smap-v1-{{ checksum "uv.lock" }}
+          key: tox-py310-t2smap-v1-{{ checksum "uv.lock" }}
           paths:
             - .tox
       - persist_to_workspace:
@@ -327,7 +303,6 @@ jobs:
 workflows:
   upload-to-codecov:
     jobs:
-      - unittest_39
       - unittest_310
       - unittest_311
       - unittest_312
@@ -340,7 +315,6 @@ workflows:
       - t2smap
       - merge_coverage:
           requires:
-            - unittest_39
             - unittest_310
             - unittest_311
             - unittest_312
