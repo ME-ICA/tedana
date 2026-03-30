@@ -1700,8 +1700,7 @@ version = "0.0.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nibabel" },
-    { name = "nilearn", version = "0.12.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "nilearn", version = "0.13.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "nilearn" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2004,51 +2003,26 @@ wheels = [
 name = "nilearn"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.10'",
-]
 dependencies = [
-    { name = "joblib", marker = "python_full_version < '3.10'" },
-    { name = "lxml", marker = "python_full_version < '3.10'" },
-    { name = "nibabel", marker = "python_full_version < '3.10'" },
+    { name = "joblib" },
+    { name = "lxml" },
+    { name = "nibabel" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "packaging", marker = "python_full_version < '3.10'" },
-    { name = "pandas", marker = "python_full_version < '3.10'" },
-    { name = "requests", marker = "python_full_version < '3.10'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "packaging" },
+    { name = "pandas" },
+    { name = "requests" },
     { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4f/1c/5d6ef3f80145889bee1c7abbf107c88e7adea7d5b498633f8644910c673c/nilearn-0.12.1.tar.gz", hash = "sha256:a08bbfae94d0fac5ba0aebbbcd864b7f91d1ef5725d1c309ce643dd64b2391b9", size = 25134624, upload-time = "2025-09-03T06:00:40.631Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6b/90/f17ebc6914b9ed0b577475a17a0b8d31e929897f7002bae1b03438852dad/nilearn-0.12.1-py3-none-any.whl", hash = "sha256:2112e1cdf9f7b96e0af87d679997e834ee36534fc0a970811a703700820edc4c", size = 12743284, upload-time = "2025-09-03T06:00:18.625Z" },
-]
-
-[[package]]
-name = "nilearn"
-version = "0.13.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.12'",
-    "python_full_version == '3.11.*'",
-    "python_full_version == '3.10.*'",
-]
-dependencies = [
-    { name = "jinja2", marker = "python_full_version >= '3.10'" },
-    { name = "joblib", marker = "python_full_version >= '3.10'" },
-    { name = "nibabel", marker = "python_full_version >= '3.10'" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
-    { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging", marker = "python_full_version >= '3.10'" },
-    { name = "pandas", marker = "python_full_version >= '3.10'" },
-    { name = "requests", marker = "python_full_version >= '3.10'" },
-    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
-    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
-    { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/57/5f1b441a9170004fbaddbff144e6e2b8443161d17e8c9655ac045d3799d0/nilearn-0.13.0.tar.gz", hash = "sha256:0a2606b2d47206d5af25d896854fe85f03d84db6a56e00326028da6f08c82cf7", size = 49673111, upload-time = "2026-01-05T10:50:03.89Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/8a/2d9b02572e52f2a00dcf6cf4665de88a17d006b6324b6e7c1d4b72d51450/nilearn-0.13.0-py3-none-any.whl", hash = "sha256:07e3ffbc671df2ac10871ef10f04d1c13c35fc441c1e150233522a77a4460b8b", size = 10627145, upload-time = "2026-01-05T10:48:06.37Z" },
 ]
 
 [[package]]
@@ -3583,8 +3557,7 @@ dependencies = [
     { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "nibabel" },
-    { name = "nilearn", version = "0.12.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "nilearn", version = "0.13.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "nilearn" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -3692,7 +3665,7 @@ requires-dist = [
     { name = "mapca", specifier = ">=0.0.7" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "nibabel", specifier = ">=2.5.1" },
-    { name = "nilearn", specifier = ">=0.11.0" },
+    { name = "nilearn", specifier = ">=0.11.0,!=0.13.0,!=0.13.1" },
     { name = "numpy", specifier = ">=1.21" },
     { name = "pandas", specifier = ">=2.0" },
     { name = "pep8-naming", marker = "extra == 'all'", specifier = ">=0.14" },
