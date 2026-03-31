@@ -278,7 +278,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it, n_threads=1):
         "init": "random",
         "random_state": 10,
     }
-    if Version(sklearn_version) >= Version("1.8.0"):
+    if Version(sklearn_version) >= Version("1.5.0"):
         t_sne_args["max_iter"] = 2500
     else:
         t_sne_args["n_iter"] = 2500
