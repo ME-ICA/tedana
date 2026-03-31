@@ -386,6 +386,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "cmahlen",
+      "name": "cmahlen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45951108?v=4",
+      "profile": "https://github.com/cmahlen",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
