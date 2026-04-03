@@ -5,7 +5,6 @@ import os
 from typing import List, Literal, Tuple
 
 import numpy as np
-import numpy.matlib
 import pandas as pd
 import scipy
 from joblib import Parallel, delayed
@@ -126,11 +125,11 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
     Parameters
     ----------
-    data_cat : (S x E x T) :obj:`numpy.ndarray`
-        Multi-echo data.
+    data_cat : (Md x E x T) :obj:`numpy.ndarray`
+        Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
         Echo times in milliseconds.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -143,18 +142,18 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
     Returns
     -------
-    t2s, s0 : (S,) :obj:`numpy.ndarray`
+    t2s, s0 : (Md,) :obj:`numpy.ndarray`
         T2* and S0 estimate maps.
         These maps include T2*/S0 estimates for all voxels with adaptive mask >= 1.
         For voxels with adaptive mask == 1, the T2*/S0 estimates are from the first two echoes.
         These voxels should be replaced with zeros in the full T2*/S0 maps.
-    failures : (S,) :obj:`numpy.ndarray`
+    failures : (Md,) :obj:`numpy.ndarray`
         Boolean array indicating samples that failed to fit the model.
-    t2s_var : (S,) :obj:`numpy.ndarray`
+    t2s_var : (Md,) :obj:`numpy.ndarray`
         Variance of the T2* estimates.
-    s0_var : (S,) :obj:`numpy.ndarray`
+    s0_var : (Md,) :obj:`numpy.ndarray`
         Variance of the S0 estimates.
-    t2s_s0_covar : (S,) :obj:`numpy.ndarray`
+    t2s_s0_covar : (Md,) :obj:`numpy.ndarray`
         Covariance of the T2* and S0 estimates.
 
     See Also
@@ -295,11 +294,11 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     Parameters
     ----------
-    data_cat : (M x E x T) :obj:`numpy.ndarray`
-        Multi-echo data. M is samples in mask, E is echoes, and T is timepoints.
+    data_cat : (Md x E x T) :obj:`numpy.ndarray`
+        Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
         Echo times in milliseconds.
-    adaptive_mask : (M,) :obj:`numpy.ndarray`
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -309,7 +308,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     Returns
     -------
-    t2s, s0 : (M,) :obj:`numpy.ndarray`
+    t2s, s0 : (Md,) :obj:`numpy.ndarray`
         "Full" T2* and S0 maps without floors or ceilings applied.
         This includes T2* and S0 estimates for all voxels with adaptive mask >= 1.
         Voxels with adaptive mask == 1 have T2* and S0 estimates from the first two echoes.
@@ -389,11 +388,12 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
 
     Parameters
     ----------
-    data : (M x E [x T]) array_like
-        Multi-echo data array, where `M` is samples in mask, `E` is echos, and `T` is time.
+    data : (Md x E [x T]) array_like
+        Multi-echo data array, where `M` is samples in denoising mask, `E` is echos,
+        and `T` is time.
     tes : (E,) :obj:`list`
         Echo times in milliseconds.
-    adaptive_mask : (M,) array_like
+    adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -408,24 +408,24 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
 
     Returns
     -------
-    t2s : (M,) :obj:`numpy.ndarray`
+    t2s : (Md,) :obj:`numpy.ndarray`
         "Full" T2* map without floors or ceilings applied.
         This includes T2* estimates for all voxels with adaptive mask >= 1.
         Voxels with adaptive mask == 1 have T2* estimates from the first two echoes.
-    s0 : (M,) :obj:`numpy.ndarray`
+    s0 : (Md,) :obj:`numpy.ndarray`
         "Full" S0 map without floors or ceilings applied.
         This includes S0 estimates for all voxels with adaptive mask >= 1.
         Voxels with adaptive mask == 1 have S0 estimates from the first two echoes.
-    failures : (M,) :obj:`numpy.ndarray` or None
+    failures : (Md,) :obj:`numpy.ndarray` or None
         Boolean array indicating samples that failed to fit the model.
         None if fittype is not "curvefit".
-    t2s_var : (M,) :obj:`numpy.ndarray` or None
+    t2s_var : (Md,) :obj:`numpy.ndarray` or None
         Variance of the T2* estimates.
         None if fittype is not "curvefit".
-    s0_var : (M,) :obj:`numpy.ndarray` or None
+    s0_var : (Md,) :obj:`numpy.ndarray` or None
         Variance of the S0 estimates.
         None if fittype is not "curvefit".
-    t2s_s0_covar : (M,) :obj:`numpy.ndarray` or None
+    t2s_s0_covar : (Md,) :obj:`numpy.ndarray` or None
         Covariance of the T2* and S0 estimates.
         None if fittype is not "curvefit".
 
@@ -477,11 +477,12 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     Parameters
     ----------
-    data : (M x E x T) array_like
-        Multi-echo data array, where `M` is samples in mask, `E` is echos, and `T` is time.
+    data : (Md x E x T) array_like
+        Multi-echo data array, where `Md` is samples in denoising mask, `E` is echos,
+        and `T` is time.
     tes : (E,) :obj:`list`
         Echo times
-    adaptive_mask : (M,) array_like
+    adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -494,22 +495,22 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     Returns
     -------
-    t2s : (M x T) :obj:`numpy.ndarray`
+    t2s : (Md x T) :obj:`numpy.ndarray`
         Limited T2* map. The limited map only keeps the T2* values for data
         where there are at least two echos with good signal.
-    s0 : (M x T) :obj:`numpy.ndarray`
+    s0 : (Md x T) :obj:`numpy.ndarray`
         Limited S0 map.  The limited map only keeps the S0 values for data
         where there are at least two echos with good signal.
-    failures : (M x T) :obj:`numpy.ndarray` or None
+    failures : (Md x T) :obj:`numpy.ndarray` or None
         Boolean array indicating samples that failed to fit the model.
         None if fittype is not "curvefit".
-    t2s_var : (M x T) :obj:`numpy.ndarray` or None
+    t2s_var : (Md x T) :obj:`numpy.ndarray` or None
         Variance of the T2* estimates.
         None if fittype is not "curvefit".
-    s0_var : (M x T) :obj:`numpy.ndarray` or None
+    s0_var : (Md x T) :obj:`numpy.ndarray` or None
         Variance of the S0 estimates.
         None if fittype is not "curvefit".
-    t2s_s0_covar : (M x T) :obj:`numpy.ndarray` or None
+    t2s_s0_covar : (Md x T) :obj:`numpy.ndarray` or None
         Covariance of the T2* and S0 estimates.
         None if fittype is not "curvefit".
 
@@ -567,13 +568,13 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
 
     Parameters
     ----------
-    t2s : (S,) :obj:`numpy.ndarray`
+    t2s : (Md,) :obj:`numpy.ndarray`
         "Full" T2* map.
         This includes T2* estimates for all voxels with adaptive mask >= 1.
-    s0 : (S,) :obj:`numpy.ndarray`
+    s0 : (Md,) :obj:`numpy.ndarray`
         "Full" S0 map.
         This includes S0 estimates for all voxels with adaptive mask >= 1.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Adaptive mask array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
@@ -583,17 +584,17 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
 
     Returns
     -------
-    t2s : (S,) :obj:`numpy.ndarray`
+    t2s : (Md,) :obj:`numpy.ndarray`
         "Full" T2* map with floors and ceilings applied.
         This includes T2* estimates for all voxels with adaptive mask >= 1.
-    s0 : (S,) :obj:`numpy.ndarray`
+    s0 : (Md,) :obj:`numpy.ndarray`
         "Full" S0 map with floors and ceilings applied.
         This includes S0 estimates for all voxels with adaptive mask >= 1.
-    t2s_limited : (S,) :obj:`numpy.ndarray`
+    t2s_limited : (Md,) :obj:`numpy.ndarray`
         "Limited" T2* map.
         This includes T2* estimates for all voxels with adaptive mask > 1.
         Voxels with adaptive mask == 1 are set to 0.
-    s0_limited : (S,) :obj:`numpy.ndarray`
+    s0_limited : (Md,) :obj:`numpy.ndarray`
         "Limited" S0 map.
         This includes S0 estimates for all voxels with adaptive mask > 1.
         Voxels with adaptive mask == 1 are set to 0.
@@ -639,25 +640,26 @@ def rmse_of_fit_decay_ts(
 
     Parameters
     ----------
-    data : (S x E x T) :obj:`numpy.ndarray`
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
+    data : (Mb x E x T) :obj:`numpy.ndarray`
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
     tes : (E,) :obj:`list`
         Echo times.
-    adaptive_mask : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (Mb,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal for that voxel.
         This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
-    t2s : (S [x T]) :obj:`numpy.ndarray`
+    t2s : (Mb [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) T2* estimates from
         :func:`~tedana.decay.fit_decay_ts`.
-    s0 : (S [x T]) :obj:`numpy.ndarray`
+    s0 : (Mb [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
     fitmode : {"fit", "all"}
         Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
 
     Returns
     -------
-    rmse_map : (S,) :obj:`numpy.ndarray`
+    rmse_map : (Mb,) :obj:`numpy.ndarray`
         Mean root mean squared error of the model fit across all volumes at each voxel.
     rmse_df : :obj:`pandas.DataFrame`
         Each column is the root mean squared error of the model fit at each timepoint.
@@ -678,8 +680,8 @@ def rmse_of_fit_decay_ts(
         use_vox = adaptive_mask == n_good_echoes
         data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
-            s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
-            t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
+            s0_echo = np.tile(s0[use_vox][:, np.newaxis], (1, n_vols))
+            t2s_echo = np.tile(t2s[use_vox][:, np.newaxis], (1, n_vols))
         elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
@@ -698,8 +700,15 @@ def rmse_of_fit_decay_ts(
             )
         rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
 
-    rmse_map = np.nanmean(rmse, axis=1)
-    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sum_map = np.nansum(rmse, axis=1)
+    rmse_count_map = np.sum(~np.isnan(rmse), axis=1)
+    rmse_map = np.full(rmse_sum_map.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_map, rmse_count_map, out=rmse_map, where=rmse_count_map > 0)
+
+    rmse_sum_ts = np.nansum(rmse, axis=0)
+    rmse_count_ts = np.sum(~np.isnan(rmse), axis=0)
+    rmse_timeseries = np.full(rmse_sum_ts.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_ts, rmse_count_ts, out=rmse_timeseries, where=rmse_count_ts > 0)
     rmse_sd_timeseries = np.nanstd(rmse, axis=0)
     rmse_percentiles_timeseries = np.nanpercentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
 

@@ -8,14 +8,20 @@ import os.path as op
 import sys
 from glob import glob
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
+from nilearn import image, masking
 
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, rica, selection, utils
 from tedana.bibtex import get_description_references
 from tedana.io import ALLOWED_COMPONENT_DELIMITERS
-from tedana.workflows.parser_utils import parse_manual_list_int, parse_manual_list_str
+from tedana.workflows.parser_utils import (
+    is_valid_file,
+    parse_manual_list_int,
+    parse_manual_list_str,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -28,74 +34,78 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    from tedana import __version__
-
-    verstr = f"ica_reclassify v{__version__}"
-
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Argument parser follow template provided by RalphyZ
-    # https://stackoverflow.com/a/43456577
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group("Required Arguments")
-    required.add_argument(
+
+    required_args = parser.add_argument_group("Required Arguments")
+    required_args.add_argument(
         "registry",
-        help="File registry from a previous tedana run",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help="File registry from a previous tedana run.",
     )
-    optional.add_argument(
+
+    selection_args = parser.add_argument_group("Component Selection")
+    selection_args.add_argument(
         "--manacc",
         dest="manual_accept",
+        metavar="INT",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
+            "Component indices to accept (zero-indexed). "
             "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
         default=[],
     )
-    optional.add_argument(
+    selection_args.add_argument(
         "--manrej",
         dest="manual_reject",
+        metavar="INT",
         nargs="+",
         help=(
-            "Component indices to reject (zero-indexed)."
+            "Component indices to reject (zero-indexed). "
             "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
         default=[],
     )
-    optional.add_argument(
+    selection_args.add_argument(
         "--tagacc",
         dest="tag_accept",
+        metavar="TAG",
         nargs="+",
         help=(
-            "Classification tag(s) to add to accepted components."
+            "Classification tag(s) to add to accepted components. "
             "Will be applied to all listed accepted components, "
-            "even if they were already accepted."
+            "even if they were already accepted. "
             "Supply a single tag or a comma-delimited list."
         ),
         default=[],
     )
-    optional.add_argument(
+    selection_args.add_argument(
         "--tagrej",
         dest="tag_reject",
+        metavar="TAG",
         nargs="+",
         help=(
-            "Classification tag(s) to add to rejected components."
+            "Classification tag(s) to add to rejected components. "
             "Will be applied to all listed rejected components, "
-            "even if they were already rejected."
+            "even if they were already rejected. "
             "Supply a single tag or a comma-delimited list."
         ),
         default=[],
     )
-    optional.add_argument(
+
+    output_args = parser.add_argument_group("Output Control")
+    output_args.add_argument(
         "--config",
         dest="config",
         help="File naming configuration.",
         default="auto",
     )
-    optional.add_argument(
+    output_args.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -103,91 +113,130 @@ def _get_parser():
         help="Output directory.",
         default=".",
     )
-    optional.add_argument(
-        "--prefix", dest="prefix", type=str, help="Prefix for filenames generated.", default=""
-    )
-    optional.add_argument(
-        "--convention",
-        dest="convention",
-        action="store",
-        choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
-        default="bids",
-    )
-    optional.add_argument(
-        "--dummy-scans",
-        dest="dummy_scans",
-        type=int,
-        help="Number of dummy scans to remove from the beginning of the data.",
-        default=0,
-    )
-    optional.add_argument(
-        "--tedort",
-        dest="tedort",
-        action="store_true",
-        help=("Orthogonalize rejected components w.r.t. accepted components prior to denoising."),
-        default=False,
-    )
-    optional.add_argument(
-        "--gscontrol",
-        dest="gscontrol",
-        required=False,
-        action="store",
-        nargs="+",
-        help=(
-            "Perform additional denoising to remove spatially diffuse noise. "
-            "This argument can be single value or a space delimited list. "
-            "'gsr' will only work if the previous tedana run used --gscontrol gsr."
-        ),
-        choices=["gsr", "mir"],
+    output_args.add_argument(
+        "--prefix",
+        dest="prefix",
+        type=str,
+        help="Prefix for filenames generated.",
         default="",
     )
-    optional.add_argument(
+    output_args.add_argument(
+        "--convention",
+        dest="convention",
+        choices=["orig", "bids"],
+        help='Filenaming convention. "bids" will use the latest BIDS derivatives version.',
+        default="bids",
+    )
+    output_args.add_argument(
         "--no-reports",
         dest="no_reports",
         action="store_true",
         help=(
-            "Creates a figures folder with static component "
-            "maps, timecourse plots and other diagnostic "
-            "images and displays these in an interactive "
-            "reporting framework"
+            "Disables creation of a figures folder with static component maps, timecourse plots, "
+            "and other diagnostic images. "
+            "Also disables the generation of a dynamic report."
         ),
         default=False,
     )
-    optional.add_argument(
-        "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
+    output_args.add_argument(
+        "--png-cmap",
+        dest="png_cmap",
+        type=str,
+        help="Colormap for figures.",
+        default="coolwarm",
     )
-    optional.add_argument(
+    output_args.add_argument(
         "--verbose",
         dest="verbose",
         action="store_true",
         help="Generate intermediate and additional files.",
         default=False,
     )
-    optional.add_argument(
-        "--debug",
-        dest="debug",
-        action="store_true",
-        help=(
-            "Logs in the terminal will have increased "
-            "verbosity, and will also be written into "
-            "a .tsv file in the output directory."
-        ),
-        default=False,
-    )
-    optional.add_argument(
-        "--overwrite",
+    output_args.add_argument(
         "-f",
+        "--overwrite",
         dest="overwrite",
         action="store_true",
         help="Force overwriting of files.",
     )
-    optional.add_argument(
-        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument("-v", "--version", action="version", version=verstr)
 
-    parser._action_groups.append(optional)
+    masking_args = parser.add_argument_group("Temporal and Spatial Masking")
+    masking_args.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        metavar="INT",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+
+    denoising_args = parser.add_argument_group("Additional Denoising Options")
+    denoising_args.add_argument(
+        "--tedort",
+        dest="tedort",
+        action="store_true",
+        help=(
+            "Orthogonalize rejected components w.r.t. accepted components prior to denoising. "
+            "This is a conservative option where shared variance between accepted and rejected "
+            "components will be retained in the denoised data."
+        ),
+        default=False,
+    )
+    denoising_args.add_argument(
+        "--gscontrol",
+        dest="gscontrol",
+        nargs="+",
+        help=(
+            "Perform additional denoising to remove spatially diffuse noise. "
+            '"gsr" regresses out the global signal of all voxels in the mask. '
+            '"mir" is Minimum Image Regression with the goal of reducing T1-like effects. '
+            "The positive and negative effects of using these options are unclear. "
+            "This argument can be a single value or a space-delimited list."
+        ),
+        choices=["gsr", "mir"],
+        default="",
+    )
+
+    performance_args = parser.add_argument_group("Performance Control")
+    performance_args.add_argument(
+        "--n-threads",
+        dest="n_threads",
+        metavar="INT",
+        type=int,
+        help=(
+            "Number of threads to use. "
+            "Used by threadpoolctl to set the parameter outside of the workflow function. "
+            "Higher numbers of threads tend to slow down performance on typical datasets."
+        ),
+        default=1,
+    )
+    performance_args.add_argument(
+        "--debug",
+        dest="debug",
+        action="store_true",
+        help=(
+            "Logs in the terminal will have increased verbosity, "
+            "and will also be written into a TSV file in the output directory."
+        ),
+        default=False,
+    )
+
+    # Hidden arguments
+    parser.add_argument(
+        "--quiet",
+        dest="quiet",
+        help=argparse.SUPPRESS,
+        action="store_true",
+        default=False,
+    )
+
+    # Version argument
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"ica_reclassify v{__version__}",
+    )
     return parser
 
 
@@ -296,7 +345,7 @@ def ica_reclassify_workflow(
     -----
     This workflow writes out several files. For a complete list of the files
     generated by this workflow, please visit
-    https://tedana.readthedocs.io/en/latest/outputs.html
+    https://tedana.readthedocs.io/en/latest/output_args.html
 
     References
     ----------
@@ -410,12 +459,6 @@ def ica_reclassify_workflow(
     else:
         data_optcom = ioh.get_file_contents("combined img")
 
-    if verbose:
-        LGR.debug("Loading input 4D data")
-        data_cat = ioh.get_file_contents("input img")
-        # Extract the data from the nibabel objects
-        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat), dummy_scans=dummy_scans)
-
     io_generator = io.OutputGenerator(
         data_optcom,
         convention=convention,
@@ -426,6 +469,26 @@ def ica_reclassify_workflow(
         out_dir=out_dir,
         old_registry=ioh.registry,
     )
+
+    # Register the base mask for masked data operations
+    # Create mask from non-zero voxels in the reference image
+    ref_data = np.asanyarray(data_optcom.dataobj)
+    # Create mask from voxels that have non-zero values
+    mask_data = (ref_data != 0).any(axis=-1).astype(np.int32)
+    mask_img = nb.Nifti1Image(mask_data, data_optcom.affine)
+    io_generator.register_mask(mask_img)
+
+    if verbose:
+        LGR.debug("Loading input 4D data")
+        data_cat_paths = ioh.get_file_path("input img")
+        # Load the data from file paths
+        data_cat = io.load_data_nilearn(
+            data_cat_paths,
+            mask_img=io_generator.mask,
+            n_echos=len(data_cat_paths),
+        )
+        if dummy_scans > 0:
+            data_cat = data_cat[:, :, dummy_scans:]
 
     # Make a new selector with the added files
     selector = selection.component_selector.ComponentSelector(previous_tree_fname)
@@ -497,10 +560,19 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    adaptive_mask = utils.reshape_niimg(adaptive_mask)
-    mask_denoise = adaptive_mask >= 1
-    data_optcom = utils.reshape_niimg(data_optcom)
+    # Convert to NIfTI1 format if needed (e.g., AFNI format)
+    adaptive_mask = io._convert_to_nifti1(adaptive_mask)
+    data_optcom = io._convert_to_nifti1(data_optcom)
+
+    # At least 1 good echo
+    mask_denoise_img = image.binarize_img(
+        adaptive_mask,
+        threshold=0.5,
+        two_sided=False,
+        copy_header=True,
+    )
+    mask_denoise = masking.apply_mask(mask_denoise_img, io_generator.mask).astype(bool)
+    data_optcom = masking.apply_mask(data_optcom, io_generator.mask).T
 
     # TODO: make a better result-writing function
     # #############################################!!!!
@@ -585,7 +657,7 @@ def ica_reclassify_workflow(
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
-            mask=mask_denoise,
+            mask=mask_denoise_img,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )

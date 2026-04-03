@@ -377,6 +377,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "mauspad",
+      "name": "Xue",
+      "avatar_url": "https://avatars.githubusercontent.com/u/84593296?v=4",
+      "profile": "https://github.com/mauspad",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "cmahlen",
+      "name": "cmahlen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45951108?v=4",
+      "profile": "https://github.com/cmahlen",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
