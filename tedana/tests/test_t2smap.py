@@ -173,10 +173,13 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
-        target_shape = list(nb.load(data[0]).shape)
-        target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude
+        in_img = nb.load(data[0])
+        target_shape = list(in_img.shape)
+        target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude; #1401
         output_shape = list(img.shape)
         assert output_shape == target_shape
+        assert in_img.get_data_dtype() == img.get_data_dtype()  # See #1389
+
 
     def test_failing_t2smap_01(self):
         """A simple failing configuration for t2smap."""
