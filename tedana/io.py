@@ -818,7 +818,7 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
     acc = component_table[component_table.classification == "accepted"].index.values
     write_split_ts(data_optcom, mixing, mask, component_table, io_generator)
 
-    if mixing_orig:
+    if mixing_orig is not None:
         mixing_for_denoising = mixing
         mixing_for_components = mixing_orig
     else:
@@ -827,7 +827,7 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
     ts_pes = get_coeffs(data_optcom, mixing_for_components)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
-    if io_generator.verbose and mixing_orig:
+    if io_generator.verbose and (mixing_orig is not None):
         ts_pes_orth = get_coeffs(data_optcom, mixing_for_denoising)
         fout = io_generator.save_file(ts_pes_orth, "ICA orthogonalized components img")
         LGR.info(f"Writing orthogonalized ICA coefficient feature set: {fout}")
