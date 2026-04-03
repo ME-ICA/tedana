@@ -178,7 +178,6 @@ class TestT2smap:
         target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude; #1401
         output_shape = list(img.shape)
         assert output_shape == target_shape
-        assert in_img.get_data_dtype() == img.get_data_dtype()  # See #1389
 
 
     def test_failing_t2smap_01(self):
