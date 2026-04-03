@@ -190,6 +190,7 @@ def test_integration_five_echo(skip_integration):
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    dummy_scans = 2
     # adding n_independent_echos=4 to test workflow code using n_independent_echos is executed
     tedana_cli.tedana_workflow(
         data=datalist,
@@ -205,7 +206,7 @@ def test_integration_five_echo(skip_integration):
         tedort=True,
         verbose=True,
         prefix="sub-01",
-        dummy_scans=2,
+        dummy_scans=dummy_scans,
     )
 
     # Just a check on the component table pending a unit test of load_comptable
@@ -223,7 +224,7 @@ def test_integration_five_echo(skip_integration):
     optcom_file = os.path.join(out_dir, "sub-01_desc-optcom_bold.nii.gz")
     output_shape = list(nb.load(optcom_file).shape)
     target_shape = list(nb.load(datalist[0]).shape)
-    target_shape[3] = target_shape[3] - 2  # account for dummy scans
+    target_shape[3] = target_shape[3] - dummy_scans
     assert output_shape == target_shape
 
 
