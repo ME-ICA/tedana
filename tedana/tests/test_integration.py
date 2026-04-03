@@ -9,6 +9,7 @@ import shutil
 import subprocess
 from importlib.resources import files
 
+import nibabel as nb
 import pandas as pd
 import pytest
 
@@ -204,6 +205,7 @@ def test_integration_five_echo(skip_integration):
         tedort=True,
         verbose=True,
         prefix="sub-01",
+        dummy_scans=2,
     )
 
     # Just a check on the component table pending a unit test of load_comptable
@@ -216,6 +218,13 @@ def test_integration_five_echo(skip_integration):
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
     check_integration_outputs(fn, out_dir, max_expected_comp=-1)
+
+    # Check that dummy scans are removed from the optimally combined data
+    optcom_file = os.path.join(out_dir, "sub-01_desc-optcom_bold.nii.gz")
+    output_shape = list(nb.load(optcom_file).shape)
+    target_shape = list(nb.load(datalist[0]).shape)
+    target_shape[3] = target_shape[3] - 2  # account for dummy scans
+    assert output_shape == target_shape
 
 
 def test_integration_four_echo(skip_integration):
