@@ -386,18 +386,6 @@ def t2smap_workflow(
             "Please set fitmode='all' or remove the exclude argument."
         )
 
-    if dummy_scans > 0:
-        LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
-    if n_exclude > 0:
-        LGR.info(f"Excluding volumes: {exclude_idx}")
-        # Adjust exclude indices for dummy scans that are already removed
-        exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
-        # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
-        exclude_idx = exclude_idx - dummy_scans
-        n_exclude = len(exclude_idx)
-        if n_exclude == 0:
-            LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
-
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
@@ -426,10 +414,24 @@ def t2smap_workflow(
     LGR.info(f"Loading input data: {[f for f in data]}")
     data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
 
+    if dummy_scans > 0:
+        LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
+        data_cat = data_cat[..., dummy_scans:]
+
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     # Create mask for volumes to use based on exclude indices
+    if n_exclude > 0:
+        LGR.info(f"Excluding volumes: {exclude_idx}")
+        # Adjust exclude indices for dummy scans that are already removed
+        exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
+        # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
+        exclude_idx = exclude_idx - dummy_scans
+        n_exclude = len(exclude_idx)
+        if n_exclude == 0:
+            LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
+
     if n_exclude > 0 and np.max(exclude_idx) > n_vols:
         raise ValueError(
             f"The maximum exclude index ({np.max(exclude_idx)}) is greater than the number of "

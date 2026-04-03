@@ -9,6 +9,7 @@ import shutil
 import subprocess
 from importlib.resources import files
 
+import nibabel as nb
 import pandas as pd
 import pytest
 
@@ -189,6 +190,7 @@ def test_integration_five_echo(skip_integration):
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    dummy_scans = 2
     # adding n_independent_echos=4 to test workflow code using n_independent_echos is executed
     tedana_cli.tedana_workflow(
         data=datalist,
@@ -204,6 +206,7 @@ def test_integration_five_echo(skip_integration):
         tedort=True,
         verbose=True,
         prefix="sub-01",
+        dummy_scans=dummy_scans,
     )
 
     # Just a check on the component table pending a unit test of load_comptable
@@ -216,6 +219,13 @@ def test_integration_five_echo(skip_integration):
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
     check_integration_outputs(fn, out_dir, max_expected_comp=-1)
+
+    # Check that dummy scans are removed from the optimally combined data
+    optcom_file = os.path.join(out_dir, "sub-01_desc-optcom_bold.nii.gz")
+    output_shape = list(nb.load(optcom_file).shape)
+    target_shape = list(nb.load(datalist[0]).shape)
+    target_shape[3] = target_shape[3] - dummy_scans
+    assert output_shape == target_shape
 
 
 def test_integration_four_echo(skip_integration):
