@@ -689,6 +689,9 @@ def tedana_workflow(
 
     LGR.info(f"Loading input data: {[f for f in data]}")
     data_cat = io.load_data_nilearn(data, mask_img=mask_img, n_echos=n_echos)
+    if dummy_scans > 0:
+        LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
+        data_cat = data_cat[..., dummy_scans:]
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error

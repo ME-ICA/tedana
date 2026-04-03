@@ -176,7 +176,7 @@ class TestT2smap:
         target_shape = list(nb.load(data[0]).shape)
         target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude
         output_shape = list(img.shape)
-        assert target_shape == output_shape
+        assert output_shape == target_shape
 
     def test_failing_t2smap_01(self):
         """A simple failing configuration for t2smap."""
