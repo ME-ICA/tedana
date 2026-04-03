@@ -728,7 +728,7 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(data_optcom, mask, component_table, mixing, io_generator):
+def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixing_orig=None):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -746,6 +746,9 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
         is components and `T` is the same as in `data`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    mixing_orig : (C x T) array_like or None, optional
+        Non-orthogonalized mixing matrix.
+        If defined, it will be used for the component maps, but not for denoising.
 
     See Also
     --------
@@ -766,17 +769,30 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
     desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted components.
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
+    desc-ICAOrth_components.nii.gz               Spatial component maps for all components from
+                                                 orthogonalized mixing matrix. Only created if
+                                                 tedort and verbose are enabled.
     =========================================    ===============================================
     """
     acc = component_table[component_table.classification == "accepted"].index.values
     write_split_ts(data_optcom, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(data_optcom, mixing, mask)
+    if mixing_orig:
+        mixing_for_denoising = mixing
+        mixing_for_components = mixing_orig
+    else:
+        mixing_for_denoising = mixing_for_components = mixing
+
+    ts_pes = get_coeffs(data_optcom, mixing_for_components, mask)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
+    if io_generator.verbose and mixing_orig:
+        ts_pes_orth = get_coeffs(data_optcom, mixing_for_denoising, mask)
+        fout = io_generator.save_file(ts_pes_orth, "ICA orthogonalized components img")
+        LGR.info(f"Writing orthogonalized ICA coefficient feature set: {fout}")
 
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
-    mixing_z = stats.zscore(mixing, axis=0)
+    mixing_z = stats.zscore(mixing_for_components, axis=0)
     betas_oc = utils.unmask(get_coeffs(data_optcom_z, mixing_z), mask)
     fout = io_generator.save_file(betas_oc, "z-scored ICA components img")
     del data_optcom_z, mixing_z
