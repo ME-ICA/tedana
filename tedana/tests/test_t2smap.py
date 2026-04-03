@@ -179,7 +179,6 @@ class TestT2smap:
         output_shape = list(img.shape)
         assert output_shape == target_shape
 
-
     def test_failing_t2smap_01(self):
         """A simple failing configuration for t2smap."""
         data_dir = get_test_data_path()
