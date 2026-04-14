@@ -103,6 +103,7 @@ jobs:
             uvx tox -e five-echo
             mkdir /tmp/src/coverage
             mv .coverage /tmp/src/coverage/.coverage.five-echo
+          no_output_timeout: 20m
       - save_cache:
           key: tox-py310-five-echo-v1-{{ checksum "uv.lock" }}
           paths:
