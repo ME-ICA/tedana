@@ -12,12 +12,14 @@ from bokeh import __version__ as bokeh_version
 from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
 from nibabel import __version__ as nibabel_version
+from nibabel.affines import apply_affine
 from nilearn import __version__ as nilearn_version
 from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
 from robustica import __version__ as robustica_version
 from scipy import __version__ as scipy_version
 from scipy import ndimage
+from scipy.spatial import KDTree
 from scipy.special import lpmv
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
@@ -953,3 +955,66 @@ def load_mask(ref_img, mask=None, t2smap=None):
         )
 
     return mask_img, t2s
+
+
+def _nn_replace(data, failures, phys_coords):
+    """Replace failing entries with nearest non-failing neighbor values (in-place).
+
+    Parameters
+    ----------
+    data : (M,) :obj:`numpy.ndarray`
+        Values to potentially replace, modified in-place.
+    failures : (M,) :obj:`numpy.ndarray` of bool
+        True where values should be replaced.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each voxel.
+    """
+    if not failures.any():
+        return
+    good = ~failures
+    if not good.any():
+        LGR.warning(
+            "All voxels failed the monoexponential fit; cannot interpolate missing values."
+        )
+        return
+    tree = KDTree(phys_coords[good])
+    _, idx = tree.query(phys_coords[failures])
+    data[failures] = data[good][idx]
+
+
+def interpolate_masked_values(data, failures, img, mask):
+    """Replace failing voxels with nearest-neighbor values from non-failing voxels.
+
+    Parameters
+    ----------
+    data : (M,) or (M, T) :obj:`numpy.ndarray`
+        T2* or S0 values for masked voxels, where M is the number of True
+        values in ``mask``.
+    failures : (M,) or (M, T) :obj:`numpy.ndarray` of bool
+        True where the curvefit failed for the corresponding voxel
+        (and timepoint for 2D input).
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Brain mask image. Its data determines which voxels are in the brain
+        mask and its affine converts voxel indices to physical (mm) coordinates.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Denoising mask (``mask_denoise``), where S is the number of brain
+        voxels in ``img`` and M is the number of True values in this array.
+
+    Returns
+    -------
+    result : (M,) or (M, T) :obj:`numpy.ndarray`
+        Copy of ``data`` with failing voxels replaced by the value of the
+        nearest non-failing voxel in physical space.
+    """
+    brain_mask = img.get_fdata().astype(bool)
+    brain_coords = np.argwhere(brain_mask)  # (S, 3)
+    voxel_coords = brain_coords[mask]  # (M, 3)
+    phys_coords = apply_affine(img.affine, voxel_coords)  # (M, 3) in mm
+
+    result = data.copy()
+    if failures.ndim == 1:
+        _nn_replace(result, failures, phys_coords)
+    else:
+        for t in range(failures.shape[1]):
+            _nn_replace(result[:, t], failures[:, t], phys_coords)
+    return result
