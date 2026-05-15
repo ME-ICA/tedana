@@ -525,39 +525,6 @@ def create_legendre_polynomial_basis_set(
     return legendre_arr
 
 
-def sec2millisec(arr):
-    """
-    Convert seconds to milliseconds.
-
-    Parameters
-    ----------
-    arr : array_like
-        Values in seconds.
-
-    Returns
-    -------
-    array_like
-        Values in milliseconds.
-    """
-    return arr * 1000
-
-
-def millisec2sec(arr):
-    """
-    Convert milliseconds to seconds.
-
-    Parameters
-    ----------
-    arr : array_like
-        Values in milliseconds.
-
-    Returns
-    -------
-    array_like
-        Values in seconds.
-    """
-    return arr / 1000.0
-
 
 def check_t2s_values(t2s_map):
     """Check and convert T2* map values to seconds.
@@ -903,7 +870,7 @@ def load_mask(ref_img, mask=None, t2smap=None):
     mask_img : nibabel.Nifti1Image
         Mask image
     t2s : numpy.ndarray or None
-        Masked T2* map data in milliseconds, or None if no T2* map was provided.
+        Masked T2* map data in seconds, or None if no T2* map was provided.
     """
     import nibabel as nb
     from nilearn.masking import apply_mask, compute_epi_mask

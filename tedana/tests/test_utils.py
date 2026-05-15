@@ -383,15 +383,15 @@ def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
     assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
 
 
-def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
-    """`load_mask` should build a mask from nonzero T2* and return masked T2* in ms."""
+def test_load_mask_t2smap_only_builds_mask_and_returns_seconds(tmp_path):
+    """`load_mask` should build a mask from nonzero T2* and return masked T2* in seconds."""
     import nibabel as nb
 
     shape = (5, 5, 5)
     affine = np.eye(4)
     ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
 
-    # Single non-zero voxel, in seconds (per BIDS): 0.02s -> 20ms
+    # Single non-zero voxel, in seconds (per BIDS): 0.02s
     t2s_arr = np.zeros(shape, dtype=np.float32)
     t2s_arr[1, 1, 1] = 0.02
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
@@ -406,7 +406,7 @@ def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_t2s is not None
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 20.0)
+    assert np.allclose(out_t2s[0], 0.02)
 
 
 def test_load_mask_combines_mask_and_t2smap(tmp_path):
@@ -426,7 +426,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
 
     # Only one of the masked voxels has non-zero T2*
     t2s_arr = np.zeros(shape, dtype=np.float32)
-    t2s_arr[1, 1, 1] = 0.03  # seconds -> 30ms
+    t2s_arr[1, 1, 1] = 0.03  # seconds
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
@@ -437,7 +437,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_mask_arr[2, 2, 2] == 0
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 30.0)
+    assert np.allclose(out_t2s[0], 0.03)
 
 
 def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
@@ -495,17 +495,6 @@ def test_create_legendre_polynomial_basis_set():
     tmp_o5 = 0.125 * (63 * bounds**5 - 70 * bounds**3 + 15 * bounds)
     assert np.abs((legendre_rounded[:, 5] - np.round(tmp_o5, decimals=6))).sum() == 0
 
-
-def test_sec2millisec():
-    """Ensure that sec2millisec returns 1000x the input values."""
-    assert utils.sec2millisec(5) == 5000
-    assert utils.sec2millisec(np.array([5])) == np.array([5000])
-
-
-def test_millisec2sec():
-    """Ensure that millisec2sec returns 1/1000x the input values."""
-    assert utils.millisec2sec(5000) == 5
-    assert utils.millisec2sec(np.array([5000])) == np.array([5])
 
 
 def test_check_te_values(caplog):
