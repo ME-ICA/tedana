@@ -32,7 +32,7 @@ class TestCalculateHfc:
         t = np.arange(n_vols) * TR
         Ny = 1.0 / (2.0 * TR)
 
-        low_freq_component = np.sin(2 * np.pi * 0.02 * t)   # 0.02 Hz, well below Nyquist
+        low_freq_component = np.sin(2 * np.pi * 0.02 * t)  # 0.02 Hz, well below Nyquist
         high_freq_component = np.sin(2 * np.pi * 0.20 * t)  # 0.20 Hz, near Nyquist=0.25
 
         mixing = np.column_stack([low_freq_component, high_freq_component])
