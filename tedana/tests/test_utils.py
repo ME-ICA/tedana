@@ -687,7 +687,7 @@ def test_interpolate_masked_values_all_failures(caplog):
     data = np.array([1.0, 2.0, 3.0])
     failures = np.ones(3, dtype=bool)
 
-    with caplog.at_level(logging.WARNING, logger="tedana.utils"):
+    with caplog.at_level(logging.WARNING, logger="GENERAL"):
         result = utils.interpolate_masked_values(data, failures, img, mask)
 
     assert "cannot interpolate" in caplog.text.lower()

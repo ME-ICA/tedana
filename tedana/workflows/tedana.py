@@ -798,6 +798,12 @@ def tedana_workflow(
             "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
             "interpolation will be skipped."
         )
+    if interpolate_failing_voxels and t2smap is not None:
+        LGR.warning(
+            "interpolate_failing_voxels is set but an external t2smap was provided; "
+            "interpolation is only applied when tedana computes the T2*/S0 maps, so "
+            "interpolation will be skipped."
+        )
 
     if t2smap is None:
         LGR.info("Computing T2* map")
