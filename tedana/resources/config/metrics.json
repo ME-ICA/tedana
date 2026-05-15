@@ -6,7 +6,9 @@
         "adaptive_mask",
         "mask",
         "tes",
-        "ref_img"
+        "ref_img",
+        "TR",
+        "motpars"
     ],
     "dependencies": {
         "kappa": [
@@ -74,6 +76,14 @@
             "signal-noise_t",
             "countnoise",
             "countsigFT2"
+        ],
+        "HFC": [
+            "mixing",
+            "TR"
+        ],
+        "max_RP_corr": [
+            "mixing",
+            "motpars"
         ],
         "map FT2": [
             "mixing",

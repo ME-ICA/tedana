@@ -578,7 +578,6 @@ def fit_model_with_stats(
     # the error ratio from 1: R² = SSR (fitted model)/SST(total or model base) =
     # Σ (Y_pred-Y_actual)**2 / Σ (Y_pred-Y_actual)**2
     r2_vals = 1 - np.divide(sse_full, sse_base)
-    print(y.shape)
 
     return betas_full, f_vals, p_vals, r2_vals
 
@@ -668,99 +667,74 @@ def compute_external_regressor_correlations(
     return correlation_df
 
 
-def feature_time_series(mixing: np.ndarray, motpars: np.ndarray):
-    """Extract maximum motion parameter correlation scores from components.
+def calculate_max_rp_corr(*, mixing: np.ndarray, motpars: np.ndarray) -> np.ndarray:
+    """Calculate the maximum motion-parameter correlation (max_RP_corr) for each component.
 
-    This function determines the maximum robust correlation of each component
-    time series with a model of 72 realignment parameters.
+    Computes the mean, over 1000 random 90%-subsamples of timepoints, of the
+    maximum absolute Pearson correlation between each component time series and
+    a 36-regressor motion-parameter model (raw 6 parameters, their derivatives,
+    and both sets time-shifted ±1 TR).  Correlations are computed for the raw
+    time series and their element-wise squares, giving 72 total comparisons per
+    split.
 
     Parameters
     ----------
-    mixing : numpy.ndarray of shape (T, C)
-        Mixing matrix in shape T (time) by C (component).
-    motpars : array_like
-        Motion parameters are (time x 6), with the first three columns being
-        rotation parameters (in radians) and the final three being translation
-        parameters (in mm).
+    mixing : (T x C) array_like
+        ICA mixing matrix where T is time points and C is components.
+    motpars : (T x 6) array_like
+        Motion parameters where the first three columns are rotation parameters
+        (in radians) and the last three are translation parameters (in mm).
 
     Returns
     -------
-    max_RP_corr : array_like
-        Array of the maximum RP correlation feature scores for the components
-        of the melodic_mix file.
-    metric_metadata : None or dict
-        If the ``metric_metadata`` input was None, then None will be returned.
-        Otherwise, this will be a dictionary containing existing information,
-        as well as new metadata for the ``max_RP_corr`` metric.
-    """
-    metric_metadata = {
-        'max_RP_corr': {
-            'LongName': 'Maximum motion parameter correlation',
-            'Description': (
-                'The maximum correlation coefficient between each component and '
-                'a set of 36 regressors derived from the motion parameters. '
-                'The derived regressors are the raw six motion parameters (6), '
-                'their derivatives (6), '
-                'the parameters and their derivatives time-shifted one TR forward (12), and '
-                'the parameters and their derivatives time-shifted one TR backward (12). '
-                'The correlations are performed on a series of 1000 permutations, '
-                'in which 90 percent of the volumes are selected from both the '
-                'component time series and the motion parameters. '
-                'The correlation is performed between each permuted component time series and '
-                'each permuted regressor in the motion parameter model, '
-                'as well as the squared versions of both. '
-                'The maximum correlation coefficient from each permutation is retained and these '
-                'correlation coefficients are averaged across permutations for the final metric.'
-            ),
-            'Units': 'arbitrary',
-        },
-    }
+    max_rp_corr : (C,) numpy.ndarray
+        Maximum motion-parameter correlation score for each component.
+        Values are in [0, 1].
 
-    rp6 = motpars.copy()
-    if (rp6.ndim != 2) or (rp6.shape[1] != 6):
-        raise ValueError(f'Motion parameters must of shape (n_trs, 6), not {rp6.shape}')
+    Raises
+    ------
+    ValueError
+        If ``motpars`` does not have shape (T, 6) or the number of rows does
+        not match ``mixing``.
+    """
+    mixing = np.asarray(mixing, dtype=float)
+    rp6 = np.asarray(motpars, dtype=float)
+
+    if rp6.ndim != 2 or rp6.shape[1] != 6:
+        raise ValueError(f"motpars must have shape (n_trs, 6), got {rp6.shape}")
 
     if rp6.shape[0] != mixing.shape[0]:
         raise ValueError(
-            f'Number of rows in mixing matrix ({mixing.shape[0]}) does not match '
-            f'number of rows in motion parameters ({rp6.shape[0]}).'
+            f"Number of rows in mixing ({mixing.shape[0]}) does not match "
+            f"number of rows in motpars ({rp6.shape[0]})."
         )
 
-    # Determine the derivatives of the RPs (add zeros at time-point zero)
     _, n_motpars = rp6.shape
-    rp6_der = np.vstack((np.zeros(n_motpars), np.diff(rp6, axis=0)))
 
-    # Create an RP-model including the RPs and its derivatives
+    # Derivatives (zero-padded at t=0)
+    rp6_der = np.vstack((np.zeros(n_motpars), np.diff(rp6, axis=0)))
     rp12 = np.hstack((rp6, rp6_der))
 
-    # add the fw and bw shifted versions
+    # Time-shifted versions (±1 TR, zero-padded at boundaries)
     rp12_1fw = np.vstack((np.zeros(2 * n_motpars), rp12[:-1]))
     rp12_1bw = np.vstack((rp12[1:], np.zeros(2 * n_motpars)))
-    rp_model = np.hstack((rp12, rp12_1fw, rp12_1bw))
+    rp_model = np.hstack((rp12, rp12_1fw, rp12_1bw))  # (T, 36)
 
-    # Determine the maximum correlation between RPs and IC time-series
-    n_splits = 1000
     n_volumes, n_components = mixing.shape
     n_rows_to_choose = int(round(0.9 * n_volumes))
+    n_splits = 1000
 
-    # Max correlations for multiple splits of the dataset (for a robust estimate)
     max_correlations = np.empty((n_splits, n_components))
     for i_split in range(n_splits):
-        # Select a random subset of 90% of the dataset rows (*without* replacement)
-        chosen_rows = np.random.choice(a=range(n_volumes), size=n_rows_to_choose, replace=False)
+        chosen_rows = np.random.choice(n_volumes, size=n_rows_to_choose, replace=False)
 
-        # Combined correlations between RP and IC time-series, squared and non squared
         correl_nonsquared = utils.cross_correlation(mixing[chosen_rows], rp_model[chosen_rows])
         correl_squared = utils.cross_correlation(
             mixing[chosen_rows] ** 2, rp_model[chosen_rows] ** 2
         )
         correl_both = np.hstack((correl_squared, correl_nonsquared))
-
-        # Maximum absolute temporal correlation for every IC
         max_correlations[i_split] = np.abs(correl_both).max(axis=1)
 
-    # Feature score is the mean of the maximum correlation over all the random splits.
-    # Avoid propagating occasional nans that arise in artificial test cases
-    max_RP_corr = np.nanmean(max_correlations, axis=0)
-    metric_df = pd.DataFrame(data=max_RP_corr, columns=['max_RP_corr'])
-    return metric_df, metric_metadata
+    # Average over splits, ignoring any NaNs from degenerate subsamples
+    max_rp_corr = np.nanmean(max_correlations, axis=0)
+    return max_rp_corr
