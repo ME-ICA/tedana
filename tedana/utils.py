@@ -560,7 +560,7 @@ def millisec2sec(arr):
 
 
 def check_t2s_values(t2s_map):
-    """Check and convert T2* map values to milliseconds.
+    """Check and convert T2* map values to seconds.
 
     This function checks if a precalculated T2* map is in seconds (expected
     per BIDS convention) or milliseconds. Typical brain T2* values at 3T are
@@ -574,7 +574,7 @@ def check_t2s_values(t2s_map):
     Returns
     -------
     array_like
-        T2* map values converted to milliseconds for internal use.
+        T2* map values in seconds for internal use.
 
     Raises
     ------
@@ -586,9 +586,10 @@ def check_t2s_values(t2s_map):
     The heuristic used is:
 
     - If median non-zero T2* < 1: values are assumed to be in seconds (correct
-      per BIDS), converted to milliseconds and returned
+      per BIDS), returned as-is
     - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
-      milliseconds already, a warning is logged, and values are returned as-is
+      milliseconds, a deprecation warning is logged, and values are converted
+      to seconds
     - If median non-zero T2* >= 1000: values are considered invalid
 
     This function is designed to handle the common case where users provide
@@ -623,21 +624,20 @@ def check_t2s_values(t2s_map):
     # At 1.5T values can be higher (~0.08-0.1 s), at 7T lower (~0.01-0.03 s)
     # Use 1 second as threshold - brain T2* should never be >= 1 second
     if median_t2s < 1:
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info(
-            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s). "
-            "Converting to milliseconds for internal use."
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug(
+            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s)."
         )
-        return sec2millisec(t2s_map)
+        return t2s_map
     elif median_t2s < 1000:
-        # Values appear to be in milliseconds already
+        # Values appear to be in milliseconds - convert to seconds
         LGR.warning(
             f"T2* map median value is {median_t2s:.2f}, which suggests values are in "
             "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-            "in seconds. The map will be used as-is (in milliseconds), but please consider "
-            "providing T2* maps in seconds in the future for consistency with BIDS."
+            "in seconds. Converting to seconds. Support for millisecond T2* values is "
+            "deprecated and will be removed in a future version."
         )
-        return t2s_map
+        return t2s_map / 1000.0
     else:
         # Values are unexpectedly large
         raise ValueError(

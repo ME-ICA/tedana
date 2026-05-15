@@ -588,27 +588,22 @@ def test_check_te_values(caplog):
 
 
 def test_check_t2s_values(caplog):
-    """Ensure that check_t2s_values returns the correct values."""
-    # Values in seconds (expected per BIDS) - should be converted to milliseconds
+    """Ensure that check_t2s_values returns values in seconds."""
+    # Values in seconds (expected per BIDS) - should be returned as-is
     t2s_sec = np.array([0.015, 0.025, 0.035, 0.045])
     result = utils.check_t2s_values(t2s_sec)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
+    np.testing.assert_array_equal(result, [0.015, 0.025, 0.035, 0.045])
 
-    # Values in milliseconds (common mistake) - should be returned as-is with warning
-    t2s_ms = np.array([15, 25, 35, 45])
+    # Values in milliseconds (common mistake) - should be converted to seconds with warning
+    t2s_ms = np.array([15.0, 25.0, 35.0, 45.0])
     result = utils.check_t2s_values(t2s_ms)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
-    assert (
-        "T2* map median value is 30.00, which suggests values are in "
-        "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-        "in seconds. The map will be used as-is (in milliseconds), but please consider "
-        "providing T2* maps in seconds in the future for consistency with BIDS."
-    ) in caplog.text
+    np.testing.assert_allclose(result, [0.015, 0.025, 0.035, 0.045])
+    assert "milliseconds rather than seconds" in caplog.text
 
-    # Array with zeros (common in T2* maps for masked voxels)
+    # Array with zeros (common in T2* maps for masked voxels) - values in seconds
     t2s_with_zeros = np.array([0, 0.020, 0.030, 0, 0.040])
     result = utils.check_t2s_values(t2s_with_zeros)
-    np.testing.assert_array_equal(result, [0, 20, 30, 0, 40])
+    np.testing.assert_array_equal(result, [0, 0.020, 0.030, 0, 0.040])
 
     # All zeros - should return as-is with warning
     t2s_all_zeros = np.array([0, 0, 0, 0])
