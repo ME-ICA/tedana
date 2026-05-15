@@ -754,10 +754,10 @@ def get_system_version_info():
 
 
 def check_te_values(te_values):
-    """Check and convert TE values to milliseconds for internal use.
+    """Check and convert TE values to seconds for internal use.
 
     This function checks if TE values are provided in seconds (preferred per
-    BIDS convention) or milliseconds. Echo times are converted to milliseconds
+    BIDS convention) or milliseconds. Echo times are returned in seconds
     for internal processing.
 
     Parameters
@@ -768,7 +768,7 @@ def check_te_values(te_values):
     Returns
     -------
     list
-        TE values in milliseconds for internal use.
+        TE values in seconds for internal use.
 
     Raises
     ------
@@ -780,25 +780,25 @@ def check_te_values(te_values):
     The heuristic used is:
 
     - If all TE values are between 0 and 1: values are assumed to be in seconds
-      (correct per BIDS), converted to milliseconds and returned
+      (correct per BIDS), returned as-is
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
-      deprecation warning is logged, and values are returned as-is
+      deprecation warning is logged, and values are converted to seconds
     - Mixed values or negative values raise an error
 
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info("TE values appear to be in seconds. Converting to milliseconds for internal use.")
-        return (te_values * 1000).tolist()
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug("TE values appear to be in seconds.")
+        return te_values.tolist()
     elif all(te_values >= 1):
-        # Values appear to be in milliseconds (deprecated)
+        # Values appear to be in milliseconds (deprecated) - convert to seconds
         LGR.warning(
             "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
             "be provided in seconds. Support for millisecond TE values is deprecated and will "
             "be removed in a future version. Please provide TE values in seconds."
         )
-        return te_values.tolist()
+        return (te_values / 1000).tolist()
     else:
         raise ValueError(
             "TE values must be positive and either all in seconds (values < 1, preferred per "

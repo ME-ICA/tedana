@@ -509,10 +509,10 @@ def test_millisec2sec():
 
 
 def test_check_te_values(caplog):
-    """Ensure that check_te_values returns the correct values."""
-    # Values in seconds (preferred per BIDS) - should be converted to milliseconds
-    assert utils.check_te_values([0.015, 0.039, 0.063]) == [15, 39, 63]
-    assert utils.check_te_values([0.15, 0.35, 0.55]) == [150, 350, 550]
+    """Ensure that check_te_values returns values in seconds."""
+    # Values in seconds (preferred per BIDS) - should be returned as-is
+    assert utils.check_te_values([0.015, 0.039, 0.063]) == [0.015, 0.039, 0.063]
+    assert utils.check_te_values([0.15, 0.35, 0.55]) == [0.15, 0.35, 0.55]
 
     # EPTI echo times (48 echoes)
     epti_te_ms = [
@@ -566,19 +566,21 @@ def test_check_te_values(caplog):
         50.41,
     ]
     epti_te_sec = [te / 1000 for te in epti_te_ms]
-    assert utils.check_te_values(epti_te_sec) == epti_te_ms
+    # Seconds input returns seconds unchanged
+    assert utils.check_te_values(epti_te_sec) == epti_te_sec
 
-    # Values in milliseconds (deprecated) - should be returned as-is with warning
-    assert utils.check_te_values([15, 39, 63]) == [15, 39, 63]
+    # Values in milliseconds (deprecated) - should be converted to seconds with warning
+    np.testing.assert_allclose(utils.check_te_values([15, 39, 63]), [0.015, 0.039, 0.063])
     assert (
         "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
         "be provided in seconds. Support for millisecond TE values is deprecated and will "
         "be removed in a future version. Please provide TE values in seconds."
     ) in caplog.text
-    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+    np.testing.assert_allclose(utils.check_te_values([2, 3, 4]), [0.002, 0.003, 0.004])
 
-    # EPTI echo times in milliseconds (deprecated)
-    assert utils.check_te_values(epti_te_ms) == epti_te_ms
+    # EPTI echo times in milliseconds (deprecated) - should be converted to seconds
+    result = utils.check_te_values(epti_te_ms)
+    np.testing.assert_allclose(result, epti_te_sec)
 
     # Check that the error is raised when TE values are in mixed units
     with pytest.raises(ValueError):
