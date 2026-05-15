@@ -496,7 +496,6 @@ def test_create_legendre_polynomial_basis_set():
     assert np.abs((legendre_rounded[:, 5] - np.round(tmp_o5, decimals=6))).sum() == 0
 
 
-
 def test_check_te_values(caplog):
     """Ensure that check_te_values returns values in seconds."""
     # Values in seconds (preferred per BIDS) - should be returned as-is

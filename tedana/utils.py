@@ -525,7 +525,6 @@ def create_legendre_polynomial_basis_set(
     return legendre_arr
 
 
-
 def check_t2s_values(t2s_map):
     """Check and convert T2* map values to seconds.
 
@@ -592,9 +591,7 @@ def check_t2s_values(t2s_map):
     # Use 1 second as threshold - brain T2* should never be >= 1 second
     if median_t2s < 1:
         # Values appear to be in seconds (expected per BIDS) - return as-is
-        LGR.debug(
-            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s)."
-        )
+        LGR.debug(f"T2* map values appear to be in seconds (median={median_t2s:.4f}s).")
         return t2s_map
     elif median_t2s < 1000:
         # Values appear to be in milliseconds - convert to seconds
