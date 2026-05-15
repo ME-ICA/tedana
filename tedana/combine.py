@@ -20,7 +20,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
     data : (Mb x E x T) array_like
         Masked data.
     tes : (1 x E) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     ft2s : (Mb [x T] X 1) array_like
         Either voxel-wise or voxel- and volume-wise estimates of T2*.
     report : bool, optional
@@ -71,7 +71,7 @@ def _combine_paid(data, tes, report=True):
     data : (Mb x E x T) array_like
         Masked data, where `Mb` is samples in base mask, `E` is echos, and `T` is time.
     tes : (1 x E) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
 
