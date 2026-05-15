@@ -701,8 +701,8 @@ def test_interpolate_masked_values_timeseries():
 
     data = np.tile(np.array([1.0, 2.0, 3.0, 4.0, 5.0])[:, np.newaxis], (1, 2))
     failures = np.zeros((5, 2), dtype=bool)
-    failures[0, 0] = True   # t=0: voxel 0 fails
-    failures[4, 1] = True   # t=1: voxel 4 fails
+    failures[0, 0] = True  # t=0: voxel 0 fails
+    failures[4, 1] = True  # t=1: voxel 4 fails
 
     result = utils.interpolate_masked_values(data, failures, img, mask)
 
