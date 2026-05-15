@@ -580,7 +580,7 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : (E,) :obj:`list`
-        Echo times in milliseconds.
+        Echo times in seconds.
 
     Returns
     -------
