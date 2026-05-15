@@ -982,7 +982,28 @@ def _nn_replace(data, failures, phys_coords):
     data[failures] = data[good][idx]
 
 
-def interpolate_masked_values(data, failures, img, mask):
+def _mask_to_phys_coords(img, mask):
+    """Compute physical (mm) coordinates for voxels selected by a boolean mask.
+
+    Parameters
+    ----------
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Image whose affine converts voxel indices to mm coordinates.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Boolean mask over all brain voxels; True selects voxels to include.
+
+    Returns
+    -------
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each of the M True voxels in ``mask``.
+    """
+    brain_mask = img.get_fdata().astype(bool)
+    brain_coords = np.argwhere(brain_mask)  # (S, 3)
+    voxel_coords = brain_coords[mask]  # (M, 3)
+    return apply_affine(img.affine, voxel_coords)  # (M, 3) in mm
+
+
+def interpolate_masked_values(data, failures, img, mask, phys_coords=None):
     """Replace failing voxels with nearest-neighbor values from non-failing voxels.
 
     Parameters
@@ -996,20 +1017,40 @@ def interpolate_masked_values(data, failures, img, mask):
     img : :obj:`nibabel.nifti1.Nifti1Image`
         Brain mask image. Its data determines which voxels are in the brain
         mask and its affine converts voxel indices to physical (mm) coordinates.
+        Ignored when ``phys_coords`` is provided.
     mask : (S,) :obj:`numpy.ndarray` of bool
         Denoising mask (``mask_denoise``), where S is the number of brain
         voxels in ``img`` and M is the number of True values in this array.
+        Ignored when ``phys_coords`` is provided.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`, optional
+        Pre-computed physical coordinates for the M masked voxels (e.g. from a
+        previous call or from :func:`_mask_to_phys_coords`).  When supplied,
+        the ``img``/``mask`` coordinate computation is skipped, avoiding
+        redundant work when interpolating multiple arrays with the same mask.
 
     Returns
     -------
     result : (M,) or (M, T) :obj:`numpy.ndarray`
         Copy of ``data`` with failing voxels replaced by the value of the
         nearest non-failing voxel in physical space.
+
+    Raises
+    ------
+    ValueError
+        If ``failures.shape`` does not match ``data.shape``, or if
+        ``mask.sum()`` does not equal ``data.shape[0]`` (when ``phys_coords``
+        is not provided).
     """
-    brain_mask = img.get_fdata().astype(bool)
-    brain_coords = np.argwhere(brain_mask)  # (S, 3)
-    voxel_coords = brain_coords[mask]  # (M, 3)
-    phys_coords = apply_affine(img.affine, voxel_coords)  # (M, 3) in mm
+    if failures.shape != data.shape:
+        raise ValueError(
+            f"failures shape {failures.shape} does not match data shape {data.shape}."
+        )
+    if phys_coords is None:
+        if mask.sum() != data.shape[0]:
+            raise ValueError(
+                f"mask has {int(mask.sum())} True values but data has {data.shape[0]} rows."
+            )
+        phys_coords = _mask_to_phys_coords(img, mask)
 
     result = data.copy()
     if failures.ndim == 1:
