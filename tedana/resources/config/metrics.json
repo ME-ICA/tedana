@@ -7,7 +7,7 @@
         "mask",
         "tes",
         "ref_img",
-        "TR",
+        "tr",
         "motpars"
     ],
     "dependencies": {
@@ -79,7 +79,7 @@
         ],
         "HFC": [
             "mixing",
-            "TR"
+            "tr"
         ],
         "max_RP_corr": [
             "mixing",

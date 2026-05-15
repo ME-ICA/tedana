@@ -35,7 +35,7 @@ def generate_metrics(
     n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
     label: str,
-    TR: float = None,
+    tr: float = None,
     motpars: Union[npt.NDArray, None] = None,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
@@ -67,7 +67,7 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
-    TR : float, optional
+    tr : float, optional
         Repetition time of the fMRI data in seconds.  Required when ``metrics``
         includes ``"HFC"``.  Default is None.
     motpars : (T x 6) array_like or None, optional
@@ -427,10 +427,10 @@ def generate_metrics(
 
     # AROMA-derived frequency metric
     if "HFC" in required_metrics:
-        if TR is None:
-            raise ValueError("TR must be provided to compute the HFC metric.")
+        if tr is None:
+            raise ValueError("tr must be provided to compute the HFC metric.")
         LGR.info("Calculating high-frequency content (HFC)")
-        component_table["HFC"] = calculate_hfc(mixing=mixing, TR=TR)
+        component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr)
 
     # AROMA-derived motion-correlation metric
     if "max_RP_corr" in required_metrics:
@@ -814,7 +814,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "The mean, over 1000 random 90 %-subsamples of timepoints, of the maximum "
                 "absolute Pearson correlation between a component time series and a "
                 "36-regressor motion-parameter model (raw 6 parameters, their derivatives, "
-                "and both sets shifted ±1 TR). "
+                "and both sets shifted ±1 tr). "
                 "Correlations are computed for the raw and squared time series, giving "
                 "72 comparisons per split. "
                 "Values near 1 indicate strong coupling with head motion (likely noise)."

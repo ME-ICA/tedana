@@ -30,7 +30,6 @@ class TestCalculateHfc:
         n_vols = 300
         tr = 2.0
         t = np.arange(n_vols) * tr
-        nyquist_freq = 1.0 / (2.0 * tr)
 
         low_freq_component = np.sin(2 * np.pi * 0.02 * t)  # 0.02 Hz, well below Nyquist
         high_freq_component = np.sin(2 * np.pi * 0.20 * t)  # 0.20 Hz, near Nyquist=0.25
