@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def calculate_hfc(*, mixing: np.ndarray, TR: float, f_hp: float = 0.01) -> np.ndarray:
+def calculate_hfc(*, mixing: np.ndarray, tr: float, f_hp: float = 0.01) -> np.ndarray:
     """Calculate the high-frequency content (HFC) score for each component.
 
     Determines the normalized frequency at which the lower and higher
@@ -16,7 +16,7 @@ def calculate_hfc(*, mixing: np.ndarray, TR: float, f_hp: float = 0.01) -> np.nd
     ----------
     mixing : (T x C) array_like
         ICA mixing matrix where T is time points and C is components.
-    TR : float
+    tr : float
         Repetition time of the fMRI data in seconds.
     f_hp : float, optional
         High-pass cutoff frequency in Hz.  Frequencies at or below this value
@@ -34,12 +34,12 @@ def calculate_hfc(*, mixing: np.ndarray, TR: float, f_hp: float = 0.01) -> np.nd
     fft_vals = np.fft.rfft(mixing, axis=0)
     mixing_fft = np.abs(fft_vals[1:, :])  # (F, C)
 
-    Fs = 1.0 / TR
-    Ny = Fs / 2.0
+    sampling_rate = 1.0 / tr
+    nyquist_freq = sampling_rate / 2.0
     n_frequencies = mixing_fft.shape[0]
 
     # Map row indices to frequencies (matches MELODIC FTmix convention)
-    frequencies = Ny * np.arange(1, n_frequencies + 1) / n_frequencies
+    frequencies = nyquist_freq * np.arange(1, n_frequencies + 1) / n_frequencies
 
     # Restrict to frequencies above the high-pass cutoff
     included = np.where(frequencies > f_hp)[0]
@@ -47,7 +47,7 @@ def calculate_hfc(*, mixing: np.ndarray, TR: float, f_hp: float = 0.01) -> np.nd
     frequencies = frequencies[included]
 
     # Normalize frequency axis to [0, 1] within the retained band
-    frequencies_normalized = (frequencies - f_hp) / (Ny - f_hp)
+    frequencies_normalized = (frequencies - f_hp) / (nyquist_freq - f_hp)
 
     # Cumulative power fraction across frequency for each component
     fcumsum_fract = np.cumsum(mixing_fft, axis=0) / np.sum(mixing_fft, axis=0)

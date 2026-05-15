@@ -361,9 +361,9 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     Parameters
     ----------
     data : (S, ) array_like
-            A timeseries S, on which you would like to perform an fft.
+        A timeseries S, on which you would like to perform an fft.
     tr : :obj:`float`
-            Reptition time (TR) of the data
+        Repetition time (TR) of the data
     """
     # adapted from @dangom
     power_spectrum = np.abs(np.fft.rfft(data)) ** 2

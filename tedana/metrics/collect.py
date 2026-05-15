@@ -11,13 +11,13 @@ import pandas as pd
 
 from tedana import io, utils
 from tedana.metrics import dependence, external
-from tedana.metrics.frequency import calculate_hfc
 from tedana.metrics._utils import (
     add_external_dependencies,
     dependency_resolver,
     determine_signs,
     flip_components,
 )
+from tedana.metrics.frequency import calculate_hfc
 from tedana.stats import getfbounds, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
