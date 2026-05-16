@@ -729,3 +729,37 @@ def test_interpolate_masked_values_shape_preservation():
     failures_2d[0, :] = True
     result_2d = utils.interpolate_masked_values(data_2d, failures_2d, img, mask)
     assert result_2d.shape == data_2d.shape
+
+
+def test_interpolate_masked_values_shape_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.zeros((3, 2), dtype=bool)  # wrong shape
+
+    with pytest.raises(ValueError, match="failures shape"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_mask_sum_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])  # only 3 rows, but mask has 5 True values
+    failures = np.zeros(3, dtype=bool)
+
+    with pytest.raises(ValueError, match="mask has"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_precomputed_phys_coords():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([99.0, 2.0, 3.0, 4.0, 99.0])
+    failures = np.array([True, False, False, False, True])
+
+    phys_coords = utils.mask_to_phys_coords(img, mask)
+    result = utils.interpolate_masked_values(data, failures, img, mask, phys_coords=phys_coords)
+
+    assert result[0] == 2.0
+    assert result[4] == 4.0
+    np.testing.assert_array_equal(result[1:4], data[1:4])

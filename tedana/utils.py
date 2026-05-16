@@ -982,7 +982,7 @@ def _nn_replace(data, failures, phys_coords):
     data[failures] = data[good][idx]
 
 
-def _mask_to_phys_coords(img, mask):
+def mask_to_phys_coords(img, mask):
     """Compute physical (mm) coordinates for voxels selected by a boolean mask.
 
     Parameters
@@ -1024,7 +1024,7 @@ def interpolate_masked_values(data, failures, img, mask, phys_coords=None):
         Ignored when ``phys_coords`` is provided.
     phys_coords : (M, 3) :obj:`numpy.ndarray`, optional
         Pre-computed physical coordinates for the M masked voxels (e.g. from a
-        previous call or from :func:`_mask_to_phys_coords`).  When supplied,
+        previous call or from :func:`mask_to_phys_coords`).  When supplied,
         the ``img``/``mask`` coordinate computation is skipped, avoiding
         redundant work when interpolating multiple arrays with the same mask.
 
@@ -1050,7 +1050,7 @@ def interpolate_masked_values(data, failures, img, mask, phys_coords=None):
             raise ValueError(
                 f"mask has {int(mask.sum())} True values but data has {data.shape[0]} rows."
             )
-        phys_coords = _mask_to_phys_coords(img, mask)
+        phys_coords = mask_to_phys_coords(img, mask)
 
     result = data.copy()
     if failures.ndim == 1:

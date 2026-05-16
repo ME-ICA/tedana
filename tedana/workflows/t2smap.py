@@ -508,7 +508,7 @@ def t2smap_workflow(
 
         if interpolate_failing_voxels:
             if failures.any():
-                phys_coords = utils._mask_to_phys_coords(mask_img, mask_denoise)
+                phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
                 t2s_full = utils.interpolate_masked_values(
                     t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
                 )
