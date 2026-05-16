@@ -38,7 +38,7 @@ def _combine_r2s(data, tes, fr2s, report=True):
     if report:
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
-            "T2* combination method \\citep{posse1999enhancement}."
+            "R2* combination method \\citep{posse1999enhancement}."
         )
 
     n_vols = data.shape[-1]
