@@ -903,45 +903,59 @@ def parse_volume_indices(indices_str):
     return sorted(indices)
 
 
-def load_mask(ref_img, mask=None, t2smap=None):
-    """Load mask from user-defined mask or T2* map.
+def load_mask(ref_img, mask=None, t2smap=None, r2smap=None):
+    """Load mask from user-defined mask, T2* map (deprecated), or R2* map.
 
     Parameters
     ----------
     ref_img : nibabel.Nifti1Image
+        Reference image for affine.
     mask : str or None
+        Path to mask file.
     t2smap : str or None
-        Path to T2* map file
+        Path to T2* map file (deprecated; use r2smap instead).
+    r2smap : str or None
+        Path to R2* map file in s^-1.
 
     Returns
     -------
     mask_img : nibabel.Nifti1Image
-        Mask image
-    t2s : numpy.ndarray or None
-        Masked T2* map data in seconds, or None if no T2* map was provided.
+        Mask image.
+    r2s : numpy.ndarray or None
+        Masked R2* map in s^-1, or None if no map was provided.
     """
     import nibabel as nb
     from nilearn.masking import apply_mask, compute_epi_mask
 
     from tedana import io
 
-    t2s = None
-    if mask and not t2smap:
+    if t2smap is not None and r2smap is not None:
+        raise ValueError("Only one of t2smap or r2smap can be provided.")
+
+    if t2smap is not None:
+        LGR.warning(
+            "--t2smap is deprecated and will be removed in a future release. "
+            "Please convert your T2* map to R2* (R2* = 1/T2*) and use --r2smap instead."
+        )
+
+    r2s = None
+    if mask and not (t2smap or r2smap):
         # TODO: add affine check
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
         mask_img = io._convert_to_nifti1(nb.load(mask), max_dim=3)
         # Convert mask to binary (assuming non-zero values indicate mask inclusion)
-        mask = mask_img.get_fdata() > 0
-        mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
+        mask_data = mask_img.get_fdata() > 0
+        mask_img = nb.Nifti1Image(mask_data, mask_img.affine, mask_img.header)
     elif t2smap and not mask:
         LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap), max_dim=3)
         t2s_loaded = t2s_img.get_fdata()
-        mask = (t2s_loaded != 0).astype(np.uint8)
-        mask_img = nb.Nifti1Image(mask, ref_img.affine)
+        mask_data = (t2s_loaded != 0).astype(np.uint8)
+        mask_img = nb.Nifti1Image(mask_data, ref_img.affine)
         t2s = apply_mask(t2s_img, mask_img)
         t2s = check_t2s_values(t2s)
+        r2s = 1.0 / t2s
     elif t2smap and mask:
         LGR.info("Combining user-defined mask and T2* map to generate mask")
         t2s_img = io._convert_to_nifti1(nb.load(t2smap), max_dim=3)
@@ -949,11 +963,30 @@ def load_mask(ref_img, mask=None, t2smap=None):
         # Load and convert user-defined mask to NIfTI1 (e.g., AFNI format)
         mask_img = io._convert_to_nifti1(nb.load(mask), max_dim=3)
         # Convert mask to binary (assuming non-zero values indicate mask inclusion)
-        mask = mask_img.get_fdata() > 0
-        mask[t2s_loaded == 0] = 0  # reduce mask based on T2* map
-        mask_img = nb.Nifti1Image(mask, mask_img.affine, mask_img.header)
+        mask_data = mask_img.get_fdata() > 0
+        mask_data[t2s_loaded == 0] = 0  # reduce mask based on T2* map
+        mask_img = nb.Nifti1Image(mask_data, mask_img.affine, mask_img.header)
         t2s = apply_mask(t2s_img, mask_img)
         t2s = check_t2s_values(t2s)
+        r2s = 1.0 / t2s
+    elif r2smap and not mask:
+        LGR.info("Assuming user-defined R2* map is masked and using it to generate mask")
+        r2s_img = io._convert_to_nifti1(nb.load(r2smap), max_dim=3)
+        r2s_loaded = r2s_img.get_fdata()
+        mask_data = (r2s_loaded != 0).astype(np.uint8)
+        mask_img = nb.Nifti1Image(mask_data, ref_img.affine)
+        r2s = apply_mask(r2s_img, mask_img)
+        r2s = check_r2s_values(r2s)
+    elif r2smap and mask:
+        LGR.info("Combining user-defined mask and R2* map to generate mask")
+        r2s_img = io._convert_to_nifti1(nb.load(r2smap), max_dim=3)
+        r2s_loaded = r2s_img.get_fdata()
+        mask_img = io._convert_to_nifti1(nb.load(mask), max_dim=3)
+        mask_data = mask_img.get_fdata() > 0
+        mask_data[r2s_loaded == 0] = 0
+        mask_img = nb.Nifti1Image(mask_data, mask_img.affine, mask_img.header)
+        r2s = apply_mask(r2s_img, mask_img)
+        r2s = check_r2s_values(r2s)
     else:
         LGR.warning(
             "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
@@ -967,4 +1000,4 @@ def load_mask(ref_img, mask=None, t2smap=None):
             "nilearn's compute_epi_mask function."
         )
 
-    return mask_img, t2s
+    return mask_img, r2s

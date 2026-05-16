@@ -377,67 +377,83 @@ def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
     mask_path = tmp_path / "mask.nii.gz"
     mask_img.to_filename(mask_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=None)
+    out_mask_img, out_r2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=None)
     assert isinstance(out_mask_img, nb.Nifti1Image)
-    assert out_t2s is None
+    assert out_r2s is None
     assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
 
 
-def test_load_mask_t2smap_only_builds_mask_and_returns_seconds(tmp_path):
-    """`load_mask` should build a mask from nonzero T2* and return masked T2* in seconds."""
+def test_load_mask_t2smap_only_builds_mask_and_returns_r2s(tmp_path):
+    """`load_mask` with t2smap should build a mask and return R2* (= 1/T2*)."""
     import nibabel as nb
 
-    shape = (5, 5, 5)
+    shape = (3, 3, 3)
     affine = np.eye(4)
-    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+    ref_img = nb.Nifti1Image(np.ones(shape, dtype=np.float32), affine)
 
-    # Single non-zero voxel, in seconds (per BIDS): 0.02s
     t2s_arr = np.zeros(shape, dtype=np.float32)
-    t2s_arr[1, 1, 1] = 0.02
+    t2s_arr[1, 1, 1] = 0.02  # T2* in seconds -> R2* = 50 s^-1
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=str(t2s_path))
-    assert isinstance(out_mask_img, nb.Nifti1Image)
-    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
-    assert out_mask_arr.dtype == np.uint8
-    assert int(out_mask_arr.sum()) == 1
-    assert out_mask_arr[1, 1, 1] == 1
-    assert out_t2s is not None
-    assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 0.02)
+    out_mask_img, out_r2s = utils.load_mask(ref_img, mask=None, t2smap=str(t2s_path))
+
+    assert out_mask_img is not None
+    assert out_r2s is not None
+    assert np.asarray(out_r2s).shape == (1,)
+    assert np.allclose(out_r2s[0], 50.0)  # 1/0.02 = 50 s^-1
 
 
 def test_load_mask_combines_mask_and_t2smap(tmp_path):
-    """If both mask and T2* map are provided, T2* zeros should zero-out the mask."""
+    """`load_mask` with mask + t2smap should combine both and return R2*."""
     import nibabel as nb
 
-    shape = (5, 5, 5)
+    shape = (3, 3, 3)
     affine = np.eye(4)
-    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+    ref_img = nb.Nifti1Image(np.ones(shape, dtype=np.float32), affine)
 
     mask_arr = np.zeros(shape, dtype=np.uint8)
     mask_arr[1, 1, 1] = 1
-    mask_arr[2, 2, 2] = 1
     mask_img = nb.Nifti1Image(mask_arr, affine)
     mask_path = tmp_path / "mask.nii.gz"
     mask_img.to_filename(mask_path)
 
-    # Only one of the masked voxels has non-zero T2*
     t2s_arr = np.zeros(shape, dtype=np.float32)
-    t2s_arr[1, 1, 1] = 0.03  # seconds
+    t2s_arr[1, 1, 1] = 0.03  # T2* = 30ms -> R2* ~= 33.33 s^-1
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=str(t2s_path))
-    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
-    assert int(out_mask_arr.sum()) == 1
-    assert out_mask_arr[1, 1, 1] == 1
-    assert out_mask_arr[2, 2, 2] == 0
-    assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 0.03)
+    out_mask_img, out_r2s = utils.load_mask(
+        ref_img, mask=str(mask_path), t2smap=str(t2s_path)
+    )
+
+    assert out_mask_img is not None
+    assert np.asarray(out_r2s).shape == (1,)
+    assert np.allclose(out_r2s[0], 1 / 0.03)
+
+
+def test_load_mask_r2smap_only_builds_mask_and_returns_r2s(tmp_path):
+    """`load_mask` with r2smap should build a mask and return the R2* values directly."""
+    import nibabel as nb
+
+    shape = (3, 3, 3)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.ones(shape, dtype=np.float32), affine)
+
+    r2s_arr = np.zeros(shape, dtype=np.float32)
+    r2s_arr[1, 1, 1] = 33.3  # R2* in s^-1
+    r2s_img = nb.Nifti1Image(r2s_arr, affine)
+    r2s_path = tmp_path / "r2smap.nii.gz"
+    r2s_img.to_filename(r2s_path)
+
+    out_mask_img, out_r2s = utils.load_mask(ref_img, mask=None, r2smap=str(r2s_path))
+
+    assert out_mask_img is not None
+    assert out_r2s is not None
+    assert np.asarray(out_r2s).shape == (1,)
+    assert np.allclose(out_r2s[0], 33.3, rtol=1e-4)
 
 
 def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
@@ -461,11 +477,11 @@ def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
 
     monkeypatch.setattr(nm, "compute_epi_mask", _fake_compute_epi_mask)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=None)
+    out_mask_img, out_r2s = utils.load_mask(ref_img, mask=None, t2smap=None)
     assert called["n"] == 1
     assert called["arg"] is ref_img
     assert out_mask_img is sentinel_mask
-    assert out_t2s is None
+    assert out_r2s is None
 
 
 def test_create_legendre_polynomial_basis_set():
