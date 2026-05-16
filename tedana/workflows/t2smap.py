@@ -174,9 +174,9 @@ def _get_parser():
     decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        choices=["t2s", "paid"],
-        help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
-        default="t2s",
+        choices=["r2s", "paid"],
+        help='Combination scheme for TEs: "r2s" (Posse 1999), "paid" (Poser)',
+        default="r2s",
     )
 
     decomposition_args = parser.add_argument_group("Component Selection")
@@ -249,7 +249,7 @@ def t2smap_workflow(
     masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
-    combmode="t2s",
+    combmode="r2s",
     debug=False,
     verbose=False,
     quiet=False,
@@ -302,8 +302,8 @@ def t2smap_workflow(
         'all' means that the model is fit, per voxel, across all timepoints.
         'ts' means that the model is fit, per voxel and per timepoint.
         Default is 'all'.
-    combmode : {'t2s', 'paid'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
+    combmode : {'r2s', 'paid'}, optional
+        Combination scheme for TEs: 'r2s' (Posse 1999, default), 'paid' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     overwrite : :obj:`bool`, optional
@@ -329,14 +329,14 @@ def t2smap_workflow(
     ============================= =================================================
     Filename                      Content
     ============================= =================================================
-    T2starmap.nii.gz              Estimated T2* 3D map or 4D timeseries.
+    R2starmap.nii.gz              Estimated R2* 3D map or 4D timeseries (in s⁻¹).
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
     S0map.nii.gz                  S0 3D map or 4D timeseries.
-    desc-limited_T2starmap.nii.gz Limited T2* map/timeseries. The difference between
-                                  the limited and full maps is that, for voxels
+    desc-limited_R2starmap.nii.gz Limited R2* map/timeseries (in s⁻¹). The difference
+                                  between the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains
-                                  good data, the full map uses the T2* estimate
+                                  good data, the full map uses the R2* estimate
                                   from the first two echos, while the limited map
                                   will have a NaN.
     desc-limited_S0map.nii.gz     Limited S0 map/timeseries. The difference between
@@ -455,11 +455,11 @@ def t2smap_workflow(
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
-    LGR.info("Computing T2* map")
+    LGR.info("Computing R2* map")
     data_without_excluded_vols = data_without_excluded_vols[mask_denoise, ...]
     masksum_masked = masksum_denoise[mask_denoise]
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+    r2s_full, s0_full, failures, r2s_var, s0_var, r2s_s0_covar = decay_function(
         data=data_without_excluded_vols,
         tes=tes,
         adaptive_mask=masksum_masked,
@@ -475,28 +475,28 @@ def t2smap_workflow(
             mask=mask_denoise,
         )
         if verbose:
-            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+            io_generator.save_file(r2s_var, "r2star variance img", mask=mask_denoise)
             io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
             io_generator.save_file(
-                t2s_s0_covar,
-                "t2star-s0 covariance img",
+                r2s_s0_covar,
+                "r2star-s0 covariance img",
                 mask=mask_denoise,
             )
 
     # Delete unused variables
-    del failures, t2s_var, s0_var, t2s_s0_covar
+    del failures, r2s_var, s0_var, r2s_s0_covar
 
-    t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-        t2s=t2s_full,
+    r2s_full, s0_full, r2s_limited, s0_limited = decay.modify_r2s_s0_maps(
+        r2s=r2s_full,
         s0=s0_full,
         adaptive_mask=masksum_masked,
         tes=tes,
     )
     del masksum_masked
 
-    t2s_full = utils.unmask(t2s_full, mask_denoise)
+    r2s_full = utils.unmask(r2s_full, mask_denoise)
     s0_full = utils.unmask(s0_full, mask_denoise)
-    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+    r2s_limited = utils.unmask(r2s_limited, mask_denoise)
     s0_limited = utils.unmask(s0_limited, mask_denoise)
 
     io_generator.save_file(s0_full, "s0 img")
@@ -507,7 +507,7 @@ def t2smap_workflow(
         data=data_cat,
         tes=tes,
         adaptive_mask=masksum_denoise,
-        t2s=t2s_limited,
+        r2s=r2s_limited,
         s0=s0_limited,
         fitmode=fitmode,
     )
@@ -515,8 +515,8 @@ def t2smap_workflow(
     io_generator.save_file(rmse_df, "confounds tsv")
     io_generator.save_file(s0_limited, "limited s0 img")
     del s0_limited
-    io_generator.save_file(t2s_limited, "limited t2star img")
-    del t2s_limited
+    io_generator.save_file(r2s_limited, "limited r2star img")
+    del r2s_limited
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
@@ -524,11 +524,11 @@ def t2smap_workflow(
         data_cat,
         tes,
         masksum_denoise,
-        t2s=t2s_full,
+        r2s=r2s_full,
         combmode=combmode,
     )
 
-    io_generator.save_file(t2s_full, "t2star img")
+    io_generator.save_file(r2s_full, "r2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file
