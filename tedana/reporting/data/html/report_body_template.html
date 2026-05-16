@@ -368,28 +368,28 @@
 </div>
 {% endif %}
 <div class="carpet-plots">
-  {% if t2starExists %}
-  <h2>T2*</h2>
+  {% if r2starExists %}
+  <h2>R2*</h2>
   <div class="carpet-plots-image">
     <img
-      id="t2starBrainPlot"
-      src="{{ t2starBrainPlot }}"
+      id="r2starBrainPlot"
+      src="{{ r2starBrainPlot }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
   <div class="carpet-plots-image">
     <img
-      id="t2starHistogram"
-      src="{{ t2starHistogram }}"
+      id="r2starHistogram"
+      src="{{ r2starHistogram }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
   {% endif %} {% if varianceExists %}
-  <h3>T2* Estimate Variance</h3>
+  <h3>R2* Estimate Variance</h3>
   <div class="carpet-plots-image">
     <img
-      id="t2starVariancePlot"
-      src="{{ t2starVariancePlot }}"
+      id="r2starVariancePlot"
+      src="{{ r2starVariancePlot }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
@@ -418,17 +418,17 @@
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
-  <h3>T2* and S0 Estimate Covariance</h3>
+  <h3>R2* and S0 Estimate Covariance</h3>
   <div class="carpet-plots-image">
     <img
-      id="t2sS0CovariancePlot"
-      src="{{ t2sS0CovariancePlot }}"
+      id="r2sS0CovariancePlot"
+      src="{{ r2sS0CovariancePlot }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
   </div>
   {% endif %} {% if rmseExists %}
   <h2>
-    T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
+    R2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
   </h2>
   <div class="carpet-plots-image">
     <img

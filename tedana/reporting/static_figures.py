@@ -565,12 +565,12 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
-def plot_t2star_and_s0(
+def plot_r2star_and_s0(
     *,
     io_generator: io.OutputGenerator,
     mask: nb.Nifti1Image,
 ) -> None:
-    """Create T2* and S0 maps and histograms.
+    """Create R2* and S0 maps and histograms.
 
     Parameters
     ----------
@@ -579,31 +579,31 @@ def plot_t2star_and_s0(
     mask : img
         Binary mask image used to apply to the data.
     """
-    t2star_img = io_generator.get_name("t2star img")
+    r2star_img = io_generator.get_name("r2star img")
     s0_img = io_generator.get_name("s0 img")
-    assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
+    assert os.path.isfile(r2star_img), f"File {r2star_img} does not exist"
 
     # Check if S0 image exists, add message to log if not
     s0_exists = os.path.isfile(s0_img)
     if not s0_exists:
         LGR.info(
-            "S0 maps and T2* fit metrics are not in report since a pre-existing "
-            "T2* map was provided"
+            "S0 maps and R2* fit metrics are not in report since a pre-existing "
+            "R2* map was provided"
         )
 
     # Plot histograms
-    t2star_data = masking.apply_mask(t2star_img, mask)
-    t2s_p02, t2s_p98 = np.percentile(t2star_data, [2, 98])
-    t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
+    r2star_data = masking.apply_mask(r2star_img, mask)
+    r2s_p02, r2s_p98 = np.percentile(r2star_data, [2, 98])
+    r2star_histogram = f"{io_generator.prefix}r2star_histogram.svg"
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(t2star_data[t2star_data <= t2s_p98], bins=100)
-    ax.set_xlim(0, t2s_p98)
-    ax.set_title("T2*", fontsize=20)
+    ax.hist(r2star_data[r2star_data <= r2s_p98], bins=100)
+    ax.set_xlim(0, r2s_p98)
+    ax.set_title("R2*", fontsize=20)
     ax.set_ylabel("Count", fontsize=16)
     ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", r2star_histogram))
     plt.close(fig)
 
     # Only plot S0 data if the file exists
@@ -622,21 +622,21 @@ def plot_t2star_and_s0(
         fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
         plt.close(fig)
 
-    # Plot T2* and S0 maps
-    t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
+    # Plot R2* and S0 maps
+    r2star_plot = f"{io_generator.prefix}r2star_brain.svg"
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         plotting.plot_stat_map(
-            t2star_img,
+            r2star_img,
             bg_img=None,
             display_mode="mosaic",
             symmetric_cbar=False,
             black_bg=True,
             cmap="gray",
-            vmin=t2s_p02,
-            vmax=t2s_p98,
+            vmin=r2s_p02,
+            vmax=r2s_p98,
             annotate=False,
-            output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+            output_file=os.path.join(io_generator.out_dir, "figures", r2star_plot),
             resampling_interpolation="nearest",
         )
 
@@ -713,7 +713,7 @@ def plot_rmse(
         fontsize=16,
     )
     ax.legend(["Median", "25th-75th percentiles", "2nd and 98th percentiles"])
-    ax.set_title("Root mean squared error of T2* and S0 fit across voxels", fontsize=20)
+    ax.set_title("Root mean squared error of R2* and S0 fit across voxels", fontsize=20)
     rmse_ts_plot = os.path.join(
         io_generator.out_dir,
         "figures",
@@ -1163,7 +1163,7 @@ def plot_decay_variance(
     *,
     io_generator: io.OutputGenerator,
 ):
-    """Plot the variance of the T2* and S0 estimates.
+    """Plot the variance of the R2* and S0 estimates.
 
     Parameters
     ----------
@@ -1180,11 +1180,11 @@ def plot_decay_variance(
     )
 
     names = [
-        "stat-variance_desc-t2star_statmap",
+        "stat-variance_desc-r2star_statmap",
         "stat-variance_desc-s0_statmap",
-        "stat-covariance_desc-t2star+s0_statmap",
+        "stat-covariance_desc-r2star+s0_statmap",
     ]
-    imgs = ["t2star variance img", "s0 variance img", "t2star-s0 covariance img"]
+    imgs = ["r2star variance img", "s0 variance img", "r2star-s0 covariance img"]
     for name, img in zip(names, imgs):
         in_file = io_generator.get_name(img)
         data = masking.apply_mask(in_file, mask_img)

@@ -165,13 +165,13 @@ def _update_template_bokeh(
         f"Checking for adaptive mask: {adaptive_mask_filename}, exists: {adaptive_mask_exists}"
     )
 
-    # Check for T2* images
-    t2star_brain_filename = f"{prefix}t2star_brain.svg"
-    t2star_histogram_filename = f"{prefix}t2star_histogram.svg"
-    t2star_brain = f"./figures/{t2star_brain_filename}"
-    t2star_histogram = f"./figures/{t2star_histogram_filename}"
-    t2star_variance_filename = f"{prefix}stat-variance_desc-t2star_statmap.svg"
-    t2star_variance = f"./figures/{t2star_variance_filename}"
+    # Check for R2* images
+    r2star_brain_filename = f"{prefix}r2star_brain.svg"
+    r2star_histogram_filename = f"{prefix}r2star_histogram.svg"
+    r2star_brain = f"./figures/{r2star_brain_filename}"
+    r2star_histogram = f"./figures/{r2star_histogram_filename}"
+    r2star_variance_filename = f"{prefix}stat-variance_desc-r2star_statmap.svg"
+    r2star_variance = f"./figures/{r2star_variance_filename}"
 
     # Check for S0 images
     s0_brain_filename = f"{prefix}s0_brain.svg"
@@ -180,8 +180,8 @@ def _update_template_bokeh(
     s0_histogram = f"./figures/{s0_histogram_filename}"
     s0_variance_filename = f"{prefix}stat-variance_desc-s0_statmap.svg"
     s0_variance = f"./figures/{s0_variance_filename}"
-    t2s_s0_covariance_filename = f"{prefix}stat-covariance_desc-t2star+s0_statmap.svg"
-    t2s_s0_covariance = f"./figures/{t2s_s0_covariance_filename}"
+    r2s_s0_covariance_filename = f"{prefix}stat-covariance_desc-r2star+s0_statmap.svg"
+    r2s_s0_covariance = f"./figures/{r2s_s0_covariance_filename}"
 
     # Check for RMSE images
     rmse_brain_filename = f"{prefix}rmse_brain.svg"
@@ -198,21 +198,21 @@ def _update_template_bokeh(
     mir = mir_filename in files_in_figures
 
     # Check if each set of images exists
-    t2star_exists = (
-        t2star_brain_filename in files_in_figures and t2star_histogram_filename in files_in_figures
+    r2star_exists = (
+        r2star_brain_filename in files_in_figures and r2star_histogram_filename in files_in_figures
     )
     s0_exists = s0_brain_filename in files_in_figures and s0_histogram_filename in files_in_figures
     rmse_exists = (
         rmse_brain_filename in files_in_figures and rmse_timeseries_filename in files_in_figures
     )
-    LGR.info(f"T2* files exist: {t2star_exists}")
+    LGR.info(f"R2* files exist: {r2star_exists}")
     LGR.info(f"S0 files exist: {s0_exists}")
     LGR.info(f"RMSE files exist: {rmse_exists}")
 
     variance_exists = (
-        t2star_variance_filename in files_in_figures
+        r2star_variance_filename in files_in_figures
         and s0_variance_filename in files_in_figures
-        and t2s_s0_covariance_filename in files_in_figures
+        and r2s_s0_covariance_filename in files_in_figures
     )
     LGR.info(f"Variance files exist: {variance_exists}")
 
@@ -239,15 +239,15 @@ def _update_template_bokeh(
         initialCarpet=initial_carpet,
         adaptiveMask=adaptive_mask,
         adaptiveMaskExists=adaptive_mask_exists,
-        t2starBrainPlot=t2star_brain,
-        t2starHistogram=t2star_histogram,
-        t2starExists=t2star_exists,
-        t2starVariancePlot=t2star_variance,
+        r2starBrainPlot=r2star_brain,
+        r2starHistogram=r2star_histogram,
+        r2starExists=r2star_exists,
+        r2starVariancePlot=r2star_variance,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
         s0Exists=s0_exists,
         s0VariancePlot=s0_variance,
-        t2sS0CovariancePlot=t2s_s0_covariance,
+        r2sS0CovariancePlot=r2s_s0_covariance,
         varianceExists=variance_exists,
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
