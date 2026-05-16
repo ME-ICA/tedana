@@ -733,7 +733,7 @@ def calculate_max_rp_corr(*, mixing: np.ndarray, motpars: np.ndarray) -> np.ndar
             mixing[chosen_rows] ** 2, rp_model[chosen_rows] ** 2
         )
         correl_both = np.hstack((correl_squared, correl_nonsquared))
-        max_correlations[i_split] = np.abs(correl_both).max(axis=1)
+        max_correlations[i_split] = np.nanmax(np.abs(correl_both), axis=1)
 
     # Average over splits, ignoring any NaNs from degenerate subsamples
     max_rp_corr = np.nanmean(max_correlations, axis=0)

@@ -36,10 +36,10 @@ def calculate_hfc(*, mixing: np.ndarray, tr: float, f_hp: float = 0.01) -> np.nd
 
     sampling_rate = 1.0 / tr
     nyquist_freq = sampling_rate / 2.0
-    n_frequencies = mixing_fft.shape[0]
 
-    # Map row indices to frequencies (matches MELODIC FTmix convention)
-    frequencies = nyquist_freq * np.arange(1, n_frequencies + 1) / n_frequencies
+    # Use the actual rFFT bin centers so odd-length series do not incorrectly
+    # force the highest non-DC bin to the Nyquist frequency.
+    frequencies = np.fft.rfftfreq(mixing.shape[0], d=tr)[1:]
 
     # Restrict to frequencies above the high-pass cutoff
     included = np.where(frequencies > f_hp)[0]
