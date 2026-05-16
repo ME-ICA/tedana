@@ -74,7 +74,9 @@ def test_make_optcom():
     with pytest.raises(ValueError, match="Argument 'combmode' must be either 'r2s' or 'paid'"):
         combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="bad")
 
-    with pytest.raises(ValueError, match="Argument 'r2s' must be supplied if 'combmode' is set to 'r2s'"):
+    with pytest.raises(
+        ValueError, match="Argument 'r2s' must be supplied if 'combmode' is set to 'r2s'"
+    ):
         combine.make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s")
 
     bad_r2s = np.random.random(n_voxels - 1) * 50

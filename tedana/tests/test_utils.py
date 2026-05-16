@@ -425,9 +425,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
 
-    out_mask_img, out_r2s = utils.load_mask(
-        ref_img, mask=str(mask_path), t2smap=str(t2s_path)
-    )
+    out_mask_img, out_r2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=str(t2s_path))
 
     assert out_mask_img is not None
     assert np.asarray(out_r2s).shape == (1,)
