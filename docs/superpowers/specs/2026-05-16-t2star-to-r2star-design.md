@@ -14,8 +14,9 @@ R2\* is preferable for group-level analyses because outlier voxels with very sma
 inflate to extremely large T2\* values when projected back to the native unit, whereas the same
 voxels are simply large (but finite) R2\* values.
 
-The sole user-visible breaking change is the output file: `T2starmap.nii.gz` → `R2starmap.nii.gz`
-(and related variants), with values now in s⁻¹ rather than seconds.
+Breaking changes:
+- Output file `T2starmap.nii.gz` → `R2starmap.nii.gz` (and related variants), values in s⁻¹.
+- `combmode="t2s"` → `combmode="r2s"` in `make_optcom` (and the CLI `--combmode` argument).
 
 ---
 
@@ -101,13 +102,15 @@ r2s_limited[r2s_limited < floor_r2s / 10] = floor_r2s
 
 ```python
 # was: t2s_corrected[bad] = np.min(-echo_times) / np.log(eps)
+#      = (-max_te) / (-|log_eps|) = max_te / |log_eps|   [T2* floor]
+# new: r2s_corrected[bad] = -np.log(eps) / np.max(echo_times)
+#      = |log_eps| / max_te = 1 / (max_te / |log_eps|)   [R2* ceiling = 1 / T2* floor]
 r2s_corrected[bad] = -np.log(eps) / np.max(echo_times)
 ```
 
-Both expressions are equivalent: the old form is `min(-te) / log(eps)` = `(-min_te) / (-|log_eps|)`
-= `min_te / |log_eps|`; the new form is `|log_eps| / max_te`. They differ only in using
-`min(te)` vs `max(te)` — using `max(te)` is more conservative (tighter ceiling) and correct for
-preventing underflow at the longest echo.
+The R2\* ceiling is exactly the reciprocal of the T2\* floor, which is correct: if T2\* must be
+at least `max_te / |log_eps|` to prevent underflow, then R2\* must be at most
+`|log_eps| / max_te`.
 
 ---
 
@@ -200,7 +203,7 @@ preventing underflow at the longest echo.
 | `test_combine.py` | Rename `t2s` parameter; invert numeric values |
 | `test_utils.py` | Update `check_t2s_values` tests; add `check_r2s_values` tests |
 | `test_io.py` | `"t2star img"` → `"r2star img"` |
-| `test_integration.py` | `T2starmap.nii.gz` in `t2smap=` argument → `R2starmap.nii.gz` |
+| `test_integration.py` | Switch `t2smap=` argument to `r2smap=` with inverted values; check `R2starmap.nii.gz` is produced |
 
 ---
 
