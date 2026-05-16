@@ -44,14 +44,14 @@ tedana_report.html                                                           The
                                                                              dataset for analysis.
 "adaptive mask img": desc-adaptiveGoodSignal_mask.nii.gz                     Integer-valued mask used in the workflow, where
                                                                              each voxel's value corresponds to the number of good
-                                                                             echoes to be used for T2\*/S0 estimation. Will be
+                                                                             echoes to be used for R2\*/S0 estimation. Will be
                                                                              calculated whether original mask estimated within
                                                                              tedana or user-provided. All voxels with 1 good
                                                                              echo will be included in outputted time series
                                                                              but only voxels with at least 3 good echoes will be
                                                                              used in ICA and metric calculations
-"t2star img": T2starmap.nii.gz                                               Full estimated T2* 3D map.
-                                                                             Values are in seconds. If a voxel has at least 1 good
+"r2star img": R2starmap.nii.gz                                               Full estimated R2* 3D map.
+                                                                             Values are in s⁻¹. If a voxel has at least 1 good
                                                                              echo then the first two echoes will be used to estimate
                                                                              a value (an impresise weighting for optimal combination
                                                                              is better than fully excluding a voxel)
@@ -116,7 +116,7 @@ report.txt                                                                   A s
                                                                              include thermal noise or low variance components.
                                                                              Not the recommended dataset for analysis.
 "confounds tsv": desc-confounds_timeseries.tsv                               Summary time series measures, including RMSE measures
-                                                                             of T2*/S0 model fit.
+                                                                             of R2*/S0 model fit.
 references.bib                                                               The BibTeX entries for references cited in
                                                                              report.txt.
 
@@ -128,9 +128,9 @@ If ``verbose`` is set to True
 =============================================================================================  =====================================================
 Key: Filename                                                                                  Content
 =============================================================================================  =====================================================
-"limited t2star img": desc-limited_T2starmap.nii.gz                                            Limited T2* map/time series.
-                                                                                               Values are in seconds.
-                                                                                               Unlike the full T2* maps, if only one 1 echo contains
+"limited r2star img": desc-limited_R2starmap.nii.gz                                            Limited R2* map/time series.
+                                                                                               Values are in s⁻¹.
+                                                                                               Unlike the full R2* maps, if only one 1 echo contains
                                                                                                good data the limited map will have NaN
 "limited s0 img": desc-limited_S0map.nii.gz                                                    Limited S0 map/time series.
                                                                                                Unlike the full S0 maps, if only one 1 echo contains
@@ -158,9 +158,9 @@ If ``fittype`` is "curvefit"
 ===========================================================================  =====================================================
 Key: Filename                                                                Content
 ===========================================================================  =====================================================
-"t2star variance img": stat-variance_desc-t2star_statmap.nii.gz              Variance of the T2* estimates.
+"r2star variance img": stat-variance_desc-r2star_statmap.nii.gz              Variance of the R2* estimates.
 "s0 variance img": stat-variance_desc-s0_statmap.nii.gz                      Variance of the S0 estimates.
-"t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap.nii.gz    Covariance of the T2* and S0 estimates.
+"r2star-s0 covariance img": stat-covariance_desc-r2star+s0_statmap.nii.gz    Covariance of the R2* and S0 estimates.
 ===========================================================================  =====================================================
 
 If ``tedort`` is True
@@ -233,7 +233,7 @@ By default, ``tedana`` uses AIC.
 Of those three, AIC is the least agressive and will retain the most components.
 
 ``Tedana`` includes additional `kundu` and `kundu-stabilize` approaches that
-identify and remove components that don't contain T2* or S0 signal and are more
+identify and remove components that don't contain R2* or S0 signal and are more
 likely to be noise. If the `--tedpca kundu` option is used, the PCA_metrics tsv
 file will include an accepted vs rejected classification column and also a
 rationale column of codes documenting why a PCA component removed. If MDL, KIC,
@@ -602,12 +602,12 @@ This figure overlays contours reflecting the boundaries of the following masks o
 
 
 ************************
-T2* and S0 Summary Plots
+R2* and S0 Summary Plots
 ************************
 
-Below the adaptive mask plot are summary plots for the T2* and S0 maps.
+Below the adaptive mask plot are summary plots for the R2* and S0 maps.
 Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
-The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
+The R2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
 The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
 
 It is important to note that the histogram is limited from 0 to the 98th percentile of the data to improve readability.
@@ -624,9 +624,9 @@ It is important to note that the histogram is limited from 0 to the 98th percent
 Decay Model Fit Plots
 *********************
 
-Below the T2* and S0 summary plots are the decay model fit plots.
+Below the R2* and S0 summary plots are the decay model fit plots.
 These plots show residual mean squared error (RMSE) values for the
-monoexponential decay model, based on the T2* and S0 maps.
+monoexponential decay model, based on the R2* and S0 maps.
 
 The first plot is the mean RMSE brain plot, which shows the mean RMSE over time for each voxel in the brain.
 This plot is limited from the 2nd percentile to the 98th percentile.
@@ -888,8 +888,8 @@ An example report
 
   TE-dependence analysis was performed on input data using the tedana workflow \\citep{dupre2021te}.
   An adaptive mask was then generated, in which each voxel's value reflects the number of echoes with 'good' data.
-  A two-stage masking procedure was applied, in which a liberal mask (including voxels with good data in at least the first echo) was used for optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask (restricted to voxels with good data in at least the first three echoes) was used for the component classification procedure.
-  Multi-echo data were then optimally combined using the T2* combination method \\citep{posse1999enhancement}.
+  A two-stage masking procedure was applied, in which a liberal mask (including voxels with good data in at least the first echo) was used for optimal combination, R2*/S0 estimation, and denoising, while a more conservative mask (restricted to voxels with good data in at least the first three echoes) was used for the component classification procedure.
+  Multi-echo data were then optimally combined using the R2* combination method \\citep{posse1999enhancement}.
   Next, components were manually classified as BOLD (TE-dependent), non-BOLD (TE-independent), or uncertain (low-variance).
   This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
   This workflow also used the Dice similarity index \\citep{dice1945measures,sorensen1948method}.
