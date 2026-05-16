@@ -3,9 +3,9 @@
         "orig": "adaptive_mask",
         "bidsv1.5.0": "desc-adaptiveGoodSignal_mask"
     },
-    "t2star img": {
+    "r2star img": {
         "orig": "t2svG",
-        "bidsv1.5.0": "T2starmap"
+        "bidsv1.5.0": "R2starmap"
     },
     "s0 img": {
         "orig": "s0vG",
@@ -15,17 +15,17 @@
         "orig": "fit_failures",
         "bidsv1.5.0": "desc-decayFitFailures_mask"
     },
-    "t2star variance img": {
+    "r2star variance img": {
         "orig": "t2s_var",
-        "bidsv1.5.0": "stat-variance_desc-t2star_statmap"
+        "bidsv1.5.0": "stat-variance_desc-r2star_statmap"
     },
     "s0 variance img": {
         "orig": "s0_var",
         "bidsv1.5.0": "stat-variance_desc-s0_statmap"
     },
-    "t2star-s0 covariance img": {
+    "r2star-s0 covariance img": {
         "orig": "t2s_s0_covar",
-        "bidsv1.5.0": "stat-covariance_desc-t2star+s0_statmap"
+        "bidsv1.5.0": "stat-covariance_desc-r2star+s0_statmap"
     },
     "combined img": {
         "orig": "ts_OC",
@@ -71,9 +71,9 @@
         "orig": "lowk_ts_OC",
         "bidsv1.5.0": "desc-optcomRejected_bold"
     },
-    "limited t2star img": {
+    "limited r2star img": {
         "orig": "t2sv",
-        "bidsv1.5.0": "desc-limited_T2starmap"
+        "bidsv1.5.0": "desc-limited_R2starmap"
     },
     "limited s0 img": {
         "orig": "s0v",
