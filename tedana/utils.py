@@ -545,7 +545,7 @@ def cross_correlation(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     full = np.corrcoef(a.T, b.T)
     return full[: a.shape[1], a.shape[1] :]
 
-  
+
 def check_t2s_values(t2s_map):
     """Check and convert T2* map values to seconds.
 
