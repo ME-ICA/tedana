@@ -618,7 +618,7 @@ def test_check_t2s_values(caplog):
         utils.check_t2s_values(t2s_invalid)
 
 
-def test_check_r2s_values(caplog):
+def test_check_r2s_values():
     """check_r2s_values should return values in s⁻¹ and raise/warn on bad input."""
     # Valid R2* values (typical 10-100 s⁻¹)
     r2s_valid = np.array([14.3, 25.0, 33.3, 50.0, 66.7])
