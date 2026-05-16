@@ -384,15 +384,15 @@ def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
     assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
 
 
-def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
-    """`load_mask` should build a mask from nonzero T2* and return masked T2* in ms."""
+def test_load_mask_t2smap_only_builds_mask_and_returns_seconds(tmp_path):
+    """`load_mask` should build a mask from nonzero T2* and return masked T2* in seconds."""
     import nibabel as nb
 
     shape = (5, 5, 5)
     affine = np.eye(4)
     ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
 
-    # Single non-zero voxel, in seconds (per BIDS): 0.02s -> 20ms
+    # Single non-zero voxel, in seconds (per BIDS): 0.02s
     t2s_arr = np.zeros(shape, dtype=np.float32)
     t2s_arr[1, 1, 1] = 0.02
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
@@ -407,7 +407,7 @@ def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_t2s is not None
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 20.0)
+    assert np.allclose(out_t2s[0], 0.02)
 
 
 def test_load_mask_combines_mask_and_t2smap(tmp_path):
@@ -427,7 +427,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
 
     # Only one of the masked voxels has non-zero T2*
     t2s_arr = np.zeros(shape, dtype=np.float32)
-    t2s_arr[1, 1, 1] = 0.03  # seconds -> 30ms
+    t2s_arr[1, 1, 1] = 0.03  # seconds
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
@@ -438,7 +438,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_mask_arr[2, 2, 2] == 0
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 30.0)
+    assert np.allclose(out_t2s[0], 0.03)
 
 
 def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
@@ -497,23 +497,11 @@ def test_create_legendre_polynomial_basis_set():
     assert np.abs((legendre_rounded[:, 5] - np.round(tmp_o5, decimals=6))).sum() == 0
 
 
-def test_sec2millisec():
-    """Ensure that sec2millisec returns 1000x the input values."""
-    assert utils.sec2millisec(5) == 5000
-    assert utils.sec2millisec(np.array([5])) == np.array([5000])
-
-
-def test_millisec2sec():
-    """Ensure that millisec2sec returns 1/1000x the input values."""
-    assert utils.millisec2sec(5000) == 5
-    assert utils.millisec2sec(np.array([5000])) == np.array([5])
-
-
 def test_check_te_values(caplog):
-    """Ensure that check_te_values returns the correct values."""
-    # Values in seconds (preferred per BIDS) - should be converted to milliseconds
-    assert utils.check_te_values([0.015, 0.039, 0.063]) == [15, 39, 63]
-    assert utils.check_te_values([0.15, 0.35, 0.55]) == [150, 350, 550]
+    """Ensure that check_te_values returns values in seconds."""
+    # Values in seconds (preferred per BIDS) - should be returned as-is
+    assert utils.check_te_values([0.015, 0.039, 0.063]) == [0.015, 0.039, 0.063]
+    assert utils.check_te_values([0.15, 0.35, 0.55]) == [0.15, 0.35, 0.55]
 
     # EPTI echo times (48 echoes)
     epti_te_ms = [
@@ -567,19 +555,21 @@ def test_check_te_values(caplog):
         50.41,
     ]
     epti_te_sec = [te / 1000 for te in epti_te_ms]
-    assert utils.check_te_values(epti_te_sec) == epti_te_ms
+    # Seconds input returns seconds unchanged
+    assert utils.check_te_values(epti_te_sec) == epti_te_sec
 
-    # Values in milliseconds (deprecated) - should be returned as-is with warning
-    assert utils.check_te_values([15, 39, 63]) == [15, 39, 63]
+    # Values in milliseconds (deprecated) - should be converted to seconds with warning
+    np.testing.assert_allclose(utils.check_te_values([15, 39, 63]), [0.015, 0.039, 0.063])
     assert (
         "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
         "be provided in seconds. Support for millisecond TE values is deprecated and will "
         "be removed in a future version. Please provide TE values in seconds."
     ) in caplog.text
-    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+    np.testing.assert_allclose(utils.check_te_values([2, 3, 4]), [0.002, 0.003, 0.004])
 
-    # EPTI echo times in milliseconds (deprecated)
-    assert utils.check_te_values(epti_te_ms) == epti_te_ms
+    # EPTI echo times in milliseconds (deprecated) - should be converted to seconds
+    result = utils.check_te_values(epti_te_ms)
+    np.testing.assert_allclose(result, epti_te_sec)
 
     # Check that the error is raised when TE values are in mixed units
     with pytest.raises(ValueError):
@@ -587,27 +577,22 @@ def test_check_te_values(caplog):
 
 
 def test_check_t2s_values(caplog):
-    """Ensure that check_t2s_values returns the correct values."""
-    # Values in seconds (expected per BIDS) - should be converted to milliseconds
+    """Ensure that check_t2s_values returns values in seconds."""
+    # Values in seconds (expected per BIDS) - should be returned as-is
     t2s_sec = np.array([0.015, 0.025, 0.035, 0.045])
     result = utils.check_t2s_values(t2s_sec)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
+    np.testing.assert_array_equal(result, [0.015, 0.025, 0.035, 0.045])
 
-    # Values in milliseconds (common mistake) - should be returned as-is with warning
-    t2s_ms = np.array([15, 25, 35, 45])
+    # Values in milliseconds (common mistake) - should be converted to seconds with warning
+    t2s_ms = np.array([15.0, 25.0, 35.0, 45.0])
     result = utils.check_t2s_values(t2s_ms)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
-    assert (
-        "T2* map median value is 30.00, which suggests values are in "
-        "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-        "in seconds. The map will be used as-is (in milliseconds), but please consider "
-        "providing T2* maps in seconds in the future for consistency with BIDS."
-    ) in caplog.text
+    np.testing.assert_allclose(result, [0.015, 0.025, 0.035, 0.045])
+    assert "milliseconds rather than seconds" in caplog.text
 
-    # Array with zeros (common in T2* maps for masked voxels)
+    # Array with zeros (common in T2* maps for masked voxels) - values in seconds
     t2s_with_zeros = np.array([0, 0.020, 0.030, 0, 0.040])
     result = utils.check_t2s_values(t2s_with_zeros)
-    np.testing.assert_array_equal(result, [0, 20, 30, 0, 40])
+    np.testing.assert_array_equal(result, [0, 0.020, 0.030, 0, 0.040])
 
     # All zeros - should return as-is with warning
     t2s_all_zeros = np.array([0, 0, 0, 0])

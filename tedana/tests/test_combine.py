@@ -11,7 +11,7 @@ def test__combine_t2s():
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     data = np.random.random((n_voxels, n_echos, n_trs))
-    tes = np.array([[10, 20, 30]])  # 1 x E
+    tes = np.array([[0.010, 0.020, 0.030]])  # 1 x E
 
     # Voxel- and volume-wise T2* estimates
     t2s = np.random.random((n_voxels, n_trs, 1))  # Mb x T x 1
@@ -29,7 +29,7 @@ def test__combine_paid():
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     data = np.random.random((n_voxels, n_echos, n_trs))
-    tes = np.array([[10, 20, 30]])  # 1 x E
+    tes = np.array([[0.010, 0.020, 0.030]])  # 1 x E
     comb = combine._combine_paid(data, tes)
     assert comb.shape == (n_voxels, n_trs)
 
@@ -46,7 +46,7 @@ def test_make_optcom():
     adaptive_mask = np.zeros(n_voxels, dtype=int)
     adaptive_mask[:n_mask] = 1
     adaptive_mask[0] = 2
-    tes = np.array([10, 20, 30])  # E
+    tes = np.array([0.010, 0.020, 0.030])  # E
 
     # Voxel- and volume-wise T2* estimates
     t2s = np.random.random((n_voxels, n_trs))
@@ -71,7 +71,7 @@ def test_make_optcom():
     with pytest.raises(ValueError, match="Input data must be 3D"):
         combine.make_optcom(bad_data, tes, adaptive_mask, t2s=t2s, combmode="t2s")
 
-    bad_tes = np.array([10, 20])
+    bad_tes = np.array([0.010, 0.020])
     with pytest.raises(ValueError, match="Number of echos provided does not match second"):
         combine.make_optcom(data, bad_tes, adaptive_mask, t2s=t2s, combmode="t2s")
 

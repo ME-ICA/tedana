@@ -14,7 +14,7 @@ from tedana.tests.utils import get_test_data_path
 
 @pytest.fixture(scope="module")
 def testdata1():
-    tes = np.array([14.5, 38.5, 62.5])
+    tes = np.array([0.0145, 0.0385, 0.0625])
     in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
     mask_file = op.join(get_test_data_path(), "mask.nii.gz")
     data = io.load_data_nilearn(in_files, mask_img=nb.load(mask_file), n_echos=len(tes))

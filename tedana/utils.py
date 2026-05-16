@@ -527,42 +527,8 @@ def create_legendre_polynomial_basis_set(
     return legendre_arr
 
 
-def sec2millisec(arr):
-    """
-    Convert seconds to milliseconds.
-
-    Parameters
-    ----------
-    arr : array_like
-        Values in seconds.
-
-    Returns
-    -------
-    array_like
-        Values in milliseconds.
-    """
-    return arr * 1000
-
-
-def millisec2sec(arr):
-    """
-    Convert milliseconds to seconds.
-
-    Parameters
-    ----------
-    arr : array_like
-        Values in milliseconds.
-
-    Returns
-    -------
-    array_like
-        Values in seconds.
-    """
-    return arr / 1000.0
-
-
 def check_t2s_values(t2s_map):
-    """Check and convert T2* map values to milliseconds.
+    """Check and convert T2* map values to seconds.
 
     This function checks if a precalculated T2* map is in seconds (expected
     per BIDS convention) or milliseconds. Typical brain T2* values at 3T are
@@ -576,7 +542,7 @@ def check_t2s_values(t2s_map):
     Returns
     -------
     array_like
-        T2* map values converted to milliseconds for internal use.
+        T2* map values in seconds for internal use.
 
     Raises
     ------
@@ -588,9 +554,10 @@ def check_t2s_values(t2s_map):
     The heuristic used is:
 
     - If median non-zero T2* < 1: values are assumed to be in seconds (correct
-      per BIDS), converted to milliseconds and returned
+      per BIDS), returned as-is
     - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
-      milliseconds already, a warning is logged, and values are returned as-is
+      milliseconds, a deprecation warning is logged, and values are converted
+      to seconds
     - If median non-zero T2* >= 1000: values are considered invalid
 
     This function is designed to handle the common case where users provide
@@ -625,21 +592,18 @@ def check_t2s_values(t2s_map):
     # At 1.5T values can be higher (~0.08-0.1 s), at 7T lower (~0.01-0.03 s)
     # Use 1 second as threshold - brain T2* should never be >= 1 second
     if median_t2s < 1:
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info(
-            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s). "
-            "Converting to milliseconds for internal use."
-        )
-        return sec2millisec(t2s_map)
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug(f"T2* map values appear to be in seconds (median={median_t2s:.4f}s).")
+        return t2s_map
     elif median_t2s < 1000:
-        # Values appear to be in milliseconds already
+        # Values appear to be in milliseconds - convert to seconds
         LGR.warning(
             f"T2* map median value is {median_t2s:.2f}, which suggests values are in "
             "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-            "in seconds. The map will be used as-is (in milliseconds), but please consider "
-            "providing T2* maps in seconds in the future for consistency with BIDS."
+            "in seconds. Converting to seconds. Support for millisecond T2* values is "
+            "deprecated and will be removed in a future version."
         )
-        return t2s_map
+        return t2s_map / 1000.0
     else:
         # Values are unexpectedly large
         raise ValueError(
@@ -756,10 +720,10 @@ def get_system_version_info():
 
 
 def check_te_values(te_values):
-    """Check and convert TE values to milliseconds for internal use.
+    """Check and convert TE values to seconds for internal use.
 
     This function checks if TE values are provided in seconds (preferred per
-    BIDS convention) or milliseconds. Echo times are converted to milliseconds
+    BIDS convention) or milliseconds. Echo times are returned in seconds
     for internal processing.
 
     Parameters
@@ -770,7 +734,7 @@ def check_te_values(te_values):
     Returns
     -------
     list
-        TE values in milliseconds for internal use.
+        TE values in seconds for internal use.
 
     Raises
     ------
@@ -782,25 +746,25 @@ def check_te_values(te_values):
     The heuristic used is:
 
     - If all TE values are between 0 and 1: values are assumed to be in seconds
-      (correct per BIDS), converted to milliseconds and returned
+      (correct per BIDS), returned as-is
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
-      deprecation warning is logged, and values are returned as-is
+      deprecation warning is logged, and values are converted to seconds
     - Mixed values or negative values raise an error
 
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info("TE values appear to be in seconds. Converting to milliseconds for internal use.")
-        return (te_values * 1000).tolist()
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug("TE values appear to be in seconds.")
+        return te_values.tolist()
     elif all(te_values >= 1):
-        # Values appear to be in milliseconds (deprecated)
+        # Values appear to be in milliseconds (deprecated) - convert to seconds
         LGR.warning(
             "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
             "be provided in seconds. Support for millisecond TE values is deprecated and will "
             "be removed in a future version. Please provide TE values in seconds."
         )
-        return te_values.tolist()
+        return (te_values / 1000).tolist()
     else:
         raise ValueError(
             "TE values must be positive and either all in seconds (values < 1, preferred per "
@@ -905,7 +869,7 @@ def load_mask(ref_img, mask=None, t2smap=None):
     mask_img : nibabel.Nifti1Image
         Mask image
     t2s : numpy.ndarray or None
-        Masked T2* map data in milliseconds, or None if no T2* map was provided.
+        Masked T2* map data in seconds, or None if no T2* map was provided.
     """
     import nibabel as nb
     from nilearn.masking import apply_mask, compute_epi_mask
