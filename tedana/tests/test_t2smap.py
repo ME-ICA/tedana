@@ -25,16 +25,16 @@ class TestT2smap:
         ]
         out_dir = "TED.echo1.t2smap"
         workflows.t2smap_workflow(
-            data, [14.5, 38.5, 62.5], combmode="t2s", fitmode="all", out_dir=out_dir
+            data, [14.5, 38.5, 62.5], combmode="r2s", fitmode="all", out_dir=out_dir
         )
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
@@ -55,16 +55,16 @@ class TestT2smap:
         ]
         out_dir = "TED.echo1.t2smap"
         workflows.t2smap_workflow(
-            data, [14.5, 38.5, 62.5], combmode="t2s", fitmode="ts", out_dir=out_dir
+            data, [14.5, 38.5, 62.5], combmode="r2s", fitmode="ts", out_dir=out_dir
         )
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
@@ -90,11 +90,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
@@ -120,11 +120,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
@@ -153,7 +153,7 @@ class TestT2smap:
                 "--exclude",
                 "0:2",  # exclude one volume beyond the dummy scan
                 "--combmode",
-                "t2s",
+                "r2s",
                 "--fitmode",
                 "all",
                 "--out-dir",
@@ -163,11 +163,11 @@ class TestT2smap:
         workflows.t2smap._main(args)
 
         # Check outputs
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
@@ -192,7 +192,7 @@ class TestT2smap:
             workflows.t2smap_workflow(
                 data,
                 [14.5, 38.5, 62.5],
-                combmode="t2s",
+                combmode="r2s",
                 fitmode="ts",
                 out_dir=out_dir,
                 exclude="0,1,2,3",
@@ -211,7 +211,7 @@ class TestT2smap:
             workflows.t2smap_workflow(
                 data,
                 [14.5, 38.5, 62.5],
-                combmode="t2s",
+                combmode="r2s",
                 fitmode="all",
                 out_dir=out_dir,
                 exclude="1000",
