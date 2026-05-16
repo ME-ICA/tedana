@@ -82,7 +82,7 @@ def tedpca(
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generation object for this workflow
     tes : :obj:`list`
-        List of echo times associated with `data_cat`, in milliseconds
+        List of echo times associated with `data_cat`, in seconds
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
