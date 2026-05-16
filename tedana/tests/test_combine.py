@@ -42,11 +42,11 @@ def test_make_optcom():
     adaptive_mask = np.ones(n_voxels, dtype=int) * n_echos
 
     r2s = np.random.random((n_voxels, n_trs)) * 50
-    comb = combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="r2s")
+    comb = combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="t2s")
     assert comb.shape == (n_voxels, n_trs)
 
     r2s = np.random.random(n_voxels) * 50
-    comb = combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="r2s")
+    comb = combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="t2s")
     assert comb.shape == (n_voxels, n_trs)
 
     comb = combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="paid")
@@ -57,28 +57,28 @@ def test_make_optcom():
 
     bad_data = np.random.random((n_voxels, n_echos))
     with pytest.raises(ValueError, match="Input data must be 3D"):
-        combine.make_optcom(bad_data, tes, adaptive_mask, r2s=r2s, combmode="r2s")
+        combine.make_optcom(bad_data, tes, adaptive_mask, r2s=r2s, combmode="t2s")
 
     bad_tes = np.array([0.014, 0.028])
     with pytest.raises(ValueError, match="Number of echos provided does not match"):
-        combine.make_optcom(data, bad_tes, adaptive_mask, r2s=r2s, combmode="r2s")
+        combine.make_optcom(data, bad_tes, adaptive_mask, r2s=r2s, combmode="t2s")
 
     bad_adaptive_mask = np.ones((n_voxels, 2), dtype=int)
     with pytest.raises(ValueError, match="Mask is not 1D"):
-        combine.make_optcom(data, tes, bad_adaptive_mask, r2s=r2s, combmode="r2s")
+        combine.make_optcom(data, tes, bad_adaptive_mask, r2s=r2s, combmode="t2s")
 
     bad_adaptive_mask2 = np.ones(n_voxels - 1, dtype=int)
     with pytest.raises(ValueError, match="Mask and data do not have same number"):
-        combine.make_optcom(data, tes, bad_adaptive_mask2, r2s=r2s, combmode="r2s")
+        combine.make_optcom(data, tes, bad_adaptive_mask2, r2s=r2s, combmode="t2s")
 
-    with pytest.raises(ValueError, match="Argument 'combmode' must be either 'r2s' or 'paid'"):
+    with pytest.raises(ValueError, match="Argument 'combmode' must be either 't2s' or 'paid'"):
         combine.make_optcom(data, tes, adaptive_mask, r2s=r2s, combmode="bad")
 
     with pytest.raises(
-        ValueError, match="Argument 'r2s' must be supplied if 'combmode' is set to 'r2s'"
+        ValueError, match="Argument 'r2s' must be supplied if 'combmode' is set to 't2s'"
     ):
-        combine.make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s")
+        combine.make_optcom(data, tes, adaptive_mask, r2s=None, combmode="t2s")
 
     bad_r2s = np.random.random(n_voxels - 1) * 50
     with pytest.raises(ValueError, match="R2\\* estimates and data do not have same number"):
-        combine.make_optcom(data, tes, adaptive_mask, r2s=bad_r2s, combmode="r2s")
+        combine.make_optcom(data, tes, adaptive_mask, r2s=bad_r2s, combmode="t2s")

@@ -195,9 +195,9 @@ def _get_parser():
     decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        choices=["r2s", "paid"],
-        help='Combination scheme for TEs: "r2s" (Posse 1999)',
-        default="r2s",
+        choices=["t2s", "paid"],
+        help='Combination scheme for TEs: "t2s" (Posse 1999)',
+        default="t2s",
     )
     map_group = decay_args.add_mutually_exclusive_group()
     map_group.add_argument(
@@ -442,7 +442,7 @@ def tedana_workflow(
     dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
-    combmode="r2s",
+    combmode="t2s",
     n_independent_echos=None,
     tree="tedana_orig",
     external_regressors=None,
@@ -508,8 +508,8 @@ def tedana_workflow(
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
         the raw data, which is slightly slower but may be more accurate.
         Default is 'loglin'.
-    combmode : {'r2s', 'paid'}, optional
-        Combination scheme for TEs: 'r2s' (Posse 1999, default).
+    combmode : {'t2s', 'paid'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default).
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.

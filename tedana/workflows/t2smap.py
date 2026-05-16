@@ -174,9 +174,9 @@ def _get_parser():
     decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        choices=["r2s", "paid"],
-        help='Combination scheme for TEs: "r2s" (Posse 1999), "paid" (Poser)',
-        default="r2s",
+        choices=["t2s", "paid"],
+        help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
+        default="t2s",
     )
 
     decomposition_args = parser.add_argument_group("Component Selection")
@@ -249,7 +249,7 @@ def t2smap_workflow(
     masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
-    combmode="r2s",
+    combmode="t2s",
     debug=False,
     verbose=False,
     quiet=False,
@@ -302,7 +302,7 @@ def t2smap_workflow(
         'all' means that the model is fit, per voxel, across all timepoints.
         'ts' means that the model is fit, per voxel and per timepoint.
         Default is 'all'.
-    combmode : {'r2s', 'paid'}, optional
+    combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 'r2s' (Posse 1999, default), 'paid' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.

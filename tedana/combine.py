@@ -102,7 +102,7 @@ def _combine_paid(data, tes, report=True):
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s"):
+def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="t2s"):
     r"""Optimally combine BOLD data across TEs.
 
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
@@ -122,11 +122,11 @@ def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s"):
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     r2s : (Mb [x T]) :obj:`numpy.ndarray` or None, optional
-        Estimated R2* values in s⁻¹. Only required if combmode = 'r2s'.
+        Estimated R2* values in s⁻¹. Only required if combmode = 't2s'.
         Default is None.
-    combmode : {'r2s', 'paid'}, optional
-        How to combine data. Either 'paid' or 'r2s'. If 'paid', argument 'r2s'
-        is not required. Default is 'r2s'.
+    combmode : {'t2s', 'paid'}, optional
+        How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
+        is not required. Default is 't2s'.
 
     Returns
     -------
@@ -135,9 +135,9 @@ def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s"):
 
     Notes
     -----
-    This function supports both the ``'r2s'`` method :footcite:p:`posse1999enhancement`
+    This function supports both the ``'t2s'`` method :footcite:p:`posse1999enhancement`
     and the ``'paid'`` method :footcite:p:`poser2006bold`.
-    The ``'r2s'`` method operates according to the following logic:
+    The ``'t2s'`` method operates according to the following logic:
 
     1.  Estimate voxel- and TE-specific weights based on estimated :math:`R_2^*`:
 
@@ -173,10 +173,10 @@ def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="r2s"):
             f"voxels/samples: {adaptive_mask.shape[0]} != {data.shape[0]}"
         )
 
-    if combmode not in ["r2s", "paid"]:
-        raise ValueError("Argument 'combmode' must be either 'r2s' or 'paid'")
-    elif combmode == "r2s" and r2s is None:
-        raise ValueError("Argument 'r2s' must be supplied if 'combmode' is set to 'r2s'.")
+    if combmode not in ["t2s", "paid"]:
+        raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
+    elif combmode == "t2s" and r2s is None:
+        raise ValueError("Argument 'r2s' must be supplied if 'combmode' is set to 't2s'.")
     elif combmode == "paid" and r2s is not None:
         LGR.warning(
             "Argument 'r2s' is not required if 'combmode' is 'paid'. "
