@@ -604,6 +604,34 @@ def test_check_t2s_values(caplog):
         utils.check_t2s_values(t2s_invalid)
 
 
+def test_check_r2s_values(caplog):
+    """check_r2s_values should return values in s⁻¹ and raise/warn on bad input."""
+    # Valid R2* values (typical 10-100 s⁻¹)
+    r2s_valid = np.array([14.3, 25.0, 33.3, 50.0, 66.7])
+    result = utils.check_r2s_values(r2s_valid)
+    np.testing.assert_array_equal(result, r2s_valid)
+
+    # R2* with zeros (masked voxels) — should be returned unchanged
+    r2s_with_zeros = np.array([0.0, 25.0, 33.3, 0.0, 50.0])
+    result = utils.check_r2s_values(r2s_with_zeros)
+    np.testing.assert_array_equal(result, r2s_with_zeros)
+
+    # All zeros — should return as-is with warning
+    r2s_all_zeros = np.array([0.0, 0.0, 0.0])
+    result = utils.check_r2s_values(r2s_all_zeros)
+    np.testing.assert_array_equal(result, r2s_all_zeros)
+
+    # Values that look like T2* in seconds (too small for R2*) — should raise
+    r2s_like_t2s_seconds = np.array([0.015, 0.025, 0.035])
+    with pytest.raises(ValueError, match="too small"):
+        utils.check_r2s_values(r2s_like_t2s_seconds)
+
+    # Values that are absurdly large — should raise
+    r2s_too_large = np.array([2000.0, 3000.0, 5000.0])
+    with pytest.raises(ValueError, match="too large"):
+        utils.check_r2s_values(r2s_too_large)
+
+
 def test_parse_volume_indices():
     """Ensure that parse_volume_indices returns the correct values."""
     assert utils.parse_volume_indices("0,1,2") == [0, 1, 2]

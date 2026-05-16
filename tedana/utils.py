@@ -611,6 +611,57 @@ def check_t2s_values(t2s_map):
         )
 
 
+def check_r2s_values(r2s_map):
+    """Check R2* map values are in expected units (s⁻¹).
+
+    Parameters
+    ----------
+    r2s_map : numpy.ndarray
+        R2* map values to check. Expected to be in s⁻¹ per BIDS convention.
+
+    Returns
+    -------
+    numpy.ndarray
+        R2* map values in s⁻¹.
+
+    Raises
+    ------
+    ValueError
+        If R2* values appear to be outside the expected range.
+    """
+    r2s_map = np.asarray(r2s_map)
+
+    # Get positive values for checking
+    positive_values = r2s_map[r2s_map > 0]
+    if len(positive_values) == 0:
+        LGR.warning("R2* map has no positive values.")
+        return r2s_map
+
+    median_r2s = np.median(positive_values)
+
+    if median_r2s < 0.5:
+        raise ValueError(
+            f"R2* map median value is {median_r2s:.4f} s⁻¹, which is too small. "
+            "R2* maps should be in s⁻¹ (typical values: 10-100 s⁻¹). "
+            "If you have a T2* map in seconds, use --t2smap instead."
+        )
+    elif median_r2s > 1000:
+        raise ValueError(
+            f"R2* map median value is {median_r2s:.2f} s⁻¹, which is too large. "
+            "R2* maps should be in s⁻¹ (typical values: 10-100 s⁻¹). "
+            "Please check your R2* map units."
+        )
+    elif not (2 <= median_r2s <= 200):
+        LGR.warning(
+            f"R2* map median value is {median_r2s:.2f} s⁻¹, which is outside the typical range "
+            "(2–200 s⁻¹). Please verify your R2* map units."
+        )
+    else:
+        LGR.debug(f"R2* map values appear to be in s⁻¹ (median={median_r2s:.4f} s⁻¹).")
+
+    return r2s_map
+
+
 def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
     """Set up loggers for tedana.
 
