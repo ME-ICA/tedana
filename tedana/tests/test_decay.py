@@ -37,60 +37,56 @@ def test_fit_decay(testdata1):
     """Fit_decay should return data in (samples,) shape."""
     masked_data = testdata1["data"][testdata1["mask"], ...]
     masked_adaptive_mask = testdata1["adaptive_mask"][testdata1["mask"]]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay(
         masked_data,
         testdata1["tes"],
         masked_adaptive_mask,
         testdata1["fittype"],
     )
-    assert t2s.ndim == 1
+    assert r2s.ndim == 1
     assert s0.ndim == 1
     assert failures is None
-    assert t2s_var is None
+    assert r2s_var is None
     assert s0_var is None
-    assert t2s_s0_covar is None
+    assert r2s_s0_covar is None
 
 
 def test_fit_decay_ts(testdata1):
     """Fit_decay_ts should return data in samples x time shape."""
     masked_data = testdata1["data"][testdata1["mask"], ...]
     masked_adaptive_mask = testdata1["adaptive_mask"][testdata1["mask"]]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay_ts(
         data=masked_data,
         tes=testdata1["tes"],
         adaptive_mask=masked_adaptive_mask,
         fittype=testdata1["fittype"],
     )
-    assert t2s.ndim == 2
+    assert r2s.ndim == 2
     assert s0.ndim == 2
     assert failures is None
-    assert t2s_var is None
+    assert r2s_var is None
     assert s0_var is None
-    assert t2s_s0_covar is None
+    assert r2s_s0_covar is None
 
 
-def test__apply_t2s_floor():
-    """
-    _apply_t2s_floor applies a floor to T2* values to prevent a ZeroDivisionError during.
-
-    optimal combination.
-    """
+def test__apply_r2s_ceiling():
+    """_apply_r2s_ceiling caps large R2* values to prevent exp underflow in optimal combination."""
     n_voxels, n_echos, n_trs = 100, 5, 25
-    echo_times = np.array([2, 23, 54, 75, 96])
+    echo_times = np.array([0.002, 0.023, 0.054, 0.075, 0.096])  # seconds
     me_data = np.random.random((n_voxels, n_echos, n_trs))
-    t2s = np.random.random(n_voxels) * 1000
-    t2s[t2s < 1] = 1  # Crop at 1 ms to be safe
-    t2s[0] = 0.001
+    r2s = np.ones(n_voxels) * 10.0  # typical R2* ~10 s⁻¹
+    r2s[0] = 1e15  # extreme value → exp underflow → alpha=0 → ZeroDivisionError
 
-    # First establish a failure
+    # First establish that the failure mode exists
     with pytest.raises(ZeroDivisionError):
-        _ = combine._combine_t2s(me_data, echo_times[None, :], t2s[:, None])
+        _ = combine._combine_r2s(me_data, echo_times[None, :], r2s[:, None])
 
-    # Now correct the T2* map and get a successful result.
-    t2s_corrected = me._apply_t2s_floor(t2s, echo_times)
-    assert t2s_corrected[0] != t2s[0]  # First value should be corrected
-    assert np.array_equal(t2s_corrected[1:], t2s[1:])  # No other values should be corrected
-    combined = combine._combine_t2s(me_data, echo_times[None, :], t2s_corrected[:, None])
+    # Now apply the ceiling and verify it fixes the problem
+    r2s_corrected = me._apply_r2s_ceiling(r2s, echo_times)
+    assert r2s_corrected[0] != r2s[0]  # first value was corrected
+    assert np.array_equal(r2s_corrected[1:], r2s[1:])  # others unchanged
+
+    combined = combine._combine_r2s(me_data, echo_times[None, :], r2s_corrected[:, None])
     assert np.all(combined != 0)
 
 
@@ -118,18 +114,18 @@ def test_smoke_fit_decay():
     fittype = "loglin"
     masked_data = data[mask, ...]
     masked_adaptive_mask = adaptive_mask[mask]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay(
         masked_data,
         tes,
         masked_adaptive_mask,
         fittype,
     )
-    assert t2s.ndim == 1
+    assert r2s.ndim == 1
     assert s0.ndim == 1
     assert failures is None
-    assert t2s_var is None
+    assert r2s_var is None
     assert s0_var is None
-    assert t2s_s0_covar is None
+    assert r2s_s0_covar is None
 
 
 def test_smoke_fit_decay_curvefit():
@@ -150,18 +146,18 @@ def test_smoke_fit_decay_curvefit():
     fittype = "curvefit"
     masked_data = data[mask, ...]
     masked_adaptive_mask = adaptive_mask[mask]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay(
         masked_data,
         tes,
         masked_adaptive_mask,
         fittype,
     )
-    assert t2s.ndim == 1
+    assert r2s.ndim == 1
     assert s0.ndim == 1
     assert failures.ndim == 1
-    assert t2s_var.ndim == 1
+    assert r2s_var.ndim == 1
     assert s0_var.ndim == 1
-    assert t2s_s0_covar.ndim == 1
+    assert r2s_s0_covar.ndim == 1
 
 
 def test_smoke_fit_decay_ts():
@@ -181,18 +177,18 @@ def test_smoke_fit_decay_ts():
     fittype = "loglin"
     masked_data = data[mask, ...]
     masked_adaptive_mask = adaptive_mask[mask]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay_ts(
         masked_data,
         tes,
         masked_adaptive_mask,
         fittype,
     )
-    assert t2s.ndim == 2
+    assert r2s.ndim == 2
     assert s0.ndim == 2
     assert failures is None
-    assert t2s_var is None
+    assert r2s_var is None
     assert s0_var is None
-    assert t2s_s0_covar is None
+    assert r2s_s0_covar is None
 
 
 def test_smoke_fit_decay_curvefit_ts():
@@ -213,18 +209,18 @@ def test_smoke_fit_decay_curvefit_ts():
     fittype = "curvefit"
     masked_data = data[mask, ...]
     masked_adaptive_mask = adaptive_mask[mask]
-    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay_ts(
+    r2s, s0, failures, r2s_var, s0_var, r2s_s0_covar = me.fit_decay_ts(
         masked_data,
         tes,
         masked_adaptive_mask,
         fittype,
     )
-    assert t2s.ndim == 2
+    assert r2s.ndim == 2
     assert s0.ndim == 2
     assert failures.ndim == 2
-    assert t2s_var.ndim == 2
+    assert r2s_var.ndim == 2
     assert s0_var.ndim == 2
-    assert t2s_s0_covar.ndim == 2
+    assert r2s_s0_covar.ndim == 2
 
 
 # TODO: BREAK AND UNIT TESTS
