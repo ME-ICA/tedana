@@ -25,7 +25,7 @@ def _apply_t2s_floor(t2s, echo_times):
     t2s : (S [x T]) array_like
         T2* estimates.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
 
     Returns
     -------
@@ -128,7 +128,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     data_cat : (Md x E x T) :obj:`numpy.ndarray`
         Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -297,7 +297,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     data_cat : (Md x E x T) :obj:`numpy.ndarray`
         Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -392,7 +392,7 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
         Multi-echo data array, where `M` is samples in denoising mask, `E` is echos,
         and `T` is time.
     tes : (E,) :obj:`list`
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -481,7 +481,7 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
         Multi-echo data array, where `Md` is samples in denoising mask, `E` is echos,
         and `T` is time.
     tes : (E,) :obj:`list`
-        Echo times
+        Echo times in seconds
     adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -580,7 +580,7 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : (E,) :obj:`list`
-        Echo times in milliseconds.
+        Echo times in seconds.
 
     Returns
     -------

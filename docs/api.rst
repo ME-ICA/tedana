@@ -312,8 +312,6 @@ API
    make_adaptive_mask
    threshold_map
    unmask
-   sec2millisec
-   millisec2sec
    load_mask
    create_legendre_polynomial_basis_set
    parse_volume_indices
