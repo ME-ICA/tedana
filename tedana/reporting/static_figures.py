@@ -601,7 +601,7 @@ def plot_r2star_and_s0(
     ax.set_xlim(0, r2s_p98)
     ax.set_title("R2*", fontsize=20)
     ax.set_ylabel("Count", fontsize=16)
-    ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
+    ax.set_xlabel(r"Seconds$^{-1}$\n(limited to 98th percentile)", fontsize=16)
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", r2star_histogram))
     plt.close(fig)
