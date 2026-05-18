@@ -110,7 +110,7 @@ The PCA components are then used to calculate the same number of ICA components.
 The ``--tedpca`` option includes several options to identify the "correct" number
 of PCA components.
 ``kundu`` and ``kundu-stabilize`` use several echo-based criteria to exclude PCA
-components that are unlikely to contain T2* or S0 signal.
+components that are unlikely to contain R2* or S0 signal.
 ``mdl`` (conservative & fewest components), ``kic``,
 & ``aic`` (liberal & more components) use `MAPCA`_.
 Within the same general method, each uses a cost function to find a minimum
@@ -210,19 +210,19 @@ tree and the ``tedana_orig`` tree which has been successfully used for years.
 
 Both of the above trees use multiple intersecting metrics and rankings to classify
 components. How these steps may interact on specific datasets is opaque. While there is
-a kappa (T2*-weighted) elbow threshold and a rho (S0-weighted) elbow threshold, as
+a kappa (R2*-weighted) elbow threshold and a rho (S0-weighted) elbow threshold, as
 discussed in publications, no component is accepted or rejected because of those thresholds.
 Users sometimes notice rejected components that clearly should have been accepted. For
-example, a component that included a clear T2*-weighted V1 response to a block design
+example, a component that included a clear R2*-weighted V1 response to a block design
 flashing checkerboard was sometimes rejected because the relatively large variance of
 that component interacted with a rejection criterion.
 
 The minimal tree (`--tree minimal`) is designed to be easier to understand and less
-likely to reject T2* weighted components. There are a few other criteria, but components
+likely to reject R2*-weighted components. There are a few other criteria, but components
 with `kappa>kappa elbow` and `rho<rho elbow` should all be accepted, and the rho elbow
 threshold is less stringent. If kappa is above threshold and more than 2X rho then it
 is also accepted under the assumption that, even if a component contains noise, there
-is sufficient T2*-weighted signal to retain. Similarly to the tedana_orig and meica
+is sufficient R2*-weighted signal to retain. Similarly to the tedana_orig and meica
 trees, components with very low variance are retained so that degrees of freedom aren't
 wasted by removing them, but `minimal` makes sure that no more than 1% of total variance
 is removed this way.

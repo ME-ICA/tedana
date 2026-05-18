@@ -5,7 +5,7 @@ TE (In)Dependence Models
 ########################
 
 Functional MRI signal can be described in terms of fluctuations in :math:`S_0`
-and :math:`T_2^*`.
+and :math:`R_2^*`.
 In the below equation, :math:`S(t, TE_k)` is signal at a given time :math:`t`
 and for a given echo time :math:`TE_k`.
 :math:`\bar{S}(TE_k)` is the mean signal across time for the echo time
@@ -22,13 +22,13 @@ If we ignore time, this can be simplified to
   \frac{{\Delta}S(TE_k)}{\bar{S}(TE_k)} = \frac{{\Delta}S_0}{S_0}-{\Delta}{R_2^*}*TE_k
 
 In order to evaluate whether signal change is being driven by fluctuations in
-**either** :math:`S_0` **or** :math:`T_2^*`, one can break this overall model
+**either** :math:`S_0` **or** :math:`R_2^*`, one can break this overall model
 into submodels by zeroing out certain terms.
 
 .. important::
    Remember- :math:`R_2^*` is just :math:`\frac{1}{T_2^*}`
 
-For a **TE-independence model**, if there were no fluctuations in :math:`T_2^*`:
+For a **TE-independence model**, if there were no fluctuations in :math:`R_2^*`:
 
 .. math::
   \frac{{\Delta}S(TE_k)}{\bar{S(TE_k)}} = \frac{{\Delta}S_0}{S_0}
@@ -74,14 +74,14 @@ As an example, let us simulate some data.
 We will simulate signal decay for two time points, as well as the signal decay
 for the hypothetical overall average over time.
 In one time point, only :math:`S_0` will fluctuate.
-In the other, only :math:`T_2^*` will fluctuate.
+In the other, only :math:`R_2^*` will fluctuate.
 
 .. caution::
   To make things easier, we're simulating these data with echo times of 0 to
   200 milliseconds, at 1ms intervals.
   In real life, you'll generally only have 3-5 echoes to work with.
   Real signal from each echo will also be contaminated with random noise and
-  will have influences from both :math:`S_0` and :math:`T_2^*`.
+  will have influences from both :math:`S_0` and :math:`R_2^*`.
 
 .. image:: /_static/b01_simulated_fluctuations.png
 
@@ -89,7 +89,7 @@ We can see that :math:`{\Delta}S(TE_k)` has very different curves for the two
 simulated datasets.
 Moreover, as expected, :math:`\frac{{\Delta}S(TE_k)}{\bar{S}(TE_k)}` is flat
 across echoes for the :math:`S_0`-fluctuating data and scales roughly linearly with TE
-for the :math:`T_2^*`-fluctuating data.
+for the :math:`R_2^*`-fluctuating data.
 
 We then fit our TE-dependence and TE-independence models to the
 :math:`{\Delta}S(TE_k)` data, which gives us predicted data for each model for
@@ -98,7 +98,7 @@ each dataset.
 .. image:: /_static/b02_model_fits.png
 
 As expected, the :math:`S_0` model fits perfectly to the :math:`S_0`-fluctuating dataset, while
-the :math:`T_2^*` model fits quite well to the :math:`T_2^*`-fluctuating dataset.
+the :math:`R_2^*` model fits quite well to the :math:`R_2^*`-fluctuating dataset.
 
 The actual model fits can be calculated as F-statistics.
 Then, the F-statistics per voxel are averaged across voxels into the Kappa and
@@ -112,21 +112,21 @@ Applying our models to spatiotemporal decompositions
 Now let us see how this extends to time series, components, and component
 parameter estimates.
 
-We have the means to simulate :math:`T_2^*`- and :math:`S_0`-based fluctuations, so here we have
-generated two time series- one :math:`T_2^*`-based and one :math:`S_0`-based.
+We have the means to simulate :math:`R_2^*`- and :math:`S_0`-based fluctuations, so here we have
+generated two time series- one :math:`R_2^*`-based and one :math:`S_0`-based.
 Both time series share the same level of percent signal change (a standard
 deviation equivalent to 5\% of the mean), although the mean :math:`S_0` (16000) is very
-different from the mean :math:`T_2^*` (30).
+different from the mean :math:`R_2^*` (33.3 s⁻¹).
 
 We can then average those two time series with different weights to create
-components that are :math:`T_2^*`- or :math:`S_0`-based to various degrees.
-In this case, both :math:`T_2^*` and :math:`S_0` contribute equally to the simulated time series.
+components that are :math:`R_2^*`- or :math:`S_0`-based to various degrees.
+In this case, both :math:`R_2^*` and :math:`S_0` contribute equally to the simulated time series.
 This simulated time series will act as our ICA component for this example.
 
 .. image:: /_static/b03_component_timeseries.png
 
 We also simulate multi-echo data for a single voxel with the same levels of
-:math:`T_2^*` and :math:`S_0` fluctuations as in the pure :math:`T_2^*` and :math:`S_0` time series above.
+:math:`R_2^*` and :math:`S_0` fluctuations as in the pure :math:`R_2^*` and :math:`S_0` time series above.
 Here we show time series for a subset of echo times.
 
 .. image:: /_static/b04_echo_timeseries.png
@@ -146,7 +146,7 @@ Note that the metric values are extremely high, due to the inflated
 degrees of freedom resulting from using so many echoes in the simulations.
 
 .. attention::
-   You may also notice that, despite the fact that :math:`T_2^*` and :math:`S_0` fluctuate the same
+   You may also notice that, despite the fact that :math:`R_2^*` and :math:`S_0` fluctuate the same
    amount and that both contributed equally to the component, :math:`\rho` is
    much higher than :math:`\kappa`.
 
@@ -175,12 +175,12 @@ countsigFT2
 ===========
 :func:`tedana.metrics.dependence.compute_countsignal`
 
-The number of significant voxels in each component's T2*-model F-statistic map
+The number of significant voxels in each component's R2*-model F-statistic map
 that are in clusters.
-Having these "signal" voxels in the T2*-model F-statistic map is a good
+Having these "signal" voxels in the R2*-model F-statistic map is a good
 indicator that the component is signal,
 and having more cluster voxels in the S0-model F-statistic map than
-in the T2*-model F-statistic map is a good indicator that the component is noise.
+in the R2*-model F-statistic map is a good indicator that the component is noise.
 
 
 countsigFS0
@@ -190,7 +190,7 @@ countsigFS0
 The number of significant voxels in each component's S0-model F-statistic map
 that are in clusters.
 Having more cluster voxels in the S0-model F-statistic map than
-in the T2*-model F-statistic map is a good indicator that the component is noise.
+in the R2*-model F-statistic map is a good indicator that the component is noise.
 
 
 dice_FT2
@@ -198,10 +198,10 @@ dice_FT2
 :func:`tedana.metrics.dependence.compute_dice`
 
 The Dice similarity index between each component's cluster-extent thresholded
-T2*-model F-statistic map (using a p<0.05 threshold) and
+R2*-model F-statistic map (using a p<0.05 threshold) and
 its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
-This is a measure of the similarity between the T2*-model F-statistic map and the weight map.
-If the standardized parameter estimate map has a higher DSI with the T2*-model F-statistic map than the S0-model F-statistic map,
+This is a measure of the similarity between the R2*-model F-statistic map and the weight map.
+If the standardized parameter estimate map has a higher DSI with the R2*-model F-statistic map than the S0-model F-statistic map,
 it is more likely to be signal.
 
 
@@ -213,7 +213,7 @@ The Dice similarity index between each component's cluster-extent thresholded
 S0-model F-statistic map (using a p<0.05 threshold) and
 its cluster-extent thresholded standardized parameter estimate map (using a 5% threshold).
 This is a measure of the similarity between the S0-model F-statistic map and the standardized parameter estimate map.
-If the standardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the T2*-model F-statistic map,
+If the standardized parameter estimate map has a higher DSI with the S0-model F-statistic map than the R2*-model F-statistic map,
 it is more likely to be noise.
 
 
@@ -221,7 +221,7 @@ signal-noise_t
 ==============
 :func:`tedana.metrics.dependence.compute_signal_minus_noise_t`
 
-A t-test is performed between the distributions of unique T2*-model F-statistics
+A t-test is performed between the distributions of unique R2*-model F-statistics
 associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to
 generate a t-statistic (metric ``signal-noise_t``) and p-value (metric ``signal-noise_p``)
 measuring relative association of the component to signal over noise.
@@ -231,7 +231,7 @@ signal-noise_z
 ==============
 :func:`tedana.metrics.dependence.compute_signal_minus_noise_z`
 
-A t-test is performed between the distributions of T2*-model F-statistics
+A t-test is performed between the distributions of R2*-model F-statistics
 associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to
 generate a z-statistic (metric ``signal-noise_z``) and p-value (metric ``signal-noise_p``)
 measuring relative association of the component to signal over noise.
