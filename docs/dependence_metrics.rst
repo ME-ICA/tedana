@@ -26,7 +26,7 @@ In order to evaluate whether signal change is being driven by fluctuations in
 **either** :math:`S_0` **or** :math:`R_2^*`, one can break this overall model
 into submodels by zeroing out certain terms.
 Fitting both :math:`{\Delta}R_2^*` and :math:`{\Delta}S_0` simultaneously is
-unstable :footcite:p:`kundu2012multi`, so each sub-model is fit separately.
+unstable :footcite:p:`kundu2012differentiating`, so each sub-model is fit separately.
 
 .. important::
    Remember- :math:`R_2^*` is just :math:`\frac{1}{T_2^*}`
@@ -105,7 +105,7 @@ Here, :math:`\alpha = \sum_k {\Delta}S(TE_k)^2` instead measures how much better
 the model is than predicting no signal change at all.
 These statistics are therefore called "pseudo" F-statistics.
 Despite this difference, they still follow an :math:`F(1, E-1)` distribution
-:footcite:p:`kundu2012multi`, so standard p-values can be computed from them.
+:footcite:p:`kundu2012differentiating`, so standard p-values can be computed from them.
 
 .. topic:: Why not fit these models to the data directly?
 
