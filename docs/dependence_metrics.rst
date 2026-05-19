@@ -417,7 +417,8 @@ The metrics are:
 The decision table score is then calculated as the average of the ranks of the metrics.
 
 
+**********
 References
-==========
+**********
 
 .. footbibliography::
