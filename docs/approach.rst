@@ -159,7 +159,15 @@ on the original data.
 
 .. image:: /_static/a06_monoexponential_decay_model.png
 
-We can also see where :math:`R_{2}^*` lands on this curve.
+We can also see where :math:`T_{2}^*` lands on this curve.
+
+.. tip::
+  Remember that :math:`T_{2}^*` is just :math:`\frac{1}{R_{2}^*}`.
+
+  :math:`R_{2}^*`` is the exponential decay rate governing the steepness of the signal decay curve,
+  while :math:`T_{2}^*`` is the corresponding decay time constant.
+  In BOLD fMRI, the optimal echo time (the one that maximizes the contrast between inactive and active states)
+  is typically close to the baseline :math:`T_{2}^*` of the voxel.
 
 .. image:: /_static/a07_monoexponential_decay_model_with_t2.png
 
