@@ -10,11 +10,12 @@ In the below equation, :math:`S(t, TE_k)` is signal at a given time :math:`t`
 and for a given echo time :math:`TE_k`.
 :math:`\bar{S}(TE_k)` is the mean signal across time for the echo time
 :math:`TE_k`.
+:math:`{\Delta}S(t, TE_k)` is the difference in signal at time :math:`t` and echo :math:`TE_k` from the mean signal at that echo, i.e. :math:`{\Delta}S(t, TE_k) = S(t, TE_k) - \bar{S}(TE_k)`.
 :math:`{\Delta}{S_0}(t)` is the difference in :math:`S_0` at time :math:`t` from the average :math:`S_0`.
 :math:`{\Delta}{R_2^*}(t)` is the difference in :math:`R_2^*` at time :math:`t` from the average :math:`R_2^*`.
 
 .. math::
-  S(t, TE_k) = \bar{S}(TE_k) * (1 + \frac{{\Delta}{S_0}(t)}{\bar{S}_0} - {\Delta}{R_2^*}(t)*TE_k)
+  S(t, TE_k) = \bar{S}(TE_k) * (1 + \frac{{\Delta}{S_0}(t)}{S_0} - {\Delta}{R_2^*}(t)*TE_k)
 
 If we ignore time, this can be simplified to
 
@@ -24,6 +25,8 @@ If we ignore time, this can be simplified to
 In order to evaluate whether signal change is being driven by fluctuations in
 **either** :math:`S_0` **or** :math:`R_2^*`, one can break this overall model
 into submodels by zeroing out certain terms.
+Fitting both :math:`{\Delta}R_2^*` and :math:`{\Delta}S_0` simultaneously is
+unstable :footcite:p:`kundu2012multi`, so each sub-model is fit separately.
 
 .. important::
    Remember- :math:`R_2^*` is just :math:`\frac{1}{T_2^*}`
@@ -101,11 +104,13 @@ than simply predicting the mean.
 Here, :math:`\alpha = \sum_k {\Delta}S(TE_k)^2` instead measures how much better
 the model is than predicting no signal change at all.
 These statistics are therefore called "pseudo" F-statistics.
+Despite this difference, they still follow an :math:`F(1, E-1)` distribution
+:footcite:p:`kundu2012multi`, so standard p-values can be computed from them.
 
 .. topic:: Why not fit these models to the data directly?
 
   While it is possible to fit these models to the data directly,
-  we do not necessarily want to know whether a voxel's time series is TE-dependent or TE-independent,
+  we do not necessarily want to know whether each voxel's signal change from baseline to a given timepoint is TE-dependent or TE-independent,
   since each voxel will contain a mixture of TE-dependent and TE-independent signals.
   Therefore, tedana relies on blind source separation using PCA or ICA to identify underlying signals (components) that may be TE-dependent or TE-independent,
   and evaluates those components instead.
@@ -410,3 +415,9 @@ The metrics are:
 - countsigFT2
 
 The decision table score is then calculated as the average of the ranks of the metrics.
+
+
+References
+==========
+
+.. footbibliography::
