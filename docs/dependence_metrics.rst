@@ -31,39 +31,92 @@ into submodels by zeroing out certain terms.
 For a **TE-independence model**, if there were no fluctuations in :math:`R_2^*`:
 
 .. math::
-  \frac{{\Delta}S(TE_k)}{\bar{S(TE_k)}} = \frac{{\Delta}S_0}{S_0}
+  \frac{{\Delta}S(TE_k)}{\bar{S}(TE_k)} = \frac{{\Delta}S_0}{S_0}
 
   {\Delta}S(TE_k) = {\bar{S}(TE_k)} * \frac{{\Delta}S_0}{S_0}
 
 Note that TE is not a parameter in this model.
 Hence, this model is TE-independent.
 
-Also, :math:`\frac{{\Delta}S_0}{S_0}` is a scalar (i.e., doesn't change with
-TE), so we can just ignore that, which means we only use :math:`{\bar{S}(TE_k)}`
-(mean echo-wise signal).
+Since :math:`\frac{{\Delta}S_0}{S_0}` is a scalar (i.e., doesn't change with
+TE), it can be absorbed into a scalar coefficient, leaving :math:`{\bar{S}(TE_k)}`
+(mean echo-wise signal) as the regressor.
+The model is fit by regressing :math:`{\Delta}S(TE_k)` against
+:math:`{\bar{S}(TE_k)}`:
 
-Thus, the model becomes :math:`{\Delta}S(TE_k) = {\bar{S}(TE_k)} * X`, where we
-fit X to the data using regression and evaluate model fit.
-
-For TEDPCA/TEDICA, we use regression to get parameter estimates (raw PEs; not
-standardized beta values) for component time-series against echo-specific data,
-and substitute those PEs for :math:`{\bar{S}(TE_k)}`.
-Thus, to assess the TE-independence of a component, we use the model
-:math:`PE(TE_k) = {\bar{S}(TE_k)} * X`, fit X to the data, and evaluate model
-fit.
+.. math::
+  {\Delta}S(TE_k) \approx c * {\bar{S}(TE_k)}
 
 For a **TE-dependence model**, if there were no fluctuations in :math:`S_0`:
 
 .. math::
   \frac{{\Delta}S(TE_k)}{\bar{S}(TE_k)} = -{\Delta}{R_2^*}*TE_k
 
-  {\Delta}S(TE_k) = {\bar{S}(TE_k)} * -{\Delta}{R_2^*}*TE_k
+  {\Delta}S(TE_k) = {\bar{S}(TE_k)} * (-{\Delta}{R_2^*}) * TE_k
 
-  {\Delta}S(TE_k) = {\bar{S}(TE_k)} * TE_k * X
+Since :math:`-{\Delta}R_2^*` is a scalar (does not vary with TE), it can be
+absorbed into a scalar coefficient, leaving :math:`{\bar{S}(TE_k)} * TE_k` as the regressor.
+The model is fit by regressing :math:`{\Delta}S(TE_k)` against
+:math:`{\bar{S}(TE_k)} * TE_k`:
 
-  PE(TE_k) = {\bar{S}(TE_k)} * TE_k * X
+.. math::
+  {\Delta}S(TE_k) \approx c * {\bar{S}(TE_k)} * TE_k
 
 Note that TE is a parameter in this model. Hence, it is TE-dependent.
+
+Now that we have each model, we can estimate :math:`c` for each voxel and evaluate
+how well each model describes the data.
+For a given voxel, the scalar coefficient :math:`\hat{c}` is estimated by ordinary
+least squares:
+
+.. math::
+   \hat{c} = \frac{\sum_k {\Delta}S(TE_k) \cdot X(TE_k)}{\sum_k X(TE_k)^2}
+
+where :math:`X(TE_k)` is :math:`\bar{S}(TE_k)` for the TE-independence model and
+:math:`\bar{S}(TE_k) \cdot TE_k` for the TE-dependence model.
+
+Using this estimate, the predicted signal change at each echo is:
+
+.. math::
+   \widehat{{\Delta}S}(TE_k) = \hat{c} \cdot X(TE_k)
+
+The fit quality is then evaluated by comparing how much of the total signal the
+model accounts for.
+The total sum of squares and residual sum of squares are:
+
+.. math::
+   \alpha = \sum_k {\Delta}S(TE_k)^2
+
+   SSE = \sum_k \left({\Delta}S(TE_k) - \widehat{{\Delta}S}(TE_k)\right)^2
+
+and the pseudo-F-statistic is:
+
+.. math::
+   F = \frac{(\alpha - SSE) \cdot (E - 1)}{SSE}
+
+where :math:`E` is the number of echoes.
+In a standard F-statistic, :math:`\alpha` would be the sum of squared deviations
+from the mean of :math:`{\Delta}S(TE_k)`, measuring how much better the model is
+than simply predicting the mean.
+Here, :math:`\alpha = \sum_k {\Delta}S(TE_k)^2` instead measures how much better
+the model is than predicting no signal change at all.
+These statistics are therefore called "pseudo" F-statistics.
+
+.. topic:: Why not fit these models to the data directly?
+
+  While it is possible to fit these models to the data directly,
+  we do not necessarily want to know whether a voxel's time series is TE-dependent or TE-independent,
+  since each voxel will contain a mixture of TE-dependent and TE-independent signals.
+  Therefore, tedana relies on blind source separation using PCA or ICA to identify underlying signals (components) that may be TE-dependent or TE-independent,
+  and evaluates those components instead.
+
+The per-voxel F-statistic from the **TE-dependence model** is the per-voxel :math:`\kappa`,
+and from the **TE-independence model** it is the per-voxel :math:`\rho`.
+These per-voxel values are combined into a single component-level value by taking a
+weighted average across voxels, where each voxel is weighted by the square of its
+standardized parameter estimate for that component.
+This gives more influence to voxels where the component has a stronger signal.
+The resulting weighted averages are the component-level :math:`\kappa` and :math:`\rho`.
 
 
 ******************************************
@@ -78,7 +131,7 @@ In the other, only :math:`R_2^*` will fluctuate.
 
 .. caution::
   To make things easier, we're simulating these data with echo times of 0 to
-  200 milliseconds, at 1ms intervals.
+  200 milliseconds, at 1 ms intervals.
   In real life, you'll generally only have 3-5 echoes to work with.
   Real signal from each echo will also be contaminated with random noise and
   will have influences from both :math:`S_0` and :math:`R_2^*`.
@@ -100,9 +153,7 @@ each dataset.
 As expected, the :math:`S_0` model fits perfectly to the :math:`S_0`-fluctuating dataset, while
 the :math:`R_2^*` model fits quite well to the :math:`R_2^*`-fluctuating dataset.
 
-The actual model fits can be calculated as F-statistics.
-Then, the F-statistics per voxel are averaged across voxels into the Kappa and
-Rho pseudo-F-statistics.
+The model fit quality at each voxel is quantified using the pseudo-F-statistics defined above.
 
 
 ****************************************************
@@ -137,11 +188,23 @@ subset of echo times):
 .. image:: /_static/b05_echo_value_distributions.png
 
 We then run a regression for each echo's data against the component time series,
-producing one parameter estimate for each echo time.
-The parameter estimates match the signal decay curve for :math:`{\Delta}S(TE_k)`,
-as seen above.
-We can thus apply the same TE-dependence and -independence models as above,
-in order to calculate single-voxel :math:`\rho` and :math:`\kappa` values.
+producing one parameter estimate (PE) for each echo time.
+The PEs correspond to :math:`{\Delta}S(TE_k)`, so the same TE-dependence and
+-independence models apply directly with the PEs as the dependent variable.
+
+For the **TE-independence model**, the component PEs are regressed against
+:math:`{\bar{S}(TE_k)}`:
+
+.. math::
+  PE(TE_k) \approx c * {\bar{S}(TE_k)}
+
+For the **TE-dependence model**, the component PEs are regressed against
+:math:`{\bar{S}(TE_k)} * TE_k`:
+
+.. math::
+  PE(TE_k) \approx c * {\bar{S}(TE_k)} * TE_k
+
+These are the per-voxel :math:`\kappa` and :math:`\rho` values defined in the previous section.
 Note that the metric values are extremely high, due to the inflated
 degrees of freedom resulting from using so many echoes in the simulations.
 
