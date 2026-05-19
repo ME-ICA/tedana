@@ -204,7 +204,7 @@ For the **TE-dependence model**, the component PEs are regressed against
 .. math::
   PE(TE_k) \approx c * {\bar{S}(TE_k)} * TE_k
 
-These are the per-voxel :math:`\kappa` and :math:`\rho` values defined in the previous section.
+These are used to calculate the per-voxel :math:`\kappa` and :math:`\rho` values defined in the previous section.
 Note that the metric values are extremely high, due to the inflated
 degrees of freedom resulting from using so many echoes in the simulations.
 
