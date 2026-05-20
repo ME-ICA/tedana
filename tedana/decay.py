@@ -608,7 +608,7 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     It also replaces NaN values in the :math:`S_0` map with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
-    t2s[np.isinf(t2s)] = 500.0  # why 500?
+    t2s[np.isinf(t2s)] = 0.5  # why 500 ms?
     t2s[t2s <= 0] = 1.0  # let's get rid of negative values!
     t2s = _apply_t2s_floor(t2s, tes)
     s0[np.isnan(s0)] = 0.0  # why 0?
