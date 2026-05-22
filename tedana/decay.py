@@ -587,7 +587,7 @@ def modify_r2s_s0_maps(r2s, s0, adaptive_mask, tes):
     """
     # R2*=inf means T2*=0 (physically impossible); clamp to 1.0 s⁻¹
     r2s[np.isinf(r2s)] = 1.0
-    # R2*≤0 means T2*→∞ or negative (bad fit); clamp to very small positive
+    # R2*<=0 means T2*->inf or negative (bad fit); clamp to very small positive
     r2s[r2s <= 0] = 1 / 500.0
     r2s = _apply_r2s_ceiling(r2s, tes)
     s0[np.isnan(s0)] = 0.0
