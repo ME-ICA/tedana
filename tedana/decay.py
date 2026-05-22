@@ -601,15 +601,15 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
 
     Notes
     -----
-    This function replaces infinite values in the :math:`T_2^*` map with 500 and
-    :math:`T_2^*` values less than or equal to zero with 1.
+    This function replaces infinite values in the :math:`T_2^*` map with 0.5 s and
+    :math:`T_2^*` values less than or equal to zero with 0.001 s.
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
     It also replaces NaN values in the :math:`S_0` map with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
-    t2s[np.isinf(t2s)] = 500.0  # why 500?
-    t2s[t2s <= 0] = 1.0  # let's get rid of negative values!
+    t2s[np.isinf(t2s)] = 0.5  # why 0.5 s?
+    t2s[t2s <= 0] = 0.001  # set negative values to a small positive value
     t2s = _apply_t2s_floor(t2s, tes)
     s0[np.isnan(s0)] = 0.0  # why 0?
 
