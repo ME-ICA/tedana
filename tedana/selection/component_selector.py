@@ -15,6 +15,7 @@ from tedana.selection.selection_utils import (
     confirm_metrics_exist,
     log_classification_counts,
 )
+from tedana.metrics.external import STATISTIC_HANDLERS
 from tedana.utils import get_resource_path
 
 LGR = logging.getLogger("GENERAL")
@@ -266,9 +267,7 @@ def validate_tree(tree: Dict) -> Dict:
                 ["regress_ID", "info", "report", "detrend", "statistic", "regressors"]
             )
             dict_optional_keys = set(["partial_models"])
-            # Right now, "f" is the only option, but this leaves open the possibility
-            #  to have additional options
-            statistic_key_options = set("f")
+            statistic_key_options = set(STATISTIC_HANDLERS.keys())
 
             for config_idx in range(len(external_regressor_config)):
                 # Confirm that the required fields exist

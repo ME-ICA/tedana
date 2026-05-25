@@ -386,11 +386,7 @@ def test_validate_tree_fails():
 
     with pytest.raises(
         component_selector.TreeError,
-        match=(
-            "statistic in external_regressor_config 1 is corr. It must be one of the following: "
-            "{'f'}\nExternal regressor dictionary cannot include partial_models "
-            "if statistic is not F"
-        ),
+        match=r"statistic in external_regressor_config 1 is corr\. It must be one of the following: ",
     ):
         component_selector.validate_tree(dicts_to_test("external_invalid_statistic"))
 
