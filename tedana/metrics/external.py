@@ -735,3 +735,57 @@ def calculate_max_rp_corr(*, mixing: np.ndarray, regressors: np.ndarray) -> np.n
 
     max_rp_corr = np.nanmean(max_correlations, axis=0)
     return max_rp_corr
+
+
+def fit_max_rp_corr_to_regressors(
+    component_table: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    external_regressor_config: Dict,
+    mixing: npt.NDArray,
+    detrend_regressors: pd.DataFrame,
+) -> pd.DataFrame:
+    """Calculate max_RP_corr from specified external regressor columns.
+
+    Parameters
+    ----------
+    component_table : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component,
+        with a column for each metric.
+    external_regressors : (T x R) :obj:`pandas.DataFrame`
+        External regressor time series.
+    external_regressor_config : :obj:`dict`
+        Single external regressor config entry. Required keys:
+        ``regress_ID``, ``regressors``, ``detrend``, ``statistic``.
+    mixing : (T x C) array_like
+        ICA mixing matrix.
+    detrend_regressors : (T x P) :obj:`pandas.DataFrame`
+        Legendre polynomial basis for optional detrending.
+
+    Returns
+    -------
+    component_table : (C x X) :obj:`pandas.DataFrame`
+        Input table with ``"max_RP_corr {regress_ID} model"`` column added.
+    """
+    regress_id = external_regressor_config["regress_ID"]
+    rp_arr = external_regressors[external_regressor_config["regressors"]].values
+
+    apply_detrend = external_regressor_config["detrend"] is True or (
+        isinstance(external_regressor_config["detrend"], int)
+        and external_regressor_config["detrend"] > 0
+    )
+
+    if apply_detrend:
+        L = detrend_regressors.values
+        mixing_use = mixing - L @ np.linalg.lstsq(L, mixing, rcond=None)[0]
+        rp_use = rp_arr - L @ np.linalg.lstsq(L, rp_arr, rcond=None)[0]
+        LGR.info(
+            f"max_RP_corr for {regress_id} detrended with "
+            f"{L.shape[1]} Legendre Polynomial regressors."
+        )
+    else:
+        mixing_use = mixing
+        rp_use = rp_arr
+
+    max_rp_corr = calculate_max_rp_corr(mixing=mixing_use, regressors=rp_use)
+    component_table[f"max_RP_corr {regress_id} model"] = max_rp_corr
+    return component_table

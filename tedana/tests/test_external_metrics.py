@@ -777,6 +777,78 @@ def test_compute_external_regressor_correlations_warns_on_problematic_columns(ca
     assert "ICA components: ICA_00 (zero variance)" in caplog.text
 
 
+# fit_max_rp_corr_to_regressors
+# -----------------------------
+
+
+class TestFitMaxRpCorrToRegressors:
+    """Tests for external.fit_max_rp_corr_to_regressors."""
+
+    def _make_inputs(self, n_vols=100, n_components=5, n_regressors=6, seed=0):
+        """Return (component_table, external_regressors, config, mixing, detrend_regressors)."""
+        rng = np.random.default_rng(seed)
+        mixing = rng.standard_normal((n_vols, n_components))
+        regressor_names = [f"mot_{i}" for i in range(n_regressors)]
+        ext_reg = pd.DataFrame(
+            rng.standard_normal((n_vols, n_regressors)), columns=regressor_names
+        )
+        config = {
+            "regress_ID": "motion",
+            "regressors": regressor_names,
+            "detrend": False,
+            "statistic": "max_rp_corr",
+        }
+        import tedana.utils as tedana_utils
+        legendre_arr = tedana_utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
+        detrend_regressors = pd.DataFrame(
+            legendre_arr, columns=[f"baseline {i}" for i in range(legendre_arr.shape[1])]
+        )
+        component_table = pd.DataFrame(
+            {"Component": [f"ICA_{i:02d}" for i in range(n_components)]}
+        )
+        return component_table, ext_reg, config, mixing, detrend_regressors
+
+    def test_output_column_exists(self):
+        """Adds 'max_RP_corr motion model' column with correct length."""
+        component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
+        np.random.seed(0)
+        result = external.fit_max_rp_corr_to_regressors(
+            component_table, ext_reg, config, mixing, detrend_regressors
+        )
+        assert "max_RP_corr motion model" in result.columns
+        assert len(result["max_RP_corr motion model"]) == mixing.shape[1]
+        assert np.all(result["max_RP_corr motion model"] >= 0)
+        assert np.all(result["max_RP_corr motion model"] <= 1)
+
+    def test_column_name_uses_regress_id(self):
+        """Output column name is 'max_RP_corr {regress_ID} model'."""
+        component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
+        config["regress_ID"] = "physio"
+        np.random.seed(0)
+        result = external.fit_max_rp_corr_to_regressors(
+            component_table, ext_reg, config, mixing, detrend_regressors
+        )
+        assert "max_RP_corr physio model" in result.columns
+
+    def test_detrend_true_changes_result(self):
+        """detrend=True produces a different result than detrend=False."""
+        component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs(seed=1)
+        np.random.seed(0)
+        config["detrend"] = False
+        result_no_detrend = external.fit_max_rp_corr_to_regressors(
+            component_table.copy(), ext_reg, config, mixing, detrend_regressors
+        )
+        np.random.seed(0)
+        config["detrend"] = True
+        result_detrend = external.fit_max_rp_corr_to_regressors(
+            component_table.copy(), ext_reg, config, mixing, detrend_regressors
+        )
+        assert not np.allclose(
+            result_no_detrend["max_RP_corr motion model"].values,
+            result_detrend["max_RP_corr motion model"].values,
+        ), "detrend=True and detrend=False should produce different results"
+
+
 # calculate_max_rp_corr
 # ---------------------
 
