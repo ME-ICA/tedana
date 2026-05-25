@@ -14,6 +14,7 @@ sub-01_desc-tedana_registry.json
 sub-01_desc-ICACrossComponent_metrics.json
 sub-01_desc-ICA_status_table.tsv
 sub-01_desc-ICA_decision_tree.json
+sub-01_desc-ICAOrth_stat-z_components.nii.gz
 sub-01_desc-ICAS0_stat-F_statmap.nii.gz
 sub-01_desc-ICAT2_stat-F_statmap.nii.gz
 sub-01_desc-ICA_mixing.tsv
