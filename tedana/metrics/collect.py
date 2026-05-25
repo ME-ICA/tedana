@@ -12,7 +12,6 @@ import pandas as pd
 from tedana import io, utils
 from tedana.metrics import dependence, external
 from tedana.metrics._utils import (
-    add_external_dependencies,
     dependency_resolver,
     determine_signs,
     flip_components,
@@ -107,8 +106,7 @@ def generate_metrics(
                 "If external_regressors is defined, then "
                 "external_regressor_config also needs to be defined."
             )
-        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
-        dependency_config["inputs"].append("external regressors")
+        dependency_config = external.add_external_dependencies(dependency_config, external_regressor_config)
 
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 

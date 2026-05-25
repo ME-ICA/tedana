@@ -4,12 +4,12 @@ import numpy as np
 import pytest
 
 from tedana.metrics._utils import (
-    add_external_dependencies,
     dependency_resolver,
     determine_signs,
     flip_components,
     get_value_thresholds,
 )
+from tedana.metrics.external import add_external_dependencies
 
 
 def test_determine_signs():
@@ -165,6 +165,23 @@ def test_add_external_dependencies():
     # Check partial model dependencies
     assert "Fstat physio cardiac partial model" in updated_config_partial["dependencies"]
     assert "Fstat physio respiratory partial model" in updated_config_partial["dependencies"]
+
+    # Test with max_rp_corr statistic
+    external_regressor_config_rp = [
+        {
+            "regress_ID": "motion",
+            "statistic": "max_rp_corr",
+            "info": "Motion",
+            "report": "Motion correlation",
+        }
+    ]
+    updated_config_rp = add_external_dependencies(
+        {"inputs": ["data"], "dependencies": {}}, external_regressor_config_rp
+    )
+    assert "max_RP_corr motion model" in updated_config_rp["dependencies"]
+    assert updated_config_rp["dependencies"]["max_RP_corr motion model"] == [
+        "external regressors"
+    ]
 
 
 def test_get_value_thresholds_value_threshold_single_component():

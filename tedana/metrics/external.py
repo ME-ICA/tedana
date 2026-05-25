@@ -800,3 +800,47 @@ STATISTIC_HANDLERS = {
     "f": fit_mixing_to_regressors,
     "max_rp_corr": fit_max_rp_corr_to_regressors,
 }
+
+
+def add_external_dependencies(
+    dependency_config: Dict, external_regressor_config: List[Dict]
+) -> Dict:
+    """Add dependency information when external regressors are inputted.
+
+    Parameters
+    ----------
+    dependency_config : :obj:`dict`
+        A dictionary stored in ``./config/metrics.json`` with information on
+        all internally defined metrics.
+    external_regressor_config : :obj:`list[dict]`
+        A list of dictionaries with info for fitting external regressors to
+        component time series.
+
+    Returns
+    -------
+    dependency_config : :obj:`dict`
+        Updated dictionary with external-regressor metric dependencies added.
+    """
+    dependency_config["inputs"].append("external regressors")
+
+    for config_idx in range(len(external_regressor_config)):
+        regress_id = external_regressor_config[config_idx]["regress_ID"]
+        statistic = external_regressor_config[config_idx]["statistic"].lower()
+
+        if statistic == "f":
+            model_names = [regress_id]
+            if "partial_models" in set(external_regressor_config[config_idx].keys()):
+                partial_keys = external_regressor_config[config_idx]["partial_models"].keys()
+                for key_name in partial_keys:
+                    model_names.append(f"{regress_id} {key_name} partial")
+            for model_name in model_names:
+                for stat_type in ["Fstat", "R2stat", "pval"]:
+                    dependency_config["dependencies"][f"{stat_type} {model_name} model"] = [
+                        "external regressors"
+                    ]
+        elif statistic == "max_rp_corr":
+            dependency_config["dependencies"][f"max_RP_corr {regress_id} model"] = [
+                "external regressors"
+            ]
+
+    return dependency_config
