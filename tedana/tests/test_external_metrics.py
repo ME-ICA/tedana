@@ -527,6 +527,31 @@ def test_fit_regressors(caplog):
             component_table, external_regressors, external_regressor_config_expanded, mixing
         )
 
+    # max_rp_corr dispatch: six motion columns from external_regressors
+    caplog.clear()
+    mot_col_names = [
+        "Mot_X", "Mot_Y", "Mot_Z", "Mot_Pitch", "Mot_Roll", "Mot_Yaw"
+    ]
+    maxrp_config = [
+        {
+            "regress_ID": "motion",
+            "info": "max_RP_corr test",
+            "report": "max_RP_corr report",
+            "detrend": False,
+            "statistic": "max_rp_corr",
+            "regressors": mot_col_names,
+        }
+    ]
+    external_regressors_loaded, _ = sample_external_regressors()
+    component_table_rp = sample_comptable(mixing.shape[1])
+    np.random.seed(0)
+    component_table_rp = external.fit_regressors(
+        component_table_rp, external_regressors_loaded, maxrp_config, mixing
+    )
+    assert "max_RP_corr motion model" in component_table_rp.columns
+    assert np.all(component_table_rp["max_RP_corr motion model"] >= 0)
+    assert np.all(component_table_rp["max_RP_corr motion model"] <= 1)
+
 
 # fit_mixing_to_regressors
 # --------------

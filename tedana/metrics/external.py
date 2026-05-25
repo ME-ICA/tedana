@@ -310,23 +310,24 @@ def fit_regressors(
             detrend_labels.append(f"baseline {label_idx}")
         detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
-        if external_regressor_config[config_idx]["statistic"].lower() == "f":
-            component_table = fit_mixing_to_regressors(
-                component_table,
-                external_regressors,
-                external_regressor_config[config_idx],
-                mixing,
-                detrend_regressors,
-            )
-        else:
+        statistic = external_regressor_config[config_idx]["statistic"].lower()
+        handler = STATISTIC_HANDLERS.get(statistic)
+        if handler is None:
             # This should already be validated by this point, but keeping the catch clause here
             # since this would otherwise just return component_table with no changes, which would
             # make a hard-to-track error
             raise ValueError(
                 f"statistic for {regress_id} external regressors in decision tree is "
-                f"{external_regressor_config[config_idx]['statistic'].lower()}, "
+                f"{statistic}, "
                 "which is not valid."
             )
+        component_table = handler(
+            component_table,
+            external_regressors,
+            external_regressor_config[config_idx],
+            mixing,
+            detrend_regressors,
+        )
 
     return component_table
 
@@ -793,3 +794,9 @@ def fit_max_rp_corr_to_regressors(
     max_rp_corr = calculate_max_rp_corr(mixing=mixing_use, regressors=rp_use)
     component_table[f"max_RP_corr {regress_id} model"] = max_rp_corr
     return component_table
+
+
+STATISTIC_HANDLERS = {
+    "f": fit_mixing_to_regressors,
+    "max_rp_corr": fit_max_rp_corr_to_regressors,
+}
