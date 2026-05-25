@@ -789,58 +789,60 @@ class TestCalculateMaxRpCorr:
         rng = np.random.default_rng(0)
         n_vols, n_components = 100, 5
         mixing = rng.standard_normal((n_vols, n_components))
-        motpars = rng.standard_normal((n_vols, 6))
+        regressors = rng.standard_normal((n_vols, 6))
         np.random.seed(42)
-        result = external.calculate_max_rp_corr(mixing=mixing, motpars=motpars)
+        result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert result.shape == (n_components,)
 
     def test_output_range(self):
         """All values are in [0, 1] (absolute Pearson correlation)."""
         rng = np.random.default_rng(1)
         mixing = rng.standard_normal((100, 4))
-        motpars = rng.standard_normal((100, 6))
+        regressors = rng.standard_normal((100, 6))
         np.random.seed(0)
-        result = external.calculate_max_rp_corr(mixing=mixing, motpars=motpars)
+        result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert np.all(result >= 0)
         assert np.all(result <= 1)
 
     def test_correlated_component_has_higher_score(self):
-        """A component built from a motion parameter has a higher score than white noise."""
+        """A component built from a regressor has a higher score than white noise."""
         rng = np.random.default_rng(2)
         n_vols = 150
-        motpars = rng.standard_normal((n_vols, 6))
-        # First component strongly correlated with the first motion parameter
-        correlated = motpars[:, 0:1] + 0.1 * rng.standard_normal((n_vols, 1))
+        regressors = rng.standard_normal((n_vols, 6))
+        correlated = regressors[:, 0:1] + 0.1 * rng.standard_normal((n_vols, 1))
         noise = rng.standard_normal((n_vols, 1))
         mixing = np.hstack([correlated, noise])
-
         np.random.seed(0)
-        result = external.calculate_max_rp_corr(mixing=mixing, motpars=motpars)
+        result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert result[0] > result[1], (
             f"Correlated component score ({result[0]:.3f}) should exceed "
             f"noise component score ({result[1]:.3f})"
         )
 
-    def test_wrong_motpars_shape_n_cols(self):
-        """Raises ValueError when motpars does not have 6 columns."""
-        rng = np.random.default_rng(3)
-        mixing = rng.standard_normal((100, 3))
-        motpars_bad = rng.standard_normal((100, 4))
-        with pytest.raises(ValueError, match="motpars must have shape"):
-            external.calculate_max_rp_corr(mixing=mixing, motpars=motpars_bad)
+    def test_generalized_n_columns(self):
+        """Accepts any number of columns, not just 6."""
+        rng = np.random.default_rng(6)
+        n_vols, n_components = 100, 3
+        mixing = rng.standard_normal((n_vols, n_components))
+        for n_cols in [1, 3, 12]:
+            regressors = rng.standard_normal((n_vols, n_cols))
+            np.random.seed(0)
+            result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
+            assert result.shape == (n_components,)
+            assert np.all(result >= 0) and np.all(result <= 1)
 
-    def test_wrong_motpars_shape_n_rows(self):
-        """Raises ValueError when motpars row count does not match mixing."""
+    def test_wrong_regressors_shape_n_rows(self):
+        """Raises ValueError when regressors row count does not match mixing."""
         rng = np.random.default_rng(4)
         mixing = rng.standard_normal((100, 3))
-        motpars_bad = rng.standard_normal((80, 6))
+        regressors_bad = rng.standard_normal((80, 6))
         with pytest.raises(ValueError, match="Number of rows"):
-            external.calculate_max_rp_corr(mixing=mixing, motpars=motpars_bad)
+            external.calculate_max_rp_corr(mixing=mixing, regressors=regressors_bad)
 
     def test_keyword_only_args(self):
         """calculate_max_rp_corr requires keyword arguments."""
         rng = np.random.default_rng(5)
         mixing = rng.standard_normal((100, 2))
-        motpars = rng.standard_normal((100, 6))
+        regressors = rng.standard_normal((100, 6))
         with pytest.raises(TypeError):
-            external.calculate_max_rp_corr(mixing, motpars)  # positional not allowed
+            external.calculate_max_rp_corr(mixing, regressors)  # positional not allowed

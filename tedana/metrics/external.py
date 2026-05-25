@@ -667,58 +667,56 @@ def compute_external_regressor_correlations(
     return correlation_df
 
 
-def calculate_max_rp_corr(*, mixing: np.ndarray, motpars: np.ndarray) -> np.ndarray:
-    """Calculate the maximum motion-parameter correlation (max_RP_corr) for each component.
+def calculate_max_rp_corr(*, mixing: np.ndarray, regressors: np.ndarray) -> np.ndarray:
+    """Calculate the maximum regressor-correlation (max_RP_corr) for each component.
 
     Computes the mean, over 1000 random 90%-subsamples of timepoints, of the
     maximum absolute Pearson correlation between each component time series and
-    a 36-regressor motion-parameter model (raw 6 parameters, their derivatives,
-    and both sets time-shifted ±1 TR).  Correlations are computed for the raw
-    time series and their element-wise squares, giving 72 total comparisons per
-    split.
+    a 6*N-regressor model built from N input regressors (raw N parameters, their
+    derivatives, and both sets time-shifted ±1 TR).  Correlations are computed for
+    the raw time series and their element-wise squares, giving 12*N total
+    comparisons per split.
 
     Parameters
     ----------
     mixing : (T x C) array_like
         ICA mixing matrix where T is time points and C is components.
-    motpars : (T x 6) array_like
-        Motion parameters where the first three columns are rotation parameters
-        (in radians) and the last three are translation parameters (in mm).
+    regressors : (T x N) array_like
+        Regressor time series with T timepoints and N columns.
 
     Returns
     -------
     max_rp_corr : (C,) numpy.ndarray
-        Maximum motion-parameter correlation score for each component.
+        Maximum regressor-correlation score for each component.
         Values are in [0, 1].
 
     Raises
     ------
     ValueError
-        If ``motpars`` does not have shape (T, 6) or the number of rows does
-        not match ``mixing``.
+        If ``regressors`` is not 2-D or its row count does not match ``mixing``.
     """
     mixing = np.asarray(mixing, dtype=float)
-    rp6 = np.asarray(motpars, dtype=float)
+    rp = np.asarray(regressors, dtype=float)
 
-    if rp6.ndim != 2 or rp6.shape[1] != 6:
-        raise ValueError(f"motpars must have shape (n_trs, 6), got {rp6.shape}")
+    if rp.ndim != 2:
+        raise ValueError(f"regressors must be a 2-D array, got shape {rp.shape}")
 
-    if rp6.shape[0] != mixing.shape[0]:
+    if rp.shape[0] != mixing.shape[0]:
         raise ValueError(
             f"Number of rows in mixing ({mixing.shape[0]}) does not match "
-            f"number of rows in motpars ({rp6.shape[0]})."
+            f"number of rows in regressors ({rp.shape[0]})."
         )
 
-    _, n_motpars = rp6.shape
+    _, n_params = rp.shape
 
     # Derivatives (zero-padded at t=0)
-    rp6_der = np.vstack((np.zeros(n_motpars), np.diff(rp6, axis=0)))
-    rp12 = np.hstack((rp6, rp6_der))
+    rp_der = np.vstack((np.zeros(n_params), np.diff(rp, axis=0)))
+    rp2 = np.hstack((rp, rp_der))
 
     # Time-shifted versions (±1 TR, zero-padded at boundaries)
-    rp12_1fw = np.vstack((np.zeros(2 * n_motpars), rp12[:-1]))
-    rp12_1bw = np.vstack((rp12[1:], np.zeros(2 * n_motpars)))
-    rp_model = np.hstack((rp12, rp12_1fw, rp12_1bw))  # (T, 36)
+    rp2_1fw = np.vstack((np.zeros(2 * n_params), rp2[:-1]))
+    rp2_1bw = np.vstack((rp2[1:], np.zeros(2 * n_params)))
+    rp_model = np.hstack((rp2, rp2_1fw, rp2_1bw))  # (T, 6 * n_params)
 
     n_volumes, n_components = mixing.shape
     n_rows_to_choose = int(round(0.9 * n_volumes))
@@ -735,6 +733,5 @@ def calculate_max_rp_corr(*, mixing: np.ndarray, motpars: np.ndarray) -> np.ndar
         correl_both = np.hstack((correl_squared, correl_nonsquared))
         max_correlations[i_split] = np.nanmax(np.abs(correl_both), axis=1)
 
-    # Average over splits, ignoring any NaNs from degenerate subsamples
     max_rp_corr = np.nanmean(max_correlations, axis=0)
     return max_rp_corr

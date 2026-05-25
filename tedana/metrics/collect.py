@@ -439,7 +439,7 @@ def generate_metrics(
         LGR.info("Calculating maximum motion-parameter correlation (max_RP_corr)")
         component_table["max_RP_corr"] = external.calculate_max_rp_corr(
             mixing=mixing,
-            motpars=motpars,
+            regressors=motpars,
         )
 
     # External regressor-based metrics
