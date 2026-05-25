@@ -104,8 +104,14 @@ def dependency_resolver(
 
     # Check for deprecated metrics and raise an error if they are used
     deprecated_metrics = {
-        "map Z": "map weight",
-        "map Z clusterized": "map weight clusterized",
+        "map Z": "map optcom standardized parameter estimates",
+        "map Z clusterized": "map optcom standardized parameter estimates clusterized",
+        "map weight": "map optcom standardized parameter estimates",
+        "map weight clusterized": "map optcom standardized parameter estimates clusterized",
+        "map optcom betas": "map optcom parameter estimates",
+        "map echo betas": "map echo parameter estimates",
+        "map beta T2 clusterized": "map PE T2 clusterized",
+        "map beta S0 clusterized": "map PE S0 clusterized",
     }
     msg = []
     for metric in deprecated_metrics:

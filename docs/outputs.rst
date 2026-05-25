@@ -432,15 +432,15 @@ component (selected in the summary view, see below). It includes three different
   :align: center
   :height: 150px
 
-* **Component beta map:** This plot shows the map of the relative beta coefficients associated with
+* **Component PE map:** This plot shows the map of the parameter estimates associated with
   a given component (selected in the summary view).
+  The colorbar represents the amplitude of the parameter estimates.
   If one wants to look at these maps in more detail, they can be found in the
-  ``z-scored ICA components img`` file (see :ref:`output-filename-descriptions`).
-  The same weights could be flipped postive/negative so relative
-  values are more relevant that what is very positive vs negative.
-  Plausibly BOLD-weighted components should have larger hotspots in area that follow
-  cortical or cerebellar brain structure. Hotspots in ventricles, on the edges of the
-  brain or slice-specific or slice-alternating effects are signs of artifacts.
+  ``ICA components img`` file (see :ref:`output-filename-descriptions`).
+  The same parameter estimates could be flipped positive/negative,
+  so relative values are more relevant than whether a voxel is very positive versus very negative.
+  Plausibly BOLD-weighted components should have larger hotspots in areas that follow cortical or cerebellar brain structure.
+  Hotspots in ventricles, on the edges of the brain or slice-specific or slice-alternating effects are signs of artifacts.
 
 .. image:: /_static/rep01_betaMap.png
   :align: center
