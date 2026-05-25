@@ -798,8 +798,7 @@ class TestFitMaxRpCorrToRegressors:
             "detrend": False,
             "statistic": "max_rp_corr",
         }
-        import tedana.utils as tedana_utils
-        legendre_arr = tedana_utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
+        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
         detrend_regressors = pd.DataFrame(
             legendre_arr, columns=[f"baseline {i}" for i in range(legendre_arr.shape[1])]
         )
