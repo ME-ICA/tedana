@@ -7,8 +7,7 @@
         "mask",
         "tes",
         "ref_img",
-        "tr",
-        "motpars"
+        "tr"
     ],
     "dependencies": {
         "kappa": [
@@ -80,10 +79,6 @@
         "HFC": [
             "mixing",
             "tr"
-        ],
-        "max_RP_corr": [
-            "mixing",
-            "motpars"
         ],
         "map FT2": [
             "mixing",

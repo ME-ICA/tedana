@@ -35,7 +35,6 @@ def generate_metrics(
     io_generator: io.OutputGenerator,
     label: str,
     tr: float = None,
-    motpars: Union[npt.NDArray, None] = None,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
@@ -69,10 +68,6 @@ def generate_metrics(
     tr : float, optional
         Repetition time of the fMRI data in seconds.  Required when ``metrics``
         includes ``"HFC"``.  Default is None.
-    motpars : (T x 6) array_like or None, optional
-        Motion parameters (rotation in radians, translation in mm) with the
-        same number of timepoints as the mixing matrix.  Required when
-        ``metrics`` includes ``"max_RP_corr"``.  Default is None.
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise)
         to correlate with ICA components.
@@ -429,16 +424,6 @@ def generate_metrics(
             raise ValueError("tr must be provided to compute the HFC metric.")
         LGR.info("Calculating high-frequency content (HFC)")
         component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr)
-
-    # AROMA-derived motion-correlation metric
-    if "max_RP_corr" in required_metrics:
-        if motpars is None:
-            raise ValueError("motpars must be provided to compute the max_RP_corr metric.")
-        LGR.info("Calculating maximum motion-parameter correlation (max_RP_corr)")
-        component_table["max_RP_corr"] = external.calculate_max_rp_corr(
-            mixing=mixing,
-            regressors=motpars,
-        )
 
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
@@ -802,20 +787,6 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "spectrum of the component reaches 50 % of its total power above 0.01 Hz. "
                 "Values near 1 indicate a component dominated by high-frequency content "
                 "(likely noise); values near 0 indicate a low-frequency, BOLD-like component."
-            ),
-            "Units": "arbitrary",
-        }
-    if "max_RP_corr" in component_table:
-        metric_metadata["max_RP_corr"] = {
-            "LongName": "Maximum motion-parameter correlation",
-            "Description": (
-                "The mean, over 1000 random 90 %-subsamples of timepoints, of the maximum "
-                "absolute Pearson correlation between a component time series and a "
-                "36-regressor motion-parameter model (raw 6 parameters, their derivatives, "
-                "and both sets shifted ±1 tr). "
-                "Correlations are computed for the raw and squared time series, giving "
-                "72 comparisons per split. "
-                "Values near 1 indicate strong coupling with head motion (likely noise)."
             ),
             "Units": "arbitrary",
         }
