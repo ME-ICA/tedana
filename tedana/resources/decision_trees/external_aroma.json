@@ -15,7 +15,7 @@
         "max_RP_corr motion model"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
-    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "External regressors"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "HFC", "Motion"],
     "external_regressor_config": [
         {
             "regress_ID": "motion",
@@ -162,12 +162,27 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
+                "left": "HFC",
+                "right": 0.35
+            },
+            "kwargs": {
+                "log_extra_info": "Reject components with an HFC value greater than 0.35.",
+                "tag_if_true": "HFC"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
                 "left": "max_RP_corr motion model",
                 "right": 0.5
             },
             "kwargs": {
-                "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
-                "tag_if_true": "External regressors"
+                "log_extra_info": "Reject components with max_RP_corr > 0.5.",
+                "tag_if_true": "Motion"
             }
         },
         {
