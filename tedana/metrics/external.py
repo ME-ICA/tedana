@@ -776,16 +776,22 @@ def fit_max_rp_corr_to_regressors(
     )
 
     if apply_detrend:
-        L = detrend_regressors.values
-        if L.shape[1] == 0:
+        detrended_regressors = detrend_regressors.values
+        if detrended_regressors.shape[1] == 0:
             raise ValueError(
                 "detrend_regressors has no columns; cannot detrend mixing and regressors."
             )
-        mixing_use = mixing - L @ np.linalg.lstsq(L, mixing, rcond=None)[0]
-        rp_use = rp_arr - L @ np.linalg.lstsq(L, rp_arr, rcond=None)[0]
+        mixing_use = (
+            mixing
+            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, mixing, rcond=None)[0]
+        )
+        rp_use = (
+            rp_arr
+            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, rp_arr, rcond=None)[0]
+        )
         LGR.info(
             f"max_RP_corr for {regress_id} detrended with "
-            f"{L.shape[1]} Legendre Polynomial regressors."
+            f"{detrended_regressors.shape[1]} Legendre Polynomial regressors."
         )
     else:
         mixing_use = mixing

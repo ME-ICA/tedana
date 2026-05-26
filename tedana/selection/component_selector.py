@@ -9,13 +9,13 @@ import pandas as pd
 from numpy import asarray
 
 from tedana.io import download_json, load_json
+from tedana.metrics.external import STATISTIC_HANDLERS
 from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
     confirm_metrics_exist,
     log_classification_counts,
 )
-from tedana.metrics.external import STATISTIC_HANDLERS
 from tedana.utils import get_resource_path
 
 LGR = logging.getLogger("GENERAL")
