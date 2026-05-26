@@ -101,7 +101,9 @@ def generate_metrics(
                 "If external_regressors is defined, then "
                 "external_regressor_config also needs to be defined."
             )
-        dependency_config = external.add_external_dependencies(dependency_config, external_regressor_config)
+        dependency_config = external.add_external_dependencies(
+            dependency_config, external_regressor_config
+        )
 
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 

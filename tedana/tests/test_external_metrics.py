@@ -529,9 +529,7 @@ def test_fit_regressors(caplog):
 
     # max_rp_corr dispatch: six motion columns from external_regressors
     caplog.clear()
-    mot_col_names = [
-        "Mot_X", "Mot_Y", "Mot_Z", "Mot_Pitch", "Mot_Roll", "Mot_Yaw"
-    ]
+    mot_col_names = ["Mot_X", "Mot_Y", "Mot_Z", "Mot_Pitch", "Mot_Roll", "Mot_Yaw"]
     maxrp_config = [
         {
             "regress_ID": "motion",
