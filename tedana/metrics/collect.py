@@ -37,6 +37,7 @@ def generate_metrics(
     tr: float = None,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
+    seed: int = 0,
     metrics: Union[List[str], None] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
@@ -74,6 +75,8 @@ def generate_metrics(
         If None, no external regressor metrics will be calculated.
     external_regressor_config : :obj:`list[dic]t`
         A list of dictionaries defining how to fit external regressors to component time series
+    seed : :obj:`int`, optional
+        Random seed for metrics that use random sampling. Default is 0.
     metrics : list
         List of metrics to return
 
@@ -438,7 +441,11 @@ def generate_metrics(
             RepLGR.info({external_regressor_config[config_idx]["report"]})
 
         component_table = external.fit_regressors(
-            component_table, external_regressors, external_regressor_config, mixing
+            component_table,
+            external_regressors,
+            external_regressor_config,
+            mixing,
+            seed=seed,
         )
     # Write verbose metrics if needed
     if io_generator.verbose:

@@ -30,9 +30,9 @@ def calculate_hfc(*, mixing: np.ndarray, tr: float, f_hp: float = 0.01) -> np.nd
     """
     mixing = np.asarray(mixing, dtype=float)
 
-    # One-sided magnitude spectrum; skip the DC bin (index 0)
+    # One-sided power spectrum; skip the DC bin (index 0)
     fft_vals = np.fft.rfft(mixing, axis=0)
-    mixing_fft = np.abs(fft_vals[1:, :])  # (F, C)
+    mixing_fft = np.abs(fft_vals[1:, :]) ** 2  # (F, C)
 
     sampling_rate = 1.0 / tr
     nyquist_freq = sampling_rate / 2.0

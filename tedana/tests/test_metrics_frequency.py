@@ -26,13 +26,15 @@ class TestCalculateHfc:
         assert np.all(hfc <= 1)
 
     def test_high_freq_higher_than_low_freq(self):
-        """A pure high-frequency component has higher HFC than a pure low-frequency one."""
+        """A high-frequency component has higher HFC than a low-frequency one."""
         n_vols = 300
         tr = 2.0
-        t = np.arange(n_vols) * tr
-
-        low_freq_component = np.sin(2 * np.pi * 0.02 * t)  # 0.02 Hz, well below Nyquist
-        high_freq_component = np.sin(2 * np.pi * 0.20 * t)  # 0.20 Hz, near Nyquist=0.25
+        low_freq_fft = np.zeros(n_vols // 2 + 1, dtype=complex)
+        high_freq_fft = np.zeros(n_vols // 2 + 1, dtype=complex)
+        low_freq_fft[10:14] = 1
+        high_freq_fft[110:114] = 1
+        low_freq_component = np.fft.irfft(low_freq_fft, n=n_vols)
+        high_freq_component = np.fft.irfft(high_freq_fft, n=n_vols)
 
         mixing = np.column_stack([low_freq_component, high_freq_component])
         hfc = calculate_hfc(mixing=mixing, tr=tr)
@@ -41,6 +43,23 @@ class TestCalculateHfc:
             f"High-frequency component HFC ({hfc[1]:.3f}) should exceed "
             f"low-frequency component HFC ({hfc[0]:.3f})"
         )
+
+    def test_uses_power_spectrum(self):
+        """HFC is based on FFT power, not magnitude."""
+        n_vols = 16
+        tr = 1.0
+        fft_vals = np.zeros(n_vols // 2 + 1, dtype=complex)
+        fft_vals[1:5] = [1, 1, 1, 2]
+        mixing = np.fft.irfft(fft_vals, n=n_vols)[:, np.newaxis]
+
+        hfc = calculate_hfc(mixing=mixing, tr=tr, f_hp=0)
+
+        # With power weights [1, 1, 1, 4], the cumulative fraction closest
+        # to 0.5 is at the third non-DC bin. A magnitude spectrum would pick
+        # the second bin instead.
+        frequencies = np.fft.rfftfreq(n_vols, d=tr)[1:]
+        expected = frequencies[2] / (1 / (2 * tr))
+        np.testing.assert_allclose(hfc, [expected])
 
     def test_single_component(self):
         """calculate_hfc works when there is only one component."""

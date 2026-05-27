@@ -542,7 +542,6 @@ def test_fit_regressors(caplog):
     ]
     external_regressors_loaded, _ = sample_external_regressors()
     component_table_rp = sample_comptable(mixing.shape[1])
-    np.random.seed(0)
     component_table_rp = external.fit_regressors(
         component_table_rp, external_regressors_loaded, maxrp_config, mixing
     )
@@ -833,7 +832,6 @@ class TestFitMaxRpCorrToRegressors:
     def test_output_column_exists(self):
         """Adds 'max_RP_corr motion model' column with correct length."""
         component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
-        np.random.seed(0)
         result = external.fit_max_rp_corr_to_regressors(
             component_table, ext_reg, config, mixing, detrend_regressors
         )
@@ -846,7 +844,6 @@ class TestFitMaxRpCorrToRegressors:
         """Output column name is 'max_RP_corr {regress_ID} model'."""
         component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
         config["regress_ID"] = "physio"
-        np.random.seed(0)
         result = external.fit_max_rp_corr_to_regressors(
             component_table, ext_reg, config, mixing, detrend_regressors
         )
@@ -855,12 +852,10 @@ class TestFitMaxRpCorrToRegressors:
     def test_detrend_true_changes_result(self):
         """detrend=True produces a different result than detrend=False."""
         component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs(seed=1)
-        np.random.seed(0)
         config["detrend"] = False
         result_no_detrend = external.fit_max_rp_corr_to_regressors(
             component_table.copy(), ext_reg, config, mixing, detrend_regressors
         )
-        np.random.seed(0)
         config["detrend"] = True
         result_detrend = external.fit_max_rp_corr_to_regressors(
             component_table.copy(), ext_reg, config, mixing, detrend_regressors
@@ -884,7 +879,6 @@ class TestCalculateMaxRpCorr:
         n_vols, n_components = 100, 5
         mixing = rng.standard_normal((n_vols, n_components))
         regressors = rng.standard_normal((n_vols, 6))
-        np.random.seed(42)
         result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert result.shape == (n_components,)
 
@@ -893,7 +887,6 @@ class TestCalculateMaxRpCorr:
         rng = np.random.default_rng(1)
         mixing = rng.standard_normal((100, 4))
         regressors = rng.standard_normal((100, 6))
-        np.random.seed(0)
         result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert np.all(result >= 0)
         assert np.all(result <= 1)
@@ -906,12 +899,34 @@ class TestCalculateMaxRpCorr:
         correlated = regressors[:, 0:1] + 0.1 * rng.standard_normal((n_vols, 1))
         noise = rng.standard_normal((n_vols, 1))
         mixing = np.hstack([correlated, noise])
-        np.random.seed(0)
         result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
         assert result[0] > result[1], (
             f"Correlated component score ({result[0]:.3f}) should exceed "
             f"noise component score ({result[1]:.3f})"
         )
+
+    def test_seed_reproducibility(self):
+        """The same seed gives identical max_RP_corr values."""
+        rng = np.random.default_rng(3)
+        mixing = rng.standard_normal((120, 4))
+        regressors = rng.standard_normal((120, 6))
+
+        result1 = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors, seed=42)
+        result2 = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors, seed=42)
+
+        np.testing.assert_allclose(result1, result2)
+
+    def test_default_seed_reproducibility(self):
+        """Default max_RP_corr calls are reproducible without global RNG state."""
+        rng = np.random.default_rng(4)
+        mixing = rng.standard_normal((120, 4))
+        regressors = rng.standard_normal((120, 6))
+
+        result1 = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
+        np.random.seed(999)
+        result2 = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
+
+        np.testing.assert_allclose(result1, result2)
 
     def test_generalized_n_columns(self):
         """Accepts any number of columns, not just 6."""
@@ -920,7 +935,6 @@ class TestCalculateMaxRpCorr:
         mixing = rng.standard_normal((n_vols, n_components))
         for n_cols in [1, 3, 12]:
             regressors = rng.standard_normal((n_vols, n_cols))
-            np.random.seed(0)
             result = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
             assert result.shape == (n_components,)
             assert np.all(result >= 0) and np.all(result <= 1)

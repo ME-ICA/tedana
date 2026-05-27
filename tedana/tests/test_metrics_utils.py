@@ -9,7 +9,11 @@ from tedana.metrics._utils import (
     flip_components,
     get_value_thresholds,
 )
-from tedana.metrics.external import add_external_dependencies
+from tedana.metrics.external import (
+    STATISTIC_DEPENDENCY_BUILDERS,
+    STATISTIC_HANDLERS,
+    add_external_dependencies,
+)
 
 
 def test_determine_signs():
@@ -117,6 +121,8 @@ def test_dependency_resolver():
 
 def test_add_external_dependencies():
     """Test add_external_dependencies function."""
+    assert set(STATISTIC_HANDLERS) == set(STATISTIC_DEPENDENCY_BUILDERS)
+
     # Create a basic dependency config
     dependency_config = {
         "inputs": ["data", "mixing"],
