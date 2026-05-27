@@ -1,5 +1,6 @@
 """Metrics based on fits of component time series to external time series."""
 
+import inspect
 import logging
 import re
 from typing import Dict, List, Optional, Tuple
@@ -324,13 +325,16 @@ def fit_regressors(
                 f"{statistic}, "
                 "which is not valid."
             )
+        handler_kwargs = {}
+        if "seed" in inspect.signature(handler).parameters:
+            handler_kwargs["seed"] = seed
         component_table = handler(
             component_table,
             external_regressors,
             external_regressor_config[config_idx],
             mixing,
             detrend_regressors,
-            seed=seed,
+            **handler_kwargs,
         )
 
     return component_table
@@ -342,7 +346,6 @@ def fit_mixing_to_regressors(
     external_regressor_config: Dict,
     mixing: npt.NDArray,
     detrend_regressors: pd.DataFrame,
-    seed: int = 0,
 ) -> pd.DataFrame:
     """Compute Linear Model and calculate F statistics and P values for combinations of regressors.
 
@@ -371,10 +374,6 @@ def fit_mixing_to_regressors(
         where `C` is components and `T` is the same as in `data_cat`
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
-    seed : :obj:`int`, optional
-        Random seed passed through the external metric handler interface. Not used for F
-        statistics.
-
     Returns
     -------
     component_table : (C x X) :obj:`pandas.DataFrame`
