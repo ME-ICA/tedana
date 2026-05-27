@@ -160,6 +160,47 @@ Other Available Metrics
 In addition to the core (in)dependence model metrics, TEDANA can also calculate the following metrics:
 
 
+HFC
+===
+:func:`tedana.metrics.frequency.calculate_hfc`
+
+High-frequency content (HFC) is calculated from each component time series.
+The component's one-sided power spectrum is calculated, frequencies at or below
+the high-pass cutoff are removed, and HFC is the normalized frequency where the
+cumulative retained power is closest to 50%.
+Values are bounded between 0 and 1.
+Values near 0 indicate that the retained power is concentrated near the high-pass
+cutoff, while values near 1 indicate that the retained power is concentrated closer
+to the Nyquist frequency.
+
+The commonly used threshold of ``HFC > 0.35`` is inherited from single-echo
+ICA-AROMA. It has not yet been validated as a tedana ME-fMRI component
+classification threshold.
+
+
+max_rp_corr
+===========
+:func:`tedana.metrics.external.calculate_max_rp_corr`
+
+``max_rp_corr`` is an external-regressor metric calculated from a user-selected
+regressor set, typically motion parameters.
+For each component, tedana computes the mean across random 90% timepoint subsamples
+of the maximum absolute Pearson correlation between the component time series and
+an expanded regressor model.
+The expanded model contains the original N regressors, their derivatives, and both
+sets shifted forward and backward by one TR, for 6*N model columns.
+Correlations are calculated for the raw time series and for element-wise squared
+time series, giving 12*N total comparisons per split.
+
+Values are bounded between 0 and 1, where higher values indicate stronger
+association between the component and at least one expanded regressor.
+Thresholds inherited from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the
+original six motion-parameter inputs.
+If the input regressor set has more or fewer than six columns, the expected maximum
+correlation under the null changes and any decision-tree threshold should be
+recalibrated for that model size.
+
+
 countnoise
 ==========
 :func:`tedana.metrics.dependence.compute_countnoise`

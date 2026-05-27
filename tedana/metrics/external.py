@@ -679,7 +679,7 @@ def compute_external_regressor_correlations(
 def calculate_max_rp_corr(
     *, mixing: np.ndarray, regressors: np.ndarray, seed: Optional[int] = 0
 ) -> np.ndarray:
-    """Calculate the maximum regressor-correlation (max_RP_corr) for each component.
+    """Calculate the maximum regressor-correlation (max_rp_corr) for each component.
 
     Computes the mean, over 1000 random 90%-subsamples of timepoints, of the
     maximum absolute Pearson correlation between each component time series and
@@ -703,6 +703,13 @@ def calculate_max_rp_corr(
     max_rp_corr : (C,) numpy.ndarray
         Maximum regressor-correlation score for each component.
         Values are in [0, 1].
+
+    Notes
+    -----
+    The expanded regressor model has ``6 * N`` columns before squared comparisons.
+    Thresholds inherited from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the
+    original six motion-parameter inputs. If a different number of regressors is
+    used, the threshold should be recalibrated for that model size.
 
     Raises
     ------
@@ -761,7 +768,7 @@ def fit_max_rp_corr_to_regressors(
     detrend_regressors: pd.DataFrame,
     seed: int = 0,
 ) -> pd.DataFrame:
-    """Calculate max_RP_corr from specified external regressor columns.
+    """Calculate max_rp_corr from specified external regressor columns.
 
     Parameters
     ----------
@@ -778,12 +785,12 @@ def fit_max_rp_corr_to_regressors(
     detrend_regressors : (T x P) :obj:`pandas.DataFrame`
         Legendre polynomial basis for optional detrending.
     seed : :obj:`int`, optional
-        Random seed for the max_RP_corr subsampling. Default is 0.
+        Random seed for the max_rp_corr subsampling. Default is 0.
 
     Returns
     -------
     component_table : (C x X) :obj:`pandas.DataFrame`
-        Input table with ``"max_RP_corr {regress_ID} model"`` column added.
+        Input table with ``"max_rp_corr {regress_ID} model"`` column added.
     """
     regress_id = external_regressor_config["regress_ID"]
     rp_arr = external_regressors[external_regressor_config["regressors"]].values
@@ -808,7 +815,7 @@ def fit_max_rp_corr_to_regressors(
             - detrended_regressors @ np.linalg.lstsq(detrended_regressors, rp_arr, rcond=None)[0]
         )
         LGR.info(
-            f"max_RP_corr for {regress_id} detrended with "
+            f"max_rp_corr for {regress_id} detrended with "
             f"{detrended_regressors.shape[1]} Legendre Polynomial regressors."
         )
     else:
@@ -816,7 +823,7 @@ def fit_max_rp_corr_to_regressors(
         rp_use = rp_arr
 
     max_rp_corr = calculate_max_rp_corr(mixing=mixing_use, regressors=rp_use, seed=seed)
-    component_table[f"max_RP_corr {regress_id} model"] = max_rp_corr
+    component_table[f"max_rp_corr {regress_id} model"] = max_rp_corr
     return component_table
 
 
@@ -839,9 +846,9 @@ def _add_f_dependencies(dependency_config: Dict, external_regressor_config: Dict
 def _add_max_rp_corr_dependencies(
     dependency_config: Dict, external_regressor_config: Dict
 ) -> Dict:
-    """Add dependency entries for max_RP_corr."""
+    """Add dependency entries for max_rp_corr."""
     regress_id = external_regressor_config["regress_ID"]
-    dependency_config["dependencies"][f"max_RP_corr {regress_id} model"] = [
+    dependency_config["dependencies"][f"max_rp_corr {regress_id} model"] = [
         "external regressors"
     ]
     return dependency_config

@@ -243,12 +243,16 @@ External regressor configuration
 ================================
 
 ``external_regressor_config`` is an optional field. If this field is specified, then
-additional metrics will be calculated that include F, :math:`R^2`, and p values for the fit
-of external regressors to each component time series.
-The p value might be useful for defining a statistically significant fit,
-while :math:`R^2` can assess whether the regressors model a meaningful amount of variance.
-For example, even if nuisance regressors, like head motion, significantly fit an ICA component
-time series, do not reject if they only model 5% of the total variance of that component.
+additional metrics will be calculated from the fit between external regressors and
+each component time series.
+The available statistics include F, :math:`R^2`, and p values from a linear model,
+as well as ``max_rp_corr`` for motion-regressor correlation.
+The p value from the linear model might be useful for defining a statistically
+significant fit, while :math:`R^2` can assess whether the regressors model a
+meaningful amount of variance.
+For example, even if nuisance regressors, like head motion, significantly fit an ICA
+component time series, do not reject if they only model 5% of the total variance of
+that component.
 
 Users will need to specify the
 external regressors using the ``--external`` option.
@@ -308,8 +312,10 @@ Each dictionary in ``external_regressor_config`` must include the following sub-
 
 - "statistic"
     The statistical test to use for fitting the external regressors to the
-    ICA component time series. Currently, the only valid option is "F" for
-    fitting using a linear model with an F statistic.
+    ICA component time series. Valid options are ``"F"`` for fitting using a
+    linear model with an F statistic and ``"max_rp_corr"`` for calculating the
+    maximum correlation between component time series and an expanded
+    regressor model.
 
 - "regressors"
     A list of strings or regular expressions to specify the columns in
@@ -331,7 +337,22 @@ and each specified partial model. This can be used to potentially reject compone
 any combination of nuisance regressors and also note which components fit head motion regressors.
 If this option is included, there would be added columns in ``selector.component_table_``, such as
 ``Fstat nuisance Motion partial model``, ``pval nuisance Motion partial model``, and
-``R2stat nuisance Motion partial model``
+``R2stat nuisance Motion partial model``.
+
+``partial_models`` can only be used when ``statistic`` is ``"F"``.
+
+When ``statistic`` is ``"max_rp_corr"``, tedana builds an expanded regressor model
+from the selected ``regressors`` and adds a ``max_rp_corr {regress_ID} model`` column
+to ``selector.component_table_``.
+The expanded model contains the original N regressors, their derivatives, and both sets
+shifted forward and backward by one TR, for 6*N model columns.
+The metric also compares squared component and regressor time series, for 12*N total
+correlation comparisons per random split.
+The random subsampling uses the seed provided to the tedana workflow.
+Thresholds taken from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the original six
+motion-parameter inputs.
+If a decision tree uses more or fewer input regressors, the expected maximum correlation
+under the null changes and the threshold should be recalibrated for that model size.
 
 
 Nodes in the decision tree

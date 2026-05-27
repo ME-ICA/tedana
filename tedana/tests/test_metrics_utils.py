@@ -184,8 +184,8 @@ def test_add_external_dependencies():
     updated_config_rp = add_external_dependencies(
         {"inputs": ["data"], "dependencies": {}}, external_regressor_config_rp
     )
-    assert "max_RP_corr motion model" in updated_config_rp["dependencies"]
-    assert updated_config_rp["dependencies"]["max_RP_corr motion model"] == ["external regressors"]
+    assert "max_rp_corr motion model" in updated_config_rp["dependencies"]
+    assert updated_config_rp["dependencies"]["max_rp_corr motion model"] == ["external regressors"]
 
 
 def test_get_value_thresholds_value_threshold_single_component():

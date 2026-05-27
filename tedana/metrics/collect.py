@@ -511,7 +511,7 @@ def generate_metrics(
         "varex kappa ratio",
         "d_table_score_scrub",
         "HFC",
-        "max_RP_corr",
+        "max_rp_corr",
         "external fit",
         "classification",
         "rationale",

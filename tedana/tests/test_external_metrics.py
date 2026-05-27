@@ -533,8 +533,8 @@ def test_fit_regressors(caplog):
     maxrp_config = [
         {
             "regress_ID": "motion",
-            "info": "max_RP_corr test",
-            "report": "max_RP_corr report",
+            "info": "max_rp_corr test",
+            "report": "max_rp_corr report",
             "detrend": False,
             "statistic": "max_rp_corr",
             "regressors": mot_col_names,
@@ -545,9 +545,9 @@ def test_fit_regressors(caplog):
     component_table_rp = external.fit_regressors(
         component_table_rp, external_regressors_loaded, maxrp_config, mixing
     )
-    assert "max_RP_corr motion model" in component_table_rp.columns
-    assert np.all(component_table_rp["max_RP_corr motion model"] >= 0)
-    assert np.all(component_table_rp["max_RP_corr motion model"] <= 1)
+    assert "max_rp_corr motion model" in component_table_rp.columns
+    assert np.all(component_table_rp["max_rp_corr motion model"] >= 0)
+    assert np.all(component_table_rp["max_rp_corr motion model"] <= 1)
 
 
 # fit_mixing_to_regressors
@@ -830,24 +830,24 @@ class TestFitMaxRpCorrToRegressors:
         return component_table, ext_reg, config, mixing, detrend_regressors
 
     def test_output_column_exists(self):
-        """Adds 'max_RP_corr motion model' column with correct length."""
+        """Adds 'max_rp_corr motion model' column with correct length."""
         component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
         result = external.fit_max_rp_corr_to_regressors(
             component_table, ext_reg, config, mixing, detrend_regressors
         )
-        assert "max_RP_corr motion model" in result.columns
-        assert len(result["max_RP_corr motion model"]) == mixing.shape[1]
-        assert np.all(result["max_RP_corr motion model"] >= 0)
-        assert np.all(result["max_RP_corr motion model"] <= 1)
+        assert "max_rp_corr motion model" in result.columns
+        assert len(result["max_rp_corr motion model"]) == mixing.shape[1]
+        assert np.all(result["max_rp_corr motion model"] >= 0)
+        assert np.all(result["max_rp_corr motion model"] <= 1)
 
     def test_column_name_uses_regress_id(self):
-        """Output column name is 'max_RP_corr {regress_ID} model'."""
+        """Output column name is 'max_rp_corr {regress_ID} model'."""
         component_table, ext_reg, config, mixing, detrend_regressors = self._make_inputs()
         config["regress_ID"] = "physio"
         result = external.fit_max_rp_corr_to_regressors(
             component_table, ext_reg, config, mixing, detrend_regressors
         )
-        assert "max_RP_corr physio model" in result.columns
+        assert "max_rp_corr physio model" in result.columns
 
     def test_detrend_true_changes_result(self):
         """detrend=True produces a different result than detrend=False."""
@@ -861,8 +861,8 @@ class TestFitMaxRpCorrToRegressors:
             component_table.copy(), ext_reg, config, mixing, detrend_regressors
         )
         assert not np.allclose(
-            result_no_detrend["max_RP_corr motion model"].values,
-            result_detrend["max_RP_corr motion model"].values,
+            result_no_detrend["max_rp_corr motion model"].values,
+            result_detrend["max_rp_corr motion model"].values,
         ), "detrend=True and detrend=False should produce different results"
 
 
@@ -906,7 +906,7 @@ class TestCalculateMaxRpCorr:
         )
 
     def test_seed_reproducibility(self):
-        """The same seed gives identical max_RP_corr values."""
+        """The same seed gives identical max_rp_corr values."""
         rng = np.random.default_rng(3)
         mixing = rng.standard_normal((120, 4))
         regressors = rng.standard_normal((120, 6))
@@ -917,7 +917,7 @@ class TestCalculateMaxRpCorr:
         np.testing.assert_allclose(result1, result2)
 
     def test_default_seed_reproducibility(self):
-        """Default max_RP_corr calls are reproducible without global RNG state."""
+        """Default max_rp_corr calls are reproducible without global RNG state."""
         rng = np.random.default_rng(4)
         mixing = rng.standard_normal((120, 4))
         regressors = rng.standard_normal((120, 6))

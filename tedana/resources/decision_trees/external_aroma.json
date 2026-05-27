@@ -12,17 +12,17 @@
         "signal-noise_t",
         "variance explained",
         "HFC",
-        "max_RP_corr motion model"
+        "max_rp_corr motion model"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
     "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "HFC", "Motion"],
     "external_regressor_config": [
         {
             "regress_ID": "motion",
-            "info": "Calculates the 'max_RP_corr' metric on motion parameters.",
-            "report": "Components that exhibit a max_RP_corr value of greater than 0.5 are rejected.",
+            "info": "Calculates the 'max_rp_corr' metric on motion parameters.",
+            "report": "Components that exhibit a max_rp_corr value of greater than 0.5 are rejected.",
             "detrend": true,
-            "statistic": "max_RP_corr",
+            "statistic": "max_rp_corr",
             "regressors": ["trans_x", "trans_y", "trans_z", "rot_x", "rot_y", "rot_z"]
         }
     ],
@@ -177,11 +177,11 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "max_RP_corr motion model",
+                "left": "max_rp_corr motion model",
                 "right": 0.5
             },
             "kwargs": {
-                "log_extra_info": "Reject components with max_RP_corr > 0.5.",
+                "log_extra_info": "Reject components with max_rp_corr > 0.5.",
                 "tag_if_true": "Motion"
             }
         },
