@@ -374,6 +374,7 @@ def fit_mixing_to_regressors(
         where `C` is components and `T` is the same as in `data_cat`
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
+
     Returns
     -------
     component_table : (C x X) :obj:`pandas.DataFrame`
