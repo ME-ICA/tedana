@@ -848,9 +848,7 @@ def _add_max_rp_corr_dependencies(
 ) -> Dict:
     """Add dependency entries for max_rp_corr."""
     regress_id = external_regressor_config["regress_ID"]
-    dependency_config["dependencies"][f"max_rp_corr {regress_id} model"] = [
-        "external regressors"
-    ]
+    dependency_config["dependencies"][f"max_rp_corr {regress_id} model"] = ["external regressors"]
     return dependency_config
 
 
