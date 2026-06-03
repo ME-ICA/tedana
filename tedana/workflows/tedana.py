@@ -905,6 +905,7 @@ def tedana_workflow(
                 maxrestart=(maxrestart - n_restarts),
                 n_threads=n_threads,
             )
+            metric_seed = seed
             seed += 1
             n_restarts = seed - fixed_seed
 
@@ -926,9 +927,11 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
                 label="ICA",
+                tr=img_t_r,
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
+                seed=metric_seed,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -986,9 +989,11 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
             label="ICA",
+            tr=img_t_r,
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
+            seed=fixed_seed,
         )
         selector = selection.automatic_selection(
             component_table,

@@ -1,8 +1,9 @@
 """Metrics based on fits of component time series to external time series."""
 
+import inspect
 import logging
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -244,6 +245,7 @@ def fit_regressors(
     external_regressors: pd.DataFrame,
     external_regressor_config: List[Dict],
     mixing: npt.NDArray,
+    seed: int = 0,
 ) -> pd.DataFrame:
     """Fit regressors to the mixing matrix.
 
@@ -264,6 +266,8 @@ def fit_regressors(
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data_cat`
+    seed : :obj:`int`, optional
+        Random seed for external metrics that use random sampling. Default is 0.
 
     Returns
     -------
@@ -310,23 +314,28 @@ def fit_regressors(
             detrend_labels.append(f"baseline {label_idx}")
         detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
-        if external_regressor_config[config_idx]["statistic"].lower() == "f":
-            component_table = fit_mixing_to_regressors(
-                component_table,
-                external_regressors,
-                external_regressor_config[config_idx],
-                mixing,
-                detrend_regressors,
-            )
-        else:
+        statistic = external_regressor_config[config_idx]["statistic"].lower()
+        handler = STATISTIC_HANDLERS.get(statistic)
+        if handler is None:
             # This should already be validated by this point, but keeping the catch clause here
             # since this would otherwise just return component_table with no changes, which would
             # make a hard-to-track error
             raise ValueError(
                 f"statistic for {regress_id} external regressors in decision tree is "
-                f"{external_regressor_config[config_idx]['statistic'].lower()}, "
+                f"{statistic}, "
                 "which is not valid."
             )
+        handler_kwargs = {}
+        if "seed" in inspect.signature(handler).parameters:
+            handler_kwargs["seed"] = seed
+        component_table = handler(
+            component_table,
+            external_regressors,
+            external_regressor_config[config_idx],
+            mixing,
+            detrend_regressors,
+            **handler_kwargs,
+        )
 
     return component_table
 
@@ -578,7 +587,6 @@ def fit_model_with_stats(
     # the error ratio from 1: R² = SSR (fitted model)/SST(total or model base) =
     # Σ (Y_pred-Y_actual)**2 / Σ (Y_pred-Y_actual)**2
     r2_vals = 1 - np.divide(sse_full, sse_base)
-    print(y.shape)
 
     return betas_full, f_vals, p_vals, r2_vals
 
@@ -666,3 +674,225 @@ def compute_external_regressor_correlations(
     )
 
     return correlation_df
+
+
+def calculate_max_rp_corr(
+    *, mixing: np.ndarray, regressors: np.ndarray, seed: Optional[int] = 0
+) -> np.ndarray:
+    """Calculate the maximum regressor-correlation (max_rp_corr) for each component.
+
+    Computes the mean, over 1000 random 90%-subsamples of timepoints, of the
+    maximum absolute Pearson correlation between each component time series and
+    a 6*N-regressor model built from N input regressors (raw N parameters, their
+    derivatives, and both sets time-shifted ±1 TR).  Correlations are computed for
+    the raw time series and their element-wise squares, giving 12*N total
+    comparisons per split.
+
+    Parameters
+    ----------
+    mixing : (T x C) array_like
+        ICA mixing matrix where T is time points and C is components.
+    regressors : (T x N) array_like
+        Regressor time series with T timepoints and N columns.
+    seed : int or None, optional
+        Seed for the random subsampling. The default is 0 for reproducible
+        results. Set to None or -1 for stochastic sampling.
+
+    Returns
+    -------
+    max_rp_corr : (C,) numpy.ndarray
+        Maximum regressor-correlation score for each component.
+        Values are in [0, 1].
+
+    Notes
+    -----
+    The expanded regressor model has ``6 * N`` columns before squared comparisons.
+    Thresholds inherited from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the
+    original six motion-parameter inputs. If a different number of regressors is
+    used, the threshold should be recalibrated for that model size.
+
+    Raises
+    ------
+    ValueError
+        If ``regressors`` is not 2-D or its row count does not match ``mixing``.
+    """
+    mixing = np.asarray(mixing, dtype=float)
+    rp = np.asarray(regressors, dtype=float)
+
+    if rp.ndim != 2:
+        raise ValueError(f"regressors must be a 2-D array, got shape {rp.shape}")
+
+    if rp.shape[0] != mixing.shape[0]:
+        raise ValueError(
+            f"Number of rows in mixing ({mixing.shape[0]}) does not match "
+            f"number of rows in regressors ({rp.shape[0]})."
+        )
+
+    _, n_params = rp.shape
+
+    # Derivatives (zero-padded at t=0)
+    rp_der = np.vstack((np.zeros(n_params), np.diff(rp, axis=0)))
+    rp2 = np.hstack((rp, rp_der))
+
+    # Time-shifted versions (±1 TR, zero-padded at boundaries)
+    rp2_1fw = np.vstack((np.zeros(2 * n_params), rp2[:-1]))
+    rp2_1bw = np.vstack((rp2[1:], np.zeros(2 * n_params)))
+    rp_model = np.hstack((rp2, rp2_1fw, rp2_1bw))  # (T, 6 * n_params)
+
+    n_volumes, n_components = mixing.shape
+    n_rows_to_choose = int(round(0.9 * n_volumes))
+    n_splits = 1000
+    seed = None if seed == -1 else seed
+    rng = np.random.default_rng(seed)
+
+    max_correlations = np.empty((n_splits, n_components))
+    for i_split in range(n_splits):
+        chosen_rows = rng.choice(n_volumes, size=n_rows_to_choose, replace=False)
+
+        correl_nonsquared = utils.cross_correlation(mixing[chosen_rows], rp_model[chosen_rows])
+        correl_squared = utils.cross_correlation(
+            mixing[chosen_rows] ** 2, rp_model[chosen_rows] ** 2
+        )
+        correl_both = np.hstack((correl_squared, correl_nonsquared))
+        max_correlations[i_split] = np.nanmax(np.abs(correl_both), axis=1)
+
+    max_rp_corr = np.nanmean(max_correlations, axis=0)
+    return max_rp_corr
+
+
+def fit_max_rp_corr_to_regressors(
+    component_table: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    external_regressor_config: Dict,
+    mixing: npt.NDArray,
+    detrend_regressors: pd.DataFrame,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """Calculate max_rp_corr from specified external regressor columns.
+
+    Parameters
+    ----------
+    component_table : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component,
+        with a column for each metric.
+    external_regressors : (T x R) :obj:`pandas.DataFrame`
+        External regressor time series.
+    external_regressor_config : :obj:`dict`
+        Single external regressor config entry. Required keys:
+        ``regress_ID``, ``regressors``, ``detrend``, ``statistic``.
+    mixing : (T x C) array_like
+        ICA mixing matrix.
+    detrend_regressors : (T x P) :obj:`pandas.DataFrame`
+        Legendre polynomial basis for optional detrending.
+    seed : :obj:`int`, optional
+        Random seed for the max_rp_corr subsampling. Default is 0.
+
+    Returns
+    -------
+    component_table : (C x X) :obj:`pandas.DataFrame`
+        Input table with ``"max_rp_corr {regress_ID} model"`` column added.
+    """
+    regress_id = external_regressor_config["regress_ID"]
+    rp_arr = external_regressors[external_regressor_config["regressors"]].values
+
+    apply_detrend = external_regressor_config["detrend"] is True or (
+        isinstance(external_regressor_config["detrend"], int)
+        and external_regressor_config["detrend"] > 0
+    )
+
+    if apply_detrend:
+        detrended_regressors = detrend_regressors.values
+        if detrended_regressors.shape[1] == 0:
+            raise ValueError(
+                "detrend_regressors has no columns; cannot detrend mixing and regressors."
+            )
+        mixing_use = (
+            mixing
+            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, mixing, rcond=None)[0]
+        )
+        rp_use = (
+            rp_arr
+            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, rp_arr, rcond=None)[0]
+        )
+        LGR.info(
+            f"max_rp_corr for {regress_id} detrended with "
+            f"{detrended_regressors.shape[1]} Legendre Polynomial regressors."
+        )
+    else:
+        mixing_use = mixing
+        rp_use = rp_arr
+
+    max_rp_corr = calculate_max_rp_corr(mixing=mixing_use, regressors=rp_use, seed=seed)
+    component_table[f"max_rp_corr {regress_id} model"] = max_rp_corr
+    return component_table
+
+
+def _add_f_dependencies(dependency_config: Dict, external_regressor_config: Dict) -> Dict:
+    """Add dependency entries for external-regressor F statistics."""
+    regress_id = external_regressor_config["regress_ID"]
+    model_names = [regress_id]
+    if "partial_models" in set(external_regressor_config.keys()):
+        partial_keys = external_regressor_config["partial_models"].keys()
+        for key_name in partial_keys:
+            model_names.append(f"{regress_id} {key_name} partial")
+    for model_name in model_names:
+        for stat_type in ["Fstat", "R2stat", "pval"]:
+            dependency_config["dependencies"][f"{stat_type} {model_name} model"] = [
+                "external regressors"
+            ]
+    return dependency_config
+
+
+def _add_max_rp_corr_dependencies(
+    dependency_config: Dict, external_regressor_config: Dict
+) -> Dict:
+    """Add dependency entries for max_rp_corr."""
+    regress_id = external_regressor_config["regress_ID"]
+    dependency_config["dependencies"][f"max_rp_corr {regress_id} model"] = ["external regressors"]
+    return dependency_config
+
+
+STATISTIC_HANDLERS = {
+    "f": fit_mixing_to_regressors,
+    "max_rp_corr": fit_max_rp_corr_to_regressors,
+}
+
+STATISTIC_DEPENDENCY_BUILDERS = {
+    "f": _add_f_dependencies,
+    "max_rp_corr": _add_max_rp_corr_dependencies,
+}
+
+
+def add_external_dependencies(
+    dependency_config: Dict, external_regressor_config: List[Dict]
+) -> Dict:
+    """Add dependency information when external regressors are inputted.
+
+    Parameters
+    ----------
+    dependency_config : :obj:`dict`
+        A dictionary stored in ``./config/metrics.json`` with information on
+        all internally defined metrics.
+    external_regressor_config : :obj:`list[dict]`
+        A list of dictionaries with info for fitting external regressors to
+        component time series.
+
+    Returns
+    -------
+    dependency_config : :obj:`dict`
+        Updated dictionary with external-regressor metric dependencies added.
+    """
+    dependency_config["inputs"].append("external regressors")
+
+    for config_idx in range(len(external_regressor_config)):
+        statistic = external_regressor_config[config_idx]["statistic"].lower()
+        dependency_builder = STATISTIC_DEPENDENCY_BUILDERS.get(statistic)
+        if dependency_builder is None:
+            raise ValueError(
+                f"statistic for external regressors is {statistic}, which is not valid."
+            )
+        dependency_config = dependency_builder(
+            dependency_config, external_regressor_config[config_idx]
+        )
+
+    return dependency_config

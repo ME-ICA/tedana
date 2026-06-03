@@ -9,6 +9,7 @@ import pandas as pd
 from numpy import asarray
 
 from tedana.io import download_json, load_json
+from tedana.metrics.external import STATISTIC_HANDLERS
 from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
@@ -266,9 +267,7 @@ def validate_tree(tree: Dict) -> Dict:
                 ["regress_ID", "info", "report", "detrend", "statistic", "regressors"]
             )
             dict_optional_keys = set(["partial_models"])
-            # Right now, "f" is the only option, but this leaves open the possibility
-            #  to have additional options
-            statistic_key_options = set("f")
+            statistic_key_options = set(STATISTIC_HANDLERS.keys())
 
             for config_idx in range(len(external_regressor_config)):
                 # Confirm that the required fields exist

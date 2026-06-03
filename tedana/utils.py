@@ -361,9 +361,9 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     Parameters
     ----------
     data : (S, ) array_like
-            A timeseries S, on which you would like to perform an fft.
+        A timeseries S, on which you would like to perform an fft.
     tr : :obj:`float`
-            Reptition time (TR) of the data
+        Repetition time (TR) of the data
     """
     # adapted from @dangom
     power_spectrum = np.abs(np.fft.rfft(data)) ** 2
@@ -523,6 +523,27 @@ def create_legendre_polynomial_basis_set(
     legendre_arr = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
 
     return legendre_arr
+
+
+def cross_correlation(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Compute Pearson correlation between each column of a and each column of b.
+
+    Parameters
+    ----------
+    a : (T x M) array_like
+        First set of variables.
+    b : (T x N) array_like
+        Second set of variables.
+
+    Returns
+    -------
+    corr : (M x N) array_like
+        Correlation matrix where entry (i, j) is the Pearson r between a[:, i] and b[:, j].
+    """
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    full = np.corrcoef(a.T, b.T)
+    return full[: a.shape[1], a.shape[1] :]
 
 
 def check_t2s_values(t2s_map):
