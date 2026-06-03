@@ -118,7 +118,7 @@ that are very unlikely to be BOLD (nodes 1-5). Then all components where
 are `provisional accept` and otherwise are `provisional reject` (nodes 8 & 10).
 The only expection to this is if :math:`\kappa` > :math:`\kappa` elbow and
 :math:`\kappa` > 2* :math:`\rho` than it is `provisional accept` regardless of the
-:math:`\rho` elbow under the assumption that there is enough T2* weighted signal
+:math:`\rho` elbow under the assumption that there is enough R2*-weighted signal
 the component should not be rejected even if it also contains noise (node 9).
 If `provisional reject` components have very low variance they are accepted rather
 than losing degrees of freedom, but no more than 1% of the total variance can be
@@ -166,7 +166,7 @@ or CSF external regressors (node 12), the outputs are also tagged to say they fi
 of regressors.
 Additionally, if a rejected component fits the task design and has
 :math:`\kappa` > :math:`\kappa` elbow, then it is accepted under the conservative assumption to
-retain task fitting components with some :math:`T_2^*`` signal even if those components also
+retain task fitting components with some :math:`R_2^*`` signal even if those components also
 contain potentially rejection-worthy noise (node 13).
 This is called a "demo" tree because it is demonstrating how fits to external regressors can
 be used. It might be a good decision tree to use,

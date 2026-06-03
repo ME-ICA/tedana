@@ -1,7 +1,7 @@
 desc-ICA_mixing_static.tsv
 sub-01_references.bib
 sub-01_S0map.nii.gz
-sub-01_T2starmap.nii.gz
+sub-01_R2starmap.nii.gz
 sub-01_dataset_description.json
 sub-01_desc-ICAAcceptedMIRDenoised_components.nii.gz
 sub-01_desc-ICAAccepted_components.nii.gz
@@ -24,7 +24,7 @@ sub-01_desc-T1likeEffect_min.nii.gz
 sub-01_desc-adaptiveGoodSignal_mask.nii.gz
 sub-01_desc-globalSignal_map.nii.gz
 sub-01_desc-limited_S0map.nii.gz
-sub-01_desc-limited_T2starmap.nii.gz
+sub-01_desc-limited_R2starmap.nii.gz
 sub-01_desc-optcomAcceptedMIRDenoised_bold.nii.gz
 sub-01_desc-optcomAccepted_bold.nii.gz
 sub-01_desc-denoised_bold.nii.gz
@@ -98,5 +98,5 @@ figures/sub-01_rmse_brain.svg
 figures/sub-01_rmse_timeseries.svg
 figures/sub-01_s0_brain.svg
 figures/sub-01_s0_histogram.svg
-figures/sub-01_t2star_brain.svg
-figures/sub-01_t2star_histogram.svg
+figures/sub-01_r2star_brain.svg
+figures/sub-01_r2star_histogram.svg

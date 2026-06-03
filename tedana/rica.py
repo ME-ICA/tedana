@@ -393,7 +393,7 @@ RICA_FILE_PATTERNS = [
     "tedana_",
     "CrossComponent_metrics.json",
     # QC NIfTI files
-    "T2starmap.nii",
+    "R2starmap.nii",
     "S0map.nii",
     "rmse_statmap.nii",
     # Orig convention files

@@ -381,7 +381,7 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
         mixing_file=os.path.join(test_data_path, "desc_ICA_mixing_static.tsv"),
         overwrite=True,
         tree=files("tedana") / "tests/data/reject_all_tree.json",
-        t2smap=os.path.join(out_dir, "T2starmap.nii.gz"),
+        r2smap=os.path.join(out_dir, "R2starmap.nii.gz"),
     )
 
     # compare the generated output files. There are 68 components in the predefined mixing matrix

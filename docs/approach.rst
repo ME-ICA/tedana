@@ -33,7 +33,7 @@ Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 8 echoes.
 This voxel was selected because it is fairly correlated with the checkerboard task,
 but you can see that the signal changes substantially across echoes.
-With a 9.58ms echo time, little :math:`T_{2}^*`  has developed,
+With a 9.58ms echo time, little :math:`R_{2}^*`-driven decay has developed,
 and the response to the task has a lower magnitude.
 
 .. image:: /_static/a01_echo_timeseries.png
@@ -62,14 +62,14 @@ which means that certain brain regions
 may only have good signal for some echoes.
 
 In order to avoid using bad signal from affected echoes in calculating
-:math:`T_{2}^*` and :math:`S_{0}` for a given voxel,
+:math:`R_{2}^*` and :math:`S_{0}` for a given voxel,
 ``tedana`` generates an adaptive mask,
 where the value for each voxel indicates how many of the echoes
 (starting with the first echo) have "good" signal.
 ``tedana`` has multiple methods for generating this mask,
 and we recommend looking at the description of :func:`~tedana.utils.make_adaptive_mask` for more information.
 
-When :math:`T_{2}^*` and :math:`S_{0}` are calculated below,
+When :math:`R_{2}^*` and :math:`S_{0}` are calculated below,
 each voxel's values are only calculated from the first :math:`n` echoes,
 where :math:`n` is the value for that voxel in the adaptive mask.
 By default, the optimally combined and denoised time series will include voxels
@@ -102,19 +102,19 @@ Monoexponential decay model fit
 :func:`tedana.decay.fit_decay`
 
 The next step is to fit a monoexponential decay model to the data in order to
-estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
+estimate voxel-wise :math:`R_{2}^*` and :math:`S_0`.
 :math:`S_0` corresponds to the total signal in each voxel before decay and can reflect coil sensivity.
-:math:`T_{2}^*` corresponds to the rate at which a voxel decays over time,
-which is related to signal dropout and BOLD sensitivity.
-Estimates of the parameters are saved as **T2starmap.nii.gz** and **S0map.nii.gz**.
+:math:`R_{2}^*` is the transverse relaxation rate (units: s⁻¹), which determines how quickly signal
+decays across echo times; it is related to signal dropout and BOLD sensitivity.
+Estimates of the parameters are saved as **R2starmap.nii.gz** and **S0map.nii.gz**.
 
-While :math:`T_{2}^*` and :math:`S_0` in fact fluctuate over time,
+While :math:`R_{2}^*` and :math:`S_0` in fact fluctuate over time,
 estimating them on a volume-by-volume basis with only a small number of echoes is not feasible
 (i.e., the estimates would be extremely noisy).
-As such, we estimate average :math:`T_{2}^*` and :math:`S_0` maps and use those
+As such, we estimate average :math:`R_{2}^*` and :math:`S_0` maps and use those
 throughout the workflow.
 However, it is important to note that promising work has been done using
-volume-wise :math:`T_{2}^*` and :math:`S_0` estimates :footcite:p:`heunis2021effects`,
+volume-wise :math:`R_{2}^*` and :math:`S_0` estimates :footcite:p:`heunis2021effects`,
 which can be estimated with ``--fitmode ts`` in :func:`tedana.workflows.t2smap_workflow`.
 
 In order to make it easier to fit the decay model to the data,
@@ -124,7 +124,7 @@ The echo times are also multiplied by -1.
 
 .. tip::
     It is now possible to do a nonlinear monoexponential fit to the original,
-    untransformed data values by specifiying ``--fittype curvefit``.
+    untransformed data values by specifying ``--fittype curvefit``.
     This method is slightly more computationally demanding but may obtain more
     accurate fits.
 
@@ -137,22 +137,22 @@ we can assume that the example voxel has good signal in all eight echoes
 so the line is fit to all available data.
 
 .. note::
-    ``tedana`` actually performs and uses two sets of :math:`T_{2}^*`/:math:`S_0` model fits.
-    In one case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels with good signal in at
+    ``tedana`` actually performs and uses two sets of :math:`R_{2}^*`/:math:`S_0` model fits.
+    In one case, ``tedana`` estimates :math:`R_{2}^*` and :math:`S_0` for voxels with good signal in at
     least two echoes.
-    In the other case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels
+    In the other case, ``tedana`` estimates :math:`R_{2}^*` and :math:`S_0` for voxels
     with good data in only one echo as well, but uses the first two echoes for those voxels.
-    The resulting "full" :math:`T_{2}^*` and :math:`S_0` maps are used throughout the rest of the pipeline.
+    The resulting "full" :math:`R_{2}^*` and :math:`S_0` maps are used throughout the rest of the pipeline.
 
 .. image:: /_static/a05_loglinear_regression.png
 
-The values of interest for the decay model, :math:`S_0` and :math:`T_{2}^*`,
+The values of interest for the decay model, :math:`S_0` and :math:`R_{2}^*`,
 are then simple transformations of the line's intercept (:math:`B_{0}`) and
 slope (:math:`B_{1}`), respectively:
 
 .. math:: S_{0} = e^{B_{0}}
 
-.. math:: T_{2}^{*} = \frac{1}{B_{1}}
+.. math:: R_{2}^{*} = B_{1}
 
 The resulting values can be used to show the fitted monoexponential decay model
 on the original data.
@@ -160,6 +160,14 @@ on the original data.
 .. image:: /_static/a06_monoexponential_decay_model.png
 
 We can also see where :math:`T_{2}^*` lands on this curve.
+
+.. tip::
+  Remember that :math:`T_{2}^*` is just :math:`\frac{1}{R_{2}^*}`.
+
+  :math:`R_{2}^*`` is the exponential decay rate governing the steepness of the signal decay curve,
+  while :math:`T_{2}^*`` is the corresponding decay time constant.
+  In BOLD fMRI, the optimal echo time (the one that maximizes the contrast between inactive and active states)
+  is typically close to the baseline :math:`T_{2}^*` of the voxel.
 
 .. image:: /_static/a07_monoexponential_decay_model_with_t2.png
 
@@ -172,11 +180,11 @@ Optimal combination
 
 :func:`tedana.combine.make_optcom`
 
-Using the :math:`T_{2}^*` estimates,
+Using the :math:`R_{2}^*` estimates,
 ``tedana`` combines signal across echoes using a weighted average.
 The echoes are weighted according to the formula:
 
-.. math:: w_{TE} = TE * e^{\frac{-TE}{T_{2}^*}}
+.. math:: w_{TE} = TE \cdot e^{-TE \cdot R_{2}^*}
 
 The weights are then normalized across echoes.
 For the example voxel, the resulting weights are:
@@ -200,7 +208,7 @@ This optimally combined data is written out as **desc-optcom_bold.nii.gz**
 
 .. note::
     An alternative method for optimal combination that
-    does not use :math:`T_{2}^*` is the parallel-acquired inhomogeneity
+    does not use :math:`R_{2}^*` is the parallel-acquired inhomogeneity
     desensitized (PAID) ME-fMRI combination method :footcite:p:`poser2006bold`.
     This method specifically assumes that noise in the acquired echoes is
     "isotopic and homogeneous throughout the image,"
@@ -348,9 +356,9 @@ This results in echo- and voxel-specific betas for each of the components.
 The beta values from the linear regression can be used to determine how the
 fluctuations (in each component timeseries) change across the echo times.
 
-TE-dependence (:math:`R_2` or :math:`1/T_{2}^*`) and TE-independence (:math:`S_0`) models can then
+TE-dependence (:math:`R_2^*`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
-These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0` models
+These models allow calculation of F-statistics for the :math:`R_2^*` and :math:`S_0` models
 (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
 .. tip::
@@ -360,7 +368,7 @@ These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_
 The grey lines below shows how beta values (a.k.a. parameter estimates)
 change with echo time, for one voxel and one component.
 The blue and red lines show the predicted values for the :math:`S_0` and
-:math:`T_2^*` models, respectively, for the same voxel and component.
+:math:`R_2^*` models, respectively, for the same voxel and component.
 
 .. image:: /_static/a14_te_dependence_models_component_0.png
 

@@ -30,11 +30,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
@@ -60,11 +60,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
@@ -90,11 +90,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
@@ -120,11 +120,11 @@ class TestT2smap:
 
         # Check outputs
         assert op.isfile(op.join(out_dir, "desc-optcom_bold.nii.gz"))
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
@@ -163,11 +163,11 @@ class TestT2smap:
         workflows.t2smap._main(args)
 
         # Check outputs
-        img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
+        img = nb.load(op.join(out_dir, "desc-limited_R2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3

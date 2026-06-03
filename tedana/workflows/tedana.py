@@ -195,19 +195,31 @@ def _get_parser():
     decay_args.add_argument(
         "--combmode",
         dest="combmode",
-        choices=["t2s"],
+        choices=["t2s", "paid"],
         help='Combination scheme for TEs: "t2s" (Posse 1999)',
         default="t2s",
     )
-    decay_args.add_argument(
+    map_group = decay_args.add_mutually_exclusive_group()
+    map_group.add_argument(
         "--t2smap",
         dest="t2smap",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "Precalculated T2* map in the same space as the input data. "
-            "Values should be in seconds (per BIDS convention). "
+            "[DEPRECATED: use --r2smap] Precalculated T2* map in the same space as "
+            "the input data. Values should be in seconds (per BIDS convention). "
             "Maps in milliseconds are auto-detected and handled with a warning."
+        ),
+        default=None,
+    )
+    map_group.add_argument(
+        "--r2smap",
+        dest="r2smap",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "Precalculated R2* map in the same space as the input data. "
+            "Values should be in s⁻¹ (per BIDS convention)."
         ),
         default=None,
     )
@@ -450,6 +462,7 @@ def tedana_workflow(
     quiet=False,
     overwrite=False,
     t2smap=None,
+    r2smap=None,
     mixing_file=None,
     n_threads=1,
     tedana_command=None,
@@ -495,7 +508,7 @@ def tedana_workflow(
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
         the raw data, which is slightly slower but may be more accurate.
         Default is 'loglin'.
-    combmode : {'t2s'}, optional
+    combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
@@ -567,9 +580,12 @@ def tedana_workflow(
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data. Values should
-        be in seconds per BIDS convention. Maps in milliseconds are auto-detected
+        [DEPRECATED: use r2smap] Precalculated T2* map in the same space as the input data.
+        Values should be in seconds per BIDS convention. Maps in milliseconds are auto-detected
         and handled with a warning.
+    r2smap : :obj:`str`, optional
+        Precalculated R2* map in the same space as the input data. Values should
+        be in s⁻¹ per BIDS convention.
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -668,22 +684,29 @@ def tedana_workflow(
     )
 
     if t2smap is not None and op.isfile(t2smap):
-        t2smap_file = io_generator.get_name("t2star img")
+        r2smap_file = io_generator.get_name("r2star img")
         t2smap = op.abspath(t2smap)
-        # Allow users to re-run on same folder
-        if t2smap != t2smap_file:
-            shutil.copyfile(t2smap, t2smap_file)
+        if t2smap != r2smap_file:
+            shutil.copyfile(t2smap, r2smap_file)
     elif t2smap is not None:
         raise OSError("Argument 't2smap' must be an existing file.")
+
+    if r2smap is not None and op.isfile(r2smap):
+        r2smap_file = io_generator.get_name("r2star img")
+        r2smap = op.abspath(r2smap)
+        if r2smap != r2smap_file:
+            shutil.copyfile(r2smap, r2smap_file)
+    elif r2smap is not None:
+        raise OSError("Argument 'r2smap' must be an existing file.")
 
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
         "\\citep{dupre2021te}."
     )
 
-    mask_img, t2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap)
-    if t2s_limited is not None:
-        t2s_full = t2s_limited.copy()
+    mask_img, r2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap, r2smap=r2smap)
+    if r2s_limited is not None:
+        r2s_full = r2s_limited.copy()
 
     io_generator.register_mask(mask_img)
 
@@ -776,11 +799,11 @@ def tedana_workflow(
     )
     LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
-    if t2smap is None:
-        LGR.info("Computing T2* map")
+    if t2smap is None and r2smap is None:
+        LGR.info("Computing R2* map")
         data_masked = data_cat[mask_denoise, ...]
         masksum_masked = masksum_denoise[mask_denoise]
-        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
+        r2s_full, s0_full, failures, r2s_var, s0_var, r2s_s0_covar = decay.fit_decay(
             data=data_masked,
             tes=tes,
             adaptive_mask=masksum_masked,
@@ -796,55 +819,55 @@ def tedana_workflow(
                 mask=mask_denoise,
             )
             if verbose:
-                io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+                io_generator.save_file(r2s_var, "r2star variance img", mask=mask_denoise)
                 io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
+                io_generator.save_file(r2s_s0_covar, "r2star-s0 covariance img", mask=mask_denoise)
 
-        del failures, t2s_var, s0_var, t2s_s0_covar
+        del failures, r2s_var, s0_var, r2s_s0_covar
 
-        t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-            t2s=t2s_full,
+        r2s_full, s0_full, r2s_limited, s0_limited = decay.modify_r2s_s0_maps(
+            r2s=r2s_full,
             s0=s0_full,
             adaptive_mask=masksum_masked,
             tes=tes,
         )
         del masksum_masked
 
-        t2s_full = utils.unmask(t2s_full, mask_denoise)
-        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        r2s_full = utils.unmask(r2s_full, mask_denoise)
+        r2s_limited = utils.unmask(r2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
-        io_generator.save_file(t2s_full, "t2star img")
+        io_generator.save_file(r2s_full, "r2star img")
         io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
         del s0_full
 
         if verbose:
-            io_generator.save_file(t2s_limited, "limited t2star img")
+            io_generator.save_file(r2s_limited, "limited r2star img")
             io_generator.save_file(s0_limited, "limited s0 img")
 
-        # Calculate RMSE if S0 and T2* are fit
+        # Calculate RMSE if S0 and R2* are fit
         rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
             data=data_cat,
             tes=tes,
             adaptive_mask=masksum_denoise,
-            t2s=t2s_limited,
+            r2s=r2s_limited,
             s0=s0_limited,
             fitmode="all",
         )
         io_generator.save_file(rmse_map, "rmse img")
         io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
-        del s0_limited, t2s_limited
+        del s0_limited, r2s_limited
 
     # optimally combine data
     data_optcom = combine.make_optcom(
         data_cat,
         tes,
         masksum_denoise,
-        t2s=t2s_full,
+        r2s=r2s_full,
         combmode=combmode,
     )
-    del t2s_full
+    del r2s_full
 
     if "gsr" in gscontrol:
         # regress out global signal
@@ -1180,11 +1203,11 @@ def tedana_workflow(
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
-        reporting.static_figures.plot_t2star_and_s0(
+        reporting.static_figures.plot_r2star_and_s0(
             io_generator=io_generator,
             mask=mask_denoise_img,
         )
-        if t2smap is None:
+        if t2smap is None and r2smap is None:
             reporting.static_figures.plot_rmse(
                 io_generator=io_generator,
             )

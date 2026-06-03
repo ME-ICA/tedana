@@ -60,8 +60,7 @@ we see that there is no echo time dependence, as the final plot is a flat line.
 
 In the right column, we consider changes that are related to brain activity.
 For example, imagine that the two brain states here (x and y) are a baseline and task activated state respectively.
-This effect is a change in in :math:`{\Delta}{R_2^*}` which is equivalent
-to the inverse of :math:`{T_2^*}`.
+This effect is a change in :math:`{\Delta}{R_2^*}`.
 We typically observe this change in signal amplitude occurring over volumes with
 the hemodynamic response, while here we are examining the change in signal over echo times.
 Again we can plot the difference in the signal between these two states as a function of echo time,
@@ -144,7 +143,7 @@ Weighted averaging may lead to an increase in SNR
 -------------------------------------------------
 
 Multiple studies have shown that a weighted average of the echoes to optimize
-T2* weighting, sometimes called "optimally combined," gives a reliable, modest
+R2*-based weighting, sometimes called "optimally combined," gives a reliable, modest
 boost in data quality.
 The optimal combination of echoes can currently be calculated in several
 software packages including AFNI, fMRIPrep, and tedana.
@@ -180,8 +179,8 @@ You may recover signal in areas affected by dropout
 
 Typical single echo fMRI uses an echo time that is appropriate for signal
 across most of the brain.
-While this is effective, it also leads to drop out in regions with low
-:math:`T_2^*` values.
+While this is effective, it also leads to drop out in regions with high
+:math:`R_2^*` values.
 This can lead to low or even no signal at all in some areas.
 If your research question could benefit from having improved signal
 characteristics in regions such as the orbitofrontal cortex, ventral temporal
@@ -281,20 +280,20 @@ Other available multi-echo MRI sequences
 In addition to ME-fMRI, other MR sequences benefit from acquiring multiple
 echoes, including T1-weighted imaging (MEMPRAGE) and susceptibility weighted imaging.
 While most of these kinds of sequences fall outside the purview of this documentation,
-quantitative T2* mapping is relevant since a baseline T2* map is used in several
+quantitative R2* mapping is relevant since a baseline R2* map is used in several
 processing steps including :ref:`optimal combination`.
-While the T2* map estimated directly from fMRI time series is noisy, no current
+While the R2* map estimated directly from fMRI time series is noisy, no current
 study quantifies the benefit to optimal combination or tedana denoising if a
-higher quality T2* map is used.
-Some benefit is likely, so, if a T2* map is independently calculated, it can be
+higher quality R2* map is used.
+Some benefit is likely, so, if an R2* map is independently calculated, it can be
 used as an input to many functions in the tedana workflow.
 
 .. warning::
-    While tedana allows the input of a T2* map from any source, and a more
-    accurate T2* map should lead to better results, this hasn't been
+    While tedana allows the input of an R2* map from any source, and a more
+    accurate R2* map should lead to better results, this hasn't been
     systematically evaluated yet.
 
-There are many ways to calculate T2* maps, with some using multi-echo acquisitions.
+There are many ways to calculate R2* maps, with some using multi-echo acquisitions.
 We are not presenting an expansive review of this literature here,
 but `Cohen-Adad et al. (2012)`_ and `Ruuth et al. (2019)`_ are good places to start
 learning more about this topic.
@@ -482,8 +481,8 @@ and spatial normalization) should be applied to all echoes.
 
 Any step that will alter the relationship of signal magnitudes between echoes should occur after denoising and combining
 of the echoes. For example, if echo is separately scaled by its mean signal over time, then resulting intensity gradients
-and the subsequent calculation of voxelwise T2* values will be distorted or incorrect. See the description of
-``tedana``'s :doc:`approach <\approach>` for more details on how T2* values are calculated. An agressive temporal filter
+and the subsequent calculation of voxelwise R2* values will be distorted or incorrect. See the description of
+``tedana``'s :doc:`approach <\approach>` for more details on how R2* values are calculated. An agressive temporal filter
 (i.e. a 0.1Hz low pass filter) or spatial smoothing could similarly distort the relationship between the echoes at each
 time point.
 
@@ -598,7 +597,7 @@ These include:
   | weighting at these early echo times.
 * | `qMRLab`_: This is a MATLAB software package for quantitative magnetic
   | resonance imaging. While it does not support ME-fMRI, it does include methods
-  | for estimating T2*/S0 from high-resolution, complex-valued multi-echo GRE
+  | for estimating R2*/S0 from high-resolution, complex-valued multi-echo GRE
   | data with correction for background field gradients.
 
 .. _3dMEPFM: https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dMEPFM.html

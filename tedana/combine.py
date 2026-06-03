@@ -8,10 +8,10 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def _combine_t2s(data, tes, ft2s, report=True):
-    """Combine data across echoes using weighted averaging according to estimates of T2*.
+def _combine_r2s(data, tes, fr2s, report=True):
+    """Combine data across echoes using weighted averaging according to estimates of R2*.
 
-    The T2* estimates may be voxel- or voxel- and volume-wise.
+    The R2* estimates may be voxel- or voxel- and volume-wise.
 
     This method was proposed in :footcite:t:`posse1999enhancement`.
 
@@ -21,15 +21,15 @@ def _combine_t2s(data, tes, ft2s, report=True):
         Masked data.
     tes : (1 x E) array_like
         Echo times in seconds.
-    ft2s : (Mb [x T] X 1) array_like
-        Either voxel-wise or voxel- and volume-wise estimates of T2*.
+    fr2s : (Mb [x T] X 1) array_like
+        Either voxel-wise or voxel- and volume-wise estimates of R2* in s⁻¹.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
     combined : (Mb x T) :obj:`numpy.ndarray`
-        Data combined across echoes according to T2* estimates.
+        Data combined across echoes according to R2* estimates.
 
     References
     ----------
@@ -38,16 +38,16 @@ def _combine_t2s(data, tes, ft2s, report=True):
     if report:
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
-            "T2* combination method \\citep{posse1999enhancement}."
+            "R2* combination method \\citep{posse1999enhancement}."
         )
 
     n_vols = data.shape[-1]
-    alpha = tes * np.exp(-tes / ft2s)
+    alpha = tes * np.exp(-tes * fr2s)
     if alpha.ndim == 2:
-        # Voxel-wise T2 estimates
+        # Voxel-wise R2* estimates
         alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     elif alpha.ndim == 3:
-        # Voxel- and volume-wise T2 estimates
+        # Voxel- and volume-wise R2* estimates
         # alpha is currently (S, T, E) but should be (S, E, T) like mdata
         alpha = np.swapaxes(alpha, 1, 2)
 
@@ -102,7 +102,7 @@ def _combine_paid(data, tes, report=True):
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
+def make_optcom(data, tes, adaptive_mask, r2s=None, combmode="t2s"):
     r"""Optimally combine BOLD data across TEs.
 
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
@@ -121,8 +121,8 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
-    t2s : (Mb [x T]) :obj:`numpy.ndarray` or None, optional
-        Estimated T2* values. Only required if combmode = 't2s'.
+    r2s : (Mb [x T]) :obj:`numpy.ndarray` or None, optional
+        Estimated R2* values in s⁻¹. Only required if combmode = 't2s'.
         Default is None.
     combmode : {'t2s', 'paid'}, optional
         How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
@@ -139,11 +139,11 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
     and the ``'paid'`` method :footcite:p:`poser2006bold`.
     The ``'t2s'`` method operates according to the following logic:
 
-    1.  Estimate voxel- and TE-specific weights based on estimated :math:`T_2^*`:
+    1.  Estimate voxel- and TE-specific weights based on estimated :math:`R_2^*`:
 
-            .. math::
-                w(T_2^*)_n = \frac{TE_n * exp(\frac{-TE}\
-                {T_{2(est)}^*})}{\sum TE_n * exp(\frac{-TE}{T_{2(est)}^*})}
+        .. math::
+            w(R_2^*)_n = \frac{TE_n * exp(-TE * R_{2(est)}^*)}{\sum TE_n * exp(-TE * R_{2(est)}^*)}
+
     2.  Perform weighted average per voxel and TR across TEs based on weights
         estimated in the previous step.
 
@@ -175,12 +175,12 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
 
     if combmode not in ["t2s", "paid"]:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
-    elif combmode == "t2s" and t2s is None:
-        raise ValueError("Argument 't2s' must be supplied if 'combmode' is set to 't2s'.")
-    elif combmode == "paid" and t2s is not None:
+    elif combmode == "t2s" and r2s is None:
+        raise ValueError("Argument 'r2s' must be supplied if 'combmode' is set to 't2s'.")
+    elif combmode == "paid" and r2s is not None:
         LGR.warning(
-            "Argument 't2s' is not required if 'combmode' is 'paid'. "
-            "'t2s' array will not be used."
+            "Argument 'r2s' is not required if 'combmode' is 'paid'. "
+            "'r2s' array will not be used."
         )
 
     if combmode == "paid":
@@ -189,16 +189,16 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
             "inhomogeneity desensitized (PAID) method"
         )
     else:
-        if t2s.shape[0] != data.shape[0]:
+        if r2s.shape[0] != data.shape[0]:
             raise ValueError(
-                "T2* estimates and data do not have same number of "
-                f"voxels/samples: {t2s.shape[0]} != {data.shape[0]}"
+                "R2* estimates and data do not have same number of "
+                f"voxels/samples: {r2s.shape[0]} != {data.shape[0]}"
             )
 
-        if t2s.ndim == 1:
-            msg = "Optimally combining data with voxel-wise T2* estimates"
+        if r2s.ndim == 1:
+            msg = "Optimally combining data with voxel-wise R2* estimates"
         else:
-            msg = "Optimally combining data with voxel- and volume-wise T2* estimates"
+            msg = "Optimally combining data with voxel- and volume-wise R2* estimates"
         LGR.info(msg)
 
     echos_to_run = np.unique(adaptive_mask)
@@ -223,12 +223,12 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
                 data[voxel_idx, :echo_num, :], tes[:, :echo_num]
             )
         else:
-            t2s_ = t2s[..., np.newaxis]  # add singleton
+            r2s_ = r2s[..., np.newaxis]  # add singleton
 
-            combined[voxel_idx, :] = _combine_t2s(
+            combined[voxel_idx, :] = _combine_r2s(
                 data[voxel_idx, :echo_num, :],
                 tes[:, :echo_num],
-                t2s_[voxel_idx, ...],
+                r2s_[voxel_idx, ...],
                 report=report,
             )
         report = False

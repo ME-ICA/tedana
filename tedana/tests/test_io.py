@@ -348,7 +348,7 @@ def test_smoke_filewrite():
 
     for convention in ("bidsv1.5.0", "orig"):
         io_generator.convention = convention
-        fname = io_generator.save_file(data_1d, "t2star img")
+        fname = io_generator.save_file(data_1d, "r2star img")
         assert fname is not None
         try:
             os.remove(fname)
