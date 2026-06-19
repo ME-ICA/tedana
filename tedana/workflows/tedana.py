@@ -814,12 +814,12 @@ def tedana_workflow(
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
-        io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
+        io_generator.save_file(t2s_full, "t2star img")
         io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
         del s0_full
 
         if verbose:
-            io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
+            io_generator.save_file(t2s_limited, "limited t2star img")
             io_generator.save_file(s0_limited, "limited s0 img")
 
         # Calculate RMSE if S0 and T2* are fit

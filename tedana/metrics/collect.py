@@ -55,7 +55,7 @@ def generate_metrics(
         This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
-        List of echo times associated with `data_cat`, in milliseconds
+        List of echo times associated with `data_cat`, in seconds
     n_independent_echos : int
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.

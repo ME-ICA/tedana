@@ -515,7 +515,7 @@ def t2smap_workflow(
     io_generator.save_file(rmse_df, "confounds tsv")
     io_generator.save_file(s0_limited, "limited s0 img")
     del s0_limited
-    io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
+    io_generator.save_file(t2s_limited, "limited t2star img")
     del t2s_limited
 
     LGR.info("Computing optimal combination")
@@ -528,7 +528,7 @@ def t2smap_workflow(
         combmode=combmode,
     )
 
-    io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
+    io_generator.save_file(t2s_full, "t2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file
