@@ -302,3 +302,29 @@ def test_fit_complex_monoexponential_recovers_maps():
     assert np.allclose(out["s0"], np.abs(s0_true), rtol=1e-2)
     assert out["frequency_hz"].shape == (n_vox,)
     assert not out["failures"].any()
+
+
+def test__fit_complex_decay_joint_shared_params():
+    """Joint fit recovers shared R2*/frequency with per-volume S0."""
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    r2star, freq = 15.0, 3.0
+    s0_per_vol = np.array([100.0, 150.0, 200.0]) * np.exp(1j * np.array([0.2, -0.4, 0.6]))
+    signal = np.stack(
+        [me.complex_decay_model(tes, s0, r2star, freq) for s0 in s0_per_vol]
+    )  # (T, E)
+    out = me._fit_complex_decay_joint(signal, tes)
+    assert out is not None
+    assert np.isclose(out["r2star"], r2star, atol=1e-3)
+    assert np.isclose(out["frequency_hz"], freq, atol=1e-3)
+    assert out["s0"].shape == (3,)
+    assert np.allclose(np.abs(out["s0"]), np.abs(s0_per_vol), rtol=1e-3)
+
+
+def test__solve_complex_s0_all_volumes():
+    """_solve_complex_s0 returns one complex S0 per volume."""
+    tes = np.array([0.01, 0.02, 0.03])
+    s0_per_vol = np.array([100.0 + 0j, 200.0 + 0j])
+    signal = np.stack([me.complex_decay_model(tes, s0, 20.0, 0.0) for s0 in s0_per_vol])
+    out = me._solve_complex_s0(signal, tes, 20.0, 0.0)
+    assert out.shape == (2,)
+    assert np.allclose(np.abs(out), np.abs(s0_per_vol), rtol=1e-6)

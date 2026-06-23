@@ -345,6 +345,123 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
     }
 
 
+def _solve_complex_s0(signal, echo_times, r2star, frequency_hz):
+    """Analytically solve per-volume complex S0 for fixed R2*/frequency.
+
+    Parameters
+    ----------
+    signal : (T, E) array_like
+        Complex data for one voxel; volumes on axis 0, echoes on axis 1.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    r2star : float
+        Shared R2* in s^-1.
+    frequency_hz : float
+        Shared off-resonance frequency in Hz.
+
+    Returns
+    -------
+    s0 : (T,) :obj:`numpy.ndarray`
+        Complex S0 per volume. NaN for volumes with fewer than 2 finite echoes.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    n_vols = signal.shape[0]
+    decay = np.exp((-r2star + 1j * 2.0 * np.pi * frequency_hz) * echo_times)
+    s0 = np.full(n_vols, np.nan + 1j * np.nan, dtype=np.complex128)
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    for vol in range(n_vols):
+        echo_mask = valid[vol]
+        if int(echo_mask.sum()) < 2:
+            continue
+        basis = decay[echo_mask]
+        denom = np.sum(np.abs(basis) ** 2)
+        if denom <= 0 or not np.isfinite(denom):
+            continue
+        s0[vol] = np.sum(np.conj(basis) * signal[vol, echo_mask]) / denom
+    return s0
+
+
+def _fit_complex_decay_joint(
+    signal, echo_times, *, max_r2star=np.inf, max_frequency_hz=np.inf, max_nfev=None
+):
+    """Fit one voxel with shared R2*/frequency and per-volume complex S0.
+
+    Per-volume complex S0 is linear given fixed R2*/frequency and is solved
+    analytically inside the residual, keeping the optimizer to two parameters.
+
+    Parameters
+    ----------
+    signal : (T, E) array_like
+        Complex data for one voxel; volumes on axis 0, echoes on axis 1.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    max_r2star : float, optional
+        Upper bound for R2* in s^-1. Default is inf.
+    max_frequency_hz : float, optional
+        Symmetric bound for off-resonance in Hz. Default is inf.
+    max_nfev : int or None, optional
+        Maximum function evaluations.
+
+    Returns
+    -------
+    result : dict or None
+        Scalar ``r2star``, ``frequency_hz``, ``cost``, ``nfev``, ``success``
+        and ``(T,)`` arrays ``s0`` (complex) and ``phase0``. ``None`` if no
+        volume has >= 2 finite echoes or optimization fails.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    n_vols = signal.shape[0]
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    valid_vols = np.flatnonzero(valid.sum(axis=1) >= 2)
+    if valid_vols.size == 0:
+        return None
+
+    initial = np.asarray(
+        [
+            _initial_complex_decay_params(signal[vol, valid[vol]], echo_times[valid[vol]])
+            for vol in valid_vols
+        ]
+    )
+    lower_bounds = np.array([0.0, -max_frequency_hz])
+    upper_bounds = np.array([max_r2star, max_frequency_hz])
+    x0 = np.array([float(np.nanmedian(initial[:, 1])), float(np.nanmedian(initial[:, 2]))])
+    x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+
+    def residuals(params):
+        r2, freq = params
+        s0_est = _solve_complex_s0(signal, echo_times, r2, freq)
+        parts = []
+        for vol in valid_vols:
+            if not np.isfinite(s0_est[vol]):
+                continue
+            echo_mask = valid[vol]
+            pred = complex_decay_model(echo_times[echo_mask], s0_est[vol], r2, freq)
+            residual = pred - signal[vol, echo_mask]
+            parts.extend([residual.real, residual.imag])
+        return np.concatenate(parts)
+
+    try:
+        result = scipy.optimize.least_squares(
+            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
+        )
+    except (ValueError, RuntimeError, FloatingPointError):
+        return None
+
+    r2star, frequency_hz = result.x
+    s0 = _solve_complex_s0(signal, echo_times, r2star, frequency_hz)
+    return {
+        "s0": s0,
+        "phase0": np.angle(s0),
+        "r2star": float(r2star),
+        "frequency_hz": float(frequency_hz),
+        "cost": result.cost,
+        "nfev": result.nfev,
+        "success": result.success,
+    }
+
+
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 
