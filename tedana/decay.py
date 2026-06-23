@@ -220,8 +220,9 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
 
     def residuals(params):
         log_s0_abs, r2, freq, phi0 = params
-        pred = complex_decay_model(te_valid, np.exp(log_s0_abs) * np.exp(1j * phi0), r2, freq)
-        residual = pred - y_valid
+        with np.errstate(over="ignore", invalid="ignore"):
+            pred = complex_decay_model(te_valid, np.exp(log_s0_abs) * np.exp(1j * phi0), r2, freq)
+            residual = pred - y_valid
         return np.concatenate([residual.real, residual.imag])
 
     try:
@@ -367,7 +368,8 @@ def _solve_complex_s0(signal, echo_times, r2star, frequency_hz):
     signal = np.asarray(signal)
     echo_times = np.asarray(echo_times, dtype=float)
     n_vols = signal.shape[0]
-    decay = np.exp((-r2star + 1j * 2.0 * np.pi * frequency_hz) * echo_times)
+    with np.errstate(over="ignore", invalid="ignore"):
+        decay = np.exp((-r2star + 1j * 2.0 * np.pi * frequency_hz) * echo_times)
     s0 = np.full(n_vols, np.nan + 1j * np.nan, dtype=np.complex128)
     valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
     for vol in range(n_vols):
@@ -431,15 +433,16 @@ def _fit_complex_decay_joint(
 
     def residuals(params):
         r2, freq = params
-        s0_est = _solve_complex_s0(signal, echo_times, r2, freq)
-        parts = []
-        for vol in valid_vols:
-            if not np.isfinite(s0_est[vol]):
-                continue
-            echo_mask = valid[vol]
-            pred = complex_decay_model(echo_times[echo_mask], s0_est[vol], r2, freq)
-            residual = pred - signal[vol, echo_mask]
-            parts.extend([residual.real, residual.imag])
+        with np.errstate(over="ignore", invalid="ignore"):
+            s0_est = _solve_complex_s0(signal, echo_times, r2, freq)
+            parts = []
+            for vol in valid_vols:
+                if not np.isfinite(s0_est[vol]):
+                    continue
+                echo_mask = valid[vol]
+                pred = complex_decay_model(echo_times[echo_mask], s0_est[vol], r2, freq)
+                residual = pred - signal[vol, echo_mask]
+                parts.extend([residual.real, residual.imag])
         return np.concatenate(parts)
 
     try:
