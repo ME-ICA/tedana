@@ -252,6 +252,99 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
     }
 
 
+def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
+    """Fit a complex monoexponential decay model per voxel across all timepoints.
+
+    Echoes and timepoints are flattened into a single fit per voxel (the
+    complex analog of the ``fittype="curvefit"``/``fitmode="all"`` scheme),
+    using the adaptive mask to choose how many echoes each voxel uses.
+
+    Parameters
+    ----------
+    data_cat : (Md x E x T) :obj:`numpy.ndarray`
+        Complex multi-echo data. Md is samples in the denoising mask.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel. See ``make_adaptive_mask``.
+    report : bool, optional
+        Whether to log a description of this step. Default is True.
+    n_threads : int, optional
+        Number of threads. If None or <= 0, uses all CPU cores.
+
+    Returns
+    -------
+    result : dict
+        ``(Md,)`` arrays ``t2s``, ``s0`` (magnitude), ``r2star``,
+        ``frequency_hz``, ``phase0``, and boolean ``failures``.
+    """
+    if n_threads is None or n_threads <= 0:
+        n_threads = os.cpu_count() or 1
+    if report:
+        RepLGR.info(
+            "A complex monoexponential model was fit to the magnitude and "
+            "phase data at each voxel using nonlinear least squares, jointly "
+            "estimating T2*, S0, off-resonance frequency, and initial phase."
+        )
+    echo_times = np.asarray(echo_times, dtype=float)
+    n_samp, _, n_vols = data_cat.shape
+
+    echos_to_run = np.unique(adaptive_mask)
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
+    lower_bounds = np.array([-np.inf, 0.0, -np.inf, -np.inf])
+    upper_bounds = np.array([np.inf, np.inf, np.inf, np.inf])
+
+    r2star = np.zeros(n_samp)
+    s0_mag = np.zeros(n_samp)
+    frequency_hz = np.zeros(n_samp)
+    phase0 = np.zeros(n_samp)
+    failures = np.zeros(n_samp, dtype=bool)
+
+    for echo_num in echos_to_run:
+        if echo_num == 2:
+            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
+
+        data_2d = data_cat[:, :echo_num, :].reshape(n_samp, -1)
+        echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
+
+        results = Parallel(n_jobs=n_threads)(
+            delayed(_fit_complex_decay_1d)(
+                data_2d[voxel],
+                echo_times_1d,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+            )
+            for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo complex NLLS")
+        )
+
+        for voxel, res in zip(voxel_idx, results):
+            if res is None:
+                failures[voxel] = True
+                continue
+            r2star[voxel] = res["r2star"]
+            s0_mag[voxel] = np.abs(res["s0"])
+            frequency_hz[voxel] = res["frequency_hz"]
+            phase0[voxel] = res["phase0"]
+            failures[voxel] = not res["success"]
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
+
+    return {
+        "t2s": t2s,
+        "s0": s0_mag,
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "phase0": phase0,
+        "failures": failures,
+    }
+
+
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 

@@ -282,3 +282,23 @@ def test__fit_complex_decay_1d_optimizer_failure(monkeypatch):
     out = me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper)
     assert out is not None
     assert out["success"] is False
+
+
+def test_fit_complex_monoexponential_recovers_maps():
+    """fit_complex_monoexponential recovers R2*/S0 over the adaptive mask."""
+    rng = np.random.default_rng(0)
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    n_vox, n_echo, n_vol = 6, 5, 3
+    r2star_true = rng.uniform(10, 30, n_vox)
+    s0_true = rng.uniform(100, 300, n_vox) * np.exp(1j * rng.uniform(-1, 1, n_vox))
+    data = np.zeros((n_vox, n_echo, n_vol), dtype=np.complex128)
+    for v in range(n_vox):
+        sig = me.complex_decay_model(tes, s0_true[v], r2star_true[v], 2.0)
+        data[v] = np.repeat(sig[:, None], n_vol, axis=1)
+    adaptive_mask = np.full(n_vox, n_echo, dtype=int)
+    out = me.fit_complex_monoexponential(data, tes, adaptive_mask, report=False)
+    assert out["t2s"].shape == (n_vox,)
+    assert np.allclose(out["t2s"], 1.0 / r2star_true, rtol=1e-2)
+    assert np.allclose(out["s0"], np.abs(s0_true), rtol=1e-2)
+    assert out["frequency_hz"].shape == (n_vox,)
+    assert not out["failures"].any()
