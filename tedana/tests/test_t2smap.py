@@ -235,6 +235,11 @@ def _make_zero_phase_files(echo_files, out_dir):
     return phase_files
 
 
+# Complex NLLS can produce very large S0 in low-signal voxels of the synthetic
+# test data, causing a benign float32 cast overflow in IO when maps are saved.
+@pytest.mark.filterwarnings(
+    "ignore:overflow encountered in cast:RuntimeWarning"
+)
 @pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
 def test_t2smap_nlls(tmp_path, fitmode):
     """t2smap runs with fittype='nlls' across fitmodes and writes expected maps."""
