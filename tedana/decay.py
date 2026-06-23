@@ -167,6 +167,8 @@ def _initial_complex_decay_params(signal, echo_times):
         intercept -> log|S0|) and an unwrapped-phase linear fit
         (slope -> frequency_hz, intercept -> phase0).
     """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
     amplitude = np.maximum(np.abs(signal), np.finfo(float).tiny)
     if echo_times.size > 1:
         slope, intercept = np.polyfit(echo_times, np.log(amplitude), 1)

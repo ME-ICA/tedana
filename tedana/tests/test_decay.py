@@ -265,3 +265,20 @@ def test__fit_complex_decay_1d_too_few_echoes():
     lower = np.array([-np.inf, 0.0, -np.inf, -np.inf])
     upper = np.array([np.inf, np.inf, np.inf, np.inf])
     assert me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper) is None
+
+
+def test__fit_complex_decay_1d_optimizer_failure(monkeypatch):
+    """On optimizer error, falls back to the initial estimate with success=False."""
+    import scipy.optimize
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("forced failure")
+
+    monkeypatch.setattr(scipy.optimize, "least_squares", boom)
+    tes = np.array([0.008, 0.020, 0.032])
+    signal = me.complex_decay_model(tes, 100.0 + 0j, 20.0, 0.0)
+    lower = np.array([-np.inf, 0.0, -np.inf, -np.inf])
+    upper = np.array([np.inf, np.inf, np.inf, np.inf])
+    out = me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper)
+    assert out is not None
+    assert out["success"] is False
