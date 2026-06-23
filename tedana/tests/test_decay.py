@@ -228,3 +228,40 @@ def test_smoke_fit_decay_curvefit_ts():
 
 
 # TODO: BREAK AND UNIT TESTS
+
+
+def test_complex_decay_model():
+    """complex_decay_model returns the analytic complex signal."""
+    tes = np.array([0.01, 0.02, 0.03])
+    s0 = 100.0 * np.exp(1j * 0.5)
+    r2star = 20.0
+    freq = 3.0
+    sig = me.complex_decay_model(tes, s0, r2star, freq)
+    expected = s0 * np.exp((-r2star + 1j * 2 * np.pi * freq) * tes)
+    assert np.allclose(sig, expected)
+
+
+def test__fit_complex_decay_1d_recovers_params():
+    """_fit_complex_decay_1d recovers known params from noiseless data."""
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    s0 = 250.0 * np.exp(1j * 0.7)
+    r2star = 18.0
+    freq = 4.0
+    signal = me.complex_decay_model(tes, s0, r2star, freq)
+    lower = np.array([-np.inf, 0.0, -np.inf, -np.inf])
+    upper = np.array([np.inf, np.inf, np.inf, np.inf])
+    out = me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper)
+    assert out is not None
+    assert np.isclose(out["r2star"], r2star, atol=1e-3)
+    assert np.isclose(out["frequency_hz"], freq, atol=1e-3)
+    assert np.isclose(np.abs(out["s0"]), np.abs(s0), rtol=1e-3)
+    assert out["success"]
+
+
+def test__fit_complex_decay_1d_too_few_echoes():
+    """_fit_complex_decay_1d returns None with fewer than 2 finite echoes."""
+    tes = np.array([0.01, 0.02])
+    signal = np.array([np.nan + 1j * np.nan, 5 + 1j * 2])
+    lower = np.array([-np.inf, 0.0, -np.inf, -np.inf])
+    upper = np.array([np.inf, np.inf, np.inf, np.inf])
+    assert me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper) is None

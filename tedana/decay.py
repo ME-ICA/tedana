@@ -120,6 +120,136 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
         return (voxel, None, None, True, None, None, None)
 
 
+def complex_decay_model(echo_times, s0, r2star, frequency_hz=0.0, modulation=1.0):
+    """Evaluate a single-pool complex R2* decay model.
+
+    The model is ``S(TE) = S0 * exp((-R2* + 1j*2*pi*f) * TE) * modulation``.
+    ``s0`` is complex and absorbs the initial phase. ``modulation`` is a
+    forward-compatibility hook for a future Dahnke correction; pass 1 for none.
+
+    Parameters
+    ----------
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    s0 : complex or array_like
+        Complex signal at TE=0.
+    r2star : float or array_like
+        R2* decay rate in s^-1.
+    frequency_hz : float or array_like, optional
+        Off-resonance frequency in Hz. Default is 0.0.
+    modulation : complex or array_like, optional
+        Through-slice modulation term. Default is 1.0 (no modulation).
+
+    Returns
+    -------
+    signal : :obj:`numpy.ndarray`
+        Complex predicted signal, broadcast over the inputs.
+    """
+    echo_times = np.asarray(echo_times, dtype=float)
+    decay = -np.asarray(r2star) + 1j * 2.0 * np.pi * np.asarray(frequency_hz)
+    return np.asarray(s0) * np.exp(decay * echo_times) * np.asarray(modulation)
+
+
+def _initial_complex_decay_params(signal, echo_times):
+    """Derive initial ``[log|S0|, R2*, frequency_hz, phase0]`` for one echo train.
+
+    Parameters
+    ----------
+    signal : (E,) array_like
+        Complex echo train for one sample.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+
+    Returns
+    -------
+    params : (4,) :obj:`numpy.ndarray`
+        Initial estimates from a log-linear magnitude fit (slope -> R2*,
+        intercept -> log|S0|) and an unwrapped-phase linear fit
+        (slope -> frequency_hz, intercept -> phase0).
+    """
+    amplitude = np.maximum(np.abs(signal), np.finfo(float).tiny)
+    if echo_times.size > 1:
+        slope, intercept = np.polyfit(echo_times, np.log(amplitude), 1)
+        r2star = max(0.0, -float(slope))
+        phase = np.unwrap(np.angle(signal))
+        phase_slope, phase_intercept = np.polyfit(echo_times, phase, 1)
+        frequency_hz = float(phase_slope / (2.0 * np.pi))
+        phase0 = float(phase_intercept)
+    else:
+        intercept = float(np.log(amplitude[0]))
+        r2star = 0.0
+        frequency_hz = 0.0
+        phase0 = float(np.angle(signal[0]))
+    return np.array([float(intercept), r2star, frequency_hz, phase0], dtype=float)
+
+
+def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max_nfev=None):
+    """Fit one complex echo train with nonlinear least squares.
+
+    Parameters
+    ----------
+    signal : (E,) array_like
+        Complex-valued data for one sample.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    lower_bounds, upper_bounds : (4,) array_like
+        Bounds for ``[log|S0|, R2*, frequency_hz, phase0]``.
+    max_nfev : int or None, optional
+        Maximum function evaluations for :func:`scipy.optimize.least_squares`.
+
+    Returns
+    -------
+    result : dict or None
+        Dict with ``s0`` (complex), ``r2star``, ``frequency_hz``, ``phase0``,
+        ``cost``, ``nfev``, ``success``. ``None`` only when fewer than 2 finite
+        echoes are available. On optimizer error, falls back to the initial
+        estimate with ``success=False``.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    if int(valid.sum()) < 2:
+        return None
+
+    y_valid = signal[valid]
+    te_valid = echo_times[valid]
+    x0 = _initial_complex_decay_params(y_valid, te_valid)
+    x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+
+    def residuals(params):
+        log_s0_abs, r2, freq, phi0 = params
+        pred = complex_decay_model(te_valid, np.exp(log_s0_abs) * np.exp(1j * phi0), r2, freq)
+        residual = pred - y_valid
+        return np.concatenate([residual.real, residual.imag])
+
+    try:
+        result = scipy.optimize.least_squares(
+            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
+        )
+    except (ValueError, RuntimeError, FloatingPointError):
+        log_s0_abs, r2star, frequency_hz, phase0 = x0
+        return {
+            "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
+            "r2star": r2star,
+            "frequency_hz": frequency_hz,
+            "phase0": phase0,
+            "cost": np.nan,
+            "nfev": 0,
+            "success": False,
+        }
+
+    log_s0_abs, r2star, frequency_hz, phase0 = result.x
+    return {
+        "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "phase0": phase0,
+        "cost": result.cost,
+        "nfev": result.nfev,
+        "success": result.success,
+    }
+
+
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 
