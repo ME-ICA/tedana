@@ -383,3 +383,19 @@ def test_fit_complex_decay_varys0_use_volumes(complex_testdata):
     )
     assert out["s0"].shape == (5, d["n_vol"])
     assert np.isfinite(out["s0"][:, 2]).all()  # excluded volume still gets S0
+
+
+def test_rmse_of_fit_decay_ts_varys0():
+    """rmse handles 3D t2s with 4D s0 for fitmode='varys0'."""
+    rng = np.random.default_rng(2)
+    tes = [0.01, 0.02, 0.03]
+    n_vox, n_echo, n_vol = 4, 3, 5
+    data = rng.uniform(50, 200, (n_vox, n_echo, n_vol))
+    adaptive_mask = np.full(n_vox, n_echo, dtype=int)
+    t2s = np.full(n_vox, 0.04)            # (Mb,)
+    s0 = np.full((n_vox, n_vol), 150.0)   # (Mb, T)
+    rmse_map, rmse_df = me.rmse_of_fit_decay_ts(
+        data=data, tes=tes, adaptive_mask=adaptive_mask, t2s=t2s, s0=s0, fitmode="varys0"
+    )
+    assert rmse_map.shape == (n_vox,)
+    assert len(rmse_df) == n_vol

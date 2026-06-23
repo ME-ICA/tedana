@@ -1131,7 +1131,7 @@ def rmse_of_fit_decay_ts(
     adaptive_mask: np.ndarray,
     t2s: np.ndarray,
     s0: np.ndarray,
-    fitmode: Literal["all", "ts"],
+    fitmode: Literal["all", "ts", "varys0"],
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
 
@@ -1182,6 +1182,9 @@ def rmse_of_fit_decay_ts(
         elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
+        elif fitmode == "varys0":
+            s0_echo = s0[use_vox, :]
+            t2s_echo = np.tile(t2s[use_vox][:, np.newaxis], (1, n_vols))
         else:
             raise ValueError(f"Unknown fitmode option {fitmode}")
 
