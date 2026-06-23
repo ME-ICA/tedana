@@ -462,6 +462,161 @@ def _fit_complex_decay_joint(
     }
 
 
+def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None, n_threads=1):
+    """Estimate complex T2*/S0 maps from magnitude and phase data.
+
+    Parameters
+    ----------
+    data : (Md x E x T) :obj:`numpy.ndarray`
+        Magnitude multi-echo data in the denoising mask.
+    phase : (Md x E x T) :obj:`numpy.ndarray`
+        Phase multi-echo data in radians, same shape as ``data``.
+    tes : (E,) array_like
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel.
+    fitmode : {"all", "ts", "varys0"}
+        ``"all"`` fits one model per voxel across all timepoints. ``"ts"`` fits
+        per voxel and timepoint. ``"varys0"`` shares R2*/frequency across
+        timepoints with per-volume complex S0.
+    use_volumes : (T,) :obj:`numpy.ndarray` of bool or None, optional
+        For ``"varys0"`` only: volumes used to estimate the shared
+        R2*/frequency. Per-volume S0 is computed for all volumes regardless.
+        ``None`` uses all volumes.
+    n_threads : int, optional
+        Number of threads. If None or <= 0, uses all CPU cores.
+
+    Returns
+    -------
+    result : dict
+        For ``"all"``: ``(Md,)`` arrays ``t2s``, ``s0``, ``r2star``,
+        ``frequency_hz``, ``phase0``, ``failures``. For ``"ts"``: same keys as
+        ``(Md, T)``. For ``"varys0"``: ``t2s``/``r2star``/``frequency_hz``/
+        ``failures`` are ``(Md,)`` and ``s0``/``phase0`` are ``(Md, T)``.
+    """
+    if n_threads is None or n_threads <= 0:
+        n_threads = os.cpu_count() or 1
+    data = np.asarray(data)
+    phase = np.asarray(phase)
+    tes = np.asarray(tes, dtype=float)
+    complex_data = data * np.exp(1j * phase)
+    n_samp, _, n_vols = complex_data.shape
+
+    if fitmode == "all":
+        return fit_complex_monoexponential(
+            complex_data, tes, adaptive_mask, n_threads=n_threads
+        )
+
+    if fitmode == "ts":
+        keys = ("t2s", "s0", "r2star", "frequency_hz", "phase0")
+        out = {k: np.zeros((n_samp, n_vols)) for k in keys}
+        out["failures"] = np.zeros((n_samp, n_vols), dtype=bool)
+        report = True
+        for vol in range(n_vols):
+            res = fit_complex_monoexponential(
+                complex_data[:, :, vol][:, :, None],
+                tes,
+                adaptive_mask,
+                report=report,
+                n_threads=n_threads,
+            )
+            for k in keys:
+                out[k][:, vol] = res[k]
+            out["failures"][:, vol] = res["failures"]
+            report = False
+        return out
+
+    if fitmode == "varys0":
+        if use_volumes is None:
+            use_volumes = np.ones(n_vols, dtype=bool)
+        return _fit_complex_decay_varys0(
+            complex_data, tes, adaptive_mask, use_volumes, n_threads
+        )
+
+    raise ValueError(f"Unknown fitmode option: {fitmode}")
+
+
+def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_threads):
+    """Joint-fit driver: shared R2*/frequency, per-volume complex S0.
+
+    Parameters
+    ----------
+    complex_data : (Md x E x T) :obj:`numpy.ndarray`
+        Complex multi-echo data.
+    tes : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel.
+    use_volumes : (T,) :obj:`numpy.ndarray` of bool
+        Volumes used for the shared R2*/frequency estimate.
+    n_threads : int
+        Number of threads.
+
+    Returns
+    -------
+    result : dict
+        ``(Md,)`` ``t2s``, ``r2star``, ``frequency_hz``, ``failures`` and
+        ``(Md, T)`` ``s0`` (magnitude) and ``phase0``.
+    """
+    n_samp, _, n_vols = complex_data.shape
+    echos_to_run = np.unique(adaptive_mask)
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
+    r2star = np.zeros(n_samp)
+    frequency_hz = np.zeros(n_samp)
+    failures = np.zeros(n_samp, dtype=bool)
+    s0_mag = np.zeros((n_samp, n_vols))
+    phase0 = np.zeros((n_samp, n_vols))
+
+    def _fit_voxel(voxel, echo_num):
+        # (T, E) for the shared fit (used volumes only) and all volumes for S0
+        signal_all = complex_data[voxel, :echo_num, :].T
+        joint = _fit_complex_decay_joint(signal_all[use_volumes], tes[:echo_num])
+        if joint is None:
+            return voxel, None
+        s0_all = _solve_complex_s0(
+            signal_all, tes[:echo_num], joint["r2star"], joint["frequency_hz"]
+        )
+        return voxel, {"joint": joint, "s0_all": s0_all}
+
+    for echo_num in echos_to_run:
+        if echo_num == 2:
+            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
+
+        results = Parallel(n_jobs=n_threads)(
+            delayed(_fit_voxel)(voxel, echo_num)
+            for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo varys0 NLLS")
+        )
+
+        for voxel, res in results:
+            if res is None:
+                failures[voxel] = True
+                continue
+            joint = res["joint"]
+            r2star[voxel] = joint["r2star"]
+            frequency_hz[voxel] = joint["frequency_hz"]
+            failures[voxel] = not joint["success"]
+            s0_all = res["s0_all"]
+            s0_mag[voxel, :] = np.abs(s0_all)
+            phase0[voxel, :] = np.angle(s0_all)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
+
+    return {
+        "t2s": t2s,
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "s0": s0_mag,
+        "phase0": phase0,
+        "failures": failures,
+    }
+
+
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 

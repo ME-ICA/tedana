@@ -328,3 +328,58 @@ def test__solve_complex_s0_all_volumes():
     out = me._solve_complex_s0(signal, tes, 20.0, 0.0)
     assert out.shape == (2,)
     assert np.allclose(np.abs(out), np.abs(s0_per_vol), rtol=1e-6)
+
+
+@pytest.fixture
+def complex_testdata():
+    rng = np.random.default_rng(1)
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    n_vox, n_echo, n_vol = 5, 5, 4
+    r2star = rng.uniform(10, 25, n_vox)
+    s0 = rng.uniform(100, 250, n_vox)
+    mag = np.zeros((n_vox, n_echo, n_vol))
+    phase = np.zeros((n_vox, n_echo, n_vol))
+    for v in range(n_vox):
+        sig = me.complex_decay_model(tes, s0[v] * np.exp(1j * 0.3), r2star[v], 2.0)
+        mag[v] = np.repeat(np.abs(sig)[:, None], n_vol, axis=1)
+        phase[v] = np.repeat(np.angle(sig)[:, None], n_vol, axis=1)
+    adaptive_mask = np.full(n_vox, n_echo, dtype=int)
+    return dict(mag=mag, phase=phase, tes=tes, adaptive_mask=adaptive_mask,
+               r2star=r2star, s0=s0, n_vol=n_vol)
+
+
+def test_fit_complex_decay_all(complex_testdata):
+    d = complex_testdata
+    out = me.fit_complex_decay(d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "all")
+    assert out["t2s"].shape == (5,)
+    assert out["s0"].shape == (5,)
+    assert np.allclose(out["t2s"], 1.0 / d["r2star"], rtol=1e-2)
+
+
+def test_fit_complex_decay_ts(complex_testdata):
+    d = complex_testdata
+    out = me.fit_complex_decay(d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "ts")
+    assert out["t2s"].shape == (5, d["n_vol"])
+    assert out["s0"].shape == (5, d["n_vol"])
+
+
+def test_fit_complex_decay_varys0(complex_testdata):
+    d = complex_testdata
+    out = me.fit_complex_decay(d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "varys0")
+    assert out["t2s"].shape == (5,)
+    assert out["frequency_hz"].shape == (5,)
+    assert out["s0"].shape == (5, d["n_vol"])
+    assert out["phase0"].shape == (5, d["n_vol"])
+    assert np.allclose(out["t2s"], 1.0 / d["r2star"], rtol=1e-2)
+
+
+def test_fit_complex_decay_varys0_use_volumes(complex_testdata):
+    """use_volumes restricts the shared fit but S0 is returned for all volumes."""
+    d = complex_testdata
+    use_volumes = np.array([True, True, False, True])
+    out = me.fit_complex_decay(
+        d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "varys0",
+        use_volumes=use_volumes,
+    )
+    assert out["s0"].shape == (5, d["n_vol"])
+    assert np.isfinite(out["s0"][:, 2]).all()  # excluded volume still gets S0
