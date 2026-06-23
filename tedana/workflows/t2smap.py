@@ -41,6 +41,18 @@ def _get_parser():
         required=True,
     )
     required_args.add_argument(
+        "--phase",
+        dest="phase",
+        nargs="+",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "Phase images for each echo, in radians, in ascending echo order "
+            "matching -d. Required when --fittype is 'nlls'."
+        ),
+        default=None,
+    )
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -151,23 +163,27 @@ def _get_parser():
     decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        choices=["loglin", "curvefit"],
+        choices=["loglin", "curvefit", "nlls"],
         help=(
             "Desired T2*/S0 fitting method. "
             '"loglin" means that a linear model is fit to the log of the data. '
             '"curvefit" means that a more computationally demanding monoexponential model is fit '
             "to the raw data. "
+            '"nlls" fits a complex monoexponential model to magnitude+phase data and requires '
+            "--phase. "
         ),
         default="loglin",
     )
     decay_args.add_argument(
         "--fitmode",
         dest="fitmode",
-        choices=["all", "ts"],
+        choices=["all", "ts", "varys0"],
         help=(
             "Monoexponential model fitting scheme. "
             '"all" means that the model is fit, per voxel, across all timepoints. '
-            '"ts" means that the model is fit, per voxel and per timepoint.'
+            '"ts" means that the model is fit, per voxel and per timepoint. '
+            '"varys0" (nlls only) shares R2*/frequency across timepoints while '
+            "allowing complex S0 to vary per timepoint. "
         ),
         default="all",
     )
@@ -247,6 +263,7 @@ def t2smap_workflow(
     dummy_scans=0,
     exclude=None,
     masktype=["dropout"],
+    phase=None,
     fittype="loglin",
     fitmode="all",
     combmode="t2s",
@@ -291,16 +308,23 @@ def t2smap_workflow(
         Default is to not exclude any volumes.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
-    fittype : {'loglin', 'curvefit'}, optional
+    phase : :obj:`list` of :obj:`str`, optional
+        Phase images for each echo, in radians, in ascending echo order matching ``data``.
+        Required when ``fittype`` is ``'nlls'``. Default is None.
+    fittype : {'loglin', 'curvefit', 'nlls'}, optional
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of
         the data.
         'curvefit' means to use a monoexponential fit to the raw data,
         which is slightly slower but may be more accurate.
-    fitmode : {'all', 'ts'}, optional
+        'nlls' fits a complex monoexponential model to magnitude+phase data
+        and requires ``phase``.
+    fitmode : {'all', 'ts', 'varys0'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
         'ts' means that the model is fit, per voxel and per timepoint.
+        'varys0' (nlls only) shares R2*/frequency across timepoints while
+        allowing complex S0 to vary per timepoint.
         Default is 'all'.
     combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
@@ -386,6 +410,16 @@ def t2smap_workflow(
             "Please set fitmode='all' or remove the exclude argument."
         )
 
+    if fittype == "nlls" and phase is None:
+        raise ValueError("fittype='nlls' requires phase images (--phase).")
+    if phase is not None and fittype != "nlls":
+        raise ValueError("phase images are only used with fittype='nlls'.")
+    if fitmode == "varys0" and fittype != "nlls":
+        raise ValueError("fitmode='varys0' is only valid with fittype='nlls'.")
+
+    if isinstance(phase, str):
+        phase = [phase]
+
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
@@ -394,6 +428,9 @@ def t2smap_workflow(
     # coerce data to samples x echos x time array
     if isinstance(data, str):
         data = [data]
+
+    if phase is not None and len(phase) != len(data):
+        raise ValueError("--phase must have the same number of files as -d.")
 
     # Initialize OutputGenerator with reference image
     # XXX: This doesn't support AFNI data yet.
@@ -456,32 +493,84 @@ def t2smap_workflow(
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
     LGR.info("Computing T2* map")
-    data_without_excluded_vols = data_without_excluded_vols[mask_denoise, ...]
+    data_fit = data_without_excluded_vols[mask_denoise, ...]
     masksum_masked = masksum_denoise[mask_denoise]
-    decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
-        data=data_without_excluded_vols,
-        tes=tes,
-        adaptive_mask=masksum_masked,
-        fittype=fittype,
-        n_threads=n_threads,
-    )
+
+    if fittype == "nlls":
+        phase_cat = io.load_data_nilearn(phase, mask_img=mask_img, n_echos=n_echos)
+        if dummy_scans > 0:
+            phase_cat = phase_cat[..., dummy_scans:]
+        if phase_cat.shape != data_cat.shape:
+            raise ValueError(
+                f"Phase shape {phase_cat.shape} does not match data shape {data_cat.shape}."
+            )
+        # For varys0, pass all volumes plus a use_volumes mask; otherwise drop excluded volumes.
+        if fitmode == "varys0":
+            phase_fit = phase_cat[mask_denoise, ...]
+            data_complex_mag = data_cat[mask_denoise, ...]
+            if n_exclude > 0:
+                vol_mask = use_volumes
+            else:
+                vol_mask = np.ones(n_vols, dtype=bool)
+            complex_results = decay.fit_complex_decay(
+                data=data_complex_mag,
+                phase=phase_fit,
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fitmode="varys0",
+                use_volumes=vol_mask,
+                n_threads=n_threads,
+            )
+        else:
+            if n_exclude == 0:
+                phase_fit = phase_cat[mask_denoise, ...]
+            else:
+                phase_fit = phase_cat[:, :, use_volumes][mask_denoise, ...]
+            complex_results = decay.fit_complex_decay(
+                data=data_fit,
+                phase=phase_fit,
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fitmode=fitmode,
+                n_threads=n_threads,
+            )
+        t2s_full = complex_results["t2s"]
+        s0_full = complex_results["s0"]
+        failures = complex_results["failures"]
+        t2s_var = s0_var = t2s_s0_covar = None
+    else:
+        decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
+        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+            data=data_fit,
+            tes=tes,
+            adaptive_mask=masksum_masked,
+            fittype=fittype,
+            n_threads=n_threads,
+        )
     del data_without_excluded_vols
 
-    if fittype == "curvefit":
+    if fittype in ("curvefit", "nlls"):
         io_generator.save_file(
             failures.astype(np.uint8),
             "fit failures img",
             mask=mask_denoise,
         )
-        if verbose:
-            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
-            io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-            io_generator.save_file(
-                t2s_s0_covar,
-                "t2star-s0 covariance img",
-                mask=mask_denoise,
-            )
+    if fittype == "curvefit" and verbose:
+        io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+        io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+        io_generator.save_file(
+            t2s_s0_covar,
+            "t2star-s0 covariance img",
+            mask=mask_denoise,
+        )
+
+    if fittype == "nlls":
+        io_generator.save_file(
+            utils.unmask(complex_results["frequency_hz"], mask_denoise), "frequency img"
+        )
+        io_generator.save_file(
+            utils.unmask(complex_results["phase0"], mask_denoise), "phase0 img"
+        )
 
     # Delete unused variables
     del failures, t2s_var, s0_var, t2s_s0_covar
