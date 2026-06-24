@@ -31,14 +31,6 @@
         "orig": "phase0",
         "bidsv1.5.0": "phase0map"
     },
-    "fit cost img": {
-        "orig": "fit_cost",
-        "bidsv1.5.0": "desc-fitCost_statmap"
-    },
-    "fit nfev img": {
-        "orig": "fit_nfev",
-        "bidsv1.5.0": "desc-fitNfev_statmap"
-    },
     "t2star-s0 covariance img": {
         "orig": "t2s_s0_covar",
         "bidsv1.5.0": "stat-covariance_desc-t2star+s0_statmap"

@@ -385,6 +385,13 @@ def test_fit_complex_decay_varys0_use_volumes(complex_testdata):
     assert np.isfinite(out["s0"][:, 2]).all()  # excluded volume still gets S0
 
 
+def test_fit_complex_decay_invalid_fitmode(complex_testdata):
+    """fit_complex_decay raises ValueError on an unknown fitmode."""
+    d = complex_testdata
+    with pytest.raises(ValueError, match="Unknown fitmode"):
+        me.fit_complex_decay(d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "bogus")
+
+
 def test_rmse_of_fit_decay_ts_varys0():
     """rmse handles 3D t2s with 4D s0 for fitmode='varys0'."""
     rng = np.random.default_rng(2)

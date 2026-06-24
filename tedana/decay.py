@@ -532,6 +532,8 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
     if fitmode == "varys0":
         if use_volumes is None:
             use_volumes = np.ones(n_vols, dtype=bool)
+        else:
+            use_volumes = np.asarray(use_volumes, dtype=bool)
         return _fit_complex_decay_varys0(
             complex_data, tes, adaptive_mask, use_volumes, n_threads
         )
@@ -1105,13 +1107,15 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     :math:`T_2^*` values less than or equal to zero with 0.001 s.
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
-    It also replaces NaN values in the :math:`S_0` map with 0.
+    It also replaces NaN, infinite, and float32-unrepresentable values in the :math:`S_0` map with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
     t2s[np.isinf(t2s)] = 0.5  # why 0.5 s?
     t2s[t2s <= 0] = 0.001  # set negative values to a small positive value
     t2s = _apply_t2s_floor(t2s, tes)
-    s0[np.isnan(s0)] = 0.0  # why 0?
+    # Zero out NaN, inf, and values too large to represent in float32
+    s0_f32_max = np.finfo(np.float32).max
+    s0[~np.isfinite(s0) | (np.abs(s0) > s0_f32_max)] = 0.0
 
     t2s_limited = t2s.copy()
     s0_limited = s0.copy()
@@ -1154,8 +1158,8 @@ def rmse_of_fit_decay_ts(
         :func:`~tedana.decay.fit_decay_ts`.
     s0 : (Mb [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
-    fitmode : {"fit", "all"}
-        Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
+    fitmode : {"all", "ts", "varys0"}
+        Whether the T2* and S0 estimates are volume-wise ("ts", "varys0") or not ("all").
 
     Returns
     -------
