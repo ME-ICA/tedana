@@ -333,7 +333,7 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
             phase0[voxel] = res["phase0"]
             failures[voxel] = not res["success"]
 
-    with np.errstate(divide="ignore", invalid="ignore"):
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
         t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
 
     return {
@@ -607,7 +607,7 @@ def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_t
             s0_mag[voxel, :] = np.abs(s0_all)
             phase0[voxel, :] = np.angle(s0_all)
 
-    with np.errstate(divide="ignore", invalid="ignore"):
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
         t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
 
     return {
