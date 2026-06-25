@@ -706,15 +706,22 @@ def calculate_max_rp_corr(
 
     Notes
     -----
+    This metric is taken from ICA-AROMA :footcite:p:`pruim2015ica`,
+    but the corresponding classification step cannot be reproduced within tedana,
+    as ICA-AROMA combines this metric with its "edge fraction" metric,
+    which has not been implemented in tedana.
+    As such, any decision-tree thresholds based on this metric must be considered experimental.
+
     The expanded regressor model has ``6 * N`` columns before squared comparisons.
-    Thresholds inherited from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the
-    original six motion-parameter inputs. If a different number of regressors is
-    used, the threshold should be recalibrated for that model size.
 
     Raises
     ------
     ValueError
         If ``regressors`` is not 2-D or its row count does not match ``mixing``.
+
+    References
+    ----------
+    .. footbibliography::
     """
     mixing = np.asarray(mixing, dtype=float)
     rp = np.asarray(regressors, dtype=float)

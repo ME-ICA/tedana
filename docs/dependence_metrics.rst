@@ -174,8 +174,10 @@ cutoff, while values near 1 indicate that the retained power is concentrated clo
 to the Nyquist frequency.
 
 The commonly used threshold of ``HFC > 0.35`` is inherited from single-echo
-ICA-AROMA. It has not yet been validated as a tedana ME-fMRI component
-classification threshold.
+ICA-AROMA :footcite:p:`pruim2015ica`.
+It has not yet been validated as a tedana ME-fMRI component classification threshold,
+though there is no reason to believe that ME-fMRI components would have different
+frequency characteristics than single-echo components.
 
 
 max_rp_corr
@@ -194,11 +196,12 @@ time series, giving 12*N total comparisons per split.
 
 Values are bounded between 0 and 1, where higher values indicate stronger
 association between the component and at least one expanded regressor.
-Thresholds inherited from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the
-original six motion-parameter inputs.
-If the input regressor set has more or fewer than six columns, the expected maximum
-correlation under the null changes and any decision-tree threshold should be
-recalibrated for that model size.
+
+This metric is taken from ICA-AROMA :footcite:p:`pruim2015ica`,
+but the corresponding classification step cannot be reproduced within tedana,
+as ICA-AROMA combines this metric with its "edge fraction" metric,
+which has not been implemented in tedana.
+As such, any decision-tree thresholds based on this metric must be considered experimental.
 
 
 countnoise
@@ -388,3 +391,8 @@ The metrics are:
 - countsigFT2
 
 The decision table score is then calculated as the average of the ranks of the metrics.
+
+
+References
+==========
+.. footbibliography::

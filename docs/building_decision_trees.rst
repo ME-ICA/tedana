@@ -348,11 +348,11 @@ The expanded model contains the original N regressors, their derivatives, and bo
 shifted forward and backward by one TR, for 6*N model columns.
 The metric also compares squared component and regressor time series, for 12*N total
 correlation comparisons per random split.
-The random subsampling uses the seed provided to the tedana workflow.
-Thresholds taken from ICA-AROMA, such as ``max_rp_corr > 0.5``, assume the original six
-motion-parameter inputs.
-If a decision tree uses more or fewer input regressors, the expected maximum correlation
-under the null changes and the threshold should be recalibrated for that model size.
+This metric is taken from ICA-AROMA :footcite:p:`pruim2015ica`,
+but the corresponding classification step cannot be reproduced within tedana,
+as ICA-AROMA combines this metric with its "edge fraction" metric,
+which has not been implemented in tedana.
+As such, any decision-tree thresholds based on this metric must be considered experimental.
 
 
 Nodes in the decision tree
@@ -521,3 +521,7 @@ documentation.
 If you have made it this far, congratulations!!! If you follow these steps, you'll be able
 to impress your colleagues, friends, and family by designing your very own decision
 tree functions.
+
+References
+==========
+.. footbibliography::
