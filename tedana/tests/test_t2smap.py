@@ -4,6 +4,7 @@ import os.path as op
 from shutil import rmtree
 
 import nibabel as nb
+import numpy as np
 import pytest
 
 from tedana import workflows
@@ -220,3 +221,69 @@ class TestT2smap:
     def teardown_method(self):
         # Clean up folders
         rmtree("TED.echo1.t2smap")
+
+
+def _make_zero_phase_files(echo_files, out_dir):
+    """Write zero-valued phase NIfTIs matching the given magnitude echoes."""
+    phase_files = []
+    for i, f in enumerate(echo_files):
+        img = nb.load(f)
+        phase = nb.Nifti1Image(np.zeros(img.shape, dtype=np.float32), img.affine, img.header)
+        path = op.join(out_dir, f"phase{i + 1}.nii.gz")
+        phase.to_filename(path)
+        phase_files.append(path)
+    return phase_files
+
+
+@pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
+def test_t2smap_nlls(tmp_path, fitmode):
+    """t2smap runs with fittype='nlls' across fitmodes and writes expected maps."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    mask = op.join(data_dir, "mask.nii.gz")
+    phase_files = _make_zero_phase_files(echo_files, str(tmp_path))
+    workflows.t2smap_workflow(
+        data=echo_files,
+        tes=[14.5, 38.5, 62.5],
+        phase=phase_files,
+        mask=mask,
+        fittype="nlls",
+        fitmode=fitmode,
+        out_dir=str(tmp_path),
+    )
+    assert op.exists(op.join(tmp_path, "T2starmap.nii.gz"))
+    assert op.exists(op.join(tmp_path, "S0map.nii.gz"))
+    assert op.exists(op.join(tmp_path, "frequencyHzmap.nii.gz"))
+    assert op.exists(op.join(tmp_path, "phase0map.nii.gz"))
+    assert op.exists(op.join(tmp_path, "desc-optcom_bold.nii.gz"))
+    # varys0 should produce a 4D S0 timeseries; all/ts produce 3D/4D maps respectively
+    s0 = nb.load(op.join(tmp_path, "S0map.nii.gz"))
+    if fitmode == "varys0":
+        assert s0.ndim == 4
+
+
+def test_t2smap_nlls_requires_phase(tmp_path):
+    """fittype='nlls' without --phase raises."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    with pytest.raises(ValueError, match="requires phase"):
+        workflows.t2smap_workflow(
+            data=echo_files,
+            tes=[14.5, 38.5, 62.5],
+            fittype="nlls",
+            out_dir=str(tmp_path),
+        )
+
+
+def test_t2smap_varys0_requires_nlls(tmp_path):
+    """fitmode='varys0' with a non-nlls fittype raises."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    with pytest.raises(ValueError, match="varys0"):
+        workflows.t2smap_workflow(
+            data=echo_files,
+            tes=[14.5, 38.5, 62.5],
+            fittype="loglin",
+            fitmode="varys0",
+            out_dir=str(tmp_path),
+        )
