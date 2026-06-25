@@ -1,7 +1,7 @@
 {
-    "tree_id": "demo_external_regressors_single_model",
-    "info": "Demonstration based on the minimal decision tree that uses an F stat on a model with multiple external regressors.",
-    "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
+    "tree_id": "demo_external_aroma",
+    "info": "Demonstration of a tree that merges some multi-echo decision criteria with head motion and temporal frequency criteria from ICA-AROMA.",
+    "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} with some of the criteriea from ICA-AROMA REFERENCE.",
     "necessary_metrics": [
         "kappa",
         "rho",
