@@ -16,6 +16,13 @@ from tedana import utils
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
+# Brain T2* at typical field strengths is well under a second. This generous
+# ceiling leaves real estimates untouched while preventing the nonlinear fits
+# from driving R2* toward 0, which would send T2* = 1/R2* to absurd (and, once
+# cast to float32, infinite) values.
+MAX_PHYSIOLOGICAL_T2STAR = 5.0  # seconds
+MIN_R2STAR = 1.0 / MAX_PHYSIOLOGICAL_T2STAR  # s^-1
+
 
 def _apply_t2s_floor(t2s, echo_times):
     """Apply a floor to T2* values to prevent zero division errors during optimal combination.
@@ -295,7 +302,9 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
 
-    lower_bounds = np.array([-np.inf, 0.0, -np.inf, -np.inf])
+    # R2* is bounded below by MIN_R2STAR so a (near-)flat decay cannot drive
+    # T2* = 1/R2* toward infinity.
+    lower_bounds = np.array([-np.inf, MIN_R2STAR, -np.inf, -np.inf])
     upper_bounds = np.array([np.inf, np.inf, np.inf, np.inf])
 
     r2star = np.zeros(n_samp)
@@ -385,7 +394,13 @@ def _solve_complex_s0(signal, echo_times, r2star, frequency_hz):
 
 
 def _fit_complex_decay_joint(
-    signal, echo_times, *, max_r2star=np.inf, max_frequency_hz=np.inf, max_nfev=None
+    signal,
+    echo_times,
+    *,
+    min_r2star=0.0,
+    max_r2star=np.inf,
+    max_frequency_hz=np.inf,
+    max_nfev=None,
 ):
     """Fit one voxel with shared R2*/frequency and per-volume complex S0.
 
@@ -398,6 +413,8 @@ def _fit_complex_decay_joint(
         Complex data for one voxel; volumes on axis 0, echoes on axis 1.
     echo_times : (E,) array_like
         Echo times in seconds.
+    min_r2star : float, optional
+        Lower bound for R2* in s^-1. Default is 0.0.
     max_r2star : float, optional
         Upper bound for R2* in s^-1. Default is inf.
     max_frequency_hz : float, optional
@@ -426,7 +443,7 @@ def _fit_complex_decay_joint(
             for vol in valid_vols
         ]
     )
-    lower_bounds = np.array([0.0, -max_frequency_hz])
+    lower_bounds = np.array([min_r2star, -max_frequency_hz])
     upper_bounds = np.array([max_r2star, max_frequency_hz])
     x0 = np.array([float(np.nanmedian(initial[:, 1])), float(np.nanmedian(initial[:, 2]))])
     x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
@@ -506,9 +523,7 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
     n_samp, _, n_vols = complex_data.shape
 
     if fitmode == "all":
-        return fit_complex_monoexponential(
-            complex_data, tes, adaptive_mask, n_threads=n_threads
-        )
+        return fit_complex_monoexponential(complex_data, tes, adaptive_mask, n_threads=n_threads)
 
     if fitmode == "ts":
         keys = ("t2s", "s0", "r2star", "frequency_hz", "phase0")
@@ -534,9 +549,7 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
             use_volumes = np.ones(n_vols, dtype=bool)
         else:
             use_volumes = np.asarray(use_volumes, dtype=bool)
-        return _fit_complex_decay_varys0(
-            complex_data, tes, adaptive_mask, use_volumes, n_threads
-        )
+        return _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_threads)
 
     raise ValueError(f"Unknown fitmode option: {fitmode}")
 
@@ -578,7 +591,9 @@ def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_t
     def _fit_voxel(voxel, echo_num):
         # (T, E) for the shared fit (used volumes only) and all volumes for S0
         signal_all = complex_data[voxel, :echo_num, :].T
-        joint = _fit_complex_decay_joint(signal_all[use_volumes], tes[:echo_num])
+        joint = _fit_complex_decay_joint(
+            signal_all[use_volumes], tes[:echo_num], min_r2star=MIN_R2STAR
+        )
         if joint is None:
             return voxel, None
         s0_all = _solve_complex_s0(
@@ -1126,6 +1141,10 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5, interpolation_method="lower")
     LGR.debug(f"Setting cap on T2* map at {cap_t2s * 10:.5f}")
+    # Apply the cap to both the full and limited maps. Without it, blown-up
+    # finite estimates from a poorly constrained fit leak into the full map (and
+    # overflow to +Inf when saved as float32).
+    t2s[t2s > cap_t2s * 10] = cap_t2s
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     return t2s, s0, t2s_limited, s0_limited

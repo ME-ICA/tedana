@@ -344,8 +344,15 @@ def complex_testdata():
         mag[v] = np.repeat(np.abs(sig)[:, None], n_vol, axis=1)
         phase[v] = np.repeat(np.angle(sig)[:, None], n_vol, axis=1)
     adaptive_mask = np.full(n_vox, n_echo, dtype=int)
-    return dict(mag=mag, phase=phase, tes=tes, adaptive_mask=adaptive_mask,
-               r2star=r2star, s0=s0, n_vol=n_vol)
+    return dict(
+        mag=mag,
+        phase=phase,
+        tes=tes,
+        adaptive_mask=adaptive_mask,
+        r2star=r2star,
+        s0=s0,
+        n_vol=n_vol,
+    )
 
 
 def test_fit_complex_decay_all(complex_testdata):
@@ -378,7 +385,11 @@ def test_fit_complex_decay_varys0_use_volumes(complex_testdata):
     d = complex_testdata
     use_volumes = np.array([True, True, False, True])
     out = me.fit_complex_decay(
-        d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "varys0",
+        d["mag"],
+        d["phase"],
+        d["tes"],
+        d["adaptive_mask"],
+        "varys0",
         use_volumes=use_volumes,
     )
     assert out["s0"].shape == (5, d["n_vol"])
@@ -392,6 +403,60 @@ def test_fit_complex_decay_invalid_fitmode(complex_testdata):
         me.fit_complex_decay(d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "bogus")
 
 
+def test_fit_complex_monoexponential_caps_extreme_t2star():
+    """R2* is bounded so a no-decay signal cannot produce an infinite T2*.
+
+    With R2* unbounded below at 0, a flat (R2*=0) decay drives T2* = 1/R2* toward
+    infinity. The fit must instead pin R2* at MIN_R2STAR, keeping T2* finite and
+    at or below MAX_PHYSIOLOGICAL_T2STAR.
+    """
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    n_vol = 3
+    # No decay across echoes -> the optimizer wants R2* = 0 (T2* = inf).
+    sig = me.complex_decay_model(tes, 200.0 * np.exp(1j * 0.3), 0.0, 1.0)
+    data = np.repeat(sig[:, None], n_vol, axis=1)[None]  # (1, E, T)
+    adaptive_mask = np.array([5])
+    out = me.fit_complex_monoexponential(data, tes, adaptive_mask, report=False)
+    assert np.isfinite(out["t2s"]).all()
+    assert (out["t2s"] <= me.MAX_PHYSIOLOGICAL_T2STAR + 1e-6).all()
+    assert (out["r2star"] >= me.MIN_R2STAR - 1e-9).all()
+
+
+def test_fit_complex_decay_varys0_caps_extreme_t2star():
+    """The varys0 driver bounds R2* so a no-decay signal cannot yield infinite T2*."""
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    n_vox, n_echo, n_vol = 2, 5, 3
+    mag = np.zeros((n_vox, n_echo, n_vol))
+    phase = np.zeros((n_vox, n_echo, n_vol))
+    for v in range(n_vox):
+        for t in range(n_vol):
+            sig = me.complex_decay_model(tes, (100.0 + 50 * t) * np.exp(1j * 0.3), 0.0, 1.0)
+            mag[v, :, t] = np.abs(sig)
+            phase[v, :, t] = np.angle(sig)
+    adaptive_mask = np.full(n_vox, n_echo, dtype=int)
+    out = me.fit_complex_decay(mag, phase, tes, adaptive_mask, "varys0")
+    assert np.isfinite(out["t2s"]).all()
+    assert (out["t2s"] <= me.MAX_PHYSIOLOGICAL_T2STAR + 1e-6).all()
+
+
+def test_modify_t2s_s0_maps_caps_full_map():
+    """The full T2* map is capped, not just the limited map.
+
+    A blown-up finite estimate (as produced by an unbounded fit) must be brought
+    down in the full map, instead of leaking through to be saved (and overflow to
+    +Inf when written as float32).
+    """
+    tes = np.array([0.01, 0.02, 0.03])
+    n = 100
+    t2s = np.full(n, 0.05)
+    t2s[0] = 1e38  # blown-up value, finite in float64 but absurd
+    s0 = np.full(n, 100.0)
+    adaptive_mask = np.full(n, len(tes), dtype=int)
+    t2s_full, _, _, _ = me.modify_t2s_s0_maps(t2s.copy(), s0.copy(), adaptive_mask, tes)
+    assert np.isfinite(t2s_full).all()
+    assert t2s_full.max() < 1e6
+
+
 def test_rmse_of_fit_decay_ts_varys0():
     """rmse handles 3D t2s with 4D s0 for fitmode='varys0'."""
     rng = np.random.default_rng(2)
@@ -399,8 +464,8 @@ def test_rmse_of_fit_decay_ts_varys0():
     n_vox, n_echo, n_vol = 4, 3, 5
     data = rng.uniform(50, 200, (n_vox, n_echo, n_vol))
     adaptive_mask = np.full(n_vox, n_echo, dtype=int)
-    t2s = np.full(n_vox, 0.04)            # (Mb,)
-    s0 = np.full((n_vox, n_vol), 150.0)   # (Mb, T)
+    t2s = np.full(n_vox, 0.04)  # (Mb,)
+    s0 = np.full((n_vox, n_vol), 150.0)  # (Mb, T)
     rmse_map, rmse_df = me.rmse_of_fit_decay_ts(
         data=data, tes=tes, adaptive_mask=adaptive_mask, t2s=t2s, s0=s0, fitmode="varys0"
     )

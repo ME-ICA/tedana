@@ -568,9 +568,7 @@ def t2smap_workflow(
         io_generator.save_file(
             utils.unmask(complex_results["frequency_hz"], mask_denoise), "frequency img"
         )
-        io_generator.save_file(
-            utils.unmask(complex_results["phase0"], mask_denoise), "phase0 img"
-        )
+        io_generator.save_file(utils.unmask(complex_results["phase0"], mask_denoise), "phase0 img")
 
     # Delete unused variables
     del failures, t2s_var, s0_var, t2s_s0_covar
