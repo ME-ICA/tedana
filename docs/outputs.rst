@@ -123,7 +123,7 @@ references.bib                                                               The
 ===========================================================================  =====================================================
 
 If ``verbose`` is set to True
-------------------------------
+-----------------------------
 
 =============================================================================================  =====================================================
 Key: Filename                                                                                  Content
@@ -151,6 +151,17 @@ Key: Filename                                                                   
 "low kappa ts split img": echo-[echo]_desc-Rejected_bold.nii.gz                                Low-Kappa time series for echo number ``echo``
 "denoised ts split img": echo-[echo]_desc-Denoised_bold.nii.gz                                 Denoised time series for echo number ``echo``
 =============================================================================================  =====================================================
+
+If ``fittype`` is "curvefit"
+----------------------------
+
+===========================================================================  =====================================================
+Key: Filename                                                                Content
+===========================================================================  =====================================================
+"t2star variance img": stat-variance_desc-t2star_statmap.nii.gz              Variance of the T2* estimates.
+"s0 variance img": stat-variance_desc-s0_statmap.nii.gz                      Variance of the S0 estimates.
+"t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap.nii.gz    Covariance of the T2* and S0 estimates.
+===========================================================================  =====================================================
 
 If ``tedort`` is True
 ---------------------

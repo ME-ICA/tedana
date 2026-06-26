@@ -186,6 +186,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="20%"><a href="https://github.com/mauspad"><img src="https://avatars.githubusercontent.com/u/84593296?v=4?s=100" width="100px;" alt="Xue"/><br /><sub><b>Xue</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mauspad" title="Code">💻</a></td>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/cmahlen"><img src="https://avatars.githubusercontent.com/u/45951108?v=4?s=100" width="100px;" alt="cmahlen"/><br /><sub><b>cmahlen</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=cmahlen" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

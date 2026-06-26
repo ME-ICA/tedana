@@ -1,0 +1,106 @@
+
+type = string-attribute
+name = DATASET_NAME
+count = 5
+'none~
+
+type = string-attribute
+name = TYPESTRING
+count = 15
+'3DIM_HEAD_FUNC~
+
+type = string-attribute
+name = IDCODE_STRING
+count = 27
+'AFN__-JNle_fb3cOD18pjnbD5Q~
+
+type = string-attribute
+name = IDCODE_DATE
+count = 25
+'Thu Mar 12 21:30:01 2026~
+
+type = integer-attribute
+name = SCENE_DATA
+count = 8
+ 0 0 1 -999 -999
+ -999 -999 -999
+
+type = string-attribute
+name = LABEL_1
+count = 5
+'none~
+
+type = string-attribute
+name = LABEL_2
+count = 5
+'none~
+
+type = integer-attribute
+name = ORIENT_SPECIFIC
+count = 3
+ 0 3 5
+
+type  = float-attribute
+name  = ORIGIN
+count = 3
+       -112.641       -119.106         56.547
+
+type  = float-attribute
+name  = DELTA
+count = 3
+         3.2969         3.2969           -3.3
+
+type  = float-attribute
+name  = IJK_TO_DICOM
+count = 12
+         3.2969              0              0       -112.641              0
+         3.2969              0       -119.106              0              0
+           -3.3         56.547
+
+type  = float-attribute
+name  = IJK_TO_DICOM_REAL
+count = 12
+         3.2969              0              0       -112.641              0
+         3.2969              0       -119.106              0              0
+           -3.3         56.547
+
+type = integer-attribute
+name = DATASET_RANK
+count = 8
+ 3 1 0 0 0
+ 0 0 0
+
+type = integer-attribute
+name = DATASET_DIMENSIONS
+count = 5
+ 64 64 1 0 0
+
+type = integer-attribute
+name = BRICK_TYPES
+count = 1
+ 1
+
+type  = float-attribute
+name  = BRICK_FLOAT_FACS
+count = 1
+              0
+
+type = string-attribute
+name = BRICK_LABS
+count = 3
+'#0~
+
+type = string-attribute
+name = TEMPLATE_SPACE
+count = 5
+'ORIG~
+
+type = integer-attribute
+name = INT_CMAP
+count = 1
+ 0
+
+type = string-attribute
+name = BYTEORDER_STRING
+count = 10
+'LSB_FIRST~

@@ -151,7 +151,7 @@ class TestT2smap:
                 "--dummy-scans",
                 "1",
                 "--exclude",
-                "0:1",
+                "0:2",  # exclude one volume beyond the dummy scan
                 "--combmode",
                 "t2s",
                 "--fitmode",
@@ -173,6 +173,11 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
+        in_img = nb.load(data[0])
+        target_shape = list(in_img.shape)
+        target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude; #1401
+        output_shape = list(img.shape)
+        assert output_shape == target_shape
 
     def test_failing_t2smap_01(self):
         """A simple failing configuration for t2smap."""

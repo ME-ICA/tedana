@@ -196,7 +196,7 @@ def test_load_data_nilearn_zcat_fastpath(tmp_path):
 
 
 def test_load_data_nilearn_zcat_requires_4d(tmp_path):
-    """z-concatenated inputs must be 4D."""
+    """Z-concatenated inputs must be 4D."""
     affine = np.eye(4)
     shape3d = (4, 3, 2)
     mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
@@ -209,7 +209,7 @@ def test_load_data_nilearn_zcat_requires_4d(tmp_path):
 
 
 def test_load_data_nilearn_zcat_mask_shape_mismatch(tmp_path):
-    """z-concatenated inputs should raise if mask doesn't match per-echo slice shape."""
+    """Z-concatenated inputs should raise if mask doesn't match per-echo slice shape."""
     affine = np.eye(4)
     x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
     z_cat = n_z * n_echos
@@ -317,6 +317,17 @@ def test_load_data_nilearn_multi_echo_fallback_path(tmp_path, monkeypatch):
     assert out.shape == expected.shape
     assert out.dtype == np.float32
     assert np.allclose(out, expected)
+
+
+def test_convert_to_nifti1():
+    """Test whether the dimensionality issues with AFNI values are properly handled."""
+    afni_img = nb.load(os.path.join(data_dir, "TE_slice+orig.HEAD"))
+    nii_img = me._convert_to_nifti1(afni_img, max_dim=3)
+    # data shrunk to only 3D
+    assert nii_img.header.get_data_shape() == (64, 64, 1)
+
+    with pytest.raises(ValueError, match=r"has more than 1 dimensions"):
+        me._convert_to_nifti1(afni_img, max_dim=1)
 
 
 def test_smoke_filewrite():
