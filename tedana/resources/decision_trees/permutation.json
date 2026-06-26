@@ -16,15 +16,14 @@
     "classification_tags": [
         "T2*-aligned (strong)",
         "T2*-aligned (moderate)",
-        "T2*-aligned",
         "T2*-dominant",
         "Mixed T2*/S0",
-        "S0-aligned",
         "S0-dominant",
         "Non-specific TE pattern",
         "Poor model fit",
         "Low variance",
-        "Unclassified rejected"
+        "Unclassified rejected",
+        "Likely BOLD"
     ],
     "_comment": "This decision tree uses permutation-based p-values (p_t2 and p_s0) to test whether components show spatially-specific TE-dependence under a linearized model. Low p_t2 indicates the component's echo-wise pattern is spatially aligned with local T2* sensitivity (consistent with BOLD-like signal). Low p_s0 indicates alignment with local S0 sensitivity (consistent with S0-driven fluctuations). The combination of kappa_star_perm (descriptive variance fraction) and p-values (inferential) provides robust classification.",
     "nodes": [
@@ -182,7 +181,7 @@
                 "new_classification": "accepted",
                 "decide_comps": ["provisionalaccept", "unclassified"]
             },
-            "kwargs": {"tag": "T2*-aligned"},
+            "kwargs": {"tag": "Likely BOLD"},
             "_comment": "Accept all remaining provisionally accepted and unclassified components."
         },
         {

@@ -329,3 +329,185 @@ def test_compute_countnoise_correctness():
 
     expected = np.array([1, 0])
     assert np.array_equal(countnoise, expected)
+
+
+def _make_te_variance_inputs(seed=0, n_vox=200, n_echos=5):
+    """Build controlled echo-wise betas with known T2*/S0 character.
+
+    Returns inputs at the *seconds* scale (tedana's internal convention, per
+    BIDS), with one perfectly T2*-driven component, one perfectly S0-driven
+    component, and one pure-noise component.
+    """
+    rng = np.random.default_rng(seed)
+    # Seconds per BIDS convention -- this is what tedana passes internally.
+    tes = np.array([0.0142, 0.03893, 0.06366, 0.08839, 0.11312])[:n_echos]
+    # Spatially varying T2* (so the permutation test has power), in seconds, and
+    # realistic S0 magnitudes (thousands).
+    t2s = rng.uniform(0.03, 0.07, n_vox)
+    s0 = rng.uniform(3000.0, 8000.0, n_vox)
+    adaptive_mask = np.full(n_vox, n_echos, dtype=int)
+
+    echo_betas = np.zeros((n_vox, n_echos, 3))
+    for v in range(n_vox):
+        phi_s0 = np.exp(-tes / t2s[v])
+        phi_t2 = s0[v] * np.exp(-tes / t2s[v]) * tes / t2s[v] ** 2
+        phi_s0 /= np.linalg.norm(phi_s0)
+        phi_t2 /= np.linalg.norm(phi_t2)
+        echo_betas[v, :, 0] = phi_t2 + 0.02 * rng.standard_normal(n_echos)  # T2*
+        echo_betas[v, :, 1] = phi_s0 + 0.02 * rng.standard_normal(n_echos)  # S0
+        echo_betas[v, :, 2] = rng.standard_normal(n_echos)  # noise
+
+    spatial_weights = np.ones((n_vox, 3))
+    return tes, t2s, s0, adaptive_mask, echo_betas, spatial_weights
+
+
+def test_compute_te_variance_valid_at_seconds_scale():
+    """compute_te_variance must return finite fractions for seconds-scale T2*.
+
+    Regression test for the unit bug: the t2s_min/t2s_max validity thresholds
+    were millisecond-scale (5/500), which rejected every voxel when tedana
+    passes seconds-scale T2* (~0.05 s), yielding all-NaN output. With the
+    default thresholds expressed in seconds the voxels are retained.
+    """
+    tes, t2s, s0, amask, betas, weights = _make_te_variance_inputs()
+
+    kappa_star, rho_star, _, _, _ = dependence.compute_te_variance(
+        echowise_pes=betas,
+        tes=tes,
+        s0_hat=s0,
+        t2s_hat=t2s,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+    )
+
+    assert np.all(np.isfinite(kappa_star))
+    assert np.all(np.isfinite(rho_star))
+    # The perfectly T2*-driven component reads mostly T2*; the S0 one mostly S0.
+    assert kappa_star[0] > 0.8
+    assert rho_star[1] > 0.8
+
+
+def test_compute_te_variance_unit_invariant_with_matching_bounds():
+    """The decomposition is unit-invariant when the validity bounds are scaled too.
+
+    kappa_star/rho_star depend only on basis *shapes* (ratios of TE/T2*), so a
+    seconds->milliseconds rescale of TE, T2*, and the validity thresholds must
+    leave the result unchanged.
+    """
+    tes, t2s, s0, amask, betas, weights = _make_te_variance_inputs()
+
+    ks_s, rs_s, _, _, r2_s = dependence.compute_te_variance(
+        echowise_pes=betas,
+        tes=tes,
+        s0_hat=s0,
+        t2s_hat=t2s,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+        t2s_min=0.005,
+        t2s_max=0.5,
+    )
+    ks_ms, rs_ms, _, _, r2_ms = dependence.compute_te_variance(
+        echowise_pes=betas,
+        tes=tes * 1000.0,
+        s0_hat=s0,
+        t2s_hat=t2s * 1000.0,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+        t2s_min=5.0,
+        t2s_max=500.0,
+    )
+
+    assert np.allclose(ks_s, ks_ms, atol=1e-6, equal_nan=True)
+    assert np.allclose(rs_s, rs_ms, atol=1e-6, equal_nan=True)
+    assert np.allclose(r2_s, r2_ms, atol=1e-6, equal_nan=True)
+
+
+def test_compute_te_variance_permutation_not_degenerate_at_seconds_scale():
+    """Permutation p-values must not be degenerate for seconds-scale T2*.
+
+    With the millisecond-scale thresholds, every seconds-scale voxel was
+    dropped and the permutation null collapsed (degenerate p-values). With
+    seconds-scale thresholds a perfectly T2*-aligned component yields a low
+    p_t2, the S0-aligned component a low p_s0, and noise neither.
+    """
+    tes, t2s, s0, amask, betas, weights = _make_te_variance_inputs()
+
+    _, _, p_t2, p_s0 = dependence.compute_te_variance_permutation(
+        echowise_pes=betas,
+        tes=tes,
+        s0_hat=s0,
+        t2s_hat=t2s,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+        n_perm=500,
+        n_threads=1,
+        seed=42,
+    )
+
+    assert p_t2[0] < 0.05  # T2*-aligned component detected
+    assert p_s0[1] < 0.05  # S0-aligned component detected
+    assert p_t2[2] > 0.05  # noise not flagged as T2*-specific
+
+
+def test_compute_te_variance_permutation_reproducible_and_thread_invariant():
+    """Permutation p-values are reproducible and independent of n_threads.
+
+    Guards the memory refactor (on-the-fly, per-permutation seeded index
+    generation): the same seed must give identical p-values, and running the
+    permutations across multiple threads must match the single-thread result.
+    """
+    tes, t2s, s0, amask, betas, weights = _make_te_variance_inputs()
+    kwargs = dict(
+        echowise_pes=betas,
+        tes=tes,
+        s0_hat=s0,
+        t2s_hat=t2s,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+        n_perm=200,
+        seed=7,
+    )
+
+    _, _, p_t2_a, p_s0_a = dependence.compute_te_variance_permutation(n_threads=1, **kwargs)
+    _, _, p_t2_b, p_s0_b = dependence.compute_te_variance_permutation(n_threads=1, **kwargs)
+    _, _, p_t2_par, p_s0_par = dependence.compute_te_variance_permutation(n_threads=2, **kwargs)
+
+    # Same seed -> identical results.
+    assert np.array_equal(p_t2_a, p_t2_b)
+    assert np.array_equal(p_s0_a, p_s0_b)
+    # Threading must not change the result.
+    assert np.array_equal(p_t2_a, p_t2_par)
+    assert np.array_equal(p_s0_a, p_s0_par)
+
+
+def test_compute_te_variance_permutation_chunk_invariant():
+    """Processing components in chunks must not change the result.
+
+    Component chunking bounds peak memory (it avoids holding the einsum
+    intermediates for every component at once), so it must produce results
+    identical to computing all components in a single chunk.
+    """
+    tes, t2s, s0, amask, betas, weights = _make_te_variance_inputs(n_vox=150)
+    kwargs = dict(
+        echowise_pes=betas,
+        tes=tes,
+        s0_hat=s0,
+        t2s_hat=t2s,
+        adaptive_mask=amask,
+        spatial_weights=weights,
+        n_perm=150,
+        n_threads=1,
+        seed=11,
+    )
+
+    ks_all, rs_all, p_t2_all, p_s0_all = dependence.compute_te_variance_permutation(
+        n_comp_chunk=1000, **kwargs
+    )
+    ks_ch, rs_ch, p_t2_ch, p_s0_ch = dependence.compute_te_variance_permutation(
+        n_comp_chunk=1, **kwargs
+    )
+
+    assert np.array_equal(p_t2_all, p_t2_ch)
+    assert np.array_equal(p_s0_all, p_s0_ch)
+    assert np.allclose(ks_all, ks_ch, equal_nan=True)
+    assert np.allclose(rs_all, rs_ch, equal_nan=True)
