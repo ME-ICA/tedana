@@ -211,6 +211,14 @@ def _get_parser():
         ),
         default=None,
     )
+    decay_args.add_argument(
+        "--s0map",
+        dest="s0map",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help="Precalculated S0 map in the same space as the input data.",
+        default=None,
+    )
 
     decomposition_args = parser.add_argument_group("Component Selection")
     decomposition_args.add_argument(
@@ -450,6 +458,7 @@ def tedana_workflow(
     quiet=False,
     overwrite=False,
     t2smap=None,
+    s0map=None,
     mixing_file=None,
     n_threads=1,
     tedana_command=None,
@@ -570,6 +579,8 @@ def tedana_workflow(
         Precalculated T2* map in the same space as the input data. Values should
         be in seconds per BIDS convention. Maps in milliseconds are auto-detected
         and handled with a warning.
+    s0map : :obj:`str`, optional
+        Precalculated S0 map in the same space as the input data.
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -676,6 +687,15 @@ def tedana_workflow(
     elif t2smap is not None:
         raise OSError("Argument 't2smap' must be an existing file.")
 
+    if s0map is not None and op.isfile(s0map):
+        s0map_file = io_generator.get_name("s0 img")
+        s0map = op.abspath(s0map)
+        # Allow users to re-run on same folder
+        if s0map != s0map_file:
+            shutil.copyfile(s0map, s0map_file)
+    elif s0map is not None:
+        raise OSError("Argument 's0map' must be an existing file.")
+
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
         "\\citep{dupre2021te}."
@@ -692,6 +712,10 @@ def tedana_workflow(
     if dummy_scans > 0:
         LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
         data_cat = data_cat[..., dummy_scans:]
+
+    if s0map is not None:
+        s0_full = io.load_data_nilearn(s0map, mask_img=mask_img, n_echos=n_echos)
+        s0_limited = s0_full.copy()
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
@@ -776,6 +800,7 @@ def tedana_workflow(
     )
     LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
+    # XXX: Probably should account for S0 map here.
     if t2smap is None:
         LGR.info("Computing T2* map")
         data_masked = data_cat[mask_denoise, ...]
@@ -812,11 +837,11 @@ def tedana_workflow(
 
         t2s_full = utils.unmask(t2s_full, mask_denoise)
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_full = utils.unmask(s0_full, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
 
         io_generator.save_file(t2s_full, "t2star img")
-        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
-        del s0_full
+        io_generator.save_file(s0_full, "s0 img")
 
         if verbose:
             io_generator.save_file(t2s_limited, "limited t2star img")
@@ -844,7 +869,6 @@ def tedana_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
-    del t2s_full
 
     if "gsr" in gscontrol:
         # regress out global signal
@@ -866,11 +890,13 @@ def tedana_workflow(
     if mixing_file is None:
         # Identify and remove thermal noise from data
         data_reduced, n_components = decomposition.tedpca(
-            data_cat,
-            data_optcom,
-            mask_clf,
-            masksum_clf,
-            io_generator,
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mask=mask_clf,
+            t2smap=t2s_full,
+            s0map=s0_full,
+            adaptive_mask=masksum_clf,
+            io_generator=io_generator,
             tes=tes,
             n_independent_echos=n_independent_echos,
             algorithm=tedpca,
@@ -920,6 +946,8 @@ def tedana_workflow(
                 data_cat=data_cat[mask_clf, ...],
                 data_optcom=data_optcom[mask_clf, :],
                 mixing=mixing,
+                t2smap=t2s_full[mask_clf],
+                s0map=s0_full[mask_clf],
                 adaptive_mask=masksum_clf[mask_clf],
                 mask_img=unmask(mask_clf, io_generator.mask),
                 tes=tes,
@@ -929,6 +957,7 @@ def tedana_workflow(
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
+                n_threads=n_threads,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -980,6 +1009,8 @@ def tedana_workflow(
             data_cat=data_cat[mask_clf, ...],
             data_optcom=data_optcom[mask_clf, :],
             mixing=mixing,
+            t2smap=t2s_full[mask_clf],
+            s0map=s0_full[mask_clf],
             adaptive_mask=masksum_clf[mask_clf],
             mask_img=unmask(mask_clf, io_generator.mask),
             tes=tes,
@@ -989,6 +1020,7 @@ def tedana_workflow(
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
+            n_threads=n_threads,
         )
         selector = selection.automatic_selection(
             component_table,

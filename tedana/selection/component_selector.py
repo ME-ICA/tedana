@@ -32,6 +32,7 @@ DEFAULT_TREES = [
     "minimal",
     "meica",
     "tedana_orig",
+    "permutation",
     "demo_external_regressors_single_model",
     "demo_external_regressors_motion_task_models",
 ]
