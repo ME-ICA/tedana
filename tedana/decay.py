@@ -120,7 +120,16 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
         return (voxel, None, None, True, None, None, None)
 
 
-def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
+def fit_monoexponential(
+    data_cat,
+    echo_times,
+    adaptive_mask,
+    report=True,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 
     Parameters
@@ -139,6 +148,13 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates to use instead of log-linear fit. Default is None.
+    s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates to use instead of log-linear fit. Default is None.
+    voxels_to_refit : (Md,) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit. If None, all voxels are fitted.
+        Voxels not in this mask retain their initial values and are not marked as failures.
 
     Returns
     -------
@@ -183,12 +199,16 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     # fit_data = np.mean(data_cat, axis=2)
     # fit_sigma = np.std(data_cat, axis=2)
 
-    t2s_init, s0_init = fit_loglinear(
-        data_cat=data_cat,
-        echo_times=echo_times,
-        adaptive_mask=adaptive_mask,
-        report=False,
-    )
+    if t2s_initial is not None and s0_initial is not None:
+        t2s_init = t2s_initial.copy()
+        s0_init = s0_initial.copy()
+    else:
+        t2s_init, s0_init = fit_loglinear(
+            data_cat=data_cat,
+            echo_times=echo_times,
+            adaptive_mask=adaptive_mask,
+            report=False,
+        )
 
     echos_to_run = np.unique(adaptive_mask)
     # When there is one good echo, use two
@@ -216,6 +236,15 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         echo_mask = np.squeeze(echo_masks[..., i_echo])
         echo_mask[adaptive_mask == echo_num] = True
         echo_masks[..., i_echo] = echo_mask
+
+        # Filter to only voxels that need refitting, if specified
+        if voxels_to_refit is not None:
+            voxel_idx = np.intersect1d(voxel_idx, np.where(voxels_to_refit)[0])
+
+        if len(voxel_idx) == 0:
+            t2s_asc_maps[:, i_echo] = t2s_init
+            s0_asc_maps[:, i_echo] = s0_init
+            continue
 
         data_2d = data_cat[:, :echo_num, :].reshape(len(data_cat), -1).T
         echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
@@ -383,7 +412,17 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     return t2s, s0
 
 
-def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
+def fit_decay(
+    data,
+    tes,
+    adaptive_mask,
+    fittype,
+    report=True,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit voxel-wise monoexponential decay models to ``data``.
 
     Parameters
@@ -405,6 +444,12 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates for curvefit. If None, log-linear estimates are used.
+    s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates for curvefit. If None, log-linear estimates are used.
+    voxels_to_refit : (Md,) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit. If None, all voxels are fitted.
 
     Returns
     -------
@@ -465,6 +510,9 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
             adaptive_mask=adaptive_mask,
             report=report,
             n_threads=n_threads,
+            t2s_initial=t2s_initial,
+            s0_initial=s0_initial,
+            voxels_to_refit=voxels_to_refit,
         )
     else:
         raise ValueError(f"Unknown fittype option: {fittype}")
@@ -472,7 +520,16 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
     return t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar
 
 
-def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
+def fit_decay_ts(
+    data,
+    tes,
+    adaptive_mask,
+    fittype,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
@@ -492,6 +549,13 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates for curvefit. If None, log-linear estimates are used.
+    s0_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates for curvefit. If None, log-linear estimates are used.
+    voxels_to_refit : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit per timepoint.
+        If None, all voxels are fitted.
 
     Returns
     -------
@@ -535,6 +599,9 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     report = True
     for vol in range(n_vols):
+        t2s_init_vol = t2s_initial[:, vol] if t2s_initial is not None else None
+        s0_init_vol = s0_initial[:, vol] if s0_initial is not None else None
+        refit_vol = voxels_to_refit[:, vol] if voxels_to_refit is not None else None
         t2s_vol, s0_vol, failures_vol, t2s_var_vol, s0_var_vol, t2s_s0_covar_vol = fit_decay(
             data=data[:, :, vol][:, :, None],
             tes=tes,
@@ -542,6 +609,9 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
             fittype=fittype,
             report=report,
             n_threads=n_threads,
+            t2s_initial=t2s_init_vol,
+            s0_initial=s0_init_vol,
+            voxels_to_refit=refit_vol,
         )
         t2s[:, vol] = t2s_vol
         s0[:, vol] = s0_vol

@@ -817,7 +817,6 @@ def tedana_workflow(
             fittype=fittype,
             n_threads=n_threads,
         )
-        del data_masked
 
         if fittype == "curvefit":
             io_generator.save_file(
@@ -832,16 +831,100 @@ def tedana_workflow(
 
             if interpolate_failing_voxels:
                 if failures.any():
+                    first_failures = failures.copy()
+                    n_first_failures = first_failures.sum()
+
+                    # Save first-pass variance/covariance for non-refitted voxels
+                    first_t2s_var = t2s_var.copy()
+                    first_s0_var = s0_var.copy()
+                    first_t2s_s0_covar = t2s_s0_covar.copy()
+
+                    # Stage 1: Interpolate failing voxels
+                    LGR.info(
+                        "Interpolating T2*/S0 estimates for %d failing voxel(s) "
+                        "(stage 1).",
+                        n_first_failures,
+                    )
                     phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
-                    t2s_full = utils.interpolate_masked_values(
-                        t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                    t2s_interp = utils.interpolate_masked_values(
+                        t2s_full, first_failures, mask_img, mask_denoise,
+                        phys_coords=phys_coords,
                     )
-                    s0_full = utils.interpolate_masked_values(
-                        s0_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                    s0_interp = utils.interpolate_masked_values(
+                        s0_full, first_failures, mask_img, mask_denoise,
+                        phys_coords=phys_coords,
                     )
+
+                    # Stage 2: Re-run curvefit on failing voxels using
+                    # interpolated values as initial estimates
+                    LGR.info(
+                        "Re-running curvefit on %d failing voxel(s) using "
+                        "interpolated initial values.",
+                        n_first_failures,
+                    )
+                    (
+                        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar,
+                    ) = decay.fit_decay(
+                        data=data_masked,
+                        tes=tes,
+                        adaptive_mask=masksum_masked,
+                        fittype=fittype,
+                        n_threads=n_threads,
+                        t2s_initial=t2s_interp,
+                        s0_initial=s0_interp,
+                        voxels_to_refit=first_failures,
+                    )
+
+                    # Merge variance/covariance: keep first-pass values for
+                    # voxels that were not refitted
+                    t2s_var[~first_failures] = first_t2s_var[~first_failures]
+                    s0_var[~first_failures] = first_s0_var[~first_failures]
+                    t2s_s0_covar[~first_failures] = first_t2s_s0_covar[~first_failures]
+                    del first_t2s_var, first_s0_var, first_t2s_s0_covar
+
+                    n_second_failures = failures.sum()
+                    if n_second_failures == 0:
+                        LGR.info(
+                            "All %d previously failing voxel(s) converged with "
+                            "interpolated initial values.",
+                            n_first_failures,
+                        )
+                    elif n_second_failures == n_first_failures:
+                        LGR.warning(
+                            "All %d voxel(s) that failed the first curvefit also "
+                            "failed with interpolated initial values. "
+                            "Using interpolated initial values did not help.",
+                            n_first_failures,
+                        )
+                    else:
+                        LGR.info(
+                            "%d of %d previously failing voxel(s) converged with "
+                            "interpolated initial values; %d voxel(s) still "
+                            "failing.",
+                            n_first_failures - n_second_failures,
+                            n_first_failures,
+                            n_second_failures,
+                        )
+
+                    # Stage 3: Interpolate any remaining failures
+                    if failures.any():
+                        LGR.info(
+                            "Interpolating T2*/S0 estimates for %d remaining "
+                            "failing voxel(s) (stage 2).",
+                            n_second_failures,
+                        )
+                        t2s_full = utils.interpolate_masked_values(
+                            t2s_full, failures, mask_img, mask_denoise,
+                            phys_coords=phys_coords,
+                        )
+                        s0_full = utils.interpolate_masked_values(
+                            s0_full, failures, mask_img, mask_denoise,
+                            phys_coords=phys_coords,
+                        )
                 else:
                     LGR.info("No curvefit failures found; skipping interpolation.")
 
+        del data_masked
         del failures, t2s_var, s0_var, t2s_s0_covar
 
         t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
