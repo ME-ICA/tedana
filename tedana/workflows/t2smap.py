@@ -517,17 +517,22 @@ def t2smap_workflow(
 
                 # Stage 1: Interpolate failing voxels
                 LGR.info(
-                    "Interpolating T2*/S0 estimates for %d failing voxel(s) "
-                    "(stage 1).",
+                    "Interpolating T2*/S0 estimates for %d failing voxel(s) " "(stage 1).",
                     n_first_failures,
                 )
                 phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
                 t2s_interp = utils.interpolate_masked_values(
-                    t2s_full, first_failures, mask_img, mask_denoise,
+                    t2s_full,
+                    first_failures,
+                    mask_img,
+                    mask_denoise,
                     phys_coords=phys_coords,
                 )
                 s0_interp = utils.interpolate_masked_values(
-                    s0_full, first_failures, mask_img, mask_denoise,
+                    s0_full,
+                    first_failures,
+                    mask_img,
+                    mask_denoise,
                     phys_coords=phys_coords,
                 )
 
@@ -539,7 +544,12 @@ def t2smap_workflow(
                     n_first_failures,
                 )
                 (
-                    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar,
+                    t2s_full,
+                    s0_full,
+                    failures,
+                    t2s_var,
+                    s0_var,
+                    t2s_s0_covar,
                 ) = decay_function(
                     data=data_without_excluded_vols,
                     tes=tes,
@@ -590,11 +600,17 @@ def t2smap_workflow(
                         n_second_failures,
                     )
                     t2s_full = utils.interpolate_masked_values(
-                        t2s_full, failures, mask_img, mask_denoise,
+                        t2s_full,
+                        failures,
+                        mask_img,
+                        mask_denoise,
                         phys_coords=phys_coords,
                     )
                     s0_full = utils.interpolate_masked_values(
-                        s0_full, failures, mask_img, mask_denoise,
+                        s0_full,
+                        failures,
+                        mask_img,
+                        mask_denoise,
                         phys_coords=phys_coords,
                     )
             else:
