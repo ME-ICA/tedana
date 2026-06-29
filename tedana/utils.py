@@ -12,12 +12,14 @@ from bokeh import __version__ as bokeh_version
 from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
 from nibabel import __version__ as nibabel_version
+from nibabel.affines import apply_affine
 from nilearn import __version__ as nilearn_version
 from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
 from robustica import __version__ as robustica_version
 from scipy import __version__ as scipy_version
 from scipy import ndimage
+from scipy.spatial import KDTree
 from scipy.special import lpmv
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
@@ -938,3 +940,107 @@ def load_mask(ref_img, mask=None, t2smap=None):
         )
 
     return mask_img, t2s
+
+
+def _nn_replace(data, failures, phys_coords):
+    """Replace failing entries with nearest non-failing neighbor values (in-place).
+
+    Parameters
+    ----------
+    data : (M,) :obj:`numpy.ndarray`
+        Values to potentially replace, modified in-place.
+    failures : (M,) :obj:`numpy.ndarray` of bool
+        True where values should be replaced.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each voxel.
+    """
+    if not failures.any():
+        return
+    good = ~failures
+    if not good.any():
+        LGR.warning(
+            "All voxels failed the monoexponential fit; cannot interpolate missing values."
+        )
+        return
+    tree = KDTree(phys_coords[good])
+    _, idx = tree.query(phys_coords[failures])
+    data[failures] = data[good][idx]
+
+
+def mask_to_phys_coords(img, mask):
+    """Compute physical (mm) coordinates for voxels selected by a boolean mask.
+
+    Parameters
+    ----------
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Image whose affine converts voxel indices to mm coordinates.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Boolean mask over all brain voxels; True selects voxels to include.
+
+    Returns
+    -------
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each of the M True voxels in ``mask``.
+    """
+    brain_mask = img.get_fdata().astype(bool)
+    brain_coords = np.argwhere(brain_mask)  # (S, 3)
+    voxel_coords = brain_coords[mask]  # (M, 3)
+    return apply_affine(img.affine, voxel_coords)  # (M, 3) in mm
+
+
+def interpolate_masked_values(data, failures, img, mask, phys_coords=None):
+    """Replace failing voxels with nearest-neighbor values from non-failing voxels.
+
+    Parameters
+    ----------
+    data : (M,) or (M, T) :obj:`numpy.ndarray`
+        T2* or S0 values for masked voxels, where M is the number of True
+        values in ``mask``.
+    failures : (M,) or (M, T) :obj:`numpy.ndarray` of bool
+        True where the curvefit failed for the corresponding voxel
+        (and timepoint for 2D input).
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Brain mask image. Its data determines which voxels are in the brain
+        mask and its affine converts voxel indices to physical (mm) coordinates.
+        Ignored when ``phys_coords`` is provided.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Denoising mask (``mask_denoise``), where S is the number of brain
+        voxels in ``img`` and M is the number of True values in this array.
+        Ignored when ``phys_coords`` is provided.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`, optional
+        Pre-computed physical coordinates for the M masked voxels (e.g. from a
+        previous call or from :func:`mask_to_phys_coords`).  When supplied,
+        the ``img``/``mask`` coordinate computation is skipped, avoiding
+        redundant work when interpolating multiple arrays with the same mask.
+
+    Returns
+    -------
+    result : (M,) or (M, T) :obj:`numpy.ndarray`
+        Copy of ``data`` with failing voxels replaced by the value of the
+        nearest non-failing voxel in physical space.
+
+    Raises
+    ------
+    ValueError
+        If ``failures.shape`` does not match ``data.shape``, or if
+        ``mask.sum()`` does not equal ``data.shape[0]`` (when ``phys_coords``
+        is not provided).
+    """
+    if failures.shape != data.shape:
+        raise ValueError(
+            f"failures shape {failures.shape} does not match data shape {data.shape}."
+        )
+    if phys_coords is None:
+        if mask.sum() != data.shape[0]:
+            raise ValueError(
+                f"mask has {int(mask.sum())} True values but data has {data.shape[0]} rows."
+            )
+        phys_coords = mask_to_phys_coords(img, mask)
+
+    result = data.copy()
+    if failures.ndim == 1:
+        _nn_replace(result, failures, phys_coords)
+    else:
+        for t in range(failures.shape[1]):
+            _nn_replace(result[:, t], failures[:, t], phys_coords)
+    return result
