@@ -1203,7 +1203,7 @@ def plot_decay_variance(
                 symmetric_cbar=False,
                 black_bg=True,
                 cmap="Reds",
-                threshold=0, # T2* variance falls below default threshold
+                threshold=0,  # T2* variance falls below default threshold
                 vmin=data_p02,
                 vmax=data_p98,
                 annotate=False,
