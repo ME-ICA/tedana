@@ -1,6 +1,6 @@
 {
     "tree_id": "demo_external_aroma",
-    "info": "Demonstration of a tree that merges some multi-echo decision criteria with head motion and temporal frequency criteria from ICA-AROMA.",
+    "info": "Demonstration of a tree that merges some multi-echo decision criteria with head motion and temporal frequency criteria from ICA-AROMA. This does not replicate all of ICA-AROMA's metrics or decision criteria. Do not use it as a drop-in replacement for ICA-AROMA. The decision criteria in this tree are not validated on real data.",
     "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} with some of the criteria from ICA-AROMA \\citep{pruim2015ica}.",
     "necessary_metrics": [
         "kappa",
@@ -23,7 +23,7 @@
             "report": "Components that exhibit a max_rp_corr value of greater than 0.5 (an arbitrarily-selected threshold) are rejected.",
             "detrend": true,
             "statistic": "max_rp_corr",
-            "regressors": ["trans_x", "trans_y", "trans_z", "rot_x", "rot_y", "rot_z"]
+            "regressors": ["Mot_X", "Mot_Y", "Mot_Z", "Mot_Pitch", "Mot_Roll", "Mot_Yaw"]
         }
     ],
     "nodes": [
