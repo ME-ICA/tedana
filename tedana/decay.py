@@ -242,8 +242,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
             s0_voxel,
             t2s_voxel,
             failure,
-            t2s_var_voxel,
             s0_var_voxel,
+            t2s_var_voxel,
             t2s_s0_covar_voxel,
         ) in results:
             if failure:
@@ -252,8 +252,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
             else:
                 s0_init[voxel] = s0_voxel
                 t2s_init[voxel] = t2s_voxel
-                t2s_var_asc_maps[voxel, i_echo] = t2s_var_voxel
                 s0_var_asc_maps[voxel, i_echo] = s0_var_voxel
+                t2s_var_asc_maps[voxel, i_echo] = t2s_var_voxel
                 t2s_s0_covar_asc_maps[voxel, i_echo] = t2s_s0_covar_voxel
 
         if fail_count:
@@ -268,16 +268,20 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         s0_asc_maps[:, i_echo] = s0_init
 
     # create full T2* and S0 maps
-    t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     s0 = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     failures = utils.unmask(failures_asc_maps[echo_masks], adaptive_mask > 1)
-    t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
     s0_var = utils.unmask(s0_var_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
     t2s_s0_covar = utils.unmask(t2s_s0_covar_asc_maps[echo_masks], adaptive_mask > 1)
 
-    # create full T2* maps with S0 estimation errors
-    t2s[adaptive_mask == 1] = t2s_asc_maps[adaptive_mask == 1, 0]
-    s0[adaptive_mask == 1] = s0_asc_maps[adaptive_mask == 1, 0]
+    # Fill voxels with adaptive mask value of 1 with values from first two echoes
+    one_echo = adaptive_mask == 1
+    s0[one_echo] = s0_asc_maps[one_echo, 0]
+    t2s[one_echo] = t2s_asc_maps[one_echo, 0]
+    s0_var[one_echo] = s0_var_asc_maps[one_echo, 0]
+    t2s_var[one_echo] = t2s_var_asc_maps[one_echo, 0]
+    t2s_s0_covar[one_echo] = t2s_s0_covar_asc_maps[one_echo, 0]
 
     return t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -678,6 +682,11 @@ def rmse_of_fit_decay_ts(
     for n_good_echoes in range(2, len(tes) + 1):
         # a boolean mask for voxels with a specific num of good echoes
         use_vox = adaptive_mask == n_good_echoes
+        if n_good_echoes == 2:
+            # Voxels with a single good echo are fit using the first two echoes
+            # (mirroring fit_monoexponential), so include them here rather than
+            # leaving their RMSE as NaN (which renders as empty voxels).
+            use_vox = use_vox | (adaptive_mask == 1)
         data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
             s0_echo = np.tile(s0[use_vox][:, np.newaxis], (1, n_vols))
