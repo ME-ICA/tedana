@@ -10,7 +10,7 @@ import numpy.typing as npt
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence, external
+from tedana.metrics import artifact, dependence, external
 from tedana.metrics._utils import (
     add_external_dependencies,
     dependency_resolver,
@@ -166,6 +166,17 @@ def generate_metrics(
                 f"{label} component weights img",
                 mask=mask_img,
             )
+
+    if "slice_banding" in required_metrics:
+        LGR.info("Calculating slice-banding artifact metric")
+        component_table["slice_banding"] = artifact.compute_slice_banding(
+            weight_maps=metric_maps["map weight"],
+            mask_img=mask_img,
+        )
+
+    if "spike" in required_metrics:
+        LGR.info("Calculating transient-spike artifact metric")
+        component_table["spike"] = artifact.compute_spike(mixing=mixing)
 
     if "map optcom betas" in required_metrics:
         LGR.info("Calculating unstandardized parameter estimate maps for optimally combined data")

@@ -17,6 +17,13 @@
             "map FS0",
             "map weight"
         ],
+        "slice_banding": [
+            "map weight",
+            "mask"
+        ],
+        "spike": [
+            "mixing"
+        ],
         "countnoise": [
             "map weight",
             "map weight clusterized"
