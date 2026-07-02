@@ -9,6 +9,7 @@ import shutil
 import subprocess
 from importlib.resources import files
 
+import nibabel as nb
 import pandas as pd
 import pytest
 
@@ -189,6 +190,7 @@ def test_integration_five_echo(skip_integration):
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    dummy_scans = 2
     # adding n_independent_echos=4 to test workflow code using n_independent_echos is executed
     tedana_cli.tedana_workflow(
         data=datalist,
@@ -204,6 +206,7 @@ def test_integration_five_echo(skip_integration):
         tedort=True,
         verbose=True,
         prefix="sub-01",
+        dummy_scans=dummy_scans,
     )
 
     # Just a check on the component table pending a unit test of load_comptable
@@ -216,6 +219,13 @@ def test_integration_five_echo(skip_integration):
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
     check_integration_outputs(fn, out_dir, max_expected_comp=-1)
+
+    # Check that dummy scans are removed from the optimally combined data
+    optcom_file = os.path.join(out_dir, "sub-01_desc-optcom_bold.nii.gz")
+    output_shape = list(nb.load(optcom_file).shape)
+    target_shape = list(nb.load(datalist[0]).shape)
+    target_shape[3] = target_shape[3] - dummy_scans
+    assert output_shape == target_shape
 
 
 def test_integration_four_echo(skip_integration):
@@ -501,6 +511,37 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
     )
 
 
+def test_integration_three_echo_aroma_external(skip_integration):
+    """Integration test of tedana workflow with aroma extern regress."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with aroma external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/three-echo-aroma-externalreg")
+    )
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    # external_regress_Ftest_3echo.tsv has 12 columns for motion, 1 for CSF, and 1 for task signal
+    # The regressor values and expected fits with the data are detailed in:
+    # tests.test_external_metrics.sample_external_regressors
+    download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_external_aroma.json"
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=files("tedana") / tree_name,
+        external_regressors=files("tedana") / "tests/data/external_regress_Ftest_3echo.tsv",
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        low_mem=True,
+    )
+
+
 def test_integration_reclassify_insufficient_args(skip_integration):
     if skip_integration:
         pytest.skip("Skipping reclassify insufficient args")
@@ -528,14 +569,15 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     out_dir = os.path.abspath(os.path.join(test_data_path, "../outputs/reclassify/quiet"))
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
 
     # Make some files that have components to manually accept and reject
     to_accept = [i for i in range(3)]
     to_reject = [i for i in range(7, 4)]
     acc_df = pd.DataFrame(data=to_accept, columns=["Components"])
     rej_df = pd.DataFrame(data=to_reject, columns=["Components"])
-    acc_csv_fname = os.path.join(reclassify_raw(), "accept.csv")
-    rej_csv_fname = os.path.join(reclassify_raw(), "reject.csv")
+    acc_csv_fname = os.path.join(out_dir, "accept.csv")
+    rej_csv_fname = os.path.join(out_dir, "reject.csv")
     acc_df.to_csv(acc_csv_fname)
     rej_df.to_csv(rej_csv_fname)
 
@@ -558,7 +600,9 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
     fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
-    check_integration_outputs(fn, out_dir)
+    # accpt.csv and reject.csv are added to the output directory
+    # as inputs only for this test, so they are not in the expected output file list
+    check_integration_outputs(fn, out_dir, extra_expected_files=["accept.csv", "reject.csv"])
 
 
 def test_integration_reclassify_quiet_spaces(skip_integration):

@@ -80,12 +80,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Optimally Combined Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -93,12 +95,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Denoised Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -106,12 +110,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="High-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -119,12 +125,14 @@ def carpet_plot(
         mask,
         figure=fig,
         axes=ax,
+        standardize="zscore_sample",
         title="Low-Kappa Data",
     )
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")
     )
+    plt.close(fig)
 
     if (gscontrol is not None) and ("gsr" in gscontrol):
         optcom_with_gs_img = io_generator.get_name("has gs combined img")
@@ -134,6 +142,7 @@ def carpet_plot(
             mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
@@ -144,6 +153,7 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_optcom_nogsr.svg",
             )
         )
+        plt.close(fig)
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
@@ -153,6 +163,7 @@ def carpet_plot(
             mask,
             figure=fig,
             axes=ax,
+            standardize="zscore_sample",
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
@@ -163,6 +174,7 @@ def carpet_plot(
                 f"{io_generator.prefix}carpet_denoised_mir.svg",
             )
         )
+        plt.close(fig)
 
         if io_generator.verbose:
             mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
@@ -172,6 +184,7 @@ def carpet_plot(
                 mask,
                 figure=fig,
                 axes=ax,
+                standardize="zscore_sample",
                 title="High-Kappa Data (Post-MIR)",
             )
             fig.tight_layout()
@@ -182,6 +195,7 @@ def carpet_plot(
                     f"{io_generator.prefix}carpet_accepted_mir.svg",
                 )
             )
+            plt.close(fig)
 
 
 def plot_component(
@@ -590,6 +604,7 @@ def plot_t2star_and_s0(
     ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+    plt.close(fig)
 
     # Only plot S0 data if the file exists
     if s0_exists:
@@ -605,6 +620,7 @@ def plot_t2star_and_s0(
         ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
         fig.tight_layout()
         fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+        plt.close(fig)
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
@@ -1042,14 +1058,22 @@ def plot_heatmap(
     n_regressors = corr_df.shape[0]
     n_components = corr_df.shape[1]
     n_models = models_df.shape[0]
-    ratio = n_regressors / n_models
 
-    fig, axes = plt.subplots(
-        figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
-        nrows=2,
-        height_ratios=[n_regressors, n_models],
-        sharex=True,
-    )
+    if n_models > 0:
+        ratio = n_regressors / n_models
+        fig, axes = plt.subplots(
+            figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
+            nrows=2,
+            height_ratios=[n_regressors, n_models],
+            sharex=True,
+        )
+        corr_ax, model_ax = axes
+    else:
+        fig, corr_ax = plt.subplots(
+            figsize=(n_components * 0.25, (n_regressors * 0.25) + 0.5),
+        )
+        model_ax = None
+
     sns.heatmap(
         corr_df,
         cmap="seismic",
@@ -1065,31 +1089,35 @@ def plot_heatmap(
             "pad": 0.01,
             "aspect": 20,
         },
-        ax=axes[0],
+        ax=corr_ax,
     )
-    axes[0].tick_params(axis="y", labelrotation=0)
-    axes[0].set_xticks([])
-    axes[0].tick_params(axis="x", bottom=False)
+    corr_ax.tick_params(axis="y", labelrotation=0)
+    if model_ax is not None:
+        corr_ax.set_xticks([])
+        corr_ax.tick_params(axis="x", bottom=False)
 
-    sns.heatmap(
-        models_df,
-        cmap="Reds",
-        center=0.5,
-        vmax=1,
-        vmin=0,
-        square=True,
-        linewidths=0.5,
-        cbar_kws={
-            "shrink": 0.85,
-            "label": "R-Squared",
-            "ticks": [0, 1],
-            "pad": 0.01,
-            "aspect": 20 / ratio,
-        },
-        ax=axes[1],
-    )
-    axes[1].tick_params(axis="y", labelrotation=0)
-    axes[1].set_xlabel("Component", fontsize=16)
+    if model_ax is not None:
+        sns.heatmap(
+            models_df,
+            cmap="Reds",
+            center=0.5,
+            vmax=1,
+            vmin=0,
+            square=True,
+            linewidths=0.5,
+            cbar_kws={
+                "shrink": 0.85,
+                "label": "R-Squared",
+                "ticks": [0, 1],
+                "pad": 0.01,
+                "aspect": 20 / ratio,
+            },
+            ax=model_ax,
+        )
+        model_ax.tick_params(axis="y", labelrotation=0)
+        model_ax.set_xlabel("Component", fontsize=16)
+    else:
+        corr_ax.set_xlabel("Component", fontsize=16)
 
     fig.savefig(out_file, bbox_inches="tight")
 
@@ -1187,6 +1215,7 @@ def plot_decay_variance(
                 symmetric_cbar=False,
                 black_bg=True,
                 cmap="Reds",
+                threshold=0,  # T2* variance falls below default threshold
                 vmin=data_p02,
                 vmax=data_p98,
                 annotate=False,

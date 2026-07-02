@@ -29,23 +29,23 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest']
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         dependencies: ['latest']
         include:
           - os: ubuntu-latest
-            python-version: '3.9'
+            python-version: '3.10'
             dependencies: 'min'
 
     env:
       DEPENDS: ${{ matrix.dependencies }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7.0.0
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8.2.0
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -59,7 +59,7 @@ jobs:
         run: tox c
       - name: Run tox
         run: tox -v --exit-and-dump-after 1200
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ always() }}

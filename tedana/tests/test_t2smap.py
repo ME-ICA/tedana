@@ -151,7 +151,7 @@ class TestT2smap:
                 "--dummy-scans",
                 "1",
                 "--exclude",
-                "0:1",
+                "0:2",  # exclude one volume beyond the dummy scan
                 "--combmode",
                 "t2s",
                 "--fitmode",
@@ -173,6 +173,11 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
+        in_img = nb.load(data[0])
+        target_shape = list(in_img.shape)
+        target_shape[3] = target_shape[3] - 1  # account for dummy scans, but not exclude; #1401
+        output_shape = list(img.shape)
+        assert output_shape == target_shape
 
     def test_failing_t2smap_01(self):
         """A simple failing configuration for t2smap."""
@@ -212,6 +217,28 @@ class TestT2smap:
                 exclude="1000",
             )
 
+    def test_interpolate_failing_voxels_curvefit(self, tmp_path):
+        """Smoke test: t2smap_workflow with interpolate_failing_voxels=True completes."""
+        data_dir = get_test_data_path()
+        data = [
+            op.join(data_dir, "echo1.nii.gz"),
+            op.join(data_dir, "echo2.nii.gz"),
+            op.join(data_dir, "echo3.nii.gz"),
+        ]
+        out_dir = str(tmp_path / "output")
+        workflows.t2smap_workflow(
+            data,
+            [14.5, 38.5, 62.5],
+            combmode="t2s",
+            fitmode="all",
+            fittype="curvefit",
+            interpolate_failing_voxels=True,
+            out_dir=out_dir,
+        )
+        assert op.isfile(op.join(out_dir, "T2starmap.nii.gz"))
+        assert op.isfile(op.join(out_dir, "S0map.nii.gz"))
+
     def teardown_method(self):
-        # Clean up folders
-        rmtree("TED.echo1.t2smap")
+        # Clean up folders (may not exist if a test used tmp_path)
+        if op.isdir("TED.echo1.t2smap"):
+            rmtree("TED.echo1.t2smap")

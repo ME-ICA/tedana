@@ -160,6 +160,50 @@ Other Available Metrics
 In addition to the core (in)dependence model metrics, TEDANA can also calculate the following metrics:
 
 
+HFC
+===
+:func:`tedana.metrics.frequency.calculate_hfc`
+
+High-frequency content (HFC) is calculated from each component time series.
+The component's one-sided power spectrum is calculated, frequencies at or below
+the high-pass cutoff are removed, and HFC is the normalized frequency where the
+cumulative retained power is closest to 50%.
+Values are bounded between 0 and 1.
+Values near 0 indicate that the retained power is concentrated near the high-pass
+cutoff, while values near 1 indicate that the retained power is concentrated closer
+to the Nyquist frequency.
+
+The commonly used threshold of ``HFC > 0.35`` is inherited from single-echo
+ICA-AROMA :footcite:p:`pruim2015ica`.
+It has not yet been validated as a tedana ME-fMRI component classification threshold,
+though there is no reason to believe that ME-fMRI components would have different
+frequency characteristics than single-echo components.
+
+
+max_rp_corr
+===========
+:func:`tedana.metrics.external.calculate_max_rp_corr`
+
+``max_rp_corr`` is an external-regressor metric calculated from a user-selected
+regressor set, typically motion parameters.
+For each component, tedana computes the mean across random 90% timepoint subsamples
+of the maximum absolute Pearson correlation between the component time series and
+an expanded regressor model.
+The expanded model contains the original N regressors, their derivatives, and both
+sets shifted forward and backward by one TR, for 6*N model columns.
+Correlations are calculated for the raw time series and for element-wise squared
+time series, giving 12*N total comparisons per split.
+
+Values are bounded between 0 and 1, where higher values indicate stronger
+association between the component and at least one expanded regressor.
+
+This metric is taken from ICA-AROMA :footcite:p:`pruim2015ica`,
+but the corresponding classification step cannot be reproduced within tedana,
+as ICA-AROMA combines this metric with its "edge fraction" metric,
+which has not been implemented in tedana.
+As such, any decision-tree thresholds based on this metric must be considered experimental.
+
+
 countnoise
 ==========
 :func:`tedana.metrics.dependence.compute_countnoise`
@@ -268,7 +312,7 @@ divided by the sum of the squares of the parameter estimates.
 
 normalized variance explained
 =============================
-:func:`tedana.metrics.dependence.calculate_varex_norm`
+:func:`tedana.metrics.dependence.calculate_varex`
 
 The "normalized variance explained" by each component is calculated as the
 square of the standardized parameter estimates from the regression of the z-scored
@@ -278,7 +322,7 @@ divided by the sum of the squares of the standardized parameter estimates.
 This is not actually a measure of normalized variance explained.
 
 In the tedpca metrics, "normalized variance explained" actually comes from
-the fitted PCA object's explained_variance_ratio_ attribute,
+the fitted PCA object's ``explained_variance_ratio_`` attribute,
 and the TEDANA-calculated value is retained as "estimated normalized variance explained".
 
 
@@ -347,3 +391,8 @@ The metrics are:
 - countsigFT2
 
 The decision table score is then calculated as the average of the ranks of the metrics.
+
+
+References
+==========
+.. footbibliography::

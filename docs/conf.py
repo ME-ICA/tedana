@@ -158,6 +158,8 @@ html_favicon = "_static/tedana_favicon.png"
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
+# Avoid duplicate labels from repeated deep argparse subsection headings.
+autosectionlabel_maxdepth = 2
 
 # -----------------------------------------------------------------------------
 # sphinxcontrib-bibtex

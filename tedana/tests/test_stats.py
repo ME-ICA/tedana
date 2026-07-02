@@ -5,7 +5,6 @@ import random
 import numpy as np
 import pytest
 from numpy.linalg import LinAlgError
-from numpy.matlib import repmat
 
 from tedana.stats import fit_model, get_coeffs, getfbounds, voxelwise_univariate_zstats
 
@@ -127,7 +126,7 @@ def test_fit_model():
     residuals = rng.random(size=(t, c)) / 1000000
     y = np.empty((t, c))
     for cidx in range(c):
-        y[:, cidx] = (x * repmat(weights[:, cidx], t, 1)).sum(axis=1)
+        y[:, cidx] = (x * weights[:, cidx]).sum(axis=1)
     y = y + residuals
 
     # Fitting model and confirming outputs are the correct shape

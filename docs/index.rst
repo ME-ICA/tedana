@@ -190,7 +190,6 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    :hidden:
    :name: hiddentoc
 
-   dependence_metrics
    included_decision_trees
 
 

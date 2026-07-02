@@ -5,7 +5,6 @@ import os
 from typing import List, Literal, Tuple
 
 import numpy as np
-import numpy.matlib
 import pandas as pd
 import scipy
 from joblib import Parallel, delayed
@@ -26,7 +25,7 @@ def _apply_t2s_floor(t2s, echo_times):
     t2s : (S [x T]) array_like
         T2* estimates.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
 
     Returns
     -------
@@ -105,8 +104,8 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
     Returns
     -------
     result : tuple or None
-        If successful: (voxel, s0, t2s, False)
-        If failed: (voxel, None, None, True)
+        If successful: (voxel, s0, t2s, False, s0_var, t2s_var, s0t2s_covar)
+        If failed: (voxel, None, None, True, None, None, None)
     """
     try:
         popt, cov = scipy.optimize.curve_fit(
@@ -129,7 +128,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     data_cat : (Md x E x T) :obj:`numpy.ndarray`
         Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -243,8 +242,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
             s0_voxel,
             t2s_voxel,
             failure,
-            t2s_var_voxel,
             s0_var_voxel,
+            t2s_var_voxel,
             t2s_s0_covar_voxel,
         ) in results:
             if failure:
@@ -253,8 +252,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
             else:
                 s0_init[voxel] = s0_voxel
                 t2s_init[voxel] = t2s_voxel
-                t2s_var_asc_maps[voxel, i_echo] = t2s_var_voxel
                 s0_var_asc_maps[voxel, i_echo] = s0_var_voxel
+                t2s_var_asc_maps[voxel, i_echo] = t2s_var_voxel
                 t2s_s0_covar_asc_maps[voxel, i_echo] = t2s_s0_covar_voxel
 
         if fail_count:
@@ -269,16 +268,20 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         s0_asc_maps[:, i_echo] = s0_init
 
     # create full T2* and S0 maps
-    t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     s0 = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     failures = utils.unmask(failures_asc_maps[echo_masks], adaptive_mask > 1)
-    t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
     s0_var = utils.unmask(s0_var_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
     t2s_s0_covar = utils.unmask(t2s_s0_covar_asc_maps[echo_masks], adaptive_mask > 1)
 
-    # create full T2* maps with S0 estimation errors
-    t2s[adaptive_mask == 1] = t2s_asc_maps[adaptive_mask == 1, 0]
-    s0[adaptive_mask == 1] = s0_asc_maps[adaptive_mask == 1, 0]
+    # Fill voxels with adaptive mask value of 1 with values from first two echoes
+    one_echo = adaptive_mask == 1
+    s0[one_echo] = s0_asc_maps[one_echo, 0]
+    t2s[one_echo] = t2s_asc_maps[one_echo, 0]
+    s0_var[one_echo] = s0_var_asc_maps[one_echo, 0]
+    t2s_var[one_echo] = t2s_var_asc_maps[one_echo, 0]
+    t2s_s0_covar[one_echo] = t2s_s0_covar_asc_maps[one_echo, 0]
 
     return t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -298,7 +301,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     data_cat : (Md x E x T) :obj:`numpy.ndarray`
         Multi-echo data. Md is samples in denoising mask, E is echoes, and T is timepoints.
     echo_times : (E,) array_like
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -393,7 +396,7 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
         Multi-echo data array, where `M` is samples in denoising mask, `E` is echos,
         and `T` is time.
     tes : (E,) :obj:`list`
-        Echo times in milliseconds.
+        Echo times in seconds.
     adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -482,7 +485,7 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
         Multi-echo data array, where `Md` is samples in denoising mask, `E` is echos,
         and `T` is time.
     tes : (E,) :obj:`list`
-        Echo times
+        Echo times in seconds
     adaptive_mask : (Md,) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
@@ -581,7 +584,7 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : (E,) :obj:`list`
-        Echo times in milliseconds.
+        Echo times in seconds.
 
     Returns
     -------
@@ -602,15 +605,15 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
 
     Notes
     -----
-    This function replaces infinite values in the :math:`T_2^*` map with 500 and
-    :math:`T_2^*` values less than or equal to zero with 1.
+    This function replaces infinite values in the :math:`T_2^*` map with 0.5 s and
+    :math:`T_2^*` values less than or equal to zero with 0.001 s.
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
     It also replaces NaN values in the :math:`S_0` map with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
-    t2s[np.isinf(t2s)] = 500.0  # why 500?
-    t2s[t2s <= 0] = 1.0  # let's get rid of negative values!
+    t2s[np.isinf(t2s)] = 0.5  # why 0.5 s?
+    t2s[t2s <= 0] = 0.001  # set negative values to a small positive value
     t2s = _apply_t2s_floor(t2s, tes)
     s0[np.isnan(s0)] = 0.0  # why 0?
 
@@ -679,10 +682,15 @@ def rmse_of_fit_decay_ts(
     for n_good_echoes in range(2, len(tes) + 1):
         # a boolean mask for voxels with a specific num of good echoes
         use_vox = adaptive_mask == n_good_echoes
+        if n_good_echoes == 2:
+            # Voxels with a single good echo are fit using the first two echoes
+            # (mirroring fit_monoexponential), so include them here rather than
+            # leaving their RMSE as NaN (which renders as empty voxels).
+            use_vox = use_vox | (adaptive_mask == 1)
         data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
-            s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
-            t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
+            s0_echo = np.tile(s0[use_vox][:, np.newaxis], (1, n_vols))
+            t2s_echo = np.tile(t2s[use_vox][:, np.newaxis], (1, n_vols))
         elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
@@ -701,8 +709,15 @@ def rmse_of_fit_decay_ts(
             )
         rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
 
-    rmse_map = np.nanmean(rmse, axis=1)
-    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sum_map = np.nansum(rmse, axis=1)
+    rmse_count_map = np.sum(~np.isnan(rmse), axis=1)
+    rmse_map = np.full(rmse_sum_map.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_map, rmse_count_map, out=rmse_map, where=rmse_count_map > 0)
+
+    rmse_sum_ts = np.nansum(rmse, axis=0)
+    rmse_count_ts = np.sum(~np.isnan(rmse), axis=0)
+    rmse_timeseries = np.full(rmse_sum_ts.shape, np.nan, dtype=rmse.dtype)
+    np.divide(rmse_sum_ts, rmse_count_ts, out=rmse_timeseries, where=rmse_count_ts > 0)
     rmse_sd_timeseries = np.nanstd(rmse, axis=0)
     rmse_percentiles_timeseries = np.nanpercentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
 

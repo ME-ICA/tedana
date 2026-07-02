@@ -4,6 +4,7 @@ import random
 from os.path import dirname
 from os.path import join as pjoin
 
+import nibabel as nib
 import numpy as np
 import pytest
 
@@ -383,15 +384,15 @@ def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
     assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
 
 
-def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
-    """`load_mask` should build a mask from nonzero T2* and return masked T2* in ms."""
+def test_load_mask_t2smap_only_builds_mask_and_returns_seconds(tmp_path):
+    """`load_mask` should build a mask from nonzero T2* and return masked T2* in seconds."""
     import nibabel as nb
 
     shape = (5, 5, 5)
     affine = np.eye(4)
     ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
 
-    # Single non-zero voxel, in seconds (per BIDS): 0.02s -> 20ms
+    # Single non-zero voxel, in seconds (per BIDS): 0.02s
     t2s_arr = np.zeros(shape, dtype=np.float32)
     t2s_arr[1, 1, 1] = 0.02
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
@@ -406,7 +407,7 @@ def test_load_mask_t2smap_only_builds_mask_and_converts_seconds_to_ms(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_t2s is not None
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 20.0)
+    assert np.allclose(out_t2s[0], 0.02)
 
 
 def test_load_mask_combines_mask_and_t2smap(tmp_path):
@@ -426,7 +427,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
 
     # Only one of the masked voxels has non-zero T2*
     t2s_arr = np.zeros(shape, dtype=np.float32)
-    t2s_arr[1, 1, 1] = 0.03  # seconds -> 30ms
+    t2s_arr[1, 1, 1] = 0.03  # seconds
     t2s_img = nb.Nifti1Image(t2s_arr, affine)
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
@@ -437,7 +438,7 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
     assert out_mask_arr[1, 1, 1] == 1
     assert out_mask_arr[2, 2, 2] == 0
     assert np.asarray(out_t2s).shape == (1,)
-    assert np.allclose(out_t2s[0], 30.0)
+    assert np.allclose(out_t2s[0], 0.03)
 
 
 def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
@@ -496,23 +497,11 @@ def test_create_legendre_polynomial_basis_set():
     assert np.abs((legendre_rounded[:, 5] - np.round(tmp_o5, decimals=6))).sum() == 0
 
 
-def test_sec2millisec():
-    """Ensure that sec2millisec returns 1000x the input values."""
-    assert utils.sec2millisec(5) == 5000
-    assert utils.sec2millisec(np.array([5])) == np.array([5000])
-
-
-def test_millisec2sec():
-    """Ensure that millisec2sec returns 1/1000x the input values."""
-    assert utils.millisec2sec(5000) == 5
-    assert utils.millisec2sec(np.array([5000])) == np.array([5])
-
-
 def test_check_te_values(caplog):
-    """Ensure that check_te_values returns the correct values."""
-    # Values in seconds (preferred per BIDS) - should be converted to milliseconds
-    assert utils.check_te_values([0.015, 0.039, 0.063]) == [15, 39, 63]
-    assert utils.check_te_values([0.15, 0.35, 0.55]) == [150, 350, 550]
+    """Ensure that check_te_values returns values in seconds."""
+    # Values in seconds (preferred per BIDS) - should be returned as-is
+    assert utils.check_te_values([0.015, 0.039, 0.063]) == [0.015, 0.039, 0.063]
+    assert utils.check_te_values([0.15, 0.35, 0.55]) == [0.15, 0.35, 0.55]
 
     # EPTI echo times (48 echoes)
     epti_te_ms = [
@@ -566,19 +555,21 @@ def test_check_te_values(caplog):
         50.41,
     ]
     epti_te_sec = [te / 1000 for te in epti_te_ms]
-    assert utils.check_te_values(epti_te_sec) == epti_te_ms
+    # Seconds input returns seconds unchanged
+    assert utils.check_te_values(epti_te_sec) == epti_te_sec
 
-    # Values in milliseconds (deprecated) - should be returned as-is with warning
-    assert utils.check_te_values([15, 39, 63]) == [15, 39, 63]
+    # Values in milliseconds (deprecated) - should be converted to seconds with warning
+    np.testing.assert_allclose(utils.check_te_values([15, 39, 63]), [0.015, 0.039, 0.063])
     assert (
         "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
         "be provided in seconds. Support for millisecond TE values is deprecated and will "
         "be removed in a future version. Please provide TE values in seconds."
     ) in caplog.text
-    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+    np.testing.assert_allclose(utils.check_te_values([2, 3, 4]), [0.002, 0.003, 0.004])
 
-    # EPTI echo times in milliseconds (deprecated)
-    assert utils.check_te_values(epti_te_ms) == epti_te_ms
+    # EPTI echo times in milliseconds (deprecated) - should be converted to seconds
+    result = utils.check_te_values(epti_te_ms)
+    np.testing.assert_allclose(result, epti_te_sec)
 
     # Check that the error is raised when TE values are in mixed units
     with pytest.raises(ValueError):
@@ -586,27 +577,22 @@ def test_check_te_values(caplog):
 
 
 def test_check_t2s_values(caplog):
-    """Ensure that check_t2s_values returns the correct values."""
-    # Values in seconds (expected per BIDS) - should be converted to milliseconds
+    """Ensure that check_t2s_values returns values in seconds."""
+    # Values in seconds (expected per BIDS) - should be returned as-is
     t2s_sec = np.array([0.015, 0.025, 0.035, 0.045])
     result = utils.check_t2s_values(t2s_sec)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
+    np.testing.assert_array_equal(result, [0.015, 0.025, 0.035, 0.045])
 
-    # Values in milliseconds (common mistake) - should be returned as-is with warning
-    t2s_ms = np.array([15, 25, 35, 45])
+    # Values in milliseconds (common mistake) - should be converted to seconds with warning
+    t2s_ms = np.array([15.0, 25.0, 35.0, 45.0])
     result = utils.check_t2s_values(t2s_ms)
-    np.testing.assert_array_equal(result, [15, 25, 35, 45])
-    assert (
-        "T2* map median value is 30.00, which suggests values are in "
-        "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-        "in seconds. The map will be used as-is (in milliseconds), but please consider "
-        "providing T2* maps in seconds in the future for consistency with BIDS."
-    ) in caplog.text
+    np.testing.assert_allclose(result, [0.015, 0.025, 0.035, 0.045])
+    assert "milliseconds rather than seconds" in caplog.text
 
-    # Array with zeros (common in T2* maps for masked voxels)
+    # Array with zeros (common in T2* maps for masked voxels) - values in seconds
     t2s_with_zeros = np.array([0, 0.020, 0.030, 0, 0.040])
     result = utils.check_t2s_values(t2s_with_zeros)
-    np.testing.assert_array_equal(result, [0, 20, 30, 0, 40])
+    np.testing.assert_array_equal(result, [0, 0.020, 0.030, 0, 0.040])
 
     # All zeros - should return as-is with warning
     t2s_all_zeros = np.array([0, 0, 0, 0])
@@ -647,3 +633,118 @@ def test_parse_volume_indices():
     # Negative indices are not supported (at all)
     with pytest.raises(ValueError, match="Invalid volume indices string"):
         utils.parse_volume_indices("-1")
+
+
+def test_interpolate_masked_values_some_failures():
+    # 5 voxels in a line (5x1x1). Affine is identity so physical == voxel coords.
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)  # all 5 brain voxels in denoising mask
+
+    data = np.array([99.0, 2.0, 3.0, 4.0, 99.0])
+    failures = np.array([True, False, False, False, True])
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    # Voxel 0 at x=0: nearest non-failing voxel is voxel 1 at x=1 (val=2.0)
+    assert result[0] == 2.0
+    # Voxel 4 at x=4: nearest non-failing voxel is voxel 3 at x=3 (val=4.0)
+    assert result[4] == 4.0
+    # Non-failing voxels are unchanged
+    np.testing.assert_array_equal(result[1:4], data[1:4])
+
+
+def test_interpolate_masked_values_no_failures():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.zeros(3, dtype=bool)
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    np.testing.assert_array_equal(result, data)
+
+
+def test_interpolate_masked_values_all_failures(caplog):
+    import logging
+
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.ones(3, dtype=bool)
+
+    with caplog.at_level(logging.WARNING, logger="GENERAL"):
+        result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    assert "cannot interpolate" in caplog.text.lower()
+    np.testing.assert_array_equal(result, data)
+
+
+def test_interpolate_masked_values_timeseries():
+    # 5 voxels, 2 timepoints; different failing voxel per timepoint
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+
+    data = np.tile(np.array([1.0, 2.0, 3.0, 4.0, 5.0])[:, np.newaxis], (1, 2))
+    failures = np.zeros((5, 2), dtype=bool)
+    failures[0, 0] = True  # t=0: voxel 0 fails
+    failures[4, 1] = True  # t=1: voxel 4 fails
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    # t=0: voxel 0 gets value of nearest non-failing (voxel 1, val=2.0)
+    assert result[0, 0] == 2.0
+    # t=1: voxel 4 gets value of nearest non-failing (voxel 3, val=4.0)
+    assert result[4, 1] == 4.0
+    # Non-failing entries are unchanged
+    assert result[4, 0] == 5.0
+    assert result[0, 1] == 1.0
+
+
+def test_interpolate_masked_values_shape_preservation():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+
+    data_1d = np.array([1.0, 2.0, 3.0])
+    failures_1d = np.array([True, False, False])
+    result_1d = utils.interpolate_masked_values(data_1d, failures_1d, img, mask)
+    assert result_1d.shape == data_1d.shape
+
+    data_2d = np.ones((3, 5))
+    failures_2d = np.zeros((3, 5), dtype=bool)
+    failures_2d[0, :] = True
+    result_2d = utils.interpolate_masked_values(data_2d, failures_2d, img, mask)
+    assert result_2d.shape == data_2d.shape
+
+
+def test_interpolate_masked_values_shape_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.zeros((3, 2), dtype=bool)  # wrong shape
+
+    with pytest.raises(ValueError, match="failures shape"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_mask_sum_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])  # only 3 rows, but mask has 5 True values
+    failures = np.zeros(3, dtype=bool)
+
+    with pytest.raises(ValueError, match="mask has"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_precomputed_phys_coords():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([99.0, 2.0, 3.0, 4.0, 99.0])
+    failures = np.array([True, False, False, False, True])
+
+    phys_coords = utils.mask_to_phys_coords(img, mask)
+    result = utils.interpolate_masked_values(data, failures, img, mask, phys_coords=phys_coords)
+
+    assert result[0] == 2.0
+    assert result[4] == 4.0
+    np.testing.assert_array_equal(result[1:4], data[1:4])
