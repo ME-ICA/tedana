@@ -265,11 +265,10 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=(
-            "Maximum number of restart attempts for ICA. If ICA "
-            "fails to converge, the fixed seed will be "
-            "updated and ICA will be run again. If "
-            "convergence is achieved before maxrestart "
-            "attempts, ICA will finish early."
+            "Maximum number of restart attempts for ICA. "
+            "If ICA fails to converge, the fixed seed will be updated and ICA will be run again. "
+            "If convergence is achieved before maxrestart attempts, ICA will finish early. "
+            "Must be an integer greater than or equal to 0."
         ),
         default=DEFAULT_N_MAX_RESTART,
     )
