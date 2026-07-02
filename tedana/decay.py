@@ -104,8 +104,8 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
     Returns
     -------
     result : tuple or None
-        If successful: (voxel, s0, t2s, False)
-        If failed: (voxel, None, None, True)
+        If successful: (voxel, s0, t2s, False, s0_var, t2s_var, s0t2s_covar)
+        If failed: (voxel, None, None, True, None, None, None)
     """
     try:
         popt, cov = scipy.optimize.curve_fit(
