@@ -501,8 +501,6 @@ def t2smap_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
-
-    io_generator.save_file(t2s_full, "t2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file

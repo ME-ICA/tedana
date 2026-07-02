@@ -1020,6 +1020,7 @@ def t2smap_subworkflow(
     t2s_limited = utils.unmask(t2s_limited, mask_denoise)
     s0_limited = utils.unmask(s0_limited, mask_denoise)
 
+    io_generator.save_file(t2s_full, "t2star img")
     io_generator.save_file(s0_full, "s0 img")
 
     LGR.info("Calculating model fit quality metrics")
