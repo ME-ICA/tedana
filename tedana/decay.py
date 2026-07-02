@@ -813,3 +813,232 @@ def rmse_of_fit_decay_ts(
     )
 
     return rmse_map, rmse_df
+
+
+def t2smap_subworkflow(
+    data_cat,
+    tes,
+    fittype,
+    fitmode,
+    mask_denoise,
+    masksum_denoise,
+    interpolate_failing_voxels,
+    io_generator,
+    data_without_excluded_vols=None,
+    n_threads=1,
+):
+    """Fit a T2* map to the data.
+
+    Parameters
+    ----------
+    data_cat : (Mb x E x T) :obj:`numpy.ndarray`
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
+    tes : (E,) :obj:`list`
+        Echo times.
+    fittype : {"curvefit", "loglinear"}
+        The type of model fit to use.
+    fitmode : {"all", "ts"}
+        Whether the T2* and S0 estimates are volume-wise ("all") or not ("ts").
+    mask_denoise : (Mb,) :obj:`numpy.ndarray`
+        Boolean array indicating which voxels to include in the fit.
+    masksum_denoise : (Mb,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
+        For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
+    n_threads : int
+        Number of threads to use.
+    interpolate_failing_voxels : bool
+        Whether to interpolate failing voxels.
+    io_generator : :obj:`tedana.io.IOGenerator`
+        The IO generator to use.
+    data_without_excluded_vols : (Mb x E x T) :obj:`numpy.ndarray` or None, optional
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time. If None, the data_cat is used.
+
+    Returns
+    -------
+    t2s_full : (Mb x T) :obj:`numpy.ndarray`
+        The full T2* map.
+    """
+    data_for_fit = (
+        data_without_excluded_vols if data_without_excluded_vols is not None else data_cat
+    )
+    data_for_fit = data_for_fit[mask_denoise, ...]
+    masksum_masked = masksum_denoise[mask_denoise]
+    decay_function = fit_decay if fitmode == "all" else fit_decay_ts
+    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+        data=data_for_fit,
+        tes=tes,
+        adaptive_mask=masksum_masked,
+        fittype=fittype,
+        n_threads=n_threads,
+    )
+
+    if fittype == "curvefit":
+        # Track the first-pass failures so the saved failures map can encode
+        # 1 = failed the first curvefit pass, 2 = failed both passes.
+        first_pass_failures = failures.copy()
+
+        if interpolate_failing_voxels and failures.any():
+            first_failures = failures.copy()
+            n_first_failures = first_failures.sum()
+
+            # Save first-pass variance/covariance for non-refitted voxels
+            first_t2s_var = t2s_var.copy()
+            first_s0_var = s0_var.copy()
+            first_t2s_s0_covar = t2s_s0_covar.copy()
+
+            # Stage 1: Interpolate failing voxels
+            LGR.info(
+                "Interpolating T2*/S0 estimates for %d failing voxel(s) (stage 1).",
+                n_first_failures,
+            )
+            phys_coords = utils.mask_to_phys_coords(io_generator.mask, mask_denoise)
+            t2s_interp = utils.interpolate_masked_values(
+                t2s_full,
+                first_failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+            s0_interp = utils.interpolate_masked_values(
+                s0_full,
+                first_failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+
+            # Stage 2: Re-run curvefit on failing voxels using interp. values as initial values
+            LGR.info(
+                "Re-running curvefit on %d failing voxel(s) using interpolated initial values.",
+                n_first_failures,
+            )
+            (
+                t2s_full,
+                s0_full,
+                failures,
+                t2s_var,
+                s0_var,
+                t2s_s0_covar,
+            ) = decay_function(
+                data=data_for_fit,
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fittype=fittype,
+                n_threads=n_threads,
+                t2s_initial=t2s_interp,
+                s0_initial=s0_interp,
+                voxels_to_refit=first_failures,
+            )
+
+            # Merge variance/covariance: keep first-pass values for voxels that were not refitted
+            t2s_var[~first_failures] = first_t2s_var[~first_failures]
+            s0_var[~first_failures] = first_s0_var[~first_failures]
+            t2s_s0_covar[~first_failures] = first_t2s_s0_covar[~first_failures]
+            del first_t2s_var, first_s0_var, first_t2s_s0_covar
+
+            n_second_failures = failures.sum()
+            if n_second_failures == 0:
+                LGR.info(
+                    "All %d previously failing voxel(s) converged with interpolated initial "
+                    "values.",
+                    n_first_failures,
+                )
+            elif n_second_failures == n_first_failures:
+                LGR.warning(
+                    "All %d voxel(s) that failed the first curvefit also failed with interpolated "
+                    "initial values. Using interpolated initial values did not help.",
+                    n_first_failures,
+                )
+            else:
+                LGR.info(
+                    "%d of %d previously failing voxel(s) converged with interpolated initial "
+                    "values; %d voxel(s) still failing.",
+                    n_first_failures - n_second_failures,
+                    n_first_failures,
+                    n_second_failures,
+                )
+
+            # Stage 3: Interpolate any remaining failures
+            if failures.any():
+                LGR.info(
+                    "Interpolating T2*/S0 estimates for %d remaining failing voxel(s) (stage 2).",
+                    n_second_failures,
+                )
+                t2s_full = utils.interpolate_masked_values(
+                    t2s_full,
+                    failures,
+                    io_generator.mask,
+                    mask_denoise,
+                    phys_coords=phys_coords,
+                )
+                s0_full = utils.interpolate_masked_values(
+                    s0_full,
+                    failures,
+                    io_generator.mask,
+                    mask_denoise,
+                    phys_coords=phys_coords,
+                )
+        elif interpolate_failing_voxels:
+            LGR.info("No curvefit failures found; skipping interpolation.")
+
+        # Save the failures map. Voxels that failed the first curvefit pass are
+        # encoded as 1; those that also failed the second (interpolation-seeded)
+        # pass are encoded as 2. When interpolation did not run, ``failures``
+        # still holds the first-pass result, so only add it when a second pass
+        # actually occurred.
+        failures_map = first_pass_failures.astype(np.uint8)
+        if interpolate_failing_voxels and first_pass_failures.any():
+            failures_map += failures.astype(np.uint8)
+        io_generator.save_file(failures_map, "fit failures img", mask=mask_denoise)
+
+        if io_generator.verbose:
+            # Save fit-quality maps after the two-stage refit so that voxels
+            # which converged in the second stage carry their real variance/
+            # covariance values instead of the first-pass zeros.
+            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+            io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+            io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
+
+    del data_without_excluded_vols
+
+    # Delete unused variables
+    del failures, t2s_var, s0_var, t2s_s0_covar
+
+    t2s_full, s0_full, t2s_limited, s0_limited = modify_t2s_s0_maps(
+        t2s=t2s_full,
+        s0=s0_full,
+        adaptive_mask=masksum_masked,
+        tes=tes,
+    )
+    del masksum_masked
+
+    t2s_full = utils.unmask(t2s_full, mask_denoise)
+    s0_full = utils.unmask(s0_full, mask_denoise)
+    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+    s0_limited = utils.unmask(s0_limited, mask_denoise)
+
+    io_generator.save_file(s0_full, "s0 img")
+
+    LGR.info("Calculating model fit quality metrics")
+    # Use the full T2*/S0 maps (the same maps used for optimal combination) so
+    # that voxels with a single good echo also receive a fit-error estimate
+    # instead of NaN.
+    rmse_map, rmse_df = rmse_of_fit_decay_ts(
+        data=data_cat,
+        tes=tes,
+        adaptive_mask=masksum_denoise,
+        t2s=t2s_full,
+        s0=s0_full,
+        fitmode=fitmode,
+    )
+    del s0_full
+    io_generator.save_file(rmse_map, "rmse img")
+    io_generator.save_file(rmse_df, "confounds tsv")
+    io_generator.save_file(s0_limited, "limited s0 img")
+    del s0_limited
+    io_generator.save_file(t2s_limited, "limited t2star img")
+    del t2s_limited
+    return t2s_full
