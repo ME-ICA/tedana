@@ -1017,11 +1017,16 @@ def t2smap_subworkflow(
 
     t2s_full = utils.unmask(t2s_full, mask_denoise)
     s0_full = utils.unmask(s0_full, mask_denoise)
-    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
-    s0_limited = utils.unmask(s0_limited, mask_denoise)
 
     io_generator.save_file(t2s_full, "t2star img")
     io_generator.save_file(s0_full, "s0 img")
+    if io_generator.verbose:
+        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_limited = utils.unmask(s0_limited, mask_denoise)
+        io_generator.save_file(s0_limited, "limited s0 img")
+        io_generator.save_file(t2s_limited, "limited t2star img")
+
+    del s0_limited, t2s_limited
 
     LGR.info("Calculating model fit quality metrics")
     # Use the full T2*/S0 maps (the same maps used for optimal combination) so
@@ -1038,8 +1043,4 @@ def t2smap_subworkflow(
     del s0_full
     io_generator.save_file(rmse_map, "rmse img")
     io_generator.save_file(rmse_df, "confounds tsv")
-    io_generator.save_file(s0_limited, "limited s0 img")
-    del s0_limited
-    io_generator.save_file(t2s_limited, "limited t2star img")
-    del t2s_limited
     return t2s_full
