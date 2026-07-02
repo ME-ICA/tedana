@@ -431,7 +431,6 @@ def _fit_complex_decay_joint(
     """
     signal = np.asarray(signal)
     echo_times = np.asarray(echo_times, dtype=float)
-    n_vols = signal.shape[0]
     valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
     valid_vols = np.flatnonzero(valid.sum(axis=1) >= 2)
     if valid_vols.size == 0:
@@ -1122,7 +1121,8 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     :math:`T_2^*` values less than or equal to zero with 0.001 s.
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
-    It also replaces NaN, infinite, and float32-unrepresentable values in the :math:`S_0` map with 0.
+    It also replaces NaN, infinite, and float32-unrepresentable values in the :math:`S_0` map
+    with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
     t2s[np.isinf(t2s)] = 0.5  # why 0.5 s?

@@ -271,7 +271,7 @@ def test__fit_complex_decay_1d_optimizer_failure(monkeypatch):
     """On optimizer error, falls back to the initial estimate with success=False."""
     import scipy.optimize
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):  # noqa: U100
         raise RuntimeError("forced failure")
 
     monkeypatch.setattr(scipy.optimize, "least_squares", boom)
