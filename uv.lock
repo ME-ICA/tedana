@@ -1011,7 +1011,7 @@ wheels = [
 
 [[package]]
 name = "mapca"
-version = "0.0.7"
+version = "0.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nibabel" },
@@ -1023,9 +1023,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7e/2e/5ce35a6fa61bdc8aa59dff521bc1ce8aa3dcd5f49de6588831e19b087291/mapca-0.0.7.tar.gz", hash = "sha256:29b39c049cd69925c795ba99a5c50876fdae20fc2d32b22c4f2b4d2a74372014", size = 28114, upload-time = "2026-03-20T21:43:13.712Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/51/b79a2059ba2b6a7cdcd2fbc385081ee36b62f5acd23ed500d17e7d23d97b/mapca-0.0.8.tar.gz", hash = "sha256:2540fc519f467f75f1bde73a5cfd8c36c51f7abe29c875babc7dcd3456ca8f0a", size = 28054, upload-time = "2026-06-25T21:23:05.041Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/18/e4/5e20b516ff2ddedd92f7943f3f6dda89bb3a08ac06f57ff6633e2be54a7f/mapca-0.0.7-py3-none-any.whl", hash = "sha256:f67b5c37e6adc0d2ccac6c6b1686f250c81690159a87fc7c3801524b19f34339", size = 31682, upload-time = "2026-03-20T21:43:12.586Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/60/9bd2fa8e72d592c7b24c64eac1c6743a412921054895936a7636961af493/mapca-0.0.8-py3-none-any.whl", hash = "sha256:8b6c2c6c12fb76bbd05e0671b2cd2acc81d3f72c451397ae96a23268775d18dc", size = 31592, upload-time = "2026-06-25T21:23:03.914Z" },
 ]
 
 [[package]]
@@ -2517,7 +2517,7 @@ requires-dist = [
     { name = "flake8-unused-arguments", marker = "extra == 'tests'", specifier = ">=0.0.13" },
     { name = "flake8-use-fstring", marker = "extra == 'all'", specifier = ">=1.4" },
     { name = "flake8-use-fstring", marker = "extra == 'tests'", specifier = ">=1.4" },
-    { name = "mapca", specifier = ">=0.0.7" },
+    { name = "mapca", specifier = ">=0.0.8" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "nibabel", specifier = ">=2.5.1" },
     { name = "nilearn", specifier = ">=0.11.0,!=0.13.0,!=0.13.1" },
@@ -2637,14 +2637,14 @@ wheels = [
 
 [[package]]
 name = "tqdm"
-version = "4.68.2"
+version = "4.68.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/05/0d5260f1f1ca784f4a4a0def9cbe6affe587f5b4025328d446c3d67765f4/tqdm-4.68.2.tar.gz", hash = "sha256:89c230e8dbc67c7615c142487111222f878c77427ea09549960f62389e258add", size = 171923, upload-time = "2026-06-09T13:26:42.539Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/d7/0535a28b1f5f24f6612fb3ff1e89fb1a8d160fee0f976e0aa6803862134b/tqdm-4.68.3.tar.gz", hash = "sha256:00dfa48452b6b6cfae3dd9885636c23d3422d1ec97c66d96818cbd5e0821d482", size = 170596, upload-time = "2026-06-17T07:36:52.105Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/75/1a0392bcc21c44dcdf87b3cf2d137e7829be2c083a1e38d44efca3d57a16/tqdm-4.68.2-py3-none-any.whl", hash = "sha256:d4240441fb5353290b87d6a85968c9decc131a99b8c7faa28269d829de669ede", size = 78578, upload-time = "2026-06-09T13:26:40.731Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/8e/bb97bb0c71802080bfc8952937d174e49cfc50de5c951dd47b2496f0dcdb/tqdm-4.68.3-py3-none-any.whl", hash = "sha256:39832cc2def2789a6f29df83f172db7416cea70052c0907a57801c5f2fdccb03", size = 78337, upload-time = "2026-06-17T07:36:50.132Z" },
 ]
 
 [[package]]
