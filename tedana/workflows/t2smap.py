@@ -194,6 +194,17 @@ def _get_parser():
         help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
         default="t2s",
     )
+    decay_args.add_argument(
+        "--interpolate-failing-voxels",
+        dest="interpolate_failing_voxels",
+        action="store_true",
+        help=(
+            "If fittype='curvefit', replace T2*/S0 values for voxels where the "
+            "monoexponential fit failed with nearest-neighbor interpolated values "
+            "from non-failing neighbors. Ignored if fittype='loglin'."
+        ),
+        default=False,
+    )
 
     decomposition_args = parser.add_argument_group("Component Selection")
     decomposition_args.add_argument(
@@ -265,6 +276,7 @@ def t2smap_workflow(
     masktype=["dropout"],
     phase=None,
     fittype="loglin",
+    interpolate_failing_voxels=False,
     fitmode="all",
     combmode="t2s",
     debug=False,
@@ -319,6 +331,11 @@ def t2smap_workflow(
         which is slightly slower but may be more accurate.
         'nlls' fits a complex monoexponential model to magnitude+phase data
         and requires ``phase``.
+    interpolate_failing_voxels : :obj:`bool`, optional
+        If ``True`` and ``fittype='curvefit'``, replace T2*/S0 values for
+        voxels where the monoexponential fit failed with nearest-neighbor
+        interpolated values from non-failing neighbors.
+        Ignored if ``fittype='loglin'``. Default is ``False``.
     fitmode : {'all', 'ts', 'varys0'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
@@ -492,6 +509,12 @@ def t2smap_workflow(
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
+    if interpolate_failing_voxels and fittype != "curvefit":
+        LGR.warning(
+            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolation will be skipped."
+        )
+
     LGR.info("Computing T2* map")
     data_fit = data_without_excluded_vols[mask_denoise, ...]
     masksum_masked = masksum_denoise[mask_denoise]
@@ -569,6 +592,18 @@ def t2smap_workflow(
             utils.unmask(complex_results["frequency_hz"], mask_denoise), "frequency img"
         )
         io_generator.save_file(utils.unmask(complex_results["phase0"], mask_denoise), "phase0 img")
+
+        if interpolate_failing_voxels:
+            if failures.any():
+                phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
+                t2s_full = utils.interpolate_masked_values(
+                    t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                )
+                s0_full = utils.interpolate_masked_values(
+                    s0_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                )
+            else:
+                LGR.info("No curvefit failures found; skipping interpolation.")
 
     # Delete unused variables
     del failures, t2s_var, s0_var, t2s_s0_covar

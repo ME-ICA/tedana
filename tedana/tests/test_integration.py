@@ -511,6 +511,37 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
     )
 
 
+def test_integration_three_echo_aroma_external(skip_integration):
+    """Integration test of tedana workflow with aroma extern regress."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with aroma external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/three-echo-aroma-externalreg")
+    )
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    # external_regress_Ftest_3echo.tsv has 12 columns for motion, 1 for CSF, and 1 for task signal
+    # The regressor values and expected fits with the data are detailed in:
+    # tests.test_external_metrics.sample_external_regressors
+    download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_external_aroma.json"
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=files("tedana") / tree_name,
+        external_regressors=files("tedana") / "tests/data/external_regress_Ftest_3echo.tsv",
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        low_mem=True,
+    )
+
+
 def test_integration_reclassify_insufficient_args(skip_integration):
     if skip_integration:
         pytest.skip("Skipping reclassify insufficient args")

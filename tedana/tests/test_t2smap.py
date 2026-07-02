@@ -218,9 +218,31 @@ class TestT2smap:
                 exclude="1000",
             )
 
+    def test_interpolate_failing_voxels_curvefit(self, tmp_path):
+        """Smoke test: t2smap_workflow with interpolate_failing_voxels=True completes."""
+        data_dir = get_test_data_path()
+        data = [
+            op.join(data_dir, "echo1.nii.gz"),
+            op.join(data_dir, "echo2.nii.gz"),
+            op.join(data_dir, "echo3.nii.gz"),
+        ]
+        out_dir = str(tmp_path / "output")
+        workflows.t2smap_workflow(
+            data,
+            [14.5, 38.5, 62.5],
+            combmode="t2s",
+            fitmode="all",
+            fittype="curvefit",
+            interpolate_failing_voxels=True,
+            out_dir=out_dir,
+        )
+        assert op.isfile(op.join(out_dir, "T2starmap.nii.gz"))
+        assert op.isfile(op.join(out_dir, "S0map.nii.gz"))
+
     def teardown_method(self):
-        # Clean up folders
-        rmtree("TED.echo1.t2smap")
+        # Clean up folders (may not exist if a test used tmp_path)
+        if op.isdir("TED.echo1.t2smap"):
+            rmtree("TED.echo1.t2smap")
 
 
 def _make_zero_phase_files(echo_files, out_dir):
