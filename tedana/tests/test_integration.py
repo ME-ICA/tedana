@@ -569,14 +569,15 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     out_dir = os.path.abspath(os.path.join(test_data_path, "../outputs/reclassify/quiet"))
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
 
     # Make some files that have components to manually accept and reject
     to_accept = [i for i in range(3)]
     to_reject = [i for i in range(7, 4)]
     acc_df = pd.DataFrame(data=to_accept, columns=["Components"])
     rej_df = pd.DataFrame(data=to_reject, columns=["Components"])
-    acc_csv_fname = os.path.join(reclassify_raw(), "accept.csv")
-    rej_csv_fname = os.path.join(reclassify_raw(), "reject.csv")
+    acc_csv_fname = os.path.join(out_dir, "accept.csv")
+    rej_csv_fname = os.path.join(out_dir, "reject.csv")
     acc_df.to_csv(acc_csv_fname)
     rej_df.to_csv(rej_csv_fname)
 
@@ -599,7 +600,9 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
     fn = files("tedana") / "tests/data/reclassify_quiet_out.txt"
-    check_integration_outputs(fn, out_dir)
+    # accpt.csv and reject.csv are added to the output directory
+    # as inputs only for this test, so they are not in the expected output file list
+    check_integration_outputs(fn, out_dir, extra_expected_files=["accept.csv", "reject.csv"])
 
 
 def test_integration_reclassify_quiet_spaces(skip_integration):
