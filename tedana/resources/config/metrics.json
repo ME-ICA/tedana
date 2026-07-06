@@ -18,13 +18,6 @@
             "map FS0",
             "map weight"
         ],
-        "slice_banding": [
-            "map weight",
-            "mask"
-        ],
-        "spike": [
-            "mixing"
-        ],
         "countnoise": [
             "map weight",
             "map weight clusterized"
@@ -82,6 +75,17 @@
             "signal-noise_t",
             "countnoise",
             "countsigFT2"
+        ],
+        "slice_banding": [
+            "map weight",
+            "mask"
+        ],
+        "slice_leakage": [
+            "map weight",
+            "mask"
+        ],
+        "spike": [
+            "mixing"
         ],
         "HFC": [
             "mixing",

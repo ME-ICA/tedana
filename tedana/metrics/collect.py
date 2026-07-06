@@ -35,6 +35,7 @@ def generate_metrics(
     io_generator: io.OutputGenerator,
     label: str,
     tr: float = None,
+    acquisition_metadata: Union[pd.DataFrame, None] = None,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     seed: int = 0,
@@ -67,8 +68,12 @@ def generate_metrics(
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
     tr : float, optional
-        Repetition time of the fMRI data in seconds.  Required when ``metrics``
+        Repetition time of the fMRI data in seconds. Required when ``metrics``
         includes ``"HFC"``.  Default is None.
+    acquisition_metadata : :obj:`tedana.metadata.AcquisitionMetadata` or None, optional
+        Parsed acquisition metadata supplying ``slice_axis`` and ``mb_factor`` to
+        the slice_leakage metric. If None, both are inferred from the affine /
+        scanned from candidate spacings. Default is None.
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise)
         to correlate with ICA components.
@@ -432,13 +437,14 @@ def generate_metrics(
 
     if "slice_leakage" in required_metrics:
         LGR.info("Calculating slice leakage artifact metric")
+        _slice_axis = acquisition_metadata.slice_axis if acquisition_metadata else None
+        _mb_factor = acquisition_metadata.mb_factor if acquisition_metadata else None
         temp_metrics = spatial.compute_slice_leakage(
             weight_maps=metric_maps["map weight"],
             mask_img=mask_img,
-            slice_axis=None,
-            mb_factor=None,
-            n_permutations=None,
-            seed=None,
+            slice_axis=_slice_axis,
+            mb_factor=_mb_factor,
+            seed=seed,
         )
         component_table["slice_leakage"] = temp_metrics["slice_leakage"]
         component_table["aliasing_z"] = temp_metrics["aliasing_z"]
