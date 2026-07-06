@@ -1,4 +1,5 @@
 """Temporal noise metrics."""
+
 import numpy as np
 from scipy.signal import detrend
 from scipy.stats import kurtosis
