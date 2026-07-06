@@ -22,6 +22,7 @@ from tedana import (
     decay,
     decomposition,
     io,
+    metadata,
     metrics,
     reporting,
     rica,
@@ -438,6 +439,7 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
+    metadata_files=None,
     dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
@@ -496,6 +498,11 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    metadata_files : None or :obj:`list` of :obj:`str`, optional
+        Paths to BIDS-format metadata files.
+        Optional alternative to ``tes``.
+        Only necessary for some metrics.
+        Default is None.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data
         (both in the BOLD data and in any confounds).
@@ -653,7 +660,15 @@ def tedana_workflow(
 
     LGR.info(f"Using output directory: {out_dir}")
 
-    # ensure tes are in appropriate format
+    # Resolve echo times from either --tes or --metadata (exactly one). With
+    # multi-echo data, `data` is the list of echo files, so its length is the
+    # echo count used to validate the metadata file count.
+    n_files = len(data) if isinstance(data, (list, tuple)) else 1
+    tes, acquisition_metadata = metadata.resolve_echo_times(
+        tes=tes,
+        metadata=metadata_files,
+        n_echos=n_files,
+    )
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
     n_echos = len(tes)
