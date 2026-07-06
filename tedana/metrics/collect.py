@@ -431,24 +431,27 @@ def generate_metrics(
     if "slice_banding" in required_metrics:
         LGR.info("Calculating slice-banding artifact metric")
         component_table["slice_banding"] = spatial.compute_slice_banding(
-            weight_maps=metric_maps["map weight"],
+            weight_maps=metric_maps["map weight"] ** 2,
             mask_img=mask_img,
         )
 
-    if "slice_leakage" in required_metrics:
+    if any(
+        m in required_metrics
+        for m in ("slice_leakage", "slice_leakage_aliasing_z", "slice_leakage_periodicity_z")
+    ):
         LGR.info("Calculating slice leakage artifact metric")
         _slice_axis = acquisition_metadata.slice_axis if acquisition_metadata else None
         _mb_factor = acquisition_metadata.mb_factor if acquisition_metadata else None
         temp_metrics = spatial.compute_slice_leakage(
-            weight_maps=metric_maps["map weight"],
+            weight_maps=metric_maps["map weight"] ** 2,
             mask_img=mask_img,
             slice_axis=_slice_axis,
             mb_factor=_mb_factor,
             seed=seed,
         )
         component_table["slice_leakage"] = temp_metrics["slice_leakage"]
-        component_table["aliasing_z"] = temp_metrics["aliasing_z"]
-        component_table["periodicity_z"] = temp_metrics["periodicity_z"]
+        component_table["slice_leakage_aliasing_z"] = temp_metrics["aliasing_z"]
+        component_table["slice_leakage_periodicity_z"] = temp_metrics["periodicity_z"]
 
     if "spike" in required_metrics:
         LGR.info("Calculating transient-spike artifact metric")
@@ -827,6 +830,61 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "spectrum of the component reaches 50 % of its total power above 0.01 Hz. "
                 "Values near 1 indicate a component dominated by high-frequency content "
                 "(likely noise); values near 0 indicate a low-frequency, BOLD-like component."
+            ),
+            "Units": "arbitrary",
+        }
+    if "spike" in component_table:
+        metric_metadata["spike"] = {
+            "LongName": "Transient-spike index",
+            "Description": (
+                "Fisher (excess) kurtosis of each component's linearly detrended time series. "
+                "Higher values indicate a heavy-tailed time series dominated by isolated "
+                "transients (e.g., abrupt motion or a scanner glitch)."
+            ),
+            "Units": "arbitrary",
+        }
+    if "slice_banding" in component_table:
+        metric_metadata["slice_banding"] = {
+            "LongName": "Slice-banding index",
+            "Description": (
+                "Maximum over array axes of the product of the fraction of squared-weight-map "
+                "variance explained by the per-slice mean (banding magnitude) and the upper-half "
+                "spectral fraction of the detrended slice profile (alternating-slice character). "
+                "Higher values indicate simultaneous multi-slice (multiband) acceleration leakage."
+            ),
+            "Units": "arbitrary",
+        }
+    if "slice_leakage" in component_table:
+        metric_metadata["slice_leakage"] = {
+            "LongName": "SMS slice-leakage index",
+            "Description": (
+                "Minimum of the slice_leakage_aliasing_z and slice_leakage_periodicity_z "
+                "z-scores (both signatures required), computed on each component's squared "
+                "weight map along the slice axis. Higher values indicate simultaneous "
+                "multi-slice (multiband) leakage; the value is 0 when there is no multiband "
+                "acceleration (multiband factor < 2)."
+            ),
+            "Units": "arbitrary",
+        }
+    if "slice_leakage_aliasing_z" in component_table:
+        metric_metadata["slice_leakage_aliasing_z"] = {
+            "LongName": "Slice-leakage aliasing z-score",
+            "Description": (
+                "Excess Pearson correlation among aliasing-partner slices (separated by "
+                "n_slices / multiband factor) relative to a slice-index permutation null, "
+                "computed on each component's squared weight map. Higher values indicate "
+                "multiband slice leakage."
+            ),
+            "Units": "arbitrary",
+        }
+    if "slice_leakage_periodicity_z" in component_table:
+        metric_metadata["slice_leakage_periodicity_z"] = {
+            "LongName": "Slice-leakage periodicity z-score",
+            "Description": (
+                "Fraction of the per-slice energy profile's variance explained by period-g "
+                "group means (ANOVA R-squared), z-scored against a slice-order permutation "
+                "null, computed on each component's squared weight map. Higher values indicate "
+                "periodic slice-to-slice structure consistent with multiband leakage."
             ),
             "Units": "arbitrary",
         }

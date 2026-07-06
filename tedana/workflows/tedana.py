@@ -71,7 +71,8 @@ def _get_parser():
         ),
         required=True,
     )
-    required_args.add_argument(
+    te_or_metadata = parser.add_mutually_exclusive_group(required=True)
+    te_or_metadata.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -79,9 +80,24 @@ def _get_parser():
         type=float,
         help=(
             "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
-            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
+            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated. "
+            "Mutually exclusive with --metadata."
         ),
-        required=True,
+        default=None,
+    )
+    te_or_metadata.add_argument(
+        "--metadata",
+        dest="metadata_files",
+        nargs="+",
+        metavar="JSON",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "BIDS sidecar JSON files, one per echo file in the same order as -d/--data. "
+            "Echo times are read from each file's EchoTime. Also supplies SliceTiming, "
+            "MultibandAccelerationFactor, etc. for metadata-aware metrics. "
+            "Mutually exclusive with -e/--tes."
+        ),
+        default=None,
     )
 
     output_args = parser.add_argument_group("Output Control")
@@ -434,7 +450,7 @@ def _get_parser():
 
 def tedana_workflow(
     data,
-    tes,
+    tes=None,
     out_dir=".",
     mask=None,
     convention="bids",

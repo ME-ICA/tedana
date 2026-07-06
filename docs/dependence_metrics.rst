@@ -204,6 +204,108 @@ which has not been implemented in tedana.
 As such, any decision-tree thresholds based on this metric must be considered experimental.
 
 
+spike
+=====
+:func:`tedana.metrics.temporal.compute_spike`
+
+The Fisher (excess) kurtosis of each component's time series, after linear detrending.
+A transient artifact- a single-volume motion jump or a spike in a few TRs-
+concentrates a large fraction of a component's variance into a handful of timepoints,
+producing a heavy-tailed (leptokurtic) distribution that kurtosis is built to detect.
+Smooth or oscillatory signal (task blocks, drift, respiration) spreads its variance
+across many timepoints and stays near-Gaussian, so it scores low.
+Linear detrending first ensures a strong drift is not mistaken for a transient.
+The metric is sign- and scale-invariant, and requires only the mixing matrix.
+
+This metric reports *that* a component is spiky, not *when*.
+Because kurtosis is maximized by a single dominant outlier,
+a component with many spread-out spikes can score *lower* than a single-spike one,
+and genuinely sparse signal (e.g., rare event-related responses) also produces heavy tails.
+No threshold is provided, as kurtosis has no natural cut-off.
+
+
+slice_banding
+=============
+:func:`tedana.metrics.spatial.compute_slice_banding`
+
+A spatial metric flagging components whose weight map has a slice-to-slice banding
+structure characteristic of simultaneous multi-slice (SMS / "multiband") acceleration leakage.
+Operating on each component's squared weight map, for each of the three array axes
+two quantities are computed: ``bandR2``, the fraction of in-mask weight variance explained
+by the per-slice mean profile (the *magnitude* of banding), and ``bandMB``, the fraction
+of that profile's power spectrum in its upper half after linear detrending
+(the alternating-slice *character* of the banding).
+The axis score is ``bandR2 * bandMB``, and the metric is the maximum over the three axes.
+
+Multiplying the two terms means a component is only flagged when the banding is both strong
+and high-frequency, which separates true acceleration leakage from benign smooth gradients
+(coil sensitivity, anatomy, drift), whose slice profiles are low-frequency and removed by
+the detrend step.
+Squaring the weights sharpens the contrast, since multiband banding often alternates in sign
+and a signed per-slice mean would partly cancel.
+The metric is axis-agnostic within the array frame and scale-invariant.
+
+This metric assumes the slice direction is aligned with an array axis,
+so it should be run in (or close to) native acquisition space-
+after resampling to a rotated grid the banding becomes oblique and is largely missed.
+It targets *alternating* banding specifically and is not a general slice-dropout detector.
+An example run suggested a threshold of approximately 0.02 on the squared weight map,
+but this is not known to generalize and should be recalibrated per acquisition.
+
+
+slice_leakage
+=============
+:func:`tedana.metrics.spatial.compute_slice_leakage`
+
+A metadata-aware, null-calibrated detector for the same SMS/multiband leakage as
+``slice_banding``.
+Operating on each component's squared weight map along the true slice axis
+(from the ``SliceEncodingDirection``/``SliceTiming`` metadata, or inferred from the affine)
+and using the multiband factor (from ``MultibandAccelerationFactor``,
+or inferred from ``SliceTiming``), it computes two z-scored statistics against a
+slice-index permutation null- ``slice_leakage_aliasing_z`` and
+``slice_leakage_periodicity_z`` (each documented separately below).
+The reported ``slice_leakage`` is the **minimum** of the two z-scores,
+so both signatures must be present for a component to score highly.
+When the multiband factor is unknown, candidate spacings are scanned and the null applies
+the same scan, keeping the z-scores calibrated.
+
+Relative to ``slice_banding``, this uses the true slice axis instead of a max-over-axes
+heuristic, targets the specific aliasing frequency rather than a broad upper-half-spectrum
+rule, preserves in-plane information, and yields a portable z-score (e.g., ``z > 3``)
+instead of a fixed raw cutoff.
+It returns 0 when there is no simultaneous multi-slice acquisition (``mb_factor < 2``)
+or when no candidate slice spacing divides the slice count.
+Its main cost is the permutation null (configurable ``n_permutations``, default 256),
+and it shares the axis-alignment assumption of ``slice_banding``.
+
+
+slice_leakage_aliasing_z
+========================
+:func:`tedana.metrics.spatial.compute_slice_leakage`
+
+The aliasing z-score component of ``slice_leakage``, available on its own.
+Aliasing-partner slices, separated by ``n_slices / mb_factor``, are made abnormally
+similar by leakage; this metric is the mean within-group Pearson correlation between
+their in-plane images (computed on the squared weight map), z-scored against a
+slice-index permutation null.
+Because of the null calibration it measures *excess* correlation beyond the overall
+inter-slice trend, so a large positive value indicates aliasing-specific similarity
+rather than generic spatial smoothness.
+
+
+slice_leakage_periodicity_z
+===========================
+:func:`tedana.metrics.spatial.compute_slice_leakage`
+
+The periodicity z-score component of ``slice_leakage``, available on its own.
+This is the fraction of the per-slice energy profile's variance explained by
+period-``g`` group means (a one-way ANOVA R^2, with ``g = n_slices / mb_factor``),
+z-scored against a slice-order permutation null.
+A large positive value indicates a periodic slice-to-slice energy pattern at the
+aliasing spacing, the spatial signature of multiband leakage.
+
+
 countnoise
 ==========
 :func:`tedana.metrics.dependence.compute_countnoise`
