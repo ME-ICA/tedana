@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tedana.metadata import AcquisitionMetadata, parse_acquisition_metadata
+from tedana.metadata import parse_acquisition_metadata
 
 
 def _write(tmp_path, name, d):

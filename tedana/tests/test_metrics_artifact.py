@@ -18,7 +18,6 @@ def _grid_mask(shape=(10, 10, 12)):
 def test_slice_banding_flags_banded_and_spares_smooth():
     mask_img, shape = _grid_mask()
     nx, ny, nz = shape
-    n_vox = nx * ny * nz
     # Component 0: alternating-slice banding along z (multiband signature).
     z = np.arange(nz)
     band = ((-1.0) ** z)[None, None, :] * np.ones((nx, ny, 1))
@@ -96,7 +95,7 @@ def test_periodicity_stat_high_for_periodic_profile():
 
 
 def _leakage_volume(shape, n_slices, mb, rng, leak=True):
-    """Build a (X,Y,Z=n_slices) squared-weight volume with optional SMS leakage at spacing n_slices//mb."""
+    """Build a squared-weight volume with optional SMS leakage at spacing n_slices//mb."""
     g = n_slices // mb
     nx, ny = shape
     patterns = {p: rng.standard_normal((nx, ny)) ** 2 for p in range(g)}

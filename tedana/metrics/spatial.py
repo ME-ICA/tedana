@@ -171,7 +171,6 @@ def _periodicity_stat(profile, g):
     power to concentrate at a single FFT bin.
     """
     x = np.asarray(profile, dtype=float)
-    n = x.size
     grand_mean = x.mean()
     ss_tot = np.dot(x - grand_mean, x - grand_mean)
     if ss_tot <= 0:
