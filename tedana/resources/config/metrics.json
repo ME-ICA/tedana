@@ -6,7 +6,8 @@
         "adaptive_mask",
         "mask",
         "tes",
-        "ref_img"
+        "ref_img",
+        "tr"
     ],
     "dependencies": {
         "kappa": [
@@ -81,6 +82,10 @@
             "signal-noise_t",
             "countnoise",
             "countsigFT2"
+        ],
+        "HFC": [
+            "mixing",
+            "tr"
         ],
         "map FT2": [
             "mixing",

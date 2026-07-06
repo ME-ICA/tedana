@@ -1058,14 +1058,22 @@ def plot_heatmap(
     n_regressors = corr_df.shape[0]
     n_components = corr_df.shape[1]
     n_models = models_df.shape[0]
-    ratio = n_regressors / n_models
 
-    fig, axes = plt.subplots(
-        figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
-        nrows=2,
-        height_ratios=[n_regressors, n_models],
-        sharex=True,
-    )
+    if n_models > 0:
+        ratio = n_regressors / n_models
+        fig, axes = plt.subplots(
+            figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
+            nrows=2,
+            height_ratios=[n_regressors, n_models],
+            sharex=True,
+        )
+        corr_ax, model_ax = axes
+    else:
+        fig, corr_ax = plt.subplots(
+            figsize=(n_components * 0.25, (n_regressors * 0.25) + 0.5),
+        )
+        model_ax = None
+
     sns.heatmap(
         corr_df,
         cmap="seismic",
@@ -1081,31 +1089,35 @@ def plot_heatmap(
             "pad": 0.01,
             "aspect": 20,
         },
-        ax=axes[0],
+        ax=corr_ax,
     )
-    axes[0].tick_params(axis="y", labelrotation=0)
-    axes[0].set_xticks([])
-    axes[0].tick_params(axis="x", bottom=False)
+    corr_ax.tick_params(axis="y", labelrotation=0)
+    if model_ax is not None:
+        corr_ax.set_xticks([])
+        corr_ax.tick_params(axis="x", bottom=False)
 
-    sns.heatmap(
-        models_df,
-        cmap="Reds",
-        center=0.5,
-        vmax=1,
-        vmin=0,
-        square=True,
-        linewidths=0.5,
-        cbar_kws={
-            "shrink": 0.85,
-            "label": "R-Squared",
-            "ticks": [0, 1],
-            "pad": 0.01,
-            "aspect": 20 / ratio,
-        },
-        ax=axes[1],
-    )
-    axes[1].tick_params(axis="y", labelrotation=0)
-    axes[1].set_xlabel("Component", fontsize=16)
+    if model_ax is not None:
+        sns.heatmap(
+            models_df,
+            cmap="Reds",
+            center=0.5,
+            vmax=1,
+            vmin=0,
+            square=True,
+            linewidths=0.5,
+            cbar_kws={
+                "shrink": 0.85,
+                "label": "R-Squared",
+                "ticks": [0, 1],
+                "pad": 0.01,
+                "aspect": 20 / ratio,
+            },
+            ax=model_ax,
+        )
+        model_ax.tick_params(axis="y", labelrotation=0)
+        model_ax.set_xlabel("Component", fontsize=16)
+    else:
+        corr_ax.set_xlabel("Component", fontsize=16)
 
     fig.savefig(out_file, bbox_inches="tight")
 
@@ -1203,6 +1215,7 @@ def plot_decay_variance(
                 symmetric_cbar=False,
                 black_bg=True,
                 cmap="Reds",
+                threshold=0,  # T2* variance falls below default threshold
                 vmin=data_p02,
                 vmax=data_p98,
                 annotate=False,

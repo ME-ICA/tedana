@@ -211,6 +211,17 @@ def _get_parser():
         ),
         default=None,
     )
+    decay_args.add_argument(
+        "--interpolate-failing-voxels",
+        dest="interpolate_failing_voxels",
+        action="store_true",
+        help=(
+            "If fittype='curvefit', replace T2*/S0 values for voxels where the "
+            "monoexponential fit failed with nearest-neighbor interpolated values "
+            "from non-failing neighbors. Ignored if fittype='loglin'."
+        ),
+        default=False,
+    )
 
     decomposition_args = parser.add_argument_group("Component Selection")
     decomposition_args.add_argument(
@@ -430,6 +441,7 @@ def tedana_workflow(
     dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
+    interpolate_failing_voxels=False,
     combmode="t2s",
     n_independent_echos=None,
     tree="tedana_orig",
@@ -495,6 +507,12 @@ def tedana_workflow(
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
         the raw data, which is slightly slower but may be more accurate.
         Default is 'loglin'.
+    interpolate_failing_voxels : :obj:`bool`, optional
+        If ``True`` and ``fittype='curvefit'``, replace T2*/S0 values for
+        voxels where the monoexponential fit failed with nearest-neighbor
+        interpolated values from non-failing neighbors.
+        Ignored if ``fittype='loglin'`` or if an external ``t2smap`` is
+        provided. Default is ``False``.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     n_independent_echos : :obj:`int`, optional
@@ -776,6 +794,18 @@ def tedana_workflow(
     )
     LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
+    if interpolate_failing_voxels and fittype != "curvefit":
+        LGR.warning(
+            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolation will be skipped."
+        )
+    if interpolate_failing_voxels and t2smap is not None:
+        LGR.warning(
+            "interpolate_failing_voxels is set but an external t2smap was provided; "
+            "interpolation is only applied when tedana computes the T2*/S0 maps, so "
+            "interpolation will be skipped."
+        )
+
     if t2smap is None:
         LGR.info("Computing T2* map")
         data_masked = data_cat[mask_denoise, ...]
@@ -799,6 +829,18 @@ def tedana_workflow(
                 io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
                 io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
                 io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
+
+            if interpolate_failing_voxels:
+                if failures.any():
+                    phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
+                    t2s_full = utils.interpolate_masked_values(
+                        t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                    )
+                    s0_full = utils.interpolate_masked_values(
+                        s0_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
+                    )
+                else:
+                    LGR.info("No curvefit failures found; skipping interpolation.")
 
         del failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -905,6 +947,7 @@ def tedana_workflow(
                 maxrestart=(maxrestart - n_restarts),
                 n_threads=n_threads,
             )
+            metric_seed = seed
             seed += 1
             n_restarts = seed - fixed_seed
 
@@ -926,9 +969,11 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
                 label="ICA",
+                tr=img_t_r,
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
+                seed=metric_seed,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -986,9 +1031,11 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
             label="ICA",
+            tr=img_t_r,
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
+            seed=fixed_seed,
         )
         selector = selection.automatic_selection(
             component_table,

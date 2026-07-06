@@ -12,11 +12,11 @@ import pandas as pd
 from tedana import io, utils
 from tedana.metrics import dependence, external, spatial, temporal
 from tedana.metrics._utils import (
-    add_external_dependencies,
     dependency_resolver,
     determine_signs,
     flip_components,
 )
+from tedana.metrics.frequency import calculate_hfc
 from tedana.stats import getfbounds, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
@@ -34,8 +34,10 @@ def generate_metrics(
     n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
     label: str,
+    tr: float = None,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
+    seed: int = 0,
     metrics: Union[List[str], None] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
@@ -64,12 +66,17 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
+    tr : float, optional
+        Repetition time of the fMRI data in seconds.  Required when ``metrics``
+        includes ``"HFC"``.  Default is None.
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise)
         to correlate with ICA components.
         If None, no external regressor metrics will be calculated.
     external_regressor_config : :obj:`list[dic]t`
         A list of dictionaries defining how to fit external regressors to component time series
+    seed : :obj:`int`, optional
+        Random seed for metrics that use random sampling. Default is 0.
     metrics : list
         List of metrics to return
 
@@ -97,8 +104,9 @@ def generate_metrics(
                 "If external_regressors is defined, then "
                 "external_regressor_config also needs to be defined."
             )
-        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
-        dependency_config["inputs"].append("external regressors")
+        dependency_config = external.add_external_dependencies(
+            dependency_config, external_regressor_config
+        )
 
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
@@ -415,7 +423,6 @@ def generate_metrics(
             rho=component_table["rho"],
         )
 
-
     if "slice_banding" in required_metrics:
         LGR.info("Calculating slice-banding artifact metric")
         component_table["slice_banding"] = spatial.compute_slice_banding(
@@ -441,6 +448,13 @@ def generate_metrics(
         LGR.info("Calculating transient-spike artifact metric")
         component_table["spike"] = temporal.compute_spike(mixing=mixing)
 
+    # AROMA-derived frequency metric
+    if "HFC" in required_metrics:
+        if tr is None:
+            raise ValueError("tr must be provided to compute the HFC metric.")
+        LGR.info("Calculating high-frequency content (HFC)")
+        component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr)
+
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
@@ -452,7 +466,11 @@ def generate_metrics(
             RepLGR.info({external_regressor_config[config_idx]["report"]})
 
         component_table = external.fit_regressors(
-            component_table, external_regressors, external_regressor_config, mixing
+            component_table,
+            external_regressors,
+            external_regressor_config,
+            mixing,
+            seed=seed,
         )
     # Write verbose metrics if needed
     if io_generator.verbose:
@@ -517,6 +535,8 @@ def generate_metrics(
         "kappa_rho_difference",
         "varex kappa ratio",
         "d_table_score_scrub",
+        "HFC",
+        "max_rp_corr",
         "external fit",
         "classification",
         "rationale",
@@ -792,6 +812,17 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 1: "Component is not flipped prior to metric calculation.",
                 -1: "Component is flipped prior to metric calculation.",
             },
+        }
+    if "HFC" in component_table:
+        metric_metadata["HFC"] = {
+            "LongName": "High-frequency content",
+            "Description": (
+                "The normalized frequency (relative to Nyquist) at which the cumulative power "
+                "spectrum of the component reaches 50 % of its total power above 0.01 Hz. "
+                "Values near 1 indicate a component dominated by high-frequency content "
+                "(likely noise); values near 0 indicate a low-frequency, BOLD-like component."
+            ),
+            "Units": "arbitrary",
         }
     if "Var Exp of rejected to accepted" in component_table:
         metric_metadata["Var Exp of rejected to accepted"] = {
