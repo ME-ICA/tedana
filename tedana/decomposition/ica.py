@@ -53,9 +53,10 @@ def tedica(
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
-        Maximum number of attempted decompositions to perform with different
-        random seeds. ICA will stop running if there is convergence prior to
-        reaching this limit. Default is 10.
+        Maximum number of restarted decompositions to perform with different random seeds if ICA
+        fails to converge.
+        ICA will stop running if there is convergence prior to reaching this limit.
+        Default is 10.
     n_threads : :obj:`int`, optional
         Number of threads to use for parallel computation. Default is 1.
 
@@ -312,9 +313,10 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
-        Maximum number of attempted decompositions to perform with different
-        random seeds. ICA will stop running if there is convergence prior to
-        reaching this limit. Default is 10.
+        Maximum number of restarted decompositions to perform with different random seeds if ICA
+        fails to converge.
+        ICA will stop running if there is convergence prior to reaching this limit.
+        Default is 10.
 
     Returns
     -------
@@ -331,7 +333,7 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
 
-    for i_attempt in range(maxrestart):
+    for i_attempt in range(maxrestart + 1):
         ica = FastICA(
             n_components=n_components,
             algorithm="parallel",
