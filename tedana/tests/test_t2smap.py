@@ -4,6 +4,7 @@ import os.path as op
 from shutil import rmtree
 
 import nibabel as nb
+import numpy as np
 import pytest
 
 from tedana import workflows
@@ -34,10 +35,6 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
-        assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
-        assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
@@ -63,10 +60,6 @@ class TestT2smap:
         img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
-        assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
-        assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
@@ -94,10 +87,6 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
         assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
-        assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
-        assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
 
@@ -123,10 +112,6 @@ class TestT2smap:
         img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
-        assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
-        assert len(img.shape) == 4
-        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 4
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
@@ -166,10 +151,6 @@ class TestT2smap:
         img = nb.load(op.join(out_dir, "T2starmap.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "S0map.nii.gz"))
-        assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_T2starmap.nii.gz"))
-        assert len(img.shape) == 3
-        img = nb.load(op.join(out_dir, "desc-limited_S0map.nii.gz"))
         assert len(img.shape) == 3
         img = nb.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
@@ -237,6 +218,17 @@ class TestT2smap:
         )
         assert op.isfile(op.join(out_dir, "T2starmap.nii.gz"))
         assert op.isfile(op.join(out_dir, "S0map.nii.gz"))
+
+        # The failures map encodes 0 (never failed), 1 (failed the first
+        # curvefit pass), and 2 (failed both passes).
+        failures_file = op.join(out_dir, "desc-decayFitFailures_mask.nii.gz")
+        assert op.isfile(failures_file)
+        failures_data = nb.load(failures_file).get_fdata()
+        assert set(np.unique(failures_data)).issubset({0, 1, 2})
+        # This dataset has a single first-pass failure that converges on the
+        # second pass, so the map should contain a 1 but no 2.
+        assert (failures_data == 1).any()
+        assert not (failures_data == 2).any()
 
     def teardown_method(self):
         # Clean up folders (may not exist if a test used tmp_path)

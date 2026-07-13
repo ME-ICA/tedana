@@ -120,7 +120,16 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
         return (voxel, None, None, True, None, None, None)
 
 
-def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
+def fit_monoexponential(
+    data_cat,
+    echo_times,
+    adaptive_mask,
+    report=True,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 
     Parameters
@@ -139,6 +148,13 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates to use instead of log-linear fit. Default is None.
+    s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates to use instead of log-linear fit. Default is None.
+    voxels_to_refit : (Md,) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit. If None, all voxels are fitted.
+        Voxels not in this mask retain their initial values and are not marked as failures.
 
     Returns
     -------
@@ -183,12 +199,16 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     # fit_data = np.mean(data_cat, axis=2)
     # fit_sigma = np.std(data_cat, axis=2)
 
-    t2s_init, s0_init = fit_loglinear(
-        data_cat=data_cat,
-        echo_times=echo_times,
-        adaptive_mask=adaptive_mask,
-        report=False,
-    )
+    if t2s_initial is not None and s0_initial is not None:
+        t2s_init = t2s_initial.copy()
+        s0_init = s0_initial.copy()
+    else:
+        t2s_init, s0_init = fit_loglinear(
+            data_cat=data_cat,
+            echo_times=echo_times,
+            adaptive_mask=adaptive_mask,
+            report=False,
+        )
 
     echos_to_run = np.unique(adaptive_mask)
     # When there is one good echo, use two
@@ -216,6 +236,15 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         echo_mask = np.squeeze(echo_masks[..., i_echo])
         echo_mask[adaptive_mask == echo_num] = True
         echo_masks[..., i_echo] = echo_mask
+
+        # Filter to only voxels that need refitting, if specified
+        if voxels_to_refit is not None:
+            voxel_idx = np.intersect1d(voxel_idx, np.where(voxels_to_refit)[0])
+
+        if len(voxel_idx) == 0:
+            t2s_asc_maps[:, i_echo] = t2s_init
+            s0_asc_maps[:, i_echo] = s0_init
+            continue
 
         data_2d = data_cat[:, :echo_num, :].reshape(len(data_cat), -1).T
         echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
@@ -387,7 +416,17 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     return t2s, s0
 
 
-def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
+def fit_decay(
+    data,
+    tes,
+    adaptive_mask,
+    fittype,
+    report=True,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit voxel-wise monoexponential decay models to ``data``.
 
     Parameters
@@ -409,6 +448,12 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates for curvefit. If None, log-linear estimates are used.
+    s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates for curvefit. If None, log-linear estimates are used.
+    voxels_to_refit : (Md,) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit. If None, all voxels are fitted.
 
     Returns
     -------
@@ -469,6 +514,9 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
             adaptive_mask=adaptive_mask,
             report=report,
             n_threads=n_threads,
+            t2s_initial=t2s_initial,
+            s0_initial=s0_initial,
+            voxels_to_refit=voxels_to_refit,
         )
     else:
         raise ValueError(f"Unknown fittype option: {fittype}")
@@ -476,7 +524,16 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
     return t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar
 
 
-def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
+def fit_decay_ts(
+    data,
+    tes,
+    adaptive_mask,
+    fittype,
+    n_threads=1,
+    t2s_initial=None,
+    s0_initial=None,
+    voxels_to_refit=None,
+):
     """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
@@ -496,6 +553,13 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    t2s_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Initial T2* estimates for curvefit. If None, log-linear estimates are used.
+    s0_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Initial S0 estimates for curvefit. If None, log-linear estimates are used.
+    voxels_to_refit : (Md x T) :obj:`numpy.ndarray` or None, optional
+        Boolean array indicating which voxels to refit per timepoint.
+        If None, all voxels are fitted.
 
     Returns
     -------
@@ -539,6 +603,9 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     report = True
     for vol in range(n_vols):
+        t2s_init_vol = t2s_initial[:, vol] if t2s_initial is not None else None
+        s0_init_vol = s0_initial[:, vol] if s0_initial is not None else None
+        refit_vol = voxels_to_refit[:, vol] if voxels_to_refit is not None else None
         t2s_vol, s0_vol, failures_vol, t2s_var_vol, s0_var_vol, t2s_s0_covar_vol = fit_decay(
             data=data[:, :, vol][:, :, None],
             tes=tes,
@@ -546,6 +613,9 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
             fittype=fittype,
             report=report,
             n_threads=n_threads,
+            t2s_initial=t2s_init_vol,
+            s0_initial=s0_init_vol,
+            voxels_to_refit=refit_vol,
         )
         t2s[:, vol] = t2s_vol
         s0[:, vol] = s0_vol
@@ -743,3 +813,234 @@ def rmse_of_fit_decay_ts(
     )
 
     return rmse_map, rmse_df
+
+
+def t2smap_subworkflow(
+    data_cat,
+    tes,
+    fittype,
+    fitmode,
+    mask_denoise,
+    masksum_denoise,
+    interpolate_failing_voxels,
+    io_generator,
+    data_without_excluded_vols=None,
+    n_threads=1,
+):
+    """Fit a T2* map to the data.
+
+    Parameters
+    ----------
+    data_cat : (Mb x E x T) :obj:`numpy.ndarray`
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time.
+    tes : (E,) :obj:`list`
+        Echo times.
+    fittype : {"curvefit", "loglinear"}
+        The type of model fit to use.
+    fitmode : {"all", "ts"}
+        Whether the T2* and S0 estimates are volume-wise ("all") or not ("ts").
+    mask_denoise : (Mb,) :obj:`numpy.ndarray`
+        Boolean array indicating which voxels to include in the fit.
+    masksum_denoise : (Mb,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
+        For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
+    n_threads : int
+        Number of threads to use.
+    interpolate_failing_voxels : bool
+        Whether to interpolate failing voxels.
+    io_generator : :obj:`tedana.io.IOGenerator`
+        The IO generator to use.
+    data_without_excluded_vols : (Mb x E x T) :obj:`numpy.ndarray` or None, optional
+        Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
+        and `T` is time. If None, the data_cat is used.
+
+    Returns
+    -------
+    t2s_full : (Mb x T) :obj:`numpy.ndarray`
+        The full T2* map.
+    """
+    data_for_fit = (
+        data_without_excluded_vols if data_without_excluded_vols is not None else data_cat
+    )
+    data_for_fit = data_for_fit[mask_denoise, ...]
+    masksum_masked = masksum_denoise[mask_denoise]
+    decay_function = fit_decay if fitmode == "all" else fit_decay_ts
+    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+        data=data_for_fit,
+        tes=tes,
+        adaptive_mask=masksum_masked,
+        fittype=fittype,
+        n_threads=n_threads,
+    )
+
+    if fittype == "curvefit":
+        # Track the first-pass failures so the saved failures map can encode
+        # 1 = failed the first curvefit pass, 2 = failed both passes.
+        first_pass_failures = failures.copy()
+
+        if interpolate_failing_voxels and failures.any():
+            first_failures = failures.copy()
+            n_first_failures = first_failures.sum()
+
+            # Save first-pass variance/covariance for non-refitted voxels
+            first_t2s_var = t2s_var.copy()
+            first_s0_var = s0_var.copy()
+            first_t2s_s0_covar = t2s_s0_covar.copy()
+
+            # Stage 1: Interpolate failing voxels
+            LGR.info(
+                "Interpolating T2*/S0 estimates for %d failing voxel(s) (stage 1).",
+                n_first_failures,
+            )
+            phys_coords = utils.mask_to_phys_coords(io_generator.mask, mask_denoise)
+            t2s_interp = utils.interpolate_masked_values(
+                t2s_full,
+                first_failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+            s0_interp = utils.interpolate_masked_values(
+                s0_full,
+                first_failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+
+            # Stage 2: Re-run curvefit on failing voxels using interp. values as initial values
+            LGR.info(
+                "Re-running curvefit on %d failing voxel(s) using interpolated initial values.",
+                n_first_failures,
+            )
+            (
+                t2s_full,
+                s0_full,
+                failures,
+                t2s_var,
+                s0_var,
+                t2s_s0_covar,
+            ) = decay_function(
+                data=data_for_fit,
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fittype=fittype,
+                n_threads=n_threads,
+                t2s_initial=t2s_interp,
+                s0_initial=s0_interp,
+                voxels_to_refit=first_failures,
+            )
+
+            # Merge variance/covariance: keep first-pass values for voxels that were not refitted
+            t2s_var[~first_failures] = first_t2s_var[~first_failures]
+            s0_var[~first_failures] = first_s0_var[~first_failures]
+            t2s_s0_covar[~first_failures] = first_t2s_s0_covar[~first_failures]
+            del first_t2s_var, first_s0_var, first_t2s_s0_covar
+
+            n_second_failures = failures.sum()
+            if n_second_failures == 0:
+                LGR.info(
+                    "All %d previously failing voxel(s) converged with interpolated initial "
+                    "values.",
+                    n_first_failures,
+                )
+            elif n_second_failures == n_first_failures:
+                LGR.warning(
+                    "All %d voxel(s) that failed the first curvefit also failed with interpolated "
+                    "initial values. Using interpolated initial values did not help.",
+                    n_first_failures,
+                )
+            else:
+                LGR.info(
+                    "%d of %d previously failing voxel(s) converged with interpolated initial "
+                    "values; %d voxel(s) still failing.",
+                    n_first_failures - n_second_failures,
+                    n_first_failures,
+                    n_second_failures,
+                )
+
+            # Stage 3: Interpolate any remaining failures
+            if failures.any():
+                LGR.info(
+                    "Interpolating T2*/S0 estimates for %d remaining failing voxel(s) (stage 2).",
+                    n_second_failures,
+                )
+                t2s_full = utils.interpolate_masked_values(
+                    t2s_full,
+                    failures,
+                    io_generator.mask,
+                    mask_denoise,
+                    phys_coords=phys_coords,
+                )
+                s0_full = utils.interpolate_masked_values(
+                    s0_full,
+                    failures,
+                    io_generator.mask,
+                    mask_denoise,
+                    phys_coords=phys_coords,
+                )
+        elif interpolate_failing_voxels:
+            LGR.info("No curvefit failures found; skipping interpolation.")
+
+        # Save the failures map. Voxels that failed the first curvefit pass are
+        # encoded as 1; those that also failed the second (interpolation-seeded)
+        # pass are encoded as 2. When interpolation did not run, ``failures``
+        # still holds the first-pass result, so only add it when a second pass
+        # actually occurred.
+        failures_map = first_pass_failures.astype(np.uint8)
+        if interpolate_failing_voxels and first_pass_failures.any():
+            failures_map += failures.astype(np.uint8)
+        io_generator.save_file(failures_map, "fit failures img", mask=mask_denoise)
+
+        if io_generator.verbose:
+            # Save fit-quality maps after the two-stage refit so that voxels
+            # which converged in the second stage carry their real variance/
+            # covariance values instead of the first-pass zeros.
+            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
+            io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
+            io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
+
+    del data_without_excluded_vols
+
+    # Delete unused variables
+    del failures, t2s_var, s0_var, t2s_s0_covar
+
+    t2s_full, s0_full, t2s_limited, s0_limited = modify_t2s_s0_maps(
+        t2s=t2s_full,
+        s0=s0_full,
+        adaptive_mask=masksum_masked,
+        tes=tes,
+    )
+    del masksum_masked
+
+    t2s_full = utils.unmask(t2s_full, mask_denoise)
+    s0_full = utils.unmask(s0_full, mask_denoise)
+
+    io_generator.save_file(t2s_full, "t2star img")
+    io_generator.save_file(s0_full, "s0 img")
+    if io_generator.verbose:
+        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_limited = utils.unmask(s0_limited, mask_denoise)
+        io_generator.save_file(s0_limited, "limited s0 img")
+        io_generator.save_file(t2s_limited, "limited t2star img")
+
+    del s0_limited, t2s_limited
+
+    LGR.info("Calculating model fit quality metrics")
+    # Use the full T2*/S0 maps (the same maps used for optimal combination) so
+    # that voxels with a single good echo also receive a fit-error estimate
+    # instead of NaN.
+    rmse_map, rmse_df = rmse_of_fit_decay_ts(
+        data=data_cat,
+        tes=tes,
+        adaptive_mask=masksum_denoise,
+        t2s=t2s_full,
+        s0=s0_full,
+        fitmode=fitmode,
+    )
+    del s0_full
+    io_generator.save_file(rmse_map, "rmse img")
+    io_generator.save_file(rmse_df, "confounds tsv")
+    return t2s_full

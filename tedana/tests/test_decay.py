@@ -227,4 +227,73 @@ def test_smoke_fit_decay_curvefit_ts():
     assert t2s_s0_covar.ndim == 2
 
 
+def _make_decaying_data(adaptive_mask, tes, n_times=5, seed=0):
+    """Synthesize multi-echo data that follows a clean monoexponential decay.
+
+    Used so that curve_fit converges and produces finite covariances.
+    """
+    rng = np.random.RandomState(seed)
+    n_samples = adaptive_mask.shape[0]
+    n_echos = len(tes)
+    tes = np.asarray(tes)
+    s0_true = rng.uniform(800, 1200, size=n_samples)
+    t2s_true = rng.uniform(0.02, 0.06, size=n_samples)
+    data = np.zeros((n_samples, n_echos, n_times))
+    for echo in range(n_echos):
+        signal = s0_true * np.exp(-tes[echo] / t2s_true)
+        data[:, echo, :] = signal[:, None]
+    data += rng.normal(scale=1.0, size=data.shape)
+    return data
+
+
+def test_fit_decay_curvefit_populates_variance_at_adaptive_mask_one():
+    """Voxels with adaptive_mask == 1 should get real variance/covariance values.
+
+    They are fit with two echoes (like adaptive_mask == 2 voxels), so their
+    curve_fit covariances must be carried into the full maps rather than dropped
+    (left as zero), which would render as empty voxels in the report figures.
+    """
+    tes = [0.0145, 0.0385, 0.0625]
+    n_samples = 60
+    adaptive_mask = np.full(n_samples, 3, dtype=int)
+    adaptive_mask[:20] = 1  # voxels with only one good echo
+    data = _make_decaying_data(adaptive_mask, tes)
+
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+        data, tes, adaptive_mask, "curvefit"
+    )
+
+    am1 = adaptive_mask == 1
+    converged = am1 & ~failures
+    assert converged.any(), "Expected at least one converged adaptive_mask == 1 voxel"
+    # Converged adaptive_mask == 1 voxels must have real (nonzero) variances,
+    # matching the fact that their T2*/S0 estimates are also populated.
+    assert np.all(t2s_var[converged] != 0)
+    assert np.all(s0_var[converged] != 0)
+    assert np.all(t2s_s0_covar[converged] != 0)
+
+
+def test_rmse_includes_adaptive_mask_one():
+    """rmse_of_fit_decay_ts should return finite RMSE for adaptive_mask == 1 voxels."""
+    tes = [0.0145, 0.0385, 0.0625]
+    n_samples = 60
+    n_times = 5
+    adaptive_mask = np.full(n_samples, 3, dtype=int)
+    adaptive_mask[:20] = 1
+    data = _make_decaying_data(adaptive_mask, tes, n_times=n_times)
+
+    t2s, s0, _, _, _, _ = me.fit_decay(data, tes, adaptive_mask, "curvefit")
+
+    rmse_map, rmse_df = me.rmse_of_fit_decay_ts(
+        data=data,
+        tes=tes,
+        adaptive_mask=adaptive_mask,
+        t2s=t2s,
+        s0=s0,
+        fitmode="all",
+    )
+    am1 = adaptive_mask == 1
+    assert np.all(np.isfinite(rmse_map[am1]))
+
+
 # TODO: BREAK AND UNIT TESTS
