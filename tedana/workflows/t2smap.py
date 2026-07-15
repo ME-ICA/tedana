@@ -1,6 +1,7 @@
 """Estimate T2 and S0, and optimally combine data across TEs."""
 
 import argparse
+import datetime
 import logging
 import os
 import os.path as op
@@ -377,7 +378,12 @@ def t2smap_workflow(
     exclude_idx = parse_volume_indices(exclude)
     n_exclude = len(exclude_idx)
 
-    utils.setup_loggers(quiet=quiet, debug=debug)
+    # create logfile name
+    basename = "t2smap_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname, repname=None, quiet=quiet, debug=debug)
 
     LGR.info(f"Using output directory: {out_dir}")
 
