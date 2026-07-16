@@ -334,6 +334,25 @@ You can also play around with `our demo`_.
 Report Structure
 ----------------
 
+The report is split into tabs, and only one tab is shown at a time. Select a tab
+to switch between them, or move between them with the left and right arrow keys.
+
+- **Info**: the command that was run, the system and library versions it was run
+  with, a description of the workflow, and the references it cites.
+- **ICA**: the interactive component plots described below, the robust ICA
+  clustering plot when ``--ica_method robustica`` was used, and the external
+  regressor correlations when external regressors were provided.
+- **Carpet**: the carpet plots, and the global signal removal plots when
+  ``--gscontrol`` was used.
+- **Decay**: the adaptive mask, the T2* and S0 summary plots, and the decay model
+  fit plots.
+- **Tree**: the component selection decision tree and the classification of every
+  component at each node of that tree.
+
+The Decay and Tree tabs are only shown when a workflow produces their contents.
+For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report
+written to a new output directory by that workflow has no Decay tab.
+
 The image below shows a representative report. The left is a summary view
 which contains information on all components and the right presents additional
 information for an individual component. One can hover over any pie chart wedge
@@ -568,7 +587,7 @@ and quantification of clusters.
 Carpet plots
 ************
 
-In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
+The Carpet tab of ``tedana``'s interactive reports includes carpet plots for the main outputs of the workflow:
 the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data. Each row is a voxel
 and the grayscale is the relative signal changes across time. After denoising, voxels that look very different from others across time
 or time points that are uniformly high or low across voxels are concerning. These carpet plots can be help as a quick quality check for
@@ -584,7 +603,7 @@ should not overly focus on carpet plots and should examine these results in cont
 Adaptive Mask Summary Plot
 **************************
 
-Below the carpet plots is a summary plot of the adaptive mask.
+The Decay tab opens with a summary plot of the adaptive mask.
 
 This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
 
@@ -605,7 +624,7 @@ This figure overlays contours reflecting the boundaries of the following masks o
 T2* and S0 Summary Plots
 ************************
 
-Below the adaptive mask plot are summary plots for the T2* and S0 maps.
+Below the adaptive mask plot, in the same Decay tab, are summary plots for the T2* and S0 maps.
 Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
 The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
 The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
@@ -624,7 +643,7 @@ It is important to note that the histogram is limited from 0 to the 98th percent
 Decay Model Fit Plots
 *********************
 
-Below the T2* and S0 summary plots are the decay model fit plots.
+Below the T2* and S0 summary plots, in the same Decay tab, are the decay model fit plots.
 These plots show residual mean squared error (RMSE) values for the
 monoexponential decay model, based on the T2* and S0 maps.
 
@@ -649,7 +668,7 @@ relatively high RMSE values for runs or timepoints might be a marker of an under
 Global Signal Removal Plots
 ***************************
 
-Below the decay model fit plots are the global signal removal plots, if ``--gscontrol`` was used.
+The Carpet tab also shows the global signal removal plots, if ``--gscontrol`` was used.
 These plots show the voxel-wise global signal weights and the global signal time series.
 
 .. image:: /_static/gsr_plots.png
