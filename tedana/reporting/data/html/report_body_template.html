@@ -403,6 +403,12 @@
       <button type="button" class="pure-menu-link" role="tab" id="tab-ica"
               aria-controls="pane-ica" aria-selected="false" tabindex="-1">ICA</button>
     </li>
+    {% if treeExists %}
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-tree"
+              aria-controls="pane-tree" aria-selected="false" tabindex="-1">Tree</button>
+    </li>
+    {% endif %}
     <li class="pure-menu-item">
       <button type="button" class="pure-menu-link" role="tab" id="tab-carpet"
               aria-controls="pane-carpet" aria-selected="false" tabindex="-1">Carpet</button>
@@ -411,12 +417,6 @@
     <li class="pure-menu-item">
       <button type="button" class="pure-menu-link" role="tab" id="tab-decay"
               aria-controls="pane-decay" aria-selected="false" tabindex="-1">Decay</button>
-    </li>
-    {% endif %}
-    {% if treeExists %}
-    <li class="pure-menu-item">
-      <button type="button" class="pure-menu-link" role="tab" id="tab-tree"
-              aria-controls="pane-tree" aria-selected="false" tabindex="-1">Tree</button>
     </li>
     {% endif %}
   </ul>
@@ -460,6 +460,29 @@
   </div>
   {% endif %}
 </div>
+
+<!-- Tree tab -->
+{% if treeExists %}
+<div class="tab-pane" id="pane-tree" role="tabpanel" aria-labelledby="tab-tree" tabindex="0">
+  <div class="tree-tables">
+    {% if treeTable %}
+    <h1>Decision tree</h1>
+    <p>
+      Each node of the component selection decision tree, in the order it was applied.
+      "Components true" and "Components false" are the numbers of components that did and
+      did not meet each node's condition, and are only reported for nodes that make a
+      decision.
+    </p>
+    <div class="table-scroll">{{ treeTable }}</div>
+    {% endif %}
+    {% if statusTable %}
+    <h2>Component status by node</h2>
+    <p>The classification of every component after each node of the decision tree.</p>
+    <div class="table-scroll">{{ statusTable }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 
 <!-- Carpet tab -->
 <div class="tab-pane" id="pane-carpet" role="tabpanel" aria-labelledby="tab-carpet" tabindex="0">
@@ -593,29 +616,6 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
-    {% endif %}
-  </div>
-</div>
-{% endif %}
-
-<!-- Tree tab -->
-{% if treeExists %}
-<div class="tab-pane" id="pane-tree" role="tabpanel" aria-labelledby="tab-tree" tabindex="0">
-  <div class="tree-tables">
-    {% if treeTable %}
-    <h1>Decision tree</h1>
-    <p>
-      Each node of the component selection decision tree, in the order it was applied.
-      "Components true" and "Components false" are the numbers of components that did and
-      did not meet each node's condition, and are only reported for nodes that make a
-      decision.
-    </p>
-    <div class="table-scroll">{{ treeTable }}</div>
-    {% endif %}
-    {% if statusTable %}
-    <h2>Component status by node</h2>
-    <p>The classification of every component after each node of the decision tree.</p>
-    <div class="table-scroll">{{ statusTable }}</div>
     {% endif %}
   </div>
 </div>

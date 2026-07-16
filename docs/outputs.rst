@@ -342,12 +342,12 @@ to switch between them, or move between them with the left and right arrow keys.
 - **ICA**: the interactive component plots described below, the robust ICA
   clustering plot when ``--ica_method robustica`` was used, and the external
   regressor correlations when external regressors were provided.
+- **Tree**: the component selection decision tree and the classification of every
+  component at each node of that tree.
 - **Carpet**: the carpet plots, and the global signal removal plots when
   ``--gscontrol`` was used.
 - **Decay**: the adaptive mask, the T2* and S0 summary plots, and the decay model
   fit plots.
-- **Tree**: the component selection decision tree and the classification of every
-  component at each node of that tree.
 
 The Decay and Tree tabs are only shown when a workflow produces their contents.
 For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report

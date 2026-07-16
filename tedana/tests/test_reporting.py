@@ -1,6 +1,7 @@
 """Tests for tedana.reporting."""
 
 import json
+import re
 import shutil
 from os.path import dirname, join
 
@@ -194,6 +195,20 @@ def test_update_template_bokeh_tree_tab(tmp_path):
 
     assert 'id="pane-tree"' in body
     assert body.count('aria-controls="pane-') == 4
+
+
+def test_update_template_bokeh_tab_order(tmp_path):
+    """Tree sits next to ICA, and the panes follow the same order as the tabs."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("rmse_brain.svg", "rmse_timeseries.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path, tree_table="<table></table>", status_table="<table></table>")
+
+    expected = ["pane-info", "pane-ica", "pane-tree", "pane-carpet", "pane-decay"]
+    assert re.findall(r'aria-controls="(pane-[a-z]+)"', body) == expected
+    assert re.findall(r'<div class="tab-pane[^"]*" id="(pane-[a-z]+)"', body) == expected
 
 
 def test_generate_tree_tables_missing_files(tmp_path):
