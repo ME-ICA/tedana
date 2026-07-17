@@ -171,9 +171,11 @@ def test_update_template_bokeh_omits_empty_tabs(tmp_path):
     assert 'id="pane-tree"' not in body
     assert body.count('aria-controls="pane-') == 3
 
-    # Info is the only tab open on load.
+    # ICA is the only tab open on load.
     assert body.count("tab-pane is-active") == 1
-    assert '<div class="tab-pane is-active" id="pane-info"' in body
+    assert '<div class="tab-pane is-active" id="pane-ica"' in body
+    assert re.search(r'id="tab-ica"\s+aria-controls="pane-ica" aria-selected="true"', body)
+    assert re.search(r'id="tab-info"\s+aria-controls="pane-info" aria-selected="false"', body)
 
 
 def test_update_template_bokeh_decay_tab_needs_only_one_figure_set(tmp_path):

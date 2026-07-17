@@ -583,6 +583,29 @@ and quantification of clusters.
   :align: center
   :height: 400px
 
+*************
+Decision Tree
+*************
+
+The Tree tab summarizes how the component selection decision tree classified the
+components, using two tables.
+
+The first table lists every node of the decision tree in the order it was applied.
+For each node it shows the function that was run, a short label describing what the
+node did, and the number of components that did and did not meet the node's condition.
+The last two counts are only reported for nodes that make a decision, so they are
+blank for setup nodes. This table is a flat view of the same information stored in
+``desc-ICA_decision_tree.json``, and is a quick way to see which criteria drove the
+classification and how many components each one affected.
+
+The second table shows the classification of every component after each node of the
+tree, with one row per component and one column per node. Reading across a row shows
+how a component's label evolved, for example from ``unclassified`` to ``rejected``,
+as the tree was applied. It is the same information stored in
+``desc-ICA_status_table.tsv``, and is useful for understanding why a specific
+component ended up accepted or rejected. The table can be scrolled horizontally when
+a run has many nodes.
+
 ************
 Carpet plots
 ************

@@ -395,13 +395,13 @@
 <!-- Tab bar -->
 <div class="tedana-tabs pure-menu pure-menu-horizontal">
   <ul class="pure-menu-list" role="tablist" aria-label="Report sections">
-    <li class="pure-menu-item pure-menu-selected">
-      <button type="button" class="pure-menu-link" role="tab" id="tab-info"
-              aria-controls="pane-info" aria-selected="true" tabindex="0">Info</button>
-    </li>
     <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-info"
+              aria-controls="pane-info" aria-selected="false" tabindex="-1">Info</button>
+    </li>
+    <li class="pure-menu-item pure-menu-selected">
       <button type="button" class="pure-menu-link" role="tab" id="tab-ica"
-              aria-controls="pane-ica" aria-selected="false" tabindex="-1">ICA</button>
+              aria-controls="pane-ica" aria-selected="true" tabindex="0">ICA</button>
     </li>
     {% if treeExists %}
     <li class="pure-menu-item">
@@ -423,7 +423,7 @@
 </div>
 
 <!-- Info tab -->
-<div class="tab-pane is-active" id="pane-info" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
+<div class="tab-pane" id="pane-info" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
   <div class="info">
     <h1>Info</h1>
     {{ info }}
@@ -441,7 +441,7 @@
 </div>
 
 <!-- ICA tab -->
-<div class="tab-pane" id="pane-ica" role="tabpanel" aria-labelledby="tab-ica" tabindex="0">
+<div class="tab-pane is-active" id="pane-ica" role="tabpanel" aria-labelledby="tab-ica" tabindex="0">
   <div class="content">
     <h1>ICA components</h1>
     {{ content }}
