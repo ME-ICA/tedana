@@ -171,6 +171,58 @@
     border-radius: 5px;
   }
 
+  /* Tab styles */
+  .tab-pane {
+    display: none;
+  }
+
+  /* flow-root makes each pane contain its floated children. */
+  .tab-pane.is-active {
+    display: flow-root;
+  }
+
+  .tedana-tabs {
+    /* pure-menu-horizontal sets width:100%, which overflows once margins are added. */
+    width: auto;
+    margin: 0 5% 20px 5%;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .tedana-tabs button.pure-menu-link {
+    float: none;
+    height: auto;
+    margin-right: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-size: 1em;
+    font-weight: 400;
+    cursor: pointer;
+  }
+
+  .tedana-tabs .pure-menu-selected button.pure-menu-link {
+    color: #000;
+    font-weight: 700;
+    box-shadow: inset 0 -3px 0 #0078e7;
+  }
+
+  .tedana-tabs button.pure-menu-link:focus-visible {
+    outline: 2px solid #0078e7;
+    outline-offset: -2px;
+  }
+
+  .tree-tables {
+    float: left;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 100px;
+    max-width: 90%;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
   /* Rica button styles */
   .rica-button-container {
     position: fixed;
@@ -339,166 +391,235 @@
     </div>
   </div>
 </div>
-<div class="content">
-  <h1>ICA components</h1>
-  {{ content }}
+
+<!-- Tab bar -->
+<div class="tedana-tabs pure-menu pure-menu-horizontal">
+  <ul class="pure-menu-list" role="tablist" aria-label="Report sections">
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-info"
+              aria-controls="pane-info" aria-selected="false" tabindex="-1">Info</button>
+    </li>
+    <li class="pure-menu-item pure-menu-selected">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-ica"
+              aria-controls="pane-ica" aria-selected="true" tabindex="0">ICA</button>
+    </li>
+    {% if treeExists %}
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-tree"
+              aria-controls="pane-tree" aria-selected="false" tabindex="-1">Tree</button>
+    </li>
+    {% endif %}
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-carpet"
+              aria-controls="pane-carpet" aria-selected="false" tabindex="-1">Carpet</button>
+    </li>
+    {% if decayExists %}
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-decay"
+              aria-controls="pane-decay" aria-selected="false" tabindex="-1">Decay</button>
+    </li>
+    {% endif %}
+  </ul>
 </div>
-<div>{{ tsne }}</div>
-<div class="carpet-plots">
-  <h1>Carpet plots</h1>
-  <div class="carpet-wrapper">
-    <div class="carpet-buttons">{{ buttons }}</div>
+
+<!-- Info tab -->
+<div class="tab-pane" id="pane-info" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
+  <div class="info">
+    <h1>Info</h1>
+    {{ info }}
+  </div>
+  <div class="about">
+    <h1>About tedana</h1>
+    {{ about }}
+  </div>
+  <div class="content references">
+    <h1>References</h1>
+    <ul>
+      {{ references }}
+    </ul>
+  </div>
+</div>
+
+<!-- ICA tab -->
+<div class="tab-pane is-active" id="pane-ica" role="tabpanel" aria-labelledby="tab-ica" tabindex="0">
+  <div class="content">
+    <h1>ICA components</h1>
+    {{ content }}
+  </div>
+  <div>{{ tsne }}</div>
+  {% if externalRegressorsExist %}
+  <div class="carpet-plots">
     <div class="carpet-plots-image">
-      <img
-        id="imgCarpetPlot"
-        src="{{ initialCarpet }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
+    <h1>External Regressors</h1>
+    <img
+      id="externalRegressorCorrelations"
+      src="{{ externalRegressorCorrelations }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
     </div>
-  </div>
-</div>
-{% if adaptiveMaskExists %}
-<div class="carpet-plots">
-  <h1>Adaptive mask</h1>
-  <img
-    id="adaptiveMask"
-    src="{{ adaptiveMask }}"
-    style="width: 95%; max-width: 1200px; height: auto"
-  />
-</div>
-{% endif %}
-<div class="carpet-plots">
-  {% if t2starExists %}
-  <h2>T2*</h2>
-  <div class="carpet-plots-image">
-    <img
-      id="t2starBrainPlot"
-      src="{{ t2starBrainPlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  <div class="carpet-plots-image">
-    <img
-      id="t2starHistogram"
-      src="{{ t2starHistogram }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  {% endif %} {% if varianceExists %}
-  <h3>T2* Estimate Variance</h3>
-  <div class="carpet-plots-image">
-    <img
-      id="t2starVariancePlot"
-      src="{{ t2starVariancePlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  {% endif %} {% if s0Exists %}
-  <h2>S0</h2>
-  <div class="carpet-plots-image">
-    <img
-      id="s0BrainPlot"
-      src="{{ s0BrainPlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  <div class="carpet-plots-image">
-    <img
-      id="s0Histogram"
-      src="{{ s0Histogram }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  {% endif %} {% if varianceExists %}
-  <h3>S0 Estimate Variance</h3>
-  <div class="carpet-plots-image">
-    <img
-      id="s0VariancePlot"
-      src="{{ s0VariancePlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  <h3>T2* and S0 Estimate Covariance</h3>
-  <div class="carpet-plots-image">
-    <img
-      id="t2sS0CovariancePlot"
-      src="{{ t2sS0CovariancePlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  {% endif %} {% if rmseExists %}
-  <h2>
-    T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
-  </h2>
-  <div class="carpet-plots-image">
-    <img
-      id="rmseBrainPlot"
-      src="{{ rmseBrainPlot }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
-  </div>
-  <div class="carpet-plots-image">
-    <img
-      id="rmseTimeseries"
-      src="{{ rmseTimeseries }}"
-      style="width: 95%; max-width: 1200px; height: auto"
-    />
   </div>
   {% endif %}
 </div>
 
-{% if gsr or mir %}
-<div class="carpet-plots">
-  <h2>Global Signal Control</h2>
-    {% if gsr %}
-      <h3>Global Signal Regression</h3>
-      <div class="carpet-plots-image">
-        <img
-          id="gsrPlot"
-          src="{{ gsrPlot }}"
-          style="width: 95%; max-width: 1200px; height: auto"
-        />
-      </div>
+<!-- Tree tab -->
+{% if treeExists %}
+<div class="tab-pane" id="pane-tree" role="tabpanel" aria-labelledby="tab-tree" tabindex="0">
+  <div class="tree-tables">
+    {% if treeTable %}
+    <h1>Decision tree</h1>
+    <p>
+      Each node of the component selection decision tree, in the order it was applied.
+      "Components true" and "Components false" are the numbers of components that did and
+      did not meet each node's condition, and are only reported for nodes that make a
+      decision.
+    </p>
+    <div class="table-scroll">{{ treeTable }}</div>
     {% endif %}
-    {% if mir %}
-      <h3>Minimum Image Regression</h3>
-      <div class="carpet-plots-image">
-        <img
-          id="mirPlot"
-          src="{{ mirPlot }}"
-          style="width: 95%; max-width: 1200px; height: auto"
-        />
-      </div>
+    {% if statusTable %}
+    <h2>Component status by node</h2>
+    <p>The classification of every component after each node of the decision tree.</p>
+    <div class="table-scroll">{{ statusTable }}</div>
     {% endif %}
-</div>
-{% endif %}
-{% if externalRegressorsExist %}
-<div class="carpet-plots">
-  <div class="carpet-plots-image">
-  <h1>External Regressors</h1>
-  <img
-    id="externalRegressorCorrelations"
-    src="{{ externalRegressorCorrelations }}"
-    style="width: 95%; max-width: 1200px; height: auto"
-  />
   </div>
 </div>
 {% endif %}
 
-<div class="info">
-  <h1>Info</h1>
-  {{ info }}
+<!-- Carpet tab -->
+<div class="tab-pane" id="pane-carpet" role="tabpanel" aria-labelledby="tab-carpet" tabindex="0">
+  <div class="carpet-plots">
+    <h1>Carpet plots</h1>
+    <div class="carpet-wrapper">
+      <div class="carpet-buttons">{{ buttons }}</div>
+      <div class="carpet-plots-image">
+        <img
+          id="imgCarpetPlot"
+          src="{{ initialCarpet }}"
+          style="width: 95%; max-width: 1200px; height: auto"
+        />
+      </div>
+    </div>
+  </div>
+  {% if gsr or mir %}
+  <div class="carpet-plots">
+    <h2>Global Signal Control</h2>
+      {% if gsr %}
+        <h3>Global Signal Regression</h3>
+        <div class="carpet-plots-image">
+          <img
+            id="gsrPlot"
+            src="{{ gsrPlot }}"
+            style="width: 95%; max-width: 1200px; height: auto"
+          />
+        </div>
+      {% endif %}
+      {% if mir %}
+        <h3>Minimum Image Regression</h3>
+        <div class="carpet-plots-image">
+          <img
+            id="mirPlot"
+            src="{{ mirPlot }}"
+            style="width: 95%; max-width: 1200px; height: auto"
+          />
+        </div>
+      {% endif %}
+  </div>
+  {% endif %}
 </div>
-<div class="about">
-  <h1>About tedana</h1>
-  {{ about }}
+
+<!-- Decay tab -->
+{% if decayExists %}
+<div class="tab-pane" id="pane-decay" role="tabpanel" aria-labelledby="tab-decay" tabindex="0">
+  {% if adaptiveMaskExists %}
+  <div class="carpet-plots">
+    <h1>Adaptive mask</h1>
+    <img
+      id="adaptiveMask"
+      src="{{ adaptiveMask }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
+  </div>
+  {% endif %}
+  <div class="carpet-plots">
+    {% if t2starExists %}
+    <h2>T2*</h2>
+    <div class="carpet-plots-image">
+      <img
+        id="t2starBrainPlot"
+        src="{{ t2starBrainPlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <div class="carpet-plots-image">
+      <img
+        id="t2starHistogram"
+        src="{{ t2starHistogram }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %} {% if varianceExists %}
+    <h3>T2* Estimate Variance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="t2starVariancePlot"
+        src="{{ t2starVariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %} {% if s0Exists %}
+    <h2>S0</h2>
+    <div class="carpet-plots-image">
+      <img
+        id="s0BrainPlot"
+        src="{{ s0BrainPlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <div class="carpet-plots-image">
+      <img
+        id="s0Histogram"
+        src="{{ s0Histogram }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %} {% if varianceExists %}
+    <h3>S0 Estimate Variance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="s0VariancePlot"
+        src="{{ s0VariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <h3>T2* and S0 Estimate Covariance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="t2sS0CovariancePlot"
+        src="{{ t2sS0CovariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %} {% if rmseExists %}
+    <h2>
+      T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
+    </h2>
+    <div class="carpet-plots-image">
+      <img
+        id="rmseBrainPlot"
+        src="{{ rmseBrainPlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <div class="carpet-plots-image">
+      <img
+        id="rmseTimeseries"
+        src="{{ rmseTimeseries }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %}
+  </div>
 </div>
-<div class="content references">
-  <h1>References</h1>
-  <ul>
-    {{ references }}
-  </ul>
-</div>
+{% endif %}
 
 <script type="text/javascript">
   function updateCarpetPlot(name) {
@@ -524,6 +645,44 @@
     // Update the image source
     document.getElementById("imgCarpetPlot").src = carpetPlot;
   }
+
+  // Tab switching, following the ARIA tabs pattern
+  (function () {
+    var tabs = Array.prototype.slice.call(
+      document.querySelectorAll('.tedana-tabs [role="tab"]')
+    );
+
+    function selectTab(tab, setFocus) {
+      tabs.forEach(function (other) {
+        var isSelected = other === tab;
+        other.setAttribute("aria-selected", isSelected ? "true" : "false");
+        other.setAttribute("tabindex", isSelected ? "0" : "-1");
+        other.parentNode.classList.toggle("pure-menu-selected", isSelected);
+        document
+          .getElementById(other.getAttribute("aria-controls"))
+          .classList.toggle("is-active", isSelected);
+      });
+      if (setFocus) {
+        tab.focus();
+      }
+    }
+
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener("click", function () {
+        selectTab(tab, false);
+      });
+      tab.addEventListener("keydown", function (event) {
+        var offset = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+        if (offset) {
+          event.preventDefault();
+          selectTab(tabs[(index + offset + tabs.length) % tabs.length], true);
+        } else if (event.key === "Home" || event.key === "End") {
+          event.preventDefault();
+          selectTab(event.key === "Home" ? tabs[0] : tabs[tabs.length - 1], true);
+        }
+      });
+    });
+  })();
 
   // Rica modal functions with accessibility support
   var ricaModalTrigger = null;
