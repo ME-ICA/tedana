@@ -211,6 +211,17 @@ def _get_parser():
         ),
         default=None,
     )
+    decay_args.add_argument(
+        "--interpolate-failing-voxels",
+        dest="interpolate_failing_voxels",
+        action="store_true",
+        help=(
+            "If fittype='curvefit', replace T2*/S0 values for voxels where the "
+            "monoexponential fit failed with nearest-neighbor interpolated values "
+            "from non-failing neighbors. Ignored if fittype='loglin'."
+        ),
+        default=False,
+    )
 
     decomposition_args = parser.add_argument_group("Component Selection")
     decomposition_args.add_argument(
@@ -314,7 +325,8 @@ def _get_parser():
         help=(
             "Maximum number of attempts for ICA. "
             "If ICA fails to converge, the fixed seed will be updated and ICA will be run again. "
-            "If convergence is achieved before maxrestart attempts, ICA will finish early."
+            "If convergence is achieved before maxrestart attempts, ICA will finish early. "
+            "Must be an integer greater than or equal to 0."
         ),
         default=DEFAULT_N_MAX_RESTART,
     )
@@ -430,6 +442,7 @@ def tedana_workflow(
     dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
+    interpolate_failing_voxels=False,
     combmode="t2s",
     n_independent_echos=None,
     tree="tedana_orig",
@@ -495,6 +508,12 @@ def tedana_workflow(
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
         the raw data, which is slightly slower but may be more accurate.
         Default is 'loglin'.
+    interpolate_failing_voxels : :obj:`bool`, optional
+        If ``True`` and ``fittype='curvefit'``, replace T2*/S0 values for
+        voxels where the monoexponential fit failed with nearest-neighbor
+        interpolated values from non-failing neighbors.
+        Ignored if ``fittype='loglin'`` or if an external ``t2smap`` is
+        provided. Default is ``False``.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     n_independent_echos : :obj:`int`, optional
@@ -543,9 +562,12 @@ def tedana_workflow(
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
-        Maximum number of attempts for ICA. If ICA fails to converge, the
-        fixed seed will be updated and ICA will be run again. If convergence
-        is achieved before maxrestart attempts, ICA will finish early.
+        Maximum number of restarted decompositions to perform with different random seeds if ICA
+        fails to converge or if no accepted components are found.
+        If no accepted components are found, the fixed seed will be updated and ICA will be run
+        again.
+        If convergence is achieved before maxrestart attempts, ICA will finish early.
+        ICA will stop running if there is convergence prior to reaching this limit.
         Default is 10.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
@@ -776,65 +798,32 @@ def tedana_workflow(
     )
     LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
+    if interpolate_failing_voxels and fittype != "curvefit":
+        LGR.warning(
+            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolation will be skipped."
+        )
+    if interpolate_failing_voxels and t2smap is not None:
+        LGR.warning(
+            "interpolate_failing_voxels is set but an external t2smap was provided; "
+            "interpolation is only applied when tedana computes the T2*/S0 maps, so "
+            "interpolation will be skipped."
+        )
+
     if t2smap is None:
         LGR.info("Computing T2* map")
-        data_masked = data_cat[mask_denoise, ...]
-        masksum_masked = masksum_denoise[mask_denoise]
-        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
-            data=data_masked,
+        t2s_full = decay.t2smap_subworkflow(
+            data_cat=data_cat,
             tes=tes,
-            adaptive_mask=masksum_masked,
             fittype=fittype,
+            fitmode="all",
+            mask_denoise=mask_denoise,
+            masksum_denoise=masksum_denoise,
+            interpolate_failing_voxels=interpolate_failing_voxels,
+            io_generator=io_generator,
+            data_without_excluded_vols=None,
             n_threads=n_threads,
         )
-        del data_masked
-
-        if fittype == "curvefit":
-            io_generator.save_file(
-                failures.astype(np.uint8),
-                "fit failures img",
-                mask=mask_denoise,
-            )
-            if verbose:
-                io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
-                io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
-
-        del failures, t2s_var, s0_var, t2s_s0_covar
-
-        t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-            t2s=t2s_full,
-            s0=s0_full,
-            adaptive_mask=masksum_masked,
-            tes=tes,
-        )
-        del masksum_masked
-
-        t2s_full = utils.unmask(t2s_full, mask_denoise)
-        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
-        s0_limited = utils.unmask(s0_limited, mask_denoise)
-
-        io_generator.save_file(t2s_full, "t2star img")
-        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
-        del s0_full
-
-        if verbose:
-            io_generator.save_file(t2s_limited, "limited t2star img")
-            io_generator.save_file(s0_limited, "limited s0 img")
-
-        # Calculate RMSE if S0 and T2* are fit
-        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
-            data=data_cat,
-            tes=tes,
-            adaptive_mask=masksum_denoise,
-            t2s=t2s_limited,
-            s0=s0_limited,
-            fitmode="all",
-        )
-        io_generator.save_file(rmse_map, "rmse img")
-        io_generator.add_df_to_file(rmse_df, "confounds tsv")
-
-        del s0_limited, t2s_limited
 
     # optimally combine data
     data_optcom = combine.make_optcom(
@@ -905,6 +894,7 @@ def tedana_workflow(
                 maxrestart=(maxrestart - n_restarts),
                 n_threads=n_threads,
             )
+            metric_seed = seed
             seed += 1
             n_restarts = seed - fixed_seed
 
@@ -926,9 +916,11 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
                 label="ICA",
+                tr=img_t_r,
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
+                seed=metric_seed,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -986,9 +978,11 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
             io_generator=io_generator,
             label="ICA",
+            tr=img_t_r,
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
+            seed=fixed_seed,
         )
         selector = selection.automatic_selection(
             component_table,
