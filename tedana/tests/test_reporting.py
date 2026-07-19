@@ -290,10 +290,6 @@ def test_generate_tree_tables(tmp_path):
 
 
 def test_generate_qc_card_rows():
-    import pandas as pd
-
-    from tedana.reporting import html_report
-
     component_table = pd.DataFrame(
         {
             "classification": ["accepted", "accepted", "rejected"],
@@ -326,13 +322,12 @@ def test_generate_qc_card_rows():
     assert "56.4%" in labels["Variance accepted"]
     assert "12.0%" in labels["Variance unmodeled"]
     assert "38.2" in labels["Mean T2*"]  # decay row present
+    # Missing decay sub-fields (here n_voxels_base_mask) degrade to "n/a", never "None".
+    assert "None" not in labels["Fit-mask voxels"]
+    assert "n/a" in labels["Fit-mask voxels"]
 
 
 def test_generate_qc_card_omits_decay_when_absent():
-    import pandas as pd
-
-    from tedana.reporting import html_report
-
     component_table = pd.DataFrame({"classification": ["accepted"], "variance explained": [100.0]})
     rows = html_report._generate_qc_card(
         component_table=component_table,

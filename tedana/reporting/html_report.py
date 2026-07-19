@@ -462,10 +462,12 @@ def _generate_qc_card(
         )
         fit_vox = decay_metrics_dict.get("n_voxels_fit_mask")
         base_vox = decay_metrics_dict.get("n_voxels_base_mask")
+        fit_vox_txt = "n/a" if fit_vox is None else str(fit_vox)
+        base_vox_txt = "n/a" if base_vox is None else str(base_vox)
         rows.append(
             {
                 "label": "Fit-mask voxels",
-                "value": f"{fit_vox} of {base_vox} base-mask voxels",
+                "value": f"{fit_vox_txt} of {base_vox_txt} base-mask voxels",
             }
         )
         if decay_metrics_dict.get("n_fit_failures") is not None:
