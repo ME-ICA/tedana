@@ -56,3 +56,13 @@ def test_create_data_struct_adds_color_and_marker(tmp_path):
     triples = set(zip(cds.data["classif"], cds.data["color"], cds.data["marker"]))
     assert ("accepted", "#009E73", "circle") in triples
     assert ("rejected", "#D55E00", "square") in triples
+
+
+def test_plot_component_accepts_linestyle():
+    import inspect
+
+    from tedana.reporting import static_figures
+
+    sig = inspect.signature(static_figures.plot_component)
+    assert "classification_linestyle" in sig.parameters
+    assert sig.parameters["classification_linestyle"].default == "solid"
