@@ -235,6 +235,10 @@
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
     },
+    "decay metrics json": {
+        "orig": "decay_metrics",
+        "bidsv1.5.0": "desc-decay_metrics"
+    },
     "registry json": {
         "orig": "registry",
         "bidsv1.5.0": "desc-tedana_registry"
