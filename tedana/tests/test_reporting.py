@@ -180,6 +180,7 @@ def _render_body(tmp_path, **kwargs):
         "tsne": "",
         "tree_table": None,
         "status_table": None,
+        "qc_card": [],
     }
     render_kwargs.update(kwargs)
     return html_report._update_template_bokeh(**render_kwargs)
@@ -286,3 +287,63 @@ def test_generate_tree_tables(tmp_path):
     assert "kappa, rho" in tree_table
     assert "pure-table" in tree_table
     assert "ICA_00" in status_table
+
+
+def test_generate_qc_card_rows():
+    import pandas as pd
+
+    from tedana.reporting import html_report
+
+    component_table = pd.DataFrame(
+        {
+            "classification": ["accepted", "accepted", "rejected"],
+            "variance explained": [30.0, 26.4, 43.6],
+        }
+    )
+    ccm = {
+        "accepted_variance": 56.4,
+        "rejected_variance": 43.6,
+        "unmodeled_variance": 12.0,
+        "retained_variance": 70.0,
+        "n_echos": 4,
+    }
+    decay = {"t2star_mean": 38.2, "rmse_median": 2.8, "n_voxels_fit_mask": 139812}
+
+    rows = html_report._generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict=ccm,
+        decay_metrics_dict=decay,
+        kappa_elbow=12.7,
+        rho_elbow=9.4,
+        n_vols=200,
+        n_comps=3,
+        tree_node_count=8,
+        version="26.0.4",
+    )
+
+    labels = {r["label"]: r["value"] for r in rows}
+    assert "3 total | 2 accepted | 1 rejected" in labels["Components"]
+    assert "56.4%" in labels["Variance accepted"]
+    assert "12.0%" in labels["Variance unmodeled"]
+    assert "38.2" in labels["Mean T2*"]  # decay row present
+
+
+def test_generate_qc_card_omits_decay_when_absent():
+    import pandas as pd
+
+    from tedana.reporting import html_report
+
+    component_table = pd.DataFrame({"classification": ["accepted"], "variance explained": [100.0]})
+    rows = html_report._generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict={},
+        decay_metrics_dict=None,
+        kappa_elbow=None,
+        rho_elbow=None,
+        n_vols=100,
+        n_comps=1,
+        tree_node_count=None,
+        version="26.0.4",
+    )
+    labels = {r["label"] for r in rows}
+    assert "Mean T2*" not in labels
