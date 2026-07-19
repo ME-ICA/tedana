@@ -80,6 +80,33 @@ def test_calculate_rejected_components_impact_no_acc():
     )
 
 
+def test_calculate_variance_summary_sets_keys():
+    import numpy as np
+
+    selector = sample_selector()
+    mixing = sample_mixing_matrix()
+    n_vols = mixing.shape[0]
+    rng = np.random.default_rng(0)
+    data_optcom_masked = rng.standard_normal((50, n_vols))
+
+    reporting.quality_metrics.calculate_variance_summary(selector, data_optcom_masked, mixing)
+
+    ccm = selector.cross_component_metrics_
+    for key in (
+        "accepted_variance",
+        "rejected_variance",
+        "ignored_variance",
+        "unmodeled_variance",
+        "retained_variance",
+    ):
+        assert key in ccm
+        assert isinstance(ccm[key], float)
+
+    # Class-wise variance (decomposition frame) sums to ~ total variance explained.
+    assert 0.0 <= ccm["retained_variance"] <= 100.0
+    assert 0.0 <= ccm["unmodeled_variance"] <= 100.0
+
+
 def test_plot_heatmap_nonfinite_distances_warns_and_succeeds(tmp_path):
     """Ensure plot_heatmap does not crash when correlation-derived distances are non-finite.
 
