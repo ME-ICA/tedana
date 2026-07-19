@@ -27,3 +27,32 @@ def test_okabe_ito_values():
     assert _palette.color_for("rejected") == "#D55E00"
     assert _palette.color_for("ignored") == "#0072B2"
     assert _palette.color_for("other") == "#999999"
+
+
+def test_create_data_struct_adds_color_and_marker(tmp_path):
+    import pandas as pd
+
+    from tedana.reporting import dynamic_figures as df_mod
+
+    comptable = pd.DataFrame(
+        {
+            "kappa": [50.0, 10.0],
+            "rho": [5.0, 40.0],
+            "variance explained": [60.0, 40.0],
+            "normalized variance explained": [0.6, 0.4],
+            "Var Exp of rejected to accepted": [0.0, 0.0],
+            "classification": ["accepted", "rejected"],
+            "classification_tags": ["", ""],
+        }
+    )
+    comptable_path = tmp_path / "comptable.tsv"
+    comptable.to_csv(comptable_path, sep="\t", index=False)
+
+    cds = df_mod._create_data_struct(str(comptable_path))
+
+    assert "marker" in cds.data
+    assert "color" in cds.data
+    # Rows are re-sorted by classification then var_exp; check as a set-of-triples.
+    triples = set(zip(cds.data["classif"], cds.data["color"], cds.data["marker"]))
+    assert ("accepted", "#009E73", "circle") in triples
+    assert ("rejected", "#D55E00", "square") in triples
