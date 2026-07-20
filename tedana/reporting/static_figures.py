@@ -1181,6 +1181,55 @@ def _correlate_dataframes(df1, df2):
     return correlation_df
 
 
+def plot_fit_failures(*, io_generator):
+    """Plot the curve-fit failure map, when any voxels failed.
+
+    The failure map encodes 1 = failed the first curvefit pass but recovered by
+    interpolation, and 2 = still failing after interpolation. Voxels equal to 0 are not
+    shown. No figure is written when there are no failures.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    """
+    import matplotlib.patches as mpatches
+    from matplotlib.colors import ListedColormap
+
+    failures_img = io_generator.get_name("fit failures img")
+    if not os.path.isfile(failures_img):
+        return
+
+    img = nb.load(failures_img)
+    if not np.any(np.asarray(img.dataobj) > 0):
+        return
+
+    plot_name = f"{io_generator.prefix}fit_failures.svg"
+    cmap = ListedColormap(["#0072B2", "#D55E00"])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        display = plotting.plot_roi(
+            failures_img,
+            bg_img=None,
+            display_mode="mosaic",
+            black_bg=True,
+            cmap=cmap,
+            vmin=1,
+            vmax=2,
+            annotate=False,
+            colorbar=False,
+        )
+
+    handles = [
+        mpatches.Patch(color="#0072B2", label="Recovered by interpolation"),
+        mpatches.Patch(color="#D55E00", label="Still failing after interpolation"),
+    ]
+    fig = display.frame_axes.get_figure()
+    fig.legend(handles=handles, loc="lower center", ncol=2, framealpha=0, labelcolor="white")
+    display.savefig(os.path.join(io_generator.out_dir, "figures", plot_name))
+    display.close()
+
+
 def plot_decay_variance(
     *,
     io_generator: io.OutputGenerator,
