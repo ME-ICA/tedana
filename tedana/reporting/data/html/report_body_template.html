@@ -540,6 +540,7 @@
     />
   </div>
   {% endif %}
+  {% if t2starExists or s0Exists %}
   <div class="carpet-plots">
     <h1>Parameter estimates</h1>
     {% if t2starExists %}
@@ -576,6 +577,8 @@
     </div>
     {% endif %}
   </div>
+  {% endif %}
+  {% if rmseExists or varianceExists or fitFailuresExists %}
   <div class="carpet-plots">
     <h1>Curve-fit quality</h1>
     {% if rmseExists %}
@@ -632,6 +635,7 @@
     </div>
     {% endif %}
   </div>
+  {% endif %}
 </div>
 {% endif %}
 

@@ -350,3 +350,18 @@ def test_generate_tree_tables(tmp_path):
     assert "kappa, rho" in tree_table
     assert "pure-table" in tree_table
     assert "ICA_00" in status_table
+
+
+def test_update_template_bokeh_omits_empty_curvefit_quality(tmp_path):
+    """The Curve-fit quality heading is not shown when it would have no content."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    # T2* estimate present (so the Decay tab exists), but no RMSE/variance/failures.
+    for name in ("t2star_brain.svg", "t2star_histogram.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-decay"' in body
+    assert "Parameter estimates" in body
+    assert "Curve-fit quality" not in body
