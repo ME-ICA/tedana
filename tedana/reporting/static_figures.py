@@ -811,13 +811,12 @@ def plot_adaptive_mask(
             draw_cross=False,
             colorbar=False,
             display_mode="mosaic",
-            cut_coords=5,
         )
         ob.add_contours(
-            mask_clf,
+            io_generator.mask,
             threshold=0.2,
             levels=[0.5],
-            colors=[color_dict["Classification, OC & Initial"]],
+            colors=[color_dict["Initial mask only"]],
             linewidths=1.5,
         )
         ob.add_contours(
@@ -828,10 +827,10 @@ def plot_adaptive_mask(
             linewidths=1.5,
         )
         ob.add_contours(
-            io_generator.mask,
+            mask_clf,
             threshold=0.2,
             levels=[0.5],
-            colors=[color_dict["Initial mask only"]],
+            colors=[color_dict["Classification, OC & Initial"]],
             linewidths=1.5,
         )
 
