@@ -531,7 +531,8 @@
 <div class="tab-pane" id="pane-decay" role="tabpanel" aria-labelledby="tab-decay" tabindex="0">
   {% if adaptiveMaskExists %}
   <div class="carpet-plots">
-    <h1>Adaptive mask</h1>
+    <h1>Masking</h1>
+    <h2>Adaptive mask</h2>
     <img
       id="adaptiveMask"
       src="{{ adaptiveMask }}"
@@ -540,6 +541,7 @@
   </div>
   {% endif %}
   <div class="carpet-plots">
+    <h1>Parameter estimates</h1>
     {% if t2starExists %}
     <h2>T2*</h2>
     <div class="carpet-plots-image">
@@ -553,15 +555,6 @@
       <img
         id="t2starHistogram"
         src="{{ t2starHistogram }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
-    {% endif %} {% if varianceExists %}
-    <h3>T2* Estimate Variance</h3>
-    <div class="carpet-plots-image">
-      <img
-        id="t2starVariancePlot"
-        src="{{ t2starVariancePlot }}"
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
@@ -581,7 +574,37 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
+    {% endif %}
+  </div>
+  <div class="carpet-plots">
+    <h1>Curve-fit quality</h1>
+    {% if rmseExists %}
+    <h2>
+      T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
+    </h2>
+    <div class="carpet-plots-image">
+      <img
+        id="rmseBrainPlot"
+        src="{{ rmseBrainPlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <div class="carpet-plots-image">
+      <img
+        id="rmseTimeseries"
+        src="{{ rmseTimeseries }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
     {% endif %} {% if varianceExists %}
+    <h3>T2* Estimate Variance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="t2starVariancePlot"
+        src="{{ t2starVariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
     <h3>S0 Estimate Variance</h3>
     <div class="carpet-plots-image">
       <img
@@ -598,21 +621,12 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
-    {% endif %} {% if rmseExists %}
-    <h2>
-      T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
-    </h2>
+    {% endif %} {% if fitFailuresExists %}
+    <h3>Curve-fit failures (blue = recovered by interpolation, red = still failing)</h3>
     <div class="carpet-plots-image">
       <img
-        id="rmseBrainPlot"
-        src="{{ rmseBrainPlot }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
-    <div class="carpet-plots-image">
-      <img
-        id="rmseTimeseries"
-        src="{{ rmseTimeseries }}"
+        id="fitFailuresPlot"
+        src="{{ fitFailuresPlot }}"
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>

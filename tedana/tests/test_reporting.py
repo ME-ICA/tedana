@@ -256,6 +256,32 @@ def test_update_template_bokeh_decay_tab_needs_only_one_figure_set(tmp_path):
     assert body.count('aria-controls="pane-') == 4
 
 
+def test_update_template_bokeh_fit_failures(tmp_path):
+    """The fit-failure map is rendered under Curve-fit quality when the SVG exists."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("rmse_brain.svg", "rmse_timeseries.svg", "fit_failures.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-decay"' in body
+    assert 'id="fitFailuresPlot"' in body
+    assert "Curve-fit quality" in body
+
+
+def test_update_template_bokeh_no_fit_failures(tmp_path):
+    """The fit-failure map is omitted when the SVG does not exist."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("rmse_brain.svg", "rmse_timeseries.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="fitFailuresPlot"' not in body
+
+
 def test_update_template_bokeh_tree_tab(tmp_path):
     """The Tree tab appears when the decision tree tables were generated."""
     body = _render_body(tmp_path, tree_table="<table></table>", status_table="<table></table>")
