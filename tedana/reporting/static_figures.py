@@ -1199,9 +1199,25 @@ def plot_fit_failures(*, io_generator: io.OutputGenerator):
     if not os.path.isfile(failures_img):
         return
 
+    t2star_img = io_generator.get_name("t2star img")
+    mask_img = io_generator.get_name("adaptive mask img")
+    # At least 2 good echoes
+    mask_img = image.binarize_img(
+        mask_img,
+        threshold=1.5,
+        two_sided=False,
+        copy_header=True,
+    )
+
     img = nb.load(failures_img)
     if not np.any(np.asarray(img.dataobj) > 0):
         return
+
+    bg_img = nb.load(t2star_img)
+    bg_data = masking.apply_mask(t2star_img, mask_img)
+    p98 = np.percentile(bg_data, [98])
+    bg_data[bg_data > p98]= p98
+    bg_img = masking.unmask(bg_data, mask_img)
 
     plot_name = f"{io_generator.prefix}fit_failures.svg"
     cmap = ListedColormap(["#0072B2", "#D55E00"])
@@ -1209,7 +1225,7 @@ def plot_fit_failures(*, io_generator: io.OutputGenerator):
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         display = plotting.plot_roi(
             failures_img,
-            bg_img=None,
+            bg_img=bg_img,
             display_mode="mosaic",
             black_bg=True,
             cmap=cmap,
