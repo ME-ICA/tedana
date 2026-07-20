@@ -156,7 +156,7 @@ def calculate_f_maps(
         Adaptive mask, where each voxel's value is the number of echoes with
         "good signal". Limited to masked voxels.
     tes : (E) array_like
-        Echo times in milliseconds, in the same order as the echoes in data_cat.
+        Echo times in seconds, in the same order as the echoes in data_cat.
     n_independent_echos : int
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.

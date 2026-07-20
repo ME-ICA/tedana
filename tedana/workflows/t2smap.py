@@ -1,6 +1,7 @@
 """Estimate T2 and S0, and optimally combine data across TEs."""
 
 import argparse
+import datetime
 import logging
 import os
 import os.path as op
@@ -178,6 +179,17 @@ def _get_parser():
         help='Combination scheme for TEs: "t2s" (Posse 1999), "paid" (Poser)',
         default="t2s",
     )
+    decay_args.add_argument(
+        "--interpolate-failing-voxels",
+        dest="interpolate_failing_voxels",
+        action="store_true",
+        help=(
+            "If fittype='curvefit', replace T2*/S0 values for voxels where the "
+            "monoexponential fit failed with nearest-neighbor interpolated values "
+            "from non-failing neighbors. Ignored if fittype='loglin'."
+        ),
+        default=False,
+    )
 
     decomposition_args = parser.add_argument_group("Component Selection")
     decomposition_args.add_argument(
@@ -248,6 +260,7 @@ def t2smap_workflow(
     exclude=None,
     masktype=["dropout"],
     fittype="loglin",
+    interpolate_failing_voxels=False,
     fitmode="all",
     combmode="t2s",
     debug=False,
@@ -297,6 +310,11 @@ def t2smap_workflow(
         the data.
         'curvefit' means to use a monoexponential fit to the raw data,
         which is slightly slower but may be more accurate.
+    interpolate_failing_voxels : :obj:`bool`, optional
+        If ``True`` and ``fittype='curvefit'``, replace T2*/S0 values for
+        voxels where the monoexponential fit failed with nearest-neighbor
+        interpolated values from non-failing neighbors.
+        Ignored if ``fittype='loglin'``. Default is ``False``.
     fitmode : {'all', 'ts'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
@@ -360,7 +378,12 @@ def t2smap_workflow(
     exclude_idx = parse_volume_indices(exclude)
     n_exclude = len(exclude_idx)
 
-    utils.setup_loggers(quiet=quiet, debug=debug)
+    # create logfile name
+    basename = "t2smap_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname, repname=None, quiet=quiet, debug=debug)
 
     LGR.info(f"Using output directory: {out_dir}")
 
@@ -455,68 +478,25 @@ def t2smap_workflow(
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
+    if interpolate_failing_voxels and fittype != "curvefit":
+        LGR.warning(
+            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolation will be skipped."
+        )
+
     LGR.info("Computing T2* map")
-    data_without_excluded_vols = data_without_excluded_vols[mask_denoise, ...]
-    masksum_masked = masksum_denoise[mask_denoise]
-    decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
-        data=data_without_excluded_vols,
+    t2s_full = decay.t2smap_subworkflow(
+        data_cat=data_cat,
         tes=tes,
-        adaptive_mask=masksum_masked,
         fittype=fittype,
+        fitmode=fitmode,
+        mask_denoise=mask_denoise,
+        masksum_denoise=masksum_denoise,
+        interpolate_failing_voxels=interpolate_failing_voxels,
+        io_generator=io_generator,
+        data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
     )
-    del data_without_excluded_vols
-
-    if fittype == "curvefit":
-        io_generator.save_file(
-            failures.astype(np.uint8),
-            "fit failures img",
-            mask=mask_denoise,
-        )
-        if verbose:
-            io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
-            io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-            io_generator.save_file(
-                t2s_s0_covar,
-                "t2star-s0 covariance img",
-                mask=mask_denoise,
-            )
-
-    # Delete unused variables
-    del failures, t2s_var, s0_var, t2s_s0_covar
-
-    t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-        t2s=t2s_full,
-        s0=s0_full,
-        adaptive_mask=masksum_masked,
-        tes=tes,
-    )
-    del masksum_masked
-
-    t2s_full = utils.unmask(t2s_full, mask_denoise)
-    s0_full = utils.unmask(s0_full, mask_denoise)
-    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
-    s0_limited = utils.unmask(s0_limited, mask_denoise)
-
-    io_generator.save_file(s0_full, "s0 img")
-    del s0_full
-
-    LGR.info("Calculating model fit quality metrics")
-    rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
-        data=data_cat,
-        tes=tes,
-        adaptive_mask=masksum_denoise,
-        t2s=t2s_limited,
-        s0=s0_limited,
-        fitmode=fitmode,
-    )
-    io_generator.save_file(rmse_map, "rmse img")
-    io_generator.save_file(rmse_df, "confounds tsv")
-    io_generator.save_file(s0_limited, "limited s0 img")
-    del s0_limited
-    io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
-    del t2s_limited
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
@@ -527,8 +507,6 @@ def t2smap_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
-
-    io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file

@@ -334,6 +334,25 @@ You can also play around with `our demo`_.
 Report Structure
 ----------------
 
+The report is split into tabs, and only one tab is shown at a time. Select a tab
+to switch between them, or move between them with the left and right arrow keys.
+
+- **Info**: the command that was run, the system and library versions it was run
+  with, a description of the workflow, and the references it cites.
+- **ICA**: the interactive component plots described below, the robust ICA
+  clustering plot when ``--ica_method robustica`` was used, and the external
+  regressor correlations when external regressors were provided.
+- **Tree**: the component selection decision tree and the classification of every
+  component at each node of that tree.
+- **Carpet**: the carpet plots, and the global signal removal plots when
+  ``--gscontrol`` was used.
+- **Decay**: the adaptive mask, the T2* and S0 summary plots, and the decay model
+  fit plots.
+
+The Decay and Tree tabs are only shown when a workflow produces their contents.
+For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report
+written to a new output directory by that workflow has no Decay tab.
+
 The image below shows a representative report. The left is a summary view
 which contains information on all components and the right presents additional
 information for an individual component. One can hover over any pie chart wedge
@@ -564,11 +583,34 @@ and quantification of clusters.
   :align: center
   :height: 400px
 
+*************
+Decision Tree
+*************
+
+The Tree tab summarizes how the component selection decision tree classified the
+components, using two tables.
+
+The first table lists every node of the decision tree in the order it was applied.
+For each node it shows the function that was run, a short label describing what the
+node did, and the number of components that did and did not meet the node's condition.
+The last two counts are only reported for nodes that make a decision, so they are
+blank for setup nodes. This table is a flat view of the same information stored in
+``desc-ICA_decision_tree.json``, and is a quick way to see which criteria drove the
+classification and how many components each one affected.
+
+The second table shows the classification of every component after each node of the
+tree, with one row per component and one column per node. Reading across a row shows
+how a component's label evolved, for example from ``unclassified`` to ``rejected``,
+as the tree was applied. It is the same information stored in
+``desc-ICA_status_table.tsv``, and is useful for understanding why a specific
+component ended up accepted or rejected. The table can be scrolled horizontally when
+a run has many nodes.
+
 ************
 Carpet plots
 ************
 
-In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
+The Carpet tab of ``tedana``'s interactive reports includes carpet plots for the main outputs of the workflow:
 the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data. Each row is a voxel
 and the grayscale is the relative signal changes across time. After denoising, voxels that look very different from others across time
 or time points that are uniformly high or low across voxels are concerning. These carpet plots can be help as a quick quality check for
@@ -584,7 +626,7 @@ should not overly focus on carpet plots and should examine these results in cont
 Adaptive Mask Summary Plot
 **************************
 
-Below the carpet plots is a summary plot of the adaptive mask.
+The Decay tab opens with a summary plot of the adaptive mask.
 
 This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
 
@@ -605,7 +647,7 @@ This figure overlays contours reflecting the boundaries of the following masks o
 T2* and S0 Summary Plots
 ************************
 
-Below the adaptive mask plot are summary plots for the T2* and S0 maps.
+Below the adaptive mask plot, in the same Decay tab, are summary plots for the T2* and S0 maps.
 Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
 The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
 The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
@@ -624,7 +666,7 @@ It is important to note that the histogram is limited from 0 to the 98th percent
 Decay Model Fit Plots
 *********************
 
-Below the T2* and S0 summary plots are the decay model fit plots.
+Below the T2* and S0 summary plots, in the same Decay tab, are the decay model fit plots.
 These plots show residual mean squared error (RMSE) values for the
 monoexponential decay model, based on the T2* and S0 maps.
 
@@ -649,7 +691,7 @@ relatively high RMSE values for runs or timepoints might be a marker of an under
 Global Signal Removal Plots
 ***************************
 
-Below the decay model fit plots are the global signal removal plots, if ``--gscontrol`` was used.
+The Carpet tab also shows the global signal removal plots, if ``--gscontrol`` was used.
 These plots show the voxel-wise global signal weights and the global signal time series.
 
 .. image:: /_static/gsr_plots.png

@@ -12,12 +12,14 @@ from bokeh import __version__ as bokeh_version
 from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
 from nibabel import __version__ as nibabel_version
+from nibabel.affines import apply_affine
 from nilearn import __version__ as nilearn_version
 from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
 from robustica import __version__ as robustica_version
 from scipy import __version__ as scipy_version
 from scipy import ndimage
+from scipy.spatial import KDTree
 from scipy.special import lpmv
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
@@ -361,9 +363,9 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     Parameters
     ----------
     data : (S, ) array_like
-            A timeseries S, on which you would like to perform an fft.
+        A timeseries S, on which you would like to perform an fft.
     tr : :obj:`float`
-            Reptition time (TR) of the data
+        Repetition time (TR) of the data
     """
     # adapted from @dangom
     power_spectrum = np.abs(np.fft.rfft(data)) ** 2
@@ -525,42 +527,29 @@ def create_legendre_polynomial_basis_set(
     return legendre_arr
 
 
-def sec2millisec(arr):
-    """
-    Convert seconds to milliseconds.
+def cross_correlation(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Compute Pearson correlation between each column of a and each column of b.
 
     Parameters
     ----------
-    arr : array_like
-        Values in seconds.
+    a : (T x M) array_like
+        First set of variables.
+    b : (T x N) array_like
+        Second set of variables.
 
     Returns
     -------
-    array_like
-        Values in milliseconds.
+    corr : (M x N) array_like
+        Correlation matrix where entry (i, j) is the Pearson r between a[:, i] and b[:, j].
     """
-    return arr * 1000
-
-
-def millisec2sec(arr):
-    """
-    Convert milliseconds to seconds.
-
-    Parameters
-    ----------
-    arr : array_like
-        Values in milliseconds.
-
-    Returns
-    -------
-    array_like
-        Values in seconds.
-    """
-    return arr / 1000.0
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    full = np.corrcoef(a.T, b.T)
+    return full[: a.shape[1], a.shape[1] :]
 
 
 def check_t2s_values(t2s_map):
-    """Check and convert T2* map values to milliseconds.
+    """Check and convert T2* map values to seconds.
 
     This function checks if a precalculated T2* map is in seconds (expected
     per BIDS convention) or milliseconds. Typical brain T2* values at 3T are
@@ -574,7 +563,7 @@ def check_t2s_values(t2s_map):
     Returns
     -------
     array_like
-        T2* map values converted to milliseconds for internal use.
+        T2* map values in seconds for internal use.
 
     Raises
     ------
@@ -586,9 +575,10 @@ def check_t2s_values(t2s_map):
     The heuristic used is:
 
     - If median non-zero T2* < 1: values are assumed to be in seconds (correct
-      per BIDS), converted to milliseconds and returned
+      per BIDS), returned as-is
     - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
-      milliseconds already, a warning is logged, and values are returned as-is
+      milliseconds, a deprecation warning is logged, and values are converted
+      to seconds
     - If median non-zero T2* >= 1000: values are considered invalid
 
     This function is designed to handle the common case where users provide
@@ -623,21 +613,18 @@ def check_t2s_values(t2s_map):
     # At 1.5T values can be higher (~0.08-0.1 s), at 7T lower (~0.01-0.03 s)
     # Use 1 second as threshold - brain T2* should never be >= 1 second
     if median_t2s < 1:
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info(
-            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s). "
-            "Converting to milliseconds for internal use."
-        )
-        return sec2millisec(t2s_map)
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug(f"T2* map values appear to be in seconds (median={median_t2s:.4f}s).")
+        return t2s_map
     elif median_t2s < 1000:
-        # Values appear to be in milliseconds already
+        # Values appear to be in milliseconds - convert to seconds
         LGR.warning(
             f"T2* map median value is {median_t2s:.2f}, which suggests values are in "
             "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
-            "in seconds. The map will be used as-is (in milliseconds), but please consider "
-            "providing T2* maps in seconds in the future for consistency with BIDS."
+            "in seconds. Converting to seconds. Support for millisecond T2* values is "
+            "deprecated and will be removed in a future version."
         )
-        return t2s_map
+        return t2s_map / 1000.0
     else:
         # Values are unexpectedly large
         raise ValueError(
@@ -754,10 +741,10 @@ def get_system_version_info():
 
 
 def check_te_values(te_values):
-    """Check and convert TE values to milliseconds for internal use.
+    """Check and convert TE values to seconds for internal use.
 
     This function checks if TE values are provided in seconds (preferred per
-    BIDS convention) or milliseconds. Echo times are converted to milliseconds
+    BIDS convention) or milliseconds. Echo times are returned in seconds
     for internal processing.
 
     Parameters
@@ -768,7 +755,7 @@ def check_te_values(te_values):
     Returns
     -------
     list
-        TE values in milliseconds for internal use.
+        TE values in seconds for internal use.
 
     Raises
     ------
@@ -780,25 +767,25 @@ def check_te_values(te_values):
     The heuristic used is:
 
     - If all TE values are between 0 and 1: values are assumed to be in seconds
-      (correct per BIDS), converted to milliseconds and returned
+      (correct per BIDS), returned as-is
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
-      deprecation warning is logged, and values are returned as-is
+      deprecation warning is logged, and values are converted to seconds
     - Mixed values or negative values raise an error
 
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):
-        # Values appear to be in seconds (expected per BIDS)
-        LGR.info("TE values appear to be in seconds. Converting to milliseconds for internal use.")
-        return (te_values * 1000).tolist()
+        # Values appear to be in seconds (expected per BIDS) - return as-is
+        LGR.debug("TE values appear to be in seconds.")
+        return te_values.tolist()
     elif all(te_values >= 1):
-        # Values appear to be in milliseconds (deprecated)
+        # Values appear to be in milliseconds (deprecated) - convert to seconds
         LGR.warning(
             "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
             "be provided in seconds. Support for millisecond TE values is deprecated and will "
             "be removed in a future version. Please provide TE values in seconds."
         )
-        return te_values.tolist()
+        return (te_values / 1000).tolist()
     else:
         raise ValueError(
             "TE values must be positive and either all in seconds (values < 1, preferred per "
@@ -903,7 +890,7 @@ def load_mask(ref_img, mask=None, t2smap=None):
     mask_img : nibabel.Nifti1Image
         Mask image
     t2s : numpy.ndarray or None
-        Masked T2* map data in milliseconds, or None if no T2* map was provided.
+        Masked T2* map data in seconds, or None if no T2* map was provided.
     """
     import nibabel as nb
     from nilearn.masking import apply_mask, compute_epi_mask
@@ -953,3 +940,107 @@ def load_mask(ref_img, mask=None, t2smap=None):
         )
 
     return mask_img, t2s
+
+
+def _nn_replace(data, failures, phys_coords):
+    """Replace failing entries with nearest non-failing neighbor values (in-place).
+
+    Parameters
+    ----------
+    data : (M,) :obj:`numpy.ndarray`
+        Values to potentially replace, modified in-place.
+    failures : (M,) :obj:`numpy.ndarray` of bool
+        True where values should be replaced.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each voxel.
+    """
+    if not failures.any():
+        return
+    good = ~failures
+    if not good.any():
+        LGR.warning(
+            "All voxels failed the monoexponential fit; cannot interpolate missing values."
+        )
+        return
+    tree = KDTree(phys_coords[good])
+    _, idx = tree.query(phys_coords[failures])
+    data[failures] = data[good][idx]
+
+
+def mask_to_phys_coords(img, mask):
+    """Compute physical (mm) coordinates for voxels selected by a boolean mask.
+
+    Parameters
+    ----------
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Image whose affine converts voxel indices to mm coordinates.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Boolean mask over all brain voxels; True selects voxels to include.
+
+    Returns
+    -------
+    phys_coords : (M, 3) :obj:`numpy.ndarray`
+        Physical coordinates in mm for each of the M True voxels in ``mask``.
+    """
+    brain_mask = img.get_fdata().astype(bool)
+    brain_coords = np.argwhere(brain_mask)  # (S, 3)
+    voxel_coords = brain_coords[mask]  # (M, 3)
+    return apply_affine(img.affine, voxel_coords)  # (M, 3) in mm
+
+
+def interpolate_masked_values(data, failures, img, mask, phys_coords=None):
+    """Replace failing voxels with nearest-neighbor values from non-failing voxels.
+
+    Parameters
+    ----------
+    data : (M,) or (M, T) :obj:`numpy.ndarray`
+        T2* or S0 values for masked voxels, where M is the number of True
+        values in ``mask``.
+    failures : (M,) or (M, T) :obj:`numpy.ndarray` of bool
+        True where the curvefit failed for the corresponding voxel
+        (and timepoint for 2D input).
+    img : :obj:`nibabel.nifti1.Nifti1Image`
+        Brain mask image. Its data determines which voxels are in the brain
+        mask and its affine converts voxel indices to physical (mm) coordinates.
+        Ignored when ``phys_coords`` is provided.
+    mask : (S,) :obj:`numpy.ndarray` of bool
+        Denoising mask (``mask_denoise``), where S is the number of brain
+        voxels in ``img`` and M is the number of True values in this array.
+        Ignored when ``phys_coords`` is provided.
+    phys_coords : (M, 3) :obj:`numpy.ndarray`, optional
+        Pre-computed physical coordinates for the M masked voxels (e.g. from a
+        previous call or from :func:`mask_to_phys_coords`).  When supplied,
+        the ``img``/``mask`` coordinate computation is skipped, avoiding
+        redundant work when interpolating multiple arrays with the same mask.
+
+    Returns
+    -------
+    result : (M,) or (M, T) :obj:`numpy.ndarray`
+        Copy of ``data`` with failing voxels replaced by the value of the
+        nearest non-failing voxel in physical space.
+
+    Raises
+    ------
+    ValueError
+        If ``failures.shape`` does not match ``data.shape``, or if
+        ``mask.sum()`` does not equal ``data.shape[0]`` (when ``phys_coords``
+        is not provided).
+    """
+    if failures.shape != data.shape:
+        raise ValueError(
+            f"failures shape {failures.shape} does not match data shape {data.shape}."
+        )
+    if phys_coords is None:
+        if mask.sum() != data.shape[0]:
+            raise ValueError(
+                f"mask has {int(mask.sum())} True values but data has {data.shape[0]} rows."
+            )
+        phys_coords = mask_to_phys_coords(img, mask)
+
+    result = data.copy()
+    if failures.ndim == 1:
+        _nn_replace(result, failures, phys_coords)
+    else:
+        for t in range(failures.shape[1]):
+            _nn_replace(result[:, t], failures[:, t], phys_coords)
+    return result
