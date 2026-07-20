@@ -1174,7 +1174,6 @@ def tedana_workflow(
             mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
-            n_threads=n_threads,
         )
         reporting.static_figures.plot_t2star_and_s0(
             io_generator=io_generator,

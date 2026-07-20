@@ -9,7 +9,6 @@ import matplotlib
 import nibabel as nb
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
@@ -338,7 +337,7 @@ def _generate_single_component_figure(
     compnum,
     component_table,
     mixing,
-    component_betas_file,
+    component_img,
     tr,
     png_cmap,
     out_dir,
@@ -354,8 +353,8 @@ def _generate_single_component_figure(
         Component metric table.
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space.
-    component_betas_file : :obj:`str`
-        Path to the 4D image of the component beta maps.
+    component_img : :obj:`nibabel.spatialimages.SpatialImage`
+        Spatial map for the component.
     tr : float
         Repetition time of the time series.
     png_cmap : str
@@ -395,10 +394,8 @@ def _generate_single_component_figure(
     plot_name = f"{prefix}comp_{str(compnum).zfill(3)}.png"
     compplot_name = os.path.join(out_dir, "figures", plot_name)
 
-    component_betas_img = nb.load(component_betas_file)
-
     plot_component(
-        stat_img=component_betas_img.slicer[..., compnum],
+        stat_img=component_img,
         component_timeseries=component_timeseries,
         power_spectrum=spectrum,
         frequencies=freqs,
@@ -410,7 +407,7 @@ def _generate_single_component_figure(
     )
 
 
-def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
+def comp_figures(component_table, mixing, io_generator, png_cmap):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -428,33 +425,30 @@ def comp_figures(component_table, mixing, io_generator, png_cmap, n_threads=1):
         Output Generator object to use for this workflow
     png_cmap : str
         Colormap to use for the spatial map.
-    n_threads : int, optional
-        Number of threads to use for parallel processing. Default is 1.
     """
     component_betas_file = io_generator.get_name("ICA components img")
+    component_betas_img = nb.load(component_betas_file)
+    component_betas_arr = np.asanyarray(component_betas_img.dataobj)
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
 
-    # Normalize n_threads to joblib semantics: None/<=0 means use all cores
-    if n_threads is None or n_threads <= 0:
-        n_jobs = -1
-    else:
-        n_jobs = n_threads
-
-    Parallel(n_jobs=n_jobs)(
-        delayed(_generate_single_component_figure)(
+    for compnum in component_table.index.values:
+        component_img = nb.Nifti1Image(
+            component_betas_arr[..., compnum],
+            affine=component_betas_img.affine,
+            header=component_betas_img.header,
+        )
+        _generate_single_component_figure(
             compnum=compnum,
             component_table=component_table,
             mixing=mixing,
-            component_betas_file=component_betas_file,
+            component_img=component_img,
             tr=tr,
             png_cmap=png_cmap,
             out_dir=io_generator.out_dir,
             prefix=io_generator.prefix,
         )
-        for compnum in component_table.index.values
-    )
 
 
 def pca_results(criteria, n_components, all_varex, io_generator):

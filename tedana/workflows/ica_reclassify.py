@@ -586,6 +586,7 @@ def ica_reclassify_workflow(
         component_table=component_table,
         mixing=mixing,
         io_generator=io_generator,
+        mixing_orig=mixing_orig if tedort else None,
     )
 
     if "mir" in gscontrol:

@@ -45,7 +45,7 @@
     },
     "ICA orthogonalized components img": {
         "orig": "ica_orth_components",
-        "bidsv1.5.0": "desc-ICAOrth_stat-z_components"
+        "bidsv1.5.0": "desc-ICAOrth_components"
     },
     "z-scored PCA components img": {
         "orig": "pca_components",

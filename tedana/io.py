@@ -782,12 +782,12 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
         "classification".
-    mixing : (C x T) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    ref_img : :obj:`str` or img_like
+    io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
-    mixing_orig : (C x T) array_like or None, optional
+    mixing_orig : (T x C) array_like or None, optional
         Non-orthogonalized mixing matrix.
         If defined, it will be used for the component maps, but not for denoising.
 
