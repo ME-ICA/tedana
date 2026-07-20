@@ -1187,6 +1187,11 @@ def plot_fit_failures(*, io_generator: io.OutputGenerator):
     interpolation, and 2 = still failing after interpolation. Voxels equal to 0 are not
     shown. No figure is written when there are no failures.
 
+    XXX: It is difficult to see the flagged voxels because they're so small and blend into the
+    background image.
+    However, not including the background image makes it impossible to interpret the flagged
+    voxels.
+
     Parameters
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
