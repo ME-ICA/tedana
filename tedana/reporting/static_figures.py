@@ -1181,7 +1181,7 @@ def _correlate_dataframes(df1, df2):
     return correlation_df
 
 
-def plot_fit_failures(*, io_generator):
+def plot_fit_failures(*, io_generator: io.OutputGenerator):
     """Plot the curve-fit failure map, when any voxels failed.
 
     The failure map encodes 1 = failed the first curvefit pass but recovered by
