@@ -346,8 +346,12 @@ to switch between them, or move between them with the left and right arrow keys.
   component at each node of that tree.
 - **Carpet**: the carpet plots, and the global signal removal plots when
   ``--gscontrol`` was used.
-- **Decay**: the adaptive mask, the T2* and S0 summary plots, and the decay model
-  fit plots.
+- **Decay**: organized into three sections — *Masking* (the adaptive mask),
+  *Parameter estimates* (the T2* and S0 maps and histograms), and *Curve-fit
+  quality* (the RMSE map and time series, the T2*/S0 estimate variance and
+  covariance maps, and, when the ``curvefit`` fit produced any failing voxels, a
+  categorical fit-failure map — blue for voxels recovered by interpolation and red
+  for voxels still failing afterward).
 
 The Decay and Tree tabs are only shown when a workflow produces their contents.
 For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report
