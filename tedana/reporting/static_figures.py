@@ -1221,7 +1221,7 @@ def plot_fit_failures(*, io_generator: io.OutputGenerator):
     bg_img = nb.load(t2star_img)
     bg_data = masking.apply_mask(t2star_img, mask_img)
     p98 = np.percentile(bg_data, [98])
-    bg_data[bg_data > p98]= p98
+    bg_data[bg_data > p98] = p98
     bg_img = masking.unmask(bg_data, mask_img)
 
     plot_name = f"{io_generator.prefix}fit_failures.svg"
