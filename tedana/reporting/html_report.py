@@ -233,6 +233,7 @@ def _update_template_bokeh(
         and t2s_s0_covariance_filename in files_in_figures
     )
     LGR.info(f"Variance files exist: {variance_exists}")
+    LGR.info(f"Fit-failure map exists: {fit_failures_exists}")
 
     # Check for external regressors
     erc_filename = f"{prefix}confound_correlations.svg"
