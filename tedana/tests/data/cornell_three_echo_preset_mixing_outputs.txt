@@ -15,6 +15,7 @@ desc-ICA_mixing.tsv
 desc_ICA_mixing_static.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
+desc-decay_metrics.json
 desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 desc-confounds_timeseries.tsv
