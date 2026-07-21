@@ -129,6 +129,7 @@ def _update_template_bokeh(
     tsne,
     tree_table,
     status_table,
+    qc_card,
 ):
     """
     Populate a report with content.
@@ -155,6 +156,8 @@ def _update_template_bokeh(
         HTML table of decision tree nodes created by _generate_tree_tables()
     status_table : str or None
         HTML table of component statuses created by _generate_tree_tables()
+    qc_card : list of dict
+        Display rows created by _generate_qc_card()
 
     Returns
     -------
@@ -289,6 +292,7 @@ def _update_template_bokeh(
         treeExists=tree_exists,
         treeTable=tree_table,
         statusTable=status_table,
+        qcCard=qc_card,
     )
     return body
 
@@ -388,6 +392,98 @@ def _generate_tree_tables(io_generator):
         LGR.warning("No status table found, so not displaying it in the report")
 
     return tree_table, status_table
+
+
+def _fmt_num(value, suffix="", decimals=1):
+    """Format a possibly-None number for display, returning 'n/a' for None."""
+    if value is None:
+        return "n/a"
+    return f"{value:.{decimals}f}{suffix}"
+
+
+def _generate_qc_card(
+    *,
+    component_table,
+    cross_comp_metrics_dict,
+    decay_metrics_dict,
+    kappa_elbow,
+    rho_elbow,
+    n_vols,
+    n_comps,
+    tree_node_count,
+    version,
+):
+    """Assemble display rows of precomputed run-level QC values for the summary card.
+
+    Returns a list of ``{"label": str, "value": str}`` rows. Performs no scientific
+    computation; every value is read from precomputed inputs.
+    """
+    counts = component_table["classification"].value_counts().to_dict()
+    n_total = int(len(component_table))
+    n_accepted = int(counts.get("accepted", 0))
+    n_rejected = int(counts.get("rejected", 0))
+    n_ignored = int(counts.get("ignored", 0))
+
+    ccm = cross_comp_metrics_dict or {}
+
+    rows = [
+        {
+            "label": "Components",
+            "value": (
+                f"{n_total} total | {n_accepted} accepted | "
+                f"{n_rejected} rejected | {n_ignored} ignored"
+            ),
+        },
+        {"label": "Variance accepted", "value": _fmt_num(ccm.get("accepted_variance"), "%")},
+        {"label": "Variance rejected", "value": _fmt_num(ccm.get("rejected_variance"), "%")},
+        {"label": "Variance unmodeled", "value": _fmt_num(ccm.get("unmodeled_variance"), "%")},
+        {"label": "Variance retained", "value": _fmt_num(ccm.get("retained_variance"), "%")},
+        {"label": "Kappa elbow", "value": _fmt_num(kappa_elbow, decimals=2)},
+        {"label": "Rho elbow", "value": _fmt_num(rho_elbow, decimals=2)},
+        {
+            "label": "Dimensions",
+            "value": (
+                f"{n_vols} volumes | {ccm.get('n_echos', 'n/a')} echoes | " f"{n_comps} components"
+            ),
+        },
+        {
+            "label": "Decision-tree nodes",
+            "value": "n/a" if tree_node_count is None else str(tree_node_count),
+        },
+        {"label": "tedana version", "value": str(version)},
+    ]
+
+    if decay_metrics_dict:
+        rows.append(
+            {"label": "Mean T2*", "value": _fmt_num(decay_metrics_dict.get("t2star_mean"), " ms")}
+        )
+        rows.append(
+            {"label": "Median RMSE", "value": _fmt_num(decay_metrics_dict.get("rmse_median"))}
+        )
+        fit_vox = decay_metrics_dict.get("n_voxels_fit_mask")
+        base_vox = decay_metrics_dict.get("n_voxels_base_mask")
+        fit_vox_txt = "n/a" if fit_vox is None else str(fit_vox)
+        base_vox_txt = "n/a" if base_vox is None else str(base_vox)
+        rows.append(
+            {
+                "label": "Fit-mask voxels",
+                "value": f"{fit_vox_txt} of {base_vox_txt} base-mask voxels",
+            }
+        )
+        if decay_metrics_dict.get("n_fit_failures") is not None:
+            after = decay_metrics_dict.get("n_fit_failures_after_interpolation")
+            after_txt = "n/a" if after is None else str(after)
+            rows.append(
+                {
+                    "label": "Fit failures",
+                    "value": (
+                        f"{decay_metrics_dict['n_fit_failures']} first-pass | "
+                        f"{after_txt} after interpolation"
+                    ),
+                }
+            )
+
+    return rows
 
 
 def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_sne) -> None:
@@ -545,6 +641,33 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
     # Create the decision tree tables
     tree_table, status_table = _generate_tree_tables(io_generator)
 
+    # Read the precomputed decay metrics, if present.
+    decay_metrics_dict = None
+    decay_metrics_path = io_generator.get_name("decay metrics json")
+    if os.path.exists(decay_metrics_path):
+        decay_metrics_dict = load_json(decay_metrics_path)
+
+    # Number of decision-tree nodes, if the tree JSON exists.
+    tree_node_count = None
+    tree_path = io_generator.get_name("ICA decision tree json")
+    if os.path.exists(tree_path):
+        tree_data = load_json(tree_path)
+        nodes = tree_data.get("nodes")
+        if nodes is not None:
+            tree_node_count = len(nodes)
+
+    qc_card = _generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict=cross_comp_metrics_dict,
+        decay_metrics_dict=decay_metrics_dict,
+        kappa_elbow=kappa_elbow,
+        rho_elbow=rho_elbow,
+        n_vols=n_vols,
+        n_comps=n_comps,
+        tree_node_count=tree_node_count,
+        version=__version__,
+    )
+
     body = _update_template_bokeh(
         bokeh_id=kr_div,
         info_table=info_table,
@@ -556,6 +679,7 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
         tsne=tsne_html,
         tree_table=tree_table,
         status_table=status_table,
+        qc_card=qc_card,
     )
     html = _save_as_html(body)
     with open(opj(io_generator.out_dir, f"{io_generator.prefix}tedana_report.html"), "wb") as f:

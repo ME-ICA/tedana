@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from tedana.stats import fit_model
+from tedana.stats import fit_model, get_coeffs
 
 
 def calculate_rejected_components_impact(selector, mixing):
@@ -72,3 +72,46 @@ def calculate_rejected_components_impact(selector, mixing):
         )
         / 100
     )
+
+
+def calculate_variance_summary(selector, data_optcom_masked, mixing):
+    """Store aggregate variance QC scalars in ``selector.cross_component_metrics_``.
+
+    Adds, as percentages:
+
+    - ``accepted_variance``, ``rejected_variance``, ``ignored_variance``: sums of
+      per-component ``"variance explained"`` grouped by classification. These are
+      relative to the ICA decomposition and together sum to ~100%.
+    - ``unmodeled_variance`` = ``100 - total_r2``, where ``total_r2`` is the variance of
+      the raw optimally-combined data explained by the full decomposition.
+    - ``retained_variance``: variance of the denoised data (rejected components removed)
+      relative to the raw optimally-combined data.
+
+    Parameters
+    ----------
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
+    data_optcom_masked : (S x T) array_like
+        Optimally-combined data restricted to the classification mask.
+    mixing : (T x C) array_like
+        ICA mixing matrix.
+    """
+    component_table = selector.component_table_
+
+    for label in ("accepted", "rejected", "ignored"):
+        label_mask = component_table["classification"] == label
+        selector.cross_component_metrics_[f"{label}_variance"] = float(
+            component_table.loc[label_mask, "variance explained"].sum()
+        )
+
+    # Variance relative to the raw optimally-combined data (mirrors io.denoise_ts).
+    dmdata = data_optcom_masked.T - data_optcom_masked.T.mean(axis=0)
+    betas = get_coeffs(dmdata.T, mixing)
+    sst = (dmdata.T**2).sum()
+    reconstruction = betas.dot(mixing.T)
+    total_r2 = (1 - ((dmdata.T - reconstruction) ** 2).sum() / sst) * 100
+    selector.cross_component_metrics_["unmodeled_variance"] = float(100 - total_r2)
+
+    rej = component_table[component_table["classification"] == "rejected"].index.values
+    rejected_reconstruction = betas[:, rej].dot(mixing.T[rej, :])
+    denoised = dmdata.T - rejected_reconstruction
+    selector.cross_component_metrics_["retained_variance"] = float((denoised**2).sum() / sst * 100)

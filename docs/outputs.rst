@@ -58,6 +58,12 @@ tedana_report.html                                                           The
 "s0 img": S0map.nii.gz                                                       Full S0 3D map. If a voxel has at least 1 good
                                                                              echo then the first two echoes will be used to estimate
                                                                              a value
+"decay metrics json": desc-decay_metrics.json                                Precomputed decay-fit QC summary read by the report's
+                                                                             QC summary card: mean/median T2*, S0, and fit RMSE;
+                                                                             base-mask and fit-mask voxel counts; a good-echo voxel
+                                                                             histogram; and, when curve-fitting is used, first-pass
+                                                                             and post-interpolation fit-failure counts. Only written
+                                                                             when fitmode is "all".
 "PCA mixing tsv": desc-PCA_mixing.tsv                                        Mixing matrix (component time series) from PCA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -99,6 +105,10 @@ tedana_report.html                                                           The
 "ICA cross component metrics json": desc-ICACrossComponent_metrics.json      Metric names and values that are each a single number
                                                                              calculated across components. For example, kappa and
                                                                              rho elbows.
+                                                                             Also includes aggregate variance measures used by the
+                                                                             QC summary card: accepted_variance, rejected_variance,
+                                                                             ignored_variance, unmodeled_variance (relative to the
+                                                                             raw optimally-combined data), and retained_variance.
 "ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
                                                                              an added "output" field for each node. The output field
                                                                              contains information about what happened during

@@ -27,6 +27,7 @@ sub-01_desc-PCA_metrics.tsv
 sub-01_desc-PCA_mixing.tsv
 sub-01_desc-PCA_stat-z_components.nii.gz
 sub-01_desc-adaptiveGoodSignal_mask.nii.gz
+sub-01_desc-decay_metrics.json
 sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
 sub-01_desc-optcomAccepted_bold.nii.gz
