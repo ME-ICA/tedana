@@ -813,10 +813,10 @@ def plot_adaptive_mask(
             display_mode="mosaic",
         )
         ob.add_contours(
-            io_generator.mask,
+            mask_clf,
             threshold=0.2,
             levels=[0.5],
-            colors=[color_dict["Initial mask only"]],
+            colors=[color_dict["Classification, OC & Initial"]],
             linewidths=1.5,
         )
         ob.add_contours(
@@ -827,10 +827,10 @@ def plot_adaptive_mask(
             linewidths=1.5,
         )
         ob.add_contours(
-            mask_clf,
+            io_generator.mask,
             threshold=0.2,
             levels=[0.5],
-            colors=[color_dict["Classification, OC & Initial"]],
+            colors=[color_dict["Initial mask only"]],
             linewidths=1.5,
         )
 
@@ -1178,76 +1178,6 @@ def _correlate_dataframes(df1, df2):
     # Convert the result back to a DataFrame with appropriate labels
     correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
     return correlation_df
-
-
-def plot_fit_failures(*, io_generator: io.OutputGenerator):
-    """Plot the curve-fit failure map, when any voxels failed.
-
-    The failure map encodes 1 = failed the first curvefit pass but recovered by
-    interpolation, and 2 = still failing after interpolation. Voxels equal to 0 are not
-    shown. No figure is written when there are no failures.
-
-    XXX: It is difficult to see the flagged voxels because they're so small and blend into the
-    background image.
-    However, not including the background image makes it impossible to interpret the flagged
-    voxels.
-
-    Parameters
-    ----------
-    io_generator : :obj:`~tedana.io.OutputGenerator`
-        The output generator for this workflow.
-    """
-    import matplotlib.patches as mpatches
-    from matplotlib.colors import ListedColormap
-
-    failures_img = io_generator.get_name("fit failures img")
-    if not os.path.isfile(failures_img):
-        return
-
-    t2star_img = io_generator.get_name("t2star img")
-    mask_img = io_generator.get_name("adaptive mask img")
-    # At least 2 good echoes
-    mask_img = image.binarize_img(
-        mask_img,
-        threshold=1.5,
-        two_sided=False,
-        copy_header=True,
-    )
-
-    img = nb.load(failures_img)
-    if not np.any(np.asarray(img.dataobj) > 0):
-        return
-
-    bg_img = nb.load(t2star_img)
-    bg_data = masking.apply_mask(t2star_img, mask_img)
-    p98 = np.percentile(bg_data, [98])
-    bg_data[bg_data > p98] = p98
-    bg_img = masking.unmask(bg_data, mask_img)
-
-    plot_name = f"{io_generator.prefix}fit_failures.svg"
-    cmap = ListedColormap(["#0072B2", "#D55E00"])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        display = plotting.plot_roi(
-            failures_img,
-            bg_img=bg_img,
-            display_mode="mosaic",
-            black_bg=True,
-            cmap=cmap,
-            vmin=1,
-            vmax=2,
-            annotate=False,
-            colorbar=False,
-        )
-
-    handles = [
-        mpatches.Patch(color="#0072B2", label="Recovered by interpolation"),
-        mpatches.Patch(color="#D55E00", label="Still failing after interpolation"),
-    ]
-    fig = display.frame_axes.get_figure()
-    fig.legend(handles=handles, loc="lower center", ncol=2, framealpha=0, labelcolor="white")
-    display.savefig(os.path.join(io_generator.out_dir, "figures", plot_name))
-    display.close()
 
 
 def plot_decay_variance(

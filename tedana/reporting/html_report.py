@@ -202,11 +202,6 @@ def _update_template_bokeh(
     rmse_brain = f"./figures/{rmse_brain_filename}"
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
-    # Check for fit-failure image
-    fit_failures_filename = f"{prefix}fit_failures.svg"
-    fit_failures_plot = f"./figures/{fit_failures_filename}"
-    fit_failures_exists = fit_failures_filename in files_in_figures
-
     # Check for gscontrol images
     gsr_filename = f"{prefix}gsr_boldmap.svg"
     mir_filename = f"{prefix}mir_boldmap.svg"
@@ -233,7 +228,6 @@ def _update_template_bokeh(
         and t2s_s0_covariance_filename in files_in_figures
     )
     LGR.info(f"Variance files exist: {variance_exists}")
-    LGR.info(f"Fit-failure map exists: {fit_failures_exists}")
 
     # Check for external regressors
     erc_filename = f"{prefix}confound_correlations.svg"
@@ -250,7 +244,6 @@ def _update_template_bokeh(
         or s0_exists
         or variance_exists
         or rmse_exists
-        or fit_failures_exists
     )
     tree_exists = tree_table is not None or status_table is not None
     LGR.info(f"Decay tab exists: {decay_exists}")
@@ -286,8 +279,6 @@ def _update_template_bokeh(
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
         rmseExists=rmse_exists,
-        fitFailuresPlot=fit_failures_plot,
-        fitFailuresExists=fit_failures_exists,
         gsr=gsr,
         mir=mir,
         gsrPlot=gsr_file,

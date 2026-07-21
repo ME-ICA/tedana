@@ -1182,10 +1182,6 @@ def tedana_workflow(
             reporting.static_figures.plot_rmse(
                 io_generator=io_generator,
             )
-            if fittype == "curvefit":
-                reporting.static_figures.plot_fit_failures(
-                    io_generator=io_generator,
-                )
             if fittype == "curvefit" and verbose:
                 reporting.static_figures.plot_decay_variance(
                     io_generator=io_generator,
