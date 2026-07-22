@@ -531,7 +531,8 @@
 <div class="tab-pane" id="pane-decay" role="tabpanel" aria-labelledby="tab-decay" tabindex="0">
   {% if adaptiveMaskExists %}
   <div class="carpet-plots">
-    <h1>Adaptive mask</h1>
+    <h1>Masking</h1>
+    <h2>Adaptive mask</h2>
     <img
       id="adaptiveMask"
       src="{{ adaptiveMask }}"
@@ -539,7 +540,9 @@
     />
   </div>
   {% endif %}
+  {% if t2starExists or s0Exists %}
   <div class="carpet-plots">
+    <h1>Parameter estimates</h1>
     {% if t2starExists %}
     <h2>T2*</h2>
     <div class="carpet-plots-image">
@@ -553,15 +556,6 @@
       <img
         id="t2starHistogram"
         src="{{ t2starHistogram }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
-    {% endif %} {% if varianceExists %}
-    <h3>T2* Estimate Variance</h3>
-    <div class="carpet-plots-image">
-      <img
-        id="t2starVariancePlot"
-        src="{{ t2starVariancePlot }}"
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
@@ -581,24 +575,13 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
-    {% endif %} {% if varianceExists %}
-    <h3>S0 Estimate Variance</h3>
-    <div class="carpet-plots-image">
-      <img
-        id="s0VariancePlot"
-        src="{{ s0VariancePlot }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
-    <h3>T2* and S0 Estimate Covariance</h3>
-    <div class="carpet-plots-image">
-      <img
-        id="t2sS0CovariancePlot"
-        src="{{ t2sS0CovariancePlot }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
-    </div>
-    {% endif %} {% if rmseExists %}
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if rmseExists or varianceExists %}
+  <div class="carpet-plots">
+    <h1>Curve-fit quality</h1>
+    {% if rmseExists %}
     <h2>
       T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
     </h2>
@@ -616,8 +599,34 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
+    {% endif %} {% if varianceExists %}
+    <h3>T2* Estimate Variance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="t2starVariancePlot"
+        src="{{ t2starVariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <h3>S0 Estimate Variance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="s0VariancePlot"
+        src="{{ s0VariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <h3>T2* and S0 Estimate Covariance</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="t2sS0CovariancePlot"
+        src="{{ t2sS0CovariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
     {% endif %}
   </div>
+  {% endif %}
 </div>
 {% endif %}
 

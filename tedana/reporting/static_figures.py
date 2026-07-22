@@ -565,6 +565,52 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
+def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None):
+    """Render one continuous statistical map as a mosaic, with consistent styling.
+
+    Values are windowed to the 2nd-98th percentile computed within ``mask_img``. This is
+    the shared implementation behind the T2*, S0, RMSE, and variance/covariance brain maps
+    so their sizing, colorbar, clipping, and titling stay consistent.
+
+    Parameters
+    ----------
+    in_file : str
+        Path to the statistical map to plot.
+    out_file : str
+        Full path of the SVG to write.
+    cmap : str
+        Matplotlib/nilearn colormap name.
+    mask_img : img_like
+        Mask used to compute the display percentiles.
+    threshold : float or None, optional
+        Passed to ``plot_stat_map`` only when not None (preserves per-map behavior).
+    """
+    data = masking.apply_mask(in_file, mask_img)
+    p02, p98 = np.percentile(data, [2, 98])
+
+    kwargs = dict(
+        bg_img=None,
+        display_mode="mosaic",
+        symmetric_cbar=False,
+        black_bg=True,
+        cmap=cmap,
+        vmin=p02,
+        vmax=p98,
+        annotate=False,
+        output_file=out_file,
+        resampling_interpolation="nearest",
+    )
+    if threshold is not None:
+        kwargs["threshold"] = threshold
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        display = plotting.plot_stat_map(in_file, **kwargs)
+
+    if display is not None:
+        display.close()
+
+
 def plot_t2star_and_s0(
     *,
     io_generator: io.OutputGenerator,
@@ -593,7 +639,7 @@ def plot_t2star_and_s0(
 
     # Plot histograms
     t2star_data = masking.apply_mask(t2star_img, mask)
-    t2s_p02, t2s_p98 = np.percentile(t2star_data, [2, 98])
+    t2s_p98 = np.percentile(t2star_data, 98)
     t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -609,7 +655,7 @@ def plot_t2star_and_s0(
     # Only plot S0 data if the file exists
     if s0_exists:
         s0_data = masking.apply_mask(s0_img, mask)
-        s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
+        s0_p98 = np.percentile(s0_data, 98)
         s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
 
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -624,42 +670,22 @@ def plot_t2star_and_s0(
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        plotting.plot_stat_map(
-            t2star_img,
-            bg_img=None,
-            display_mode="mosaic",
-            symmetric_cbar=False,
-            black_bg=True,
-            cmap="gray",
-            vmin=t2s_p02,
-            vmax=t2s_p98,
-            annotate=False,
-            output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
-            resampling_interpolation="nearest",
-        )
+    _plot_stat_mosaic(
+        in_file=t2star_img,
+        out_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+        cmap="gray",
+        mask_img=mask,
+    )
 
     # Only plot S0 map if the file exists
     if s0_exists:
         s0_plot = f"{io_generator.prefix}s0_brain.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", message="A non-diagonal affine.*", category=UserWarning
-            )
-            plotting.plot_stat_map(
-                s0_img,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=False,
-                black_bg=True,
-                cmap="gray",
-                vmin=s0_p02,
-                vmax=s0_p98,
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
-                resampling_interpolation="nearest",
-            )
+        _plot_stat_mosaic(
+            in_file=s0_img,
+            out_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+            cmap="gray",
+            mask_img=mask,
+        )
 
 
 def plot_rmse(
@@ -680,9 +706,6 @@ def plot_rmse(
     mask_img = io_generator.get_name("adaptive mask img")
     # At least 2 good echoes
     mask_img = image.binarize_img(mask_img, threshold=1.5, two_sided=False, copy_header=True)
-
-    rmse_data = masking.apply_mask(rmse_img, mask_img)
-    rmse_p02, rmse_p98 = np.percentile(rmse_data, [2, 98])
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
@@ -729,22 +752,12 @@ def plot_rmse(
         "figures",
         f"{io_generator.prefix}rmse_brain.svg",
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        plotting.plot_stat_map(
-            rmse_img,
-            bg_img=None,
-            display_mode="mosaic",
-            cut_coords=4,
-            symmetric_cbar=False,
-            black_bg=True,
-            cmap="Reds",
-            vmin=rmse_p02,
-            vmax=rmse_p98,
-            annotate=False,
-            output_file=rmse_brain_plot,
-            resampling_interpolation="nearest",
-        )
+    _plot_stat_mosaic(
+        in_file=rmse_img,
+        out_file=rmse_brain_plot,
+        cmap="Reds",
+        mask_img=mask_img,
+    )
 
 
 def plot_adaptive_mask(
@@ -801,7 +814,6 @@ def plot_adaptive_mask(
             draw_cross=False,
             colorbar=False,
             display_mode="mosaic",
-            cut_coords=5,
         )
         ob.add_contours(
             io_generator.mask,
@@ -1199,26 +1211,11 @@ def plot_decay_variance(
     imgs = ["t2star variance img", "s0 variance img", "t2star-s0 covariance img"]
     for name, img in zip(names, imgs):
         in_file = io_generator.get_name(img)
-        data = masking.apply_mask(in_file, mask_img)
-        data_p02, data_p98 = np.percentile(data, [2, 98])
         plot_name = f"{io_generator.prefix}{name}.svg"
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="A non-diagonal affine.*",
-                category=UserWarning,
-            )
-            plotting.plot_stat_map(
-                in_file,
-                bg_img=None,
-                display_mode="mosaic",
-                symmetric_cbar=False,
-                black_bg=True,
-                cmap="Reds",
-                threshold=0,  # T2* variance falls below default threshold
-                vmin=data_p02,
-                vmax=data_p98,
-                annotate=False,
-                output_file=os.path.join(io_generator.out_dir, "figures", plot_name),
-                resampling_interpolation="nearest",
-            )
+        _plot_stat_mosaic(
+            in_file=in_file,
+            out_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+            cmap="Reds",
+            mask_img=mask_img,
+            threshold=0,
+        )

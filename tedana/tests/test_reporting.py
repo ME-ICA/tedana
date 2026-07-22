@@ -120,6 +120,26 @@ def test_plot_heatmap_nonfinite_distances_warns_and_succeeds(tmp_path):
     assert out_file.exists()
 
 
+def test_plot_stat_mosaic_writes_output(tmp_path):
+    import nibabel as nb
+    import numpy as np
+
+    from tedana.reporting import static_figures
+
+    affine = np.eye(4)
+    data = np.abs(np.random.RandomState(0).randn(12, 12, 12)).astype("float32")
+    img = nb.Nifti1Image(data, affine)
+    in_file = tmp_path / "map.nii.gz"
+    img.to_filename(in_file)
+    mask = nb.Nifti1Image(np.ones((12, 12, 12), dtype="int16"), affine)
+
+    out_file = tmp_path / "map.svg"
+    static_figures._plot_stat_mosaic(
+        in_file=str(in_file), out_file=str(out_file), cmap="Reds", mask_img=mask
+    )
+    assert out_file.exists()
+
+
 class _StubIOGenerator:
     """Return paths inside out_dir, like OutputGenerator does for the tree files."""
 
@@ -259,3 +279,18 @@ def test_generate_tree_tables(tmp_path):
     assert "kappa, rho" in tree_table
     assert "pure-table" in tree_table
     assert "ICA_00" in status_table
+
+
+def test_update_template_bokeh_omits_empty_curvefit_quality(tmp_path):
+    """The Curve-fit quality heading is not shown when it would have no content."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    # T2* estimate present (so the Decay tab exists), but no RMSE/variance/failures.
+    for name in ("t2star_brain.svg", "t2star_histogram.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-decay"' in body
+    assert "Parameter estimates" in body
+    assert "Curve-fit quality" not in body
