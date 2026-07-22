@@ -259,3 +259,52 @@ def test_generate_tree_tables(tmp_path):
     assert "kappa, rho" in tree_table
     assert "pure-table" in tree_table
     assert "ICA_00" in status_table
+
+
+def test_pca_results_writes_svgs(tmp_path):
+    import numpy as np
+
+    from tedana.reporting import static_figures
+
+    (tmp_path / "figures").mkdir()
+
+    class _IO:
+        prefix = ""
+        out_dir = str(tmp_path)
+
+    n = 12
+    criteria = np.random.RandomState(0).rand(3, n)
+    n_components = np.array([3, 4, 5, 6, 7])
+    all_varex = np.linspace(0.1, 1.0, n)
+
+    static_figures.pca_results(criteria, n_components, all_varex, _IO())
+
+    assert (tmp_path / "figures" / "pca_criteria.svg").exists()
+    assert (tmp_path / "figures" / "pca_variance_explained.svg").exists()
+    assert not (tmp_path / "figures" / "pca_criteria.png").exists()
+
+
+def test_update_template_bokeh_pca_tab(tmp_path):
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("pca_criteria.svg", "pca_variance_explained.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="tab-pca"' in body
+    assert 'id="pane-pca"' in body
+    assert 'id="pcaCriteriaPlot"' in body
+    assert 'id="pcaVariancePlot"' in body
+    # PCA pane sits between Info and ICA.
+    assert body.index('id="pane-info"') < body.index('id="pane-pca"') < body.index('id="pane-ica"')
+
+
+def test_update_template_bokeh_no_pca_tab(tmp_path):
+    figures = tmp_path / "figures"
+    figures.mkdir()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-pca"' not in body
+    assert 'id="tab-pca"' not in body
