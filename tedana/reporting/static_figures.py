@@ -605,7 +605,10 @@ def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None):
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        plotting.plot_stat_map(in_file, **kwargs)
+        display = plotting.plot_stat_map(in_file, **kwargs)
+
+    if display is not None:
+        display.close()
 
 
 def plot_t2star_and_s0(
