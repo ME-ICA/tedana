@@ -610,6 +610,7 @@ def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None):
     if display is not None:
         display.close()
 
+
 def plot_t2star_and_s0(
     *,
     io_generator: io.OutputGenerator,
