@@ -140,6 +140,51 @@ def test_plot_stat_mosaic_writes_output(tmp_path):
     assert out_file.exists()
 
 
+class _FailuresIO:
+    """Minimal io_generator stub for plot_fit_failures."""
+
+    def __init__(self, out_dir, failures_path):
+        self.out_dir = str(out_dir)
+        self.prefix = ""
+        self._failures_path = str(failures_path)
+
+    def get_name(self, description):
+        assert description == "fit failures img"
+        return self._failures_path
+
+
+def _write_failures_nifti(path, values):
+    import nibabel as nb
+    import numpy as np
+
+    arr = np.zeros((10, 10, 10), dtype="int16")
+    for i, v in enumerate(values):
+        arr[i, 0, 0] = v
+    nb.Nifti1Image(arr, np.eye(4)).to_filename(str(path))
+
+
+def test_plot_fit_failures_writes_when_failures_exist(tmp_path):
+    from tedana.reporting import static_figures
+
+    (tmp_path / "figures").mkdir()
+    failures = tmp_path / "fit_failures.nii.gz"
+    _write_failures_nifti(failures, [1, 2, 1])  # some failures
+
+    static_figures.plot_fit_failures(io_generator=_FailuresIO(tmp_path, failures))
+    assert (tmp_path / "figures" / "fit_failures.svg").exists()
+
+
+def test_plot_fit_failures_skips_when_no_failures(tmp_path):
+    from tedana.reporting import static_figures
+
+    (tmp_path / "figures").mkdir()
+    failures = tmp_path / "fit_failures.nii.gz"
+    _write_failures_nifti(failures, [0, 0, 0])  # all clean
+
+    static_figures.plot_fit_failures(io_generator=_FailuresIO(tmp_path, failures))
+    assert not (tmp_path / "figures" / "fit_failures.svg").exists()
+
+
 class _StubIOGenerator:
     """Return paths inside out_dir, like OutputGenerator does for the tree files."""
 
@@ -209,6 +254,32 @@ def test_update_template_bokeh_decay_tab_needs_only_one_figure_set(tmp_path):
 
     assert 'id="pane-decay"' in body
     assert body.count('aria-controls="pane-') == 4
+
+
+def test_update_template_bokeh_fit_failures(tmp_path):
+    """The fit-failure map is rendered under Curve-fit quality when the SVG exists."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("rmse_brain.svg", "rmse_timeseries.svg", "fit_failures.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-decay"' in body
+    assert 'id="fitFailuresPlot"' in body
+    assert "Curve-fit quality" in body
+
+
+def test_update_template_bokeh_no_fit_failures(tmp_path):
+    """The fit-failure map is omitted when the SVG does not exist."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("rmse_brain.svg", "rmse_timeseries.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="fitFailuresPlot"' not in body
 
 
 def test_update_template_bokeh_tree_tab(tmp_path):

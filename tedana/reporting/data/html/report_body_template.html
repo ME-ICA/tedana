@@ -578,7 +578,7 @@
     {% endif %}
   </div>
   {% endif %}
-  {% if rmseExists or varianceExists %}
+  {% if rmseExists or varianceExists or fitFailuresExists %}
   <div class="carpet-plots">
     <h1>Curve-fit quality</h1>
     {% if rmseExists %}
@@ -621,6 +621,15 @@
       <img
         id="t2sS0CovariancePlot"
         src="{{ t2sS0CovariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %} {% if fitFailuresExists %}
+    <h3>Curve-fit failures (blue = recovered by interpolation, red = still failing)</h3>
+    <div class="carpet-plots-image">
+      <img
+        id="fitFailuresPlot"
+        src="{{ fitFailuresPlot }}"
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
