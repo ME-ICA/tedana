@@ -78,7 +78,7 @@ tedana_report.html                                                           The
                                                                              components and variance explained for multiple options
                                                                              Figures for the cost functions and variance explained
                                                                              are also in
-                                                                             ``./figures//pca_[criteria|variance_explained.png]``
+                                                                             ``./figures//pca_[criteria|variance_explained.svg]``
 "ICA mixing tsv": desc-ICA_mixing.tsv                                        Mixing matrix (component time series) from ICA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -339,6 +339,9 @@ to switch between them, or move between them with the left and right arrow keys.
 
 - **Info**: the command that was run, the system and library versions it was run
   with, a description of the workflow, and the references it cites.
+- **PCA**: the maPCA criteria (AIC/KIC/MDL) curves and the variance-explained
+  curve used to estimate dimensionality. Only shown when a maPCA method
+  (``--tedpca mdl``, ``aic``, or ``kic``) was used.
 - **ICA**: the interactive component plots described below, the robust ICA
   clustering plot when ``--ica_method robustica`` was used, and the external
   regressor correlations when external regressors were provided.

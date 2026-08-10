@@ -399,6 +399,12 @@
       <button type="button" class="pure-menu-link" role="tab" id="tab-info"
               aria-controls="pane-info" aria-selected="false" tabindex="-1">Info</button>
     </li>
+    {% if pcaExists %}
+    <li class="pure-menu-item">
+      <button type="button" class="pure-menu-link" role="tab" id="tab-pca"
+              aria-controls="pane-pca" aria-selected="false" tabindex="-1">PCA</button>
+    </li>
+    {% endif %}
     <li class="pure-menu-item pure-menu-selected">
       <button type="button" class="pure-menu-link" role="tab" id="tab-ica"
               aria-controls="pane-ica" aria-selected="true" tabindex="0">ICA</button>
@@ -439,6 +445,31 @@
     </ul>
   </div>
 </div>
+
+{% if pcaExists %}
+<!-- PCA tab -->
+<div class="tab-pane" id="pane-pca" role="tabpanel" aria-labelledby="tab-pca" tabindex="0">
+  <div class="carpet-plots">
+    <h1>PCA dimensionality</h1>
+    <h2>maPCA criteria</h2>
+    <div class="carpet-plots-image">
+      <img
+        id="pcaCriteriaPlot"
+        src="{{ pcaCriteriaPlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    <h2>Variance explained</h2>
+    <div class="carpet-plots-image">
+      <img
+        id="pcaVariancePlot"
+        src="{{ pcaVariancePlot }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- ICA tab -->
 <div class="tab-pane is-active" id="pane-ica" role="tabpanel" aria-labelledby="tab-ica" tabindex="0">

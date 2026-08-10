@@ -497,7 +497,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.legend()
 
     #  Save the plot
-    plot_name = f"{io_generator.prefix}pca_criteria.png"
+    plot_name = f"{io_generator.prefix}pca_criteria.svg"
     pca_criteria_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_criteria_name)
     plt.close()
@@ -559,7 +559,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.legend()
 
     #  Save the plot
-    plot_name = f"{io_generator.prefix}pca_variance_explained.png"
+    plot_name = f"{io_generator.prefix}pca_variance_explained.svg"
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
     plt.close()
