@@ -716,9 +716,9 @@ PCA Plots
 **********
 
 When the number of components (dimensionality estimation) is done with with the AIC, KIC, or MDL criteria in the PCA step,
-the PCA tab will how one plot for the cost function and one plot for the variance explained by each component.
-For the criteria plots, there should be a local minimum in the cost function that is the estimate the number of components to retain.
-MDL is the most conservative and will usualy have the sharpest and earliest local minimum.
+the PCA tab will show one plot for the cost function and one plot for the variance explained by each component.
+For the criteria plots, there should be a local minimum in the cost function that is the estimate of the number of components to retain.
+MDL is the most conservative and will usually have the sharpest and earliest local minimum.
 AIC is the most liberal and will often have a shallower and later local minimum.
 Lines for 90th and 95th percentile of variance explained are included for reference.
 The variance explained plot shows the cumulative variance explained at each code function threshold.
@@ -735,7 +735,7 @@ The appropriate amount of variance explained will vary with the number of voxels
 acquisition parameters (smaller voxels will mean more thermal noise and less variance explained),
 and structured noise (more head motion means more explainable variance).
 These estimates aren't expected to be identical across a study, but outliers should be examined.
-A very rough rule of thumb is the number of components for whole-brain fMRI should be more than 1/5 of the number of volumes.
+A very rough rule of thumb is the number of components for whole-brain fMRI should be more than 20% of the number of volumes.
 
 .. image:: /_static/pca_criteria_variance_explained_sub-19_breathing-run-1.png
   :align: center
@@ -744,10 +744,10 @@ A very rough rule of thumb is the number of components for whole-brain fMRI shou
 The other type of failure is when there is no clear local minimum and the estimate picked a small fluctuation closer to the total number of components.
 This happens most often with the more liberal AIC criterion.
 When this happens, the very high number of components means that the ICA step will be very slow and may not converge.
-If the number of components for whole-brain fMRI is more than 1/2 of the number of volumes,
+If the number of components for whole-brain fMRI is more than 50% of the number of volumes,
 it is worth checking for other problems.
 If the number of fMRI components is more than 70% of the number of volumes,
-the selected dimensionationality estimation method probably failed.
+the selected dimensionality estimation method probably failed.
 
 .. image:: /_static/pca_criteria_variance_explained_sub-22_breathing-run-2.png
   :align: center
