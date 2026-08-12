@@ -358,7 +358,7 @@ The Decay and Tree tabs are only shown when a workflow produces their contents.
 For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report
 written to a new output directory by that workflow has no Decay tab.
 
-The image below shows a representative report. The left is a summary view
+The image below shows a representative report in the ICA tab. The left is a summary view
 which contains information on all components and the right presents additional
 information for an individual component. One can hover over any pie chart wedge
 or data point in the summary view to see additional information about a
@@ -389,8 +389,13 @@ selection results. It includes four different plots.
   thresholds (black dashed lines) along with other criteria. Most accepted
   components should be greater than the kappa elbow and less than the rho elbow.
   Accepted or rejected components that don't cross those thresholds might be
-  worth additional inspection. Hovering over a component also shows a `Tag`
-  that explains why a component received its classification.
+  worth additional inspection.
+  Hovering over a component shows the component number, the variance explained, and the kappa and rho values.
+  The hover text also shows a `Tag` that explains why a component received its classification.
+  For accepted components, the hover text includes `Var. Expl. by Rej.`.
+  This is a fit of the rejected time series components to the accepted component
+  and is a measure of how much common variance is shared with rejected time series.
+
 
 .. image:: /_static/rep01_kapparhoScatter.png
   :align: center
@@ -705,6 +710,50 @@ These plots show the voxel-wise global signal weights and the global signal time
 
 
 .. _rica-reports:
+
+**********
+PCA Plots
+**********
+
+When the number of components (dimensionality estimation) is done with with the AIC, KIC, or MDL criteria in the PCA step,
+the PCA tab will show one plot for the cost function and one plot for the variance explained by each component.
+For the criteria plots, there should be a local minimum in the cost function that is the estimate of the number of components to retain.
+MDL is the most conservative and will usually have the sharpest and earliest local minimum.
+AIC is the most liberal and will often have a shallower and later local minimum.
+Lines for 90th and 95th percentile of variance explained are included for reference.
+The variance explained plot shows the cumulative variance explained at each code function threshold.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-12_breathing-run-1.png
+  :align: center
+  :height: 300px
+
+These dimensionality estimation methods have two types of failures.
+The following plot shows a very early and sharp local minimum for the MDL threshold.
+An MDL threshold in this case would result in only 19 retained components with 46% of variance explained.
+This is likely too low to appropriately model fMRI data.
+The appropriate amount of variance explained will vary with the number of voxels and volumes,
+acquisition parameters (smaller voxels will mean more thermal noise and less variance explained),
+and structured noise (more head motion means more explainable variance).
+These estimates aren't expected to be identical across a study, but outliers should be examined.
+A very rough rule of thumb is the number of components for whole-brain fMRI should be more than 20% of the number of volumes.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-19_breathing-run-1.png
+  :align: center
+  :height: 300px
+
+The other type of failure is when there is no clear local minimum and the estimate picked a small fluctuation closer to the total number of components.
+This happens most often with the more liberal AIC criterion.
+When this happens, the very high number of components means that the ICA step will be very slow and may not converge.
+If the number of components for whole-brain fMRI is more than 50% of the number of volumes,
+it is worth checking for other problems.
+If the number of fMRI components is more than 70% of the number of volumes,
+the selected dimensionality estimation method probably failed.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-22_breathing-run-2.png
+  :align: center
+  :height: 300px
+
+.. _pca-plots:
 
 **************************
 Rica Interactive Reports
