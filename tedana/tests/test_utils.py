@@ -4,6 +4,7 @@ import random
 from os.path import dirname
 from os.path import join as pjoin
 
+import nibabel as nib
 import numpy as np
 import pytest
 
@@ -632,3 +633,118 @@ def test_parse_volume_indices():
     # Negative indices are not supported (at all)
     with pytest.raises(ValueError, match="Invalid volume indices string"):
         utils.parse_volume_indices("-1")
+
+
+def test_interpolate_masked_values_some_failures():
+    # 5 voxels in a line (5x1x1). Affine is identity so physical == voxel coords.
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)  # all 5 brain voxels in denoising mask
+
+    data = np.array([99.0, 2.0, 3.0, 4.0, 99.0])
+    failures = np.array([True, False, False, False, True])
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    # Voxel 0 at x=0: nearest non-failing voxel is voxel 1 at x=1 (val=2.0)
+    assert result[0] == 2.0
+    # Voxel 4 at x=4: nearest non-failing voxel is voxel 3 at x=3 (val=4.0)
+    assert result[4] == 4.0
+    # Non-failing voxels are unchanged
+    np.testing.assert_array_equal(result[1:4], data[1:4])
+
+
+def test_interpolate_masked_values_no_failures():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.zeros(3, dtype=bool)
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    np.testing.assert_array_equal(result, data)
+
+
+def test_interpolate_masked_values_all_failures(caplog):
+    import logging
+
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.ones(3, dtype=bool)
+
+    with caplog.at_level(logging.WARNING, logger="GENERAL"):
+        result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    assert "cannot interpolate" in caplog.text.lower()
+    np.testing.assert_array_equal(result, data)
+
+
+def test_interpolate_masked_values_timeseries():
+    # 5 voxels, 2 timepoints; different failing voxel per timepoint
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+
+    data = np.tile(np.array([1.0, 2.0, 3.0, 4.0, 5.0])[:, np.newaxis], (1, 2))
+    failures = np.zeros((5, 2), dtype=bool)
+    failures[0, 0] = True  # t=0: voxel 0 fails
+    failures[4, 1] = True  # t=1: voxel 4 fails
+
+    result = utils.interpolate_masked_values(data, failures, img, mask)
+
+    # t=0: voxel 0 gets value of nearest non-failing (voxel 1, val=2.0)
+    assert result[0, 0] == 2.0
+    # t=1: voxel 4 gets value of nearest non-failing (voxel 3, val=4.0)
+    assert result[4, 1] == 4.0
+    # Non-failing entries are unchanged
+    assert result[4, 0] == 5.0
+    assert result[0, 1] == 1.0
+
+
+def test_interpolate_masked_values_shape_preservation():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+
+    data_1d = np.array([1.0, 2.0, 3.0])
+    failures_1d = np.array([True, False, False])
+    result_1d = utils.interpolate_masked_values(data_1d, failures_1d, img, mask)
+    assert result_1d.shape == data_1d.shape
+
+    data_2d = np.ones((3, 5))
+    failures_2d = np.zeros((3, 5), dtype=bool)
+    failures_2d[0, :] = True
+    result_2d = utils.interpolate_masked_values(data_2d, failures_2d, img, mask)
+    assert result_2d.shape == data_2d.shape
+
+
+def test_interpolate_masked_values_shape_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((3, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(3, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])
+    failures = np.zeros((3, 2), dtype=bool)  # wrong shape
+
+    with pytest.raises(ValueError, match="failures shape"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_mask_sum_mismatch_raises():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([1.0, 2.0, 3.0])  # only 3 rows, but mask has 5 True values
+    failures = np.zeros(3, dtype=bool)
+
+    with pytest.raises(ValueError, match="mask has"):
+        utils.interpolate_masked_values(data, failures, img, mask)
+
+
+def test_interpolate_masked_values_precomputed_phys_coords():
+    img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
+    mask = np.ones(5, dtype=bool)
+    data = np.array([99.0, 2.0, 3.0, 4.0, 99.0])
+    failures = np.array([True, False, False, False, True])
+
+    phys_coords = utils.mask_to_phys_coords(img, mask)
+    result = utils.interpolate_masked_values(data, failures, img, mask, phys_coords=phys_coords)
+
+    assert result[0] == 2.0
+    assert result[4] == 4.0
+    np.testing.assert_array_equal(result[1:4], data[1:4])

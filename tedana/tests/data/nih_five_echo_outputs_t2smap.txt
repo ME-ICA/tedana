@@ -1,8 +1,6 @@
 dataset_description.json
 desc-adaptiveGoodSignal_mask.nii.gz
 desc-decayFitFailures_mask.nii.gz
-desc-limited_S0map.nii.gz
-desc-limited_T2starmap.nii.gz
 desc-tedana_registry.json
 desc-optcom_bold.nii.gz
 S0map.nii.gz

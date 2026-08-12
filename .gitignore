@@ -1,6 +1,8 @@
 # setuptools-scm
 tedana/_version.py
 
+docs/superpowers
+
 .DS_Store
 docs/generated/
 .pytest_cache/

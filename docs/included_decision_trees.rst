@@ -175,3 +175,19 @@ but results have not yet been tested and validated.
 .. image:: _static/decision_tree_demo_external_regressors_motion_task_models.png
     :width: 400
     :alt: External Decision Tree With Motion and Task Models Flow Chart
+
+
+*************************************************
+Demo external regressors, ICA-AROMA-like criteria
+*************************************************
+
+This is based on the minimal tree, but multiple nodes were added to demonstrate how to use
+ICA-AROMA-like :footcite:p:`pruim2015ica` criteria to reject components.
+Components are rejected if they exhibit a ``max_rp_corr`` value greater than 0.5 (an arbitrarily-selected threshold)
+or an ``HFC`` value greater than 0.35 (taken from ICA-AROMA).
+
+
+**********
+References
+**********
+.. footbibliography::
