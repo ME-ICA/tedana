@@ -141,6 +141,7 @@ class TestT2smap:
             fitmode="all",
             mask=mask,
             out_dir=str(out_dir),
+            verbose=True,
         )
 
         target_shape = nb.load(data[0]).shape
