@@ -86,7 +86,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
     n_comps = df.shape[0]
 
     # remove space from column name
-    df.rename(columns={"variance explained": "var_exp"}, inplace=True)
+    df.rename(columns={"marginal R-squared": "var_exp"}, inplace=True)
     df.rename(columns={"Var Exp of rejected to accepted": "var_exp_rej"}, inplace=True)
 
     # For providing sizes based on Var Explained that are visible
