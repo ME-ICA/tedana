@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from nilearn import image, masking, plotting
 
 from tedana import io, stats, utils
+from tedana.reporting._palette import color_for, linestyle_for
 
 LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger("matplotlib")
@@ -209,6 +210,7 @@ def plot_component(
     png_cmap,
     title,
     out_file,
+    classification_linestyle="solid",
 ):
     """Create a figure with a component's spatial map, time series, and power spectrum.
 
@@ -232,6 +234,9 @@ def plot_component(
         Title for the figure
     out_file : str
         Path to save the figure
+    classification_linestyle : str, optional
+        Matplotlib line style for the time series and power spectrum, providing a
+        redundant (non-color) cue for the classification. Default is "solid".
     """
     import matplotlib.image as mpimg
     from matplotlib import gridspec
@@ -286,7 +291,9 @@ def plot_component(
     # Create three subplots
     # First is the time series of the component
     ax_ts = fig.add_subplot(gs[0])
-    ax_ts.plot(component_timeseries, color=classification_color)
+    ax_ts.plot(
+        component_timeseries, color=classification_color, linestyle=classification_linestyle
+    )
     ax_ts.set_xlim(0, len(component_timeseries) - 1)
     ax_ts.set_yticks([])
 
@@ -315,7 +322,9 @@ def plot_component(
 
     # Third is the power spectrum of the component's time series
     ax_fft = fig.add_subplot(gs[2])
-    ax_fft.plot(frequencies, power_spectrum, color=classification_color)
+    ax_fft.plot(
+        frequencies, power_spectrum, color=classification_color, linestyle=classification_linestyle
+    )
     ax_fft.set_title("One-Sided FFT")
     ax_fft.set_xlabel("Frequency (Hz)")
     ax_fft.set_xlim(0, frequencies.max())
@@ -364,29 +373,12 @@ def comp_figures(ts, component_table, mixing, io_generator, png_cmap):
     # Remove trailing ';' from rationale column
     # component_table["rationale"] = component_table["rationale"].str.rstrip(";")
     for compnum in component_table.index.values:
-        if component_table.loc[compnum, "classification"] == "accepted":
-            line_color = "g"
-            expl_text = "accepted reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
-
-        elif component_table.loc[compnum, "classification"] == "rejected":
-            line_color = "r"
-            expl_text = "rejected reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
-
-        elif component_table.loc[compnum, "classification"] == "ignored":
-            line_color = "k"
-            expl_text = "ignored reason(s): " + str(
-                component_table.loc[compnum, "classification_tags"]
-            )
-
-        else:
-            # Classification not added
-            # If new, this will keep code running
-            line_color = "0.75"
-            expl_text = "other classification"
+        classification = component_table.loc[compnum, "classification"]
+        line_color = color_for(classification)
+        line_style = linestyle_for(classification)
+        expl_text = f"{classification} reason(s): " + str(
+            component_table.loc[compnum, "classification_tags"]
+        )
 
         # Title will include variance from component_table
         comp_var = f"{component_table.loc[compnum, 'variance explained']:.2f}"
@@ -422,6 +414,7 @@ def comp_figures(ts, component_table, mixing, io_generator, png_cmap):
             png_cmap=png_cmap,
             title=plt_title,
             out_file=compplot_name,
+            classification_linestyle=line_style,
         )
 
 
