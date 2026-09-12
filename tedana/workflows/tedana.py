@@ -1038,6 +1038,7 @@ def tedana_workflow(
     component_table = selector.component_table_
 
     mixing_orig = mixing.copy()
+    mixing_orig_df = mixing_df.copy()
     if tedort:
         comps_accepted = selector.accepted_comps_
         comps_rejected = selector.rejected_comps_
@@ -1066,6 +1067,7 @@ def tedana_workflow(
         component_table=component_table,
         mixing=mixing,
         io_generator=io_generator,
+        mixing_orig=mixing_orig if tedort else None,
     )
 
     if "mir" in gscontrol:
@@ -1168,7 +1170,6 @@ def tedana_workflow(
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_optcom,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
@@ -1198,7 +1199,7 @@ def tedana_workflow(
             # Compute correlations between external regressors and ICA components
             corr_df = metrics.external.compute_external_regressor_correlations(
                 external_regressors=external_regressors,
-                mixing=mixing_df,
+                mixing=mixing_orig_df,
             )
 
             # Plot the heatmap

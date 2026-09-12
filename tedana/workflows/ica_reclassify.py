@@ -586,6 +586,7 @@ def ica_reclassify_workflow(
         component_table=component_table,
         mixing=mixing,
         io_generator=io_generator,
+        mixing_orig=mixing_orig if tedort else None,
     )
 
     if "mir" in gscontrol:
@@ -662,7 +663,6 @@ def ica_reclassify_workflow(
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_optcom,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
