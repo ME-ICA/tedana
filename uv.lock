@@ -1115,7 +1115,7 @@ wheels = [
 
 [[package]]
 name = "nilearn"
-version = "0.14.0"
+version = "0.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
@@ -1131,9 +1131,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dc/07/93844f4f3fdb7035da68350bbf6d39e9cf2bc04e32055b4fe534d10c7fd1/nilearn-0.14.0.tar.gz", hash = "sha256:2c3cf94b0f77461c242baf61b9efb4dd68dd4e2fc4eab19ae93e978b0c45b9b9", size = 56771019, upload-time = "2026-07-02T06:44:21.514Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/10/fb546467307bb411c0d8be39a0c17bff2e6d454d7cc5e912b50abf60ab52/nilearn-0.14.1.tar.gz", hash = "sha256:6f7ec639be2c9e4a3625ebc4f25c3de31ae3af21331c8d03e27201c482609672", size = 57090820, upload-time = "2026-09-04T08:11:06.708Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/0a/e687f94ddc15ba1ad186d3d69a800cafcfc267dbc9fe60b6eb30f5195a20/nilearn-0.14.0-py3-none-any.whl", hash = "sha256:5dc6171c3b689e28c65c9951d0ac26158b825c5c37cfac959da73aae986eb1a7", size = 11488789, upload-time = "2026-07-02T06:43:05.899Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/4f/6d93620cf4c7f642a8fb85fef8b6e30a24764ef99774026550291dea6fdd/nilearn-0.14.1-py3-none-any.whl", hash = "sha256:725206484e9fb3f6691f9c2d20204a068759d5072f12055324702ee0cb2bbe8a", size = 11509444, upload-time = "2026-09-04T08:10:39.24Z" },
 ]
 
 [[package]]
