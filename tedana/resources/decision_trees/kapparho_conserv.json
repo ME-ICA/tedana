@@ -1,0 +1,120 @@
+{
+    "tree_id": "kapparho_conserv",
+    "info": "first version of kappa-rho conservative decision tree",
+    "report": "The kappa-rho conservative \\citep{tedana_decision_trees} focuses completely on kappa rho relationships with the goal of making a conservative decision tree that might not remove all possible noise, but should not reject potentially valuable signal. ",
+    "necessary_metrics": [
+        "kappa",
+        "rho",
+        "variance explained"
+    ],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance"],
+    "_comment": "More information on the minimial decision tree and how it differs from other options is at https://tedana.readthedocs.io/en/stable/included_decision_trees.html. Descriptions of the metrics used are in desc-tedana.metrics.json, which is ouputted when this tree is run",
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
+            "kwargs": {
+                "clear_classification_tags": true,
+                "dont_warn_reclassify": true
+            },
+            "_comment": "All components are initially labeled as 'unclassified'."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "rho",
+                "right": "kappa"
+            },
+            "kwargs": {"tag_if_true": "Unlikely BOLD"},
+            "_comment": "The first four steps are for rejecting components that very unlikely to have substantial T2* signal. Any components with rho greater than kappa are rejected. Higher rho than kappa means that the component better fits the TE-independence (S0) model than the TE-dependence (T2*) model."
+        },
+        {
+            "functionname": "calc_kappa_elbow",
+            "parameters": {"decide_comps": "all"},
+            "_comment": "The kappa elbow is calculated from all components, for use in later steps."
+        },
+        {
+            "functionname": "calc_rho_elbow",
+            "parameters": {"decide_comps": "all"},
+            "kwargs": {
+                "subset_decide_comps": "unclassified",
+                "rho_elbow_type": "liberal"
+            },
+            "_comment": "This step determines the 'rho elbow' based on the rho values for all of the components, as well as just the unclassified components. It calculates the elbow for each set of components and then takes the maximum of the two."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "provisionalreject",
+                "decide_comps": "unclassified",
+                "op": ">=",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            },
+            "kwargs": {"right_scale": 0.95},
+            "_comment": "Any unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted. Any remaining unclassified components are provisionally rejected. Nothing is left 'unclassified'"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "provisionalaccept",
+                "op": ">",
+                "left": "kappa",
+                "right": "rho"
+            },
+            "kwargs": {"right_scale": 2, "tag_if_true": "Likely BOLD"},
+            "_comment": "Any provisionally accepted components with kappa greater than two times rho are accepted. That is, even if a component has a high rho value, if kappa above threshold and substantially higher, assume it as something work keeping and accept it"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalreject", "provisionalaccept"],
+                "op": ">",
+                "left": "rho",
+                "right": "rho_elbow_liberal"
+            },
+            "kwargs": {"right_scale": 1.05},
+            "_comment": "Any provisionally accepted or provisionally rejected components with rho values greater than the liberal rho elbow are provisionally rejected."
+        },
+        {
+            "functionname": "dec_variance_lessthan_thresholds",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "provisionalreject"
+            },
+            "kwargs": {
+                "var_metric": "variance explained",
+                "single_comp_threshold": 0.1,
+                "all_comp_threshold": 1.0,
+                "tag_if_true": "Low variance"
+            },
+            "_comment": "This step flags remaining low-variance components (less than 0.1%) and accepts up to 1% cumulative variance across these components. This is done because these components don't explain enough variance to be worth further reducing the degrees of freedom of the denoised data."
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "kwargs": {"tag": "Likely BOLD"},
+            "_comment": "All remaining provisionally accepted components are accepted."
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "rejected",
+                "decide_comps": ["provisionalreject", "unclassified"]
+            },
+            "kwargs": {"tag": "Unlikely BOLD"},
+            "_comment": "All remaining unclassified (nothing should be unclassified) or provisionally rejected components are rejected."
+        }
+    ]
+}
