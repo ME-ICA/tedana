@@ -22,7 +22,6 @@ class ClassStyle:
 CLASSIFICATION_STYLES = {
     "accepted": ClassStyle("#009E73", "circle", "solid"),
     "rejected": ClassStyle("#D55E00", "square", "dashed"),
-    "ignored": ClassStyle("#0072B2", "triangle", "dotted"),
     "other": ClassStyle("#999999", "diamond", "dashdot"),
 }
 
