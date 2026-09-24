@@ -7,7 +7,7 @@ import pandas as pd
 from bokeh import events, models, plotting, transform
 from sklearn.preprocessing import MinMaxScaler
 
-color_mapping = {"accepted": "#2ecc71", "rejected": "#e74c3c", "ignored": "#3498db"}
+from tedana.reporting._palette import color_for, marker_for
 
 tap_callback_jscode = """
     // Accessing the selected component ID
@@ -53,7 +53,7 @@ tap_callback_jscode = """
     """
 
 
-def _create_data_struct(comptable_path, color_mapping=color_mapping):
+def _create_data_struct(comptable_path):
     """
     Create Bokeh ColumnDataSource with all info dynamic plots need.
 
@@ -106,7 +106,8 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
     df.drop(unused_cols, axis=1, inplace=True, errors="ignore")
 
     # Create additional Column with colors based on final classification
-    df["color"] = [color_mapping[i] for i in df["classification"]]
+    df["color"] = [color_for(c) for c in df["classification"]]
+    df["marker"] = [marker_for(c) for c in df["classification"]]
 
     # Create additional column with component ID
     df["component"] = np.arange(n_comps)
@@ -126,6 +127,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
             varexp_rank=df["var_exp_rank"],
             component=[str(i) for i in df["component"]],
             color=df["color"],
+            marker=df["marker"],
             size=df["var_exp_size"],
             classif=df["classification"],
             classtag=df["classification_tags"],
@@ -183,6 +185,7 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
         "rho",
         size="size",
         color="color",
+        marker="marker",
         alpha=0.5,
         source=comptable_cds,
         legend_group="classif",
@@ -297,7 +300,9 @@ def _create_sorted_plt(
         y=comptable_cds.data[y_var].sort_values(ascending=False).values,
         color="black",
     )
-    fig.scatter(x_var, y_var, source=comptable_cds, size=5, color="color", alpha=0.7)
+    fig.scatter(
+        x_var, y_var, source=comptable_cds, size=5, color="color", marker="marker", alpha=0.7
+    )
     fig.xaxis.axis_label = x_label
     fig.yaxis.axis_label = y_label
     fig.x_range = models.Range1d(-1, n_comps + 1)

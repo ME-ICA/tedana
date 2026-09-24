@@ -36,7 +36,8 @@ def _get_parser():
         type=lambda x: is_valid_file(parser, x),
         help=(
             "Multi-echo dataset for analysis. "
-            "A set of echo-specific files in ascending order. "
+            "A set of echo-specific 3D or 4D files in ascending order, "
+            "or one 3D or 4D z-concatenated file. "
             "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
@@ -279,7 +280,8 @@ def t2smap_workflow(
     ----------
     data : :obj:`str` or :obj:`list` of :obj:`str`
         Either a single z-concatenated file (single-entry list or str) or a
-        list of echo-specific files, in ascending order.
+        list of echo-specific files, in ascending order. Files may be 3D
+        single-volume images or 4D time series.
     tes : :obj:`list`
         List of echo times associated with data. Values should be in seconds
         per BIDS convention. Millisecond values are still accepted but deprecated.
@@ -443,6 +445,8 @@ def t2smap_workflow(
 
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
+    if combmode == "paid" and n_vols == 1:
+        raise ValueError("PAID combination requires more than one volume.")
 
     # Create mask for volumes to use based on exclude indices
     if n_exclude > 0:

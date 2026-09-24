@@ -202,6 +202,15 @@ def _update_template_bokeh(
     rmse_brain = f"./figures/{rmse_brain_filename}"
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
+    # Check for PCA dimensionality figures
+    pca_criteria_filename = f"{prefix}pca_criteria.svg"
+    pca_variance_filename = f"{prefix}pca_variance_explained.svg"
+    pca_criteria_plot = f"./figures/{pca_criteria_filename}"
+    pca_variance_plot = f"./figures/{pca_variance_filename}"
+    pca_exists = (
+        pca_criteria_filename in files_in_figures and pca_variance_filename in files_in_figures
+    )
+
     # Check for gscontrol images
     gsr_filename = f"{prefix}gsr_boldmap.svg"
     mir_filename = f"{prefix}mir_boldmap.svg"
@@ -244,6 +253,7 @@ def _update_template_bokeh(
     tree_exists = tree_table is not None or status_table is not None
     LGR.info(f"Decay tab exists: {decay_exists}")
     LGR.info(f"Tree tab exists: {tree_exists}")
+    LGR.info(f"PCA tab exists: {pca_exists}")
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -289,6 +299,9 @@ def _update_template_bokeh(
         treeExists=tree_exists,
         treeTable=tree_table,
         statusTable=status_table,
+        pcaExists=pca_exists,
+        pcaCriteriaPlot=pca_criteria_plot,
+        pcaVariancePlot=pca_variance_plot,
     )
     return body
 
