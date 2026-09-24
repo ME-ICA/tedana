@@ -118,6 +118,49 @@ def test_smoke_write_split_ts():
     os.remove(fname)
 
 
+def test_writeresults_uses_original_mixing_for_component_maps():
+    """Component maps should use the original mixing matrix when one is provided."""
+    rng = np.random.default_rng(42)
+    n_samples, n_times, n_components = 5, 8, 3
+    data = rng.normal(size=(n_samples, n_times))
+    mask = np.ones(n_samples, dtype=bool)
+    mixing = rng.normal(size=(n_times, n_components))
+    mixing_orig = rng.normal(size=(n_times, n_components))
+    component_table = pd.DataFrame(
+        {"classification": ["rejected", "ignored", "rejected"]},
+    )
+    saved = {}
+
+    class StubOutputGenerator:
+        verbose = True
+
+        def save_file(self, data, description, **kwargs):
+            del kwargs
+            saved[description] = np.asarray(data).copy()
+            return description
+
+    with mock.patch.object(me, "write_split_ts") as write_split_ts:
+        me.writeresults(
+            data_optcom=data,
+            mask=mask,
+            component_table=component_table,
+            mixing=mixing,
+            io_generator=StubOutputGenerator(),
+            mixing_orig=mixing_orig,
+        )
+
+    write_split_ts.assert_called_once()
+    np.testing.assert_allclose(
+        saved["ICA components img"],
+        me.get_coeffs(data, mixing_orig),
+    )
+    np.testing.assert_allclose(
+        saved["ICA orthogonalized components img"],
+        me.get_coeffs(data, mixing),
+    )
+    assert "z-scored ICA components img" in saved
+
+
 def test_load_data_nilearn_multi_echo_fastpath(tmp_path):
     """`load_data_nilearn` should return (Mb, E, T) for multi-echo files."""
     affine = np.eye(4)
