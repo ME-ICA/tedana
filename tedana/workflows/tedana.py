@@ -22,6 +22,7 @@ from tedana import (
     decay,
     decomposition,
     io,
+    metadata,
     metrics,
     reporting,
     rica,
@@ -70,7 +71,8 @@ def _get_parser():
         ),
         required=True,
     )
-    required_args.add_argument(
+    te_or_metadata = parser.add_mutually_exclusive_group(required=True)
+    te_or_metadata.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -78,9 +80,24 @@ def _get_parser():
         type=float,
         help=(
             "Ascending echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
-            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
+            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated. "
+            "Mutually exclusive with --metadata."
         ),
-        required=True,
+        default=None,
+    )
+    te_or_metadata.add_argument(
+        "--metadata",
+        dest="metadata_files",
+        nargs="+",
+        metavar="JSON",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "BIDS sidecar JSON files, one per echo file in the same order as -d/--data. "
+            "Echo times are read from each file's EchoTime. Also supplies SliceTiming, "
+            "MultibandAccelerationFactor, etc. for metadata-aware metrics. "
+            "Mutually exclusive with -e/--tes."
+        ),
+        default=None,
     )
 
     output_args = parser.add_argument_group("Output Control")
@@ -434,11 +451,12 @@ def _get_parser():
 
 def tedana_workflow(
     data,
-    tes,
+    tes=None,
     out_dir=".",
     mask=None,
     convention="bids",
     prefix="",
+    metadata_files=None,
     dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
@@ -497,6 +515,11 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    metadata_files : None or :obj:`list` of :obj:`str`, optional
+        Paths to BIDS-format metadata files.
+        Optional alternative to ``tes``.
+        Only necessary for some metrics.
+        Default is None.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data
         (both in the BOLD data and in any confounds).
@@ -657,7 +680,15 @@ def tedana_workflow(
 
     LGR.info(f"Using output directory: {out_dir}")
 
-    # ensure tes are in appropriate format
+    # Resolve echo times from either --tes or --metadata (exactly one). With
+    # multi-echo data, `data` is the list of echo files, so its length is the
+    # echo count used to validate the metadata file count.
+    n_files = len(data) if isinstance(data, (list, tuple)) else 1
+    tes, acquisition_metadata = metadata.resolve_echo_times(
+        tes=tes,
+        metadata=metadata_files,
+        n_echos=n_files,
+    )
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
     n_echos = len(tes)
@@ -917,6 +948,7 @@ def tedana_workflow(
                 io_generator=io_generator,
                 label="ICA",
                 tr=img_t_r,
+                acquisition_metadata=acquisition_metadata,
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
@@ -979,6 +1011,7 @@ def tedana_workflow(
             io_generator=io_generator,
             label="ICA",
             tr=img_t_r,
+            acquisition_metadata=acquisition_metadata,
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],

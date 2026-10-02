@@ -76,6 +76,25 @@
             "countnoise",
             "countsigFT2"
         ],
+        "slice_banding": [
+            "map weight",
+            "mask"
+        ],
+        "slice_leakage": [
+            "map weight",
+            "mask"
+        ],
+        "slice_leakage_aliasing_z": [
+            "map weight",
+            "mask"
+        ],
+        "slice_leakage_periodicity_z": [
+            "map weight",
+            "mask"
+        ],
+        "spike": [
+            "mixing"
+        ],
         "HFC": [
             "mixing",
             "tr"
