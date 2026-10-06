@@ -17,6 +17,166 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
+def _fit_voxels_cuda(
+    data_2d,
+    echo_times_1d,
+    voxel_idx,
+    s0_initial,
+    t2s_initial,
+    n_iterations=25,
+    batch_size=32768,
+):
+    """Fit independent monoexponential models with batched CUDA Gauss--Newton.
+
+    Voxels that do not meet a strict convergence check are returned as failures
+    and are subsequently handled by the existing SciPy implementation.
+
+    Parameters
+    ----------
+    data_2d : (N, M) :obj:`numpy.ndarray`
+        Multi-echo measurements, with ``N`` observations per voxel and ``M``
+        voxels in the current adaptive-mask group.
+    echo_times_1d : (N,) :obj:`numpy.ndarray`
+        Echo time associated with each observation, in seconds.
+    voxel_idx : (V,) :obj:`numpy.ndarray`
+        Indices of the ``V`` voxels in ``data_2d`` to fit.
+    s0_initial : (M,) :obj:`numpy.ndarray`
+        Initial S0 estimates for the adaptive-mask group.
+    t2s_initial : (M,) :obj:`numpy.ndarray`
+        Initial T2* estimates, in seconds, for the adaptive-mask group.
+    n_iterations : :obj:`int`, optional
+        Number of damped Gauss--Newton iterations. Default is 25.
+    batch_size : :obj:`int`, optional
+        Maximum number of voxels transferred to and processed on the GPU in
+        one batch. Default is 32768.
+
+    Returns
+    -------
+    fitted_s0 : (V,) :obj:`numpy.ndarray`
+        Estimated S0 values. Entries for failed voxels are zero.
+    fitted_t2s : (V,) :obj:`numpy.ndarray`
+        Estimated T2* values in seconds. Entries for failed voxels are zero.
+    failures : (V,) :obj:`numpy.ndarray`
+        Boolean array indicating voxels that did not converge or had invalid
+        inputs and must be refit on the CPU.
+    s0_var : (V,) :obj:`numpy.ndarray`
+        Estimated variance of each fitted S0 value. Entries for failed voxels
+        are zero.
+    t2s_var : (V,) :obj:`numpy.ndarray`
+        Estimated variance of each fitted T2* value. Entries for failed voxels
+        are zero.
+    s0_t2s_covar : (V,) :obj:`numpy.ndarray`
+        Estimated covariance between S0 and T2*. Entries for failed voxels are
+        zero.
+
+    Raises
+    ------
+    ImportError
+        If CuPy is not installed.
+
+    Notes
+    -----
+    The function synchronizes the default CUDA stream before returning so that
+    callers can accurately measure elapsed execution time. It assumes CUDA
+    availability has already been validated by :func:`tedana.utils._resolve_backend`.
+    """
+    import cupy as cp
+
+    n_voxels = len(voxel_idx)
+    fitted_s0 = np.zeros(n_voxels)
+    fitted_t2s = np.zeros(n_voxels)
+    failures = np.ones(n_voxels, dtype=bool)
+    s0_var = np.zeros(n_voxels)
+    t2s_var = np.zeros(n_voxels)
+    s0_t2s_covar = np.zeros(n_voxels)
+    n_observations = data_2d.shape[0]
+    eps = np.finfo(np.float64).eps
+    echo_times_gpu = cp.asarray(echo_times_1d, dtype=cp.float64)
+
+    for first in range(0, n_voxels, batch_size):
+        last = min(first + batch_size, n_voxels)
+        batch_voxels = voxel_idx[first:last]
+        observations_cpu = np.ascontiguousarray(data_2d[:, batch_voxels].T, dtype=np.float64)
+        lower_s0_cpu = observations_cpu.min(axis=1)
+        s0_cpu = s0_initial[batch_voxels]
+        t2s_cpu = t2s_initial[batch_voxels]
+        initial_valid = (
+            np.isfinite(observations_cpu).all(axis=1)
+            & np.isfinite(s0_cpu)
+            & np.isfinite(t2s_cpu)
+            & (s0_cpu >= lower_s0_cpu)
+            & (t2s_cpu > 0)
+        )
+        if not initial_valid.any():
+            continue
+
+        local_idx = np.flatnonzero(initial_valid)
+        observations = cp.asarray(observations_cpu[local_idx])
+        lower_s0 = cp.asarray(lower_s0_cpu[local_idx])
+        s0 = cp.asarray(s0_cpu[local_idx])
+        t2s = cp.asarray(t2s_cpu[local_idx])
+        relative_step = cp.full(len(local_idx), cp.inf, dtype=cp.float64)
+        determinant = cp.zeros(len(local_idx), dtype=cp.float64)
+
+        for _ in range(n_iterations):
+            exponential = cp.exp(-echo_times_gpu[None, :] / t2s[:, None])
+            residual = s0[:, None] * exponential - observations
+            jacobian_s0 = exponential
+            jacobian_t2s = s0[:, None] * exponential * echo_times_gpu[None, :] / t2s[:, None] ** 2
+            a00 = cp.sum(jacobian_s0 * jacobian_s0, axis=1)
+            a01 = cp.sum(jacobian_s0 * jacobian_t2s, axis=1)
+            a11 = cp.sum(jacobian_t2s * jacobian_t2s, axis=1)
+            b0 = -cp.sum(jacobian_s0 * residual, axis=1)
+            b1 = -cp.sum(jacobian_t2s * residual, axis=1)
+            # Unitless diagonal damping stabilizes the two-parameter normal equation.
+            a00 *= 1.0 + 1e-8
+            a11 *= 1.0 + 1e-8
+            determinant = a00 * a11 - a01 * a01
+            delta_s0 = (a11 * b0 - a01 * b1) / determinant
+            delta_t2s = (a00 * b1 - a01 * b0) / determinant
+            s0 = cp.maximum(s0 + delta_s0, lower_s0)
+            t2s = cp.maximum(t2s + delta_t2s, eps)
+            relative_step = cp.maximum(
+                cp.abs(delta_s0) / (cp.abs(s0) + 1.0), cp.abs(delta_t2s) / t2s
+            )
+
+        exponential = cp.exp(-echo_times_gpu[None, :] / t2s[:, None])
+        residual = s0[:, None] * exponential - observations
+        jacobian_s0 = exponential
+        jacobian_t2s = s0[:, None] * exponential * echo_times_gpu[None, :] / t2s[:, None] ** 2
+        a00 = cp.sum(jacobian_s0 * jacobian_s0, axis=1)
+        a01 = cp.sum(jacobian_s0 * jacobian_t2s, axis=1)
+        a11 = cp.sum(jacobian_t2s * jacobian_t2s, axis=1)
+        determinant = a00 * a11 - a01 * a01
+        residual_variance = cp.sum(residual * residual, axis=1) / (n_observations - 2)
+        fitted_s0_batch = cp.asnumpy(s0)
+        fitted_t2s_batch = cp.asnumpy(t2s)
+        determinant_batch = cp.asnumpy(determinant)
+        relative_step_batch = cp.asnumpy(relative_step)
+        s0_var_batch = cp.asnumpy(a11 / determinant * residual_variance)
+        t2s_var_batch = cp.asnumpy(a00 / determinant * residual_variance)
+        s0_t2s_covar_batch = cp.asnumpy(-a01 / determinant * residual_variance)
+        converged = (
+            np.isfinite(fitted_s0_batch)
+            & np.isfinite(fitted_t2s_batch)
+            & np.isfinite(determinant_batch)
+            & (determinant_batch > 0)
+            & np.isfinite(relative_step_batch)
+            & (relative_step_batch < 1e-8)
+            & (n_observations > 2)
+        )
+        output_idx = first + local_idx[converged]
+        fitted_s0[output_idx] = fitted_s0_batch[converged]
+        fitted_t2s[output_idx] = fitted_t2s_batch[converged]
+        s0_var[output_idx] = s0_var_batch[converged]
+        t2s_var[output_idx] = t2s_var_batch[converged]
+        s0_t2s_covar[output_idx] = s0_t2s_covar_batch[converged]
+        failures[output_idx] = False
+
+    cp.cuda.Stream.null.synchronize()
+    return fitted_s0, fitted_t2s, failures, s0_var, t2s_var, s0_t2s_covar
+
+
 def _apply_t2s_floor(t2s, echo_times):
     """Apply a floor to T2* values to prevent zero division errors during optimal combination.
 
@@ -126,6 +286,7 @@ def fit_monoexponential(
     adaptive_mask,
     report=True,
     n_threads=1,
+    backend="cpu",
     t2s_initial=None,
     s0_initial=None,
     voxels_to_refit=None,
@@ -148,6 +309,10 @@ def fit_monoexponential(
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend for nonlinear fitting. ``cpu`` uses SciPy, ``cuda``
+        requires CuPy and a CUDA device, and ``auto`` falls back to CPU if CUDA
+        is unavailable. Default is ``cpu``.
     t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
         Initial T2* estimates to use instead of log-linear fit. Default is None.
     s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
@@ -181,6 +346,11 @@ def fit_monoexponential(
     -----
     This method is slower, but more accurate, than the log-linear approach.
     """
+    backend = utils._resolve_backend(backend)
+    if backend == "cuda":
+        cuda_batch_size = int(os.getenv("TEDANA_CUDA_BATCH_SIZE", "4096"))
+        if cuda_batch_size < 1:
+            raise ValueError("TEDANA_CUDA_BATCH_SIZE must be a positive integer")
     if n_threads is None or n_threads <= 0:
         n_threads = os.cpu_count() or 1
     if report:
@@ -249,23 +419,62 @@ def fit_monoexponential(
         data_2d = data_cat[:, :echo_num, :].reshape(len(data_cat), -1).T
         echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
 
-        # perform a monoexponential fit of echo times against MR signal
-        # using loglin estimates as initial starting points for fit
-        # parallelize the curve_fit calls across voxels
-        results = Parallel(n_jobs=n_threads)(
-            delayed(_fit_single_voxel)(
-                voxel=voxel,
-                echo_times_1d=echo_times_1d,
-                data_column=data_2d[:, voxel],
-                s0_init=s0_init[voxel],
-                t2s_init=t2s_init[voxel],
-                bounds=((np.min(data_2d[:, voxel]), 0), (np.inf, np.inf)),
+        # Perform a monoexponential fit using log-linear estimates as initial values.
+        if backend == "cuda":
+            (
+                fitted_s0,
+                fitted_t2s,
+                failures,
+                fitted_s0_var,
+                fitted_t2s_var,
+                fitted_s0_t2s_covar,
+            ) = _fit_voxels_cuda(
+                data_2d,
+                echo_times_1d,
+                voxel_idx,
+                s0_init,
+                t2s_init,
+                batch_size=cuda_batch_size,
             )
-            for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo monoexponential")
-        )
+            successful_voxels = voxel_idx[~failures]
+            s0_init[successful_voxels] = fitted_s0[~failures]
+            t2s_init[successful_voxels] = fitted_t2s[~failures]
+            s0_var_asc_maps[successful_voxels, i_echo] = fitted_s0_var[~failures]
+            t2s_var_asc_maps[successful_voxels, i_echo] = fitted_t2s_var[~failures]
+            t2s_s0_covar_asc_maps[successful_voxels, i_echo] = fitted_s0_t2s_covar[~failures]
+            fallback_voxels = voxel_idx[failures]
+            if len(fallback_voxels):
+                LGR.debug(
+                    "Refitting %d CUDA non-convergent voxel(s) with SciPy.", len(fallback_voxels)
+                )
+                results = Parallel(n_jobs=n_threads)(
+                    delayed(_fit_single_voxel)(
+                        voxel=voxel,
+                        echo_times_1d=echo_times_1d,
+                        data_column=data_2d[:, voxel],
+                        s0_init=s0_init[voxel],
+                        t2s_init=t2s_init[voxel],
+                        bounds=((np.min(data_2d[:, voxel]), 0), (np.inf, np.inf)),
+                    )
+                    for voxel in fallback_voxels
+                )
+            else:
+                results = []
+            fail_count = 0
+        else:
+            results = Parallel(n_jobs=n_threads)(
+                delayed(_fit_single_voxel)(
+                    voxel=voxel,
+                    echo_times_1d=echo_times_1d,
+                    data_column=data_2d[:, voxel],
+                    s0_init=s0_init[voxel],
+                    t2s_init=t2s_init[voxel],
+                    bounds=((np.min(data_2d[:, voxel]), 0), (np.inf, np.inf)),
+                )
+                for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo monoexponential")
+            )
+            fail_count = 0
 
-        # Update results and count failures
-        fail_count = 0
         for (
             voxel,
             s0_voxel,
@@ -423,6 +632,7 @@ def fit_decay(
     fittype,
     report=True,
     n_threads=1,
+    backend="cpu",
     t2s_initial=None,
     s0_initial=None,
     voxels_to_refit=None,
@@ -448,6 +658,8 @@ def fit_decay(
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend for curve fitting. Default is ``cpu``.
     t2s_initial : (Md,) :obj:`numpy.ndarray` or None, optional
         Initial T2* estimates for curvefit. If None, log-linear estimates are used.
     s0_initial : (Md,) :obj:`numpy.ndarray` or None, optional
@@ -483,6 +695,7 @@ def fit_decay(
     :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
                                               parameter.
     """
+    backend = utils._resolve_backend(backend)
     if n_threads is None or n_threads <= 0:
         n_threads = os.cpu_count() or 1
     if data.shape[1] != len(tes):
@@ -514,6 +727,7 @@ def fit_decay(
             adaptive_mask=adaptive_mask,
             report=report,
             n_threads=n_threads,
+            backend=backend,
             t2s_initial=t2s_initial,
             s0_initial=s0_initial,
             voxels_to_refit=voxels_to_refit,
@@ -530,6 +744,7 @@ def fit_decay_ts(
     adaptive_mask,
     fittype,
     n_threads=1,
+    backend="cpu",
     t2s_initial=None,
     s0_initial=None,
     voxels_to_refit=None,
@@ -553,6 +768,8 @@ def fit_decay_ts(
     n_threads : int, optional
         Number of threads to use. Default is 1. If None or <= 0, uses the number
         of available CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend for curve fitting. Default is ``cpu``.
     t2s_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
         Initial T2* estimates for curvefit. If None, log-linear estimates are used.
     s0_initial : (Md x T) :obj:`numpy.ndarray` or None, optional
@@ -587,6 +804,7 @@ def fit_decay_ts(
     :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
         parameter.
     """
+    backend = utils._resolve_backend(backend)
     if n_threads is None or n_threads <= 0:
         n_threads = os.cpu_count() or 1
     n_samples, _, n_vols = data.shape
@@ -613,6 +831,7 @@ def fit_decay_ts(
             fittype=fittype,
             report=report,
             n_threads=n_threads,
+            backend=backend,
             t2s_initial=t2s_init_vol,
             s0_initial=s0_init_vol,
             voxels_to_refit=refit_vol,
@@ -826,6 +1045,7 @@ def t2smap_subworkflow(
     io_generator,
     data_without_excluded_vols=None,
     n_threads=1,
+    backend="cpu",
 ):
     """Fit a T2* map to the data.
 
@@ -848,6 +1068,8 @@ def t2smap_subworkflow(
         For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
     n_threads : int
         Number of threads to use.
+    backend : {"cpu", "cuda", "auto"}
+        Compute backend for curve fitting.
     interpolate_failing_voxels : bool
         Whether to interpolate failing voxels.
     io_generator : :obj:`tedana.io.IOGenerator`
@@ -873,6 +1095,7 @@ def t2smap_subworkflow(
         adaptive_mask=masksum_masked,
         fittype=fittype,
         n_threads=n_threads,
+        backend=backend,
     )
 
     if fittype == "curvefit":
@@ -928,6 +1151,7 @@ def t2smap_subworkflow(
                 adaptive_mask=masksum_masked,
                 fittype=fittype,
                 n_threads=n_threads,
+                backend=backend,
                 t2s_initial=t2s_interp,
                 s0_initial=s0_interp,
                 voxels_to_refit=first_failures,

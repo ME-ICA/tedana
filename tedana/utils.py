@@ -30,6 +30,58 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
+def _resolve_backend(backend):
+    """Resolve a requested execution backend without importing CUDA on the CPU path.
+
+    This shared resolver lets individual workflow steps opt into accelerators
+    while keeping CUDA optional for CPU-only installations.
+
+    Parameters
+    ----------
+    backend : {"cpu", "cuda", "auto"}
+        Requested execution backend. ``"cpu"`` always selects the CPU.
+        ``"cuda"`` requires CuPy and at least one CUDA device. ``"auto"``
+        selects CUDA when available and otherwise falls back to the CPU.
+
+    Returns
+    -------
+    resolved_backend : {"cpu", "cuda"}
+        Available backend selected for the requested configuration.
+
+    Raises
+    ------
+    ValueError
+        If ``backend`` is not ``"cpu"``, ``"cuda"``, or ``"auto"``.
+    RuntimeError
+        If ``backend`` is ``"cuda"`` and CuPy cannot be imported or no CUDA
+        device is available.
+
+    Warns
+    -----
+    Logs a warning when ``backend`` is ``"auto"`` and CUDA is unavailable.
+    """
+    if backend not in {"cpu", "cuda", "auto"}:
+        raise ValueError("backend must be one of 'cpu', 'cuda', or 'auto'")
+    if backend == "cpu":
+        return "cpu"
+
+    try:
+        import cupy as cp
+
+        if cp.cuda.runtime.getDeviceCount() < 1:
+            raise RuntimeError("No CUDA devices were detected")
+    except Exception as exc:
+        if backend == "cuda":
+            raise RuntimeError(
+                "The CUDA backend requires CuPy and an available CUDA device. "
+                "Install tedana with its GPU extra and verify the NVIDIA driver."
+            ) from exc
+        LGR.warning("CUDA backend unavailable (%s); falling back to CPU.", exc)
+        return "cpu"
+
+    return "cuda"
+
+
 def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
