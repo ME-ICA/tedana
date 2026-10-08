@@ -157,7 +157,6 @@ def test_calculate_variance_summary_sets_keys():
     for key in (
         "accepted_variance",
         "rejected_variance",
-        "ignored_variance",
         "unmodeled_variance",
         "retained_variance",
     ):
@@ -371,6 +370,10 @@ def test_generate_tree_tables(tmp_path):
     assert "ICA_00" in status_table
 
 
+def _qc_card_labels(sections):
+    return {r["label"]: r["value"] for section in sections for r in section["rows"]}
+
+
 def test_generate_qc_card_rows():
     component_table = pd.DataFrame(
         {
@@ -385,9 +388,15 @@ def test_generate_qc_card_rows():
         "retained_variance": 70.0,
         "n_echos": 4,
     }
-    decay = {"t2star_mean": 38.2, "rmse_median": 2.8, "n_voxels_fit_mask": 139812}
+    # Values as read back from desc-decay_metrics.json (T2* in seconds, string keys).
+    decay = {
+        "t2star_mean": 0.0382,
+        "rmse_median": 2.8,
+        "n_voxels_fit_mask": 139812,
+        "good_echo_voxel_counts": {"10": 5, "2": 7, "4": 139800},
+    }
 
-    rows = html_report._generate_qc_card(
+    sections = html_report._generate_qc_card(
         component_table=component_table,
         cross_comp_metrics_dict=ccm,
         decay_metrics_dict=decay,
@@ -396,14 +405,22 @@ def test_generate_qc_card_rows():
         n_vols=200,
         n_comps=3,
         tree_node_count=8,
-        version="26.0.4",
     )
 
-    labels = {r["label"]: r["value"] for r in rows}
-    assert "3 total | 2 accepted | 1 rejected" in labels["Components"]
-    assert "56.4%" in labels["Variance accepted"]
-    assert "12.0%" in labels["Variance unmodeled"]
-    assert "38.2" in labels["Mean T2*"]  # decay row present
+    titles = [section["title"] for section in sections]
+    assert titles == [
+        "Components and variance",
+        "Decision criteria",
+        "Data dimensions",
+        "Decay model",
+    ]
+    labels = _qc_card_labels(sections)
+    assert labels["Components"] == "3 total | 2 accepted | 1 rejected"
+    assert "56.4%" in labels["Accepted modeled variance"]
+    assert "12.0%" in labels["Unmodeled variance"]
+    assert labels["Mean T2*"] == "38.2 ms"
+    assert labels["Voxels by good-echo count"] == "2 echoes: 7 | 4 echoes: 139800 | 10 echoes: 5"
+    assert "tedana version" not in labels
     # Missing decay sub-fields (here n_voxels_base_mask) degrade to "n/a", never "None".
     assert "None" not in labels["Fit-mask voxels"]
     assert "n/a" in labels["Fit-mask voxels"]
@@ -411,7 +428,7 @@ def test_generate_qc_card_rows():
 
 def test_generate_qc_card_omits_decay_when_absent():
     component_table = pd.DataFrame({"classification": ["accepted"], "variance explained": [100.0]})
-    rows = html_report._generate_qc_card(
+    sections = html_report._generate_qc_card(
         component_table=component_table,
         cross_comp_metrics_dict={},
         decay_metrics_dict=None,
@@ -420,10 +437,26 @@ def test_generate_qc_card_omits_decay_when_absent():
         n_vols=100,
         n_comps=1,
         tree_node_count=None,
-        version="26.0.4",
     )
-    labels = {r["label"] for r in rows}
-    assert "Mean T2*" not in labels
+    assert "Decay model" not in [section["title"] for section in sections]
+    assert "Mean T2*" not in _qc_card_labels(sections)
+
+
+def test_update_template_bokeh_renders_qc_card_sections(tmp_path):
+    qc_card = [
+        {
+            "title": "Components and variance",
+            "rows": [{"label": "Components", "value": "2 total"}],
+        },
+        {"title": "Decay model", "rows": [{"label": "Mean T2*", "value": "30.0 ms"}]},
+    ]
+
+    body = _render_body(tmp_path, qc_card=qc_card)
+
+    assert "Components and variance" in body
+    assert "Decay model" in body
+    assert "30.0 ms" in body
+    assert body.index("Components and variance") < body.index("Decay model")
 
 
 def test_pca_results_writes_svgs(tmp_path):

@@ -106,8 +106,9 @@ tedana_report.html                                                           The
                                                                              calculated across components. For example, kappa and
                                                                              rho elbows.
                                                                              Also includes aggregate variance measures used by the
-                                                                             QC summary card: accepted_variance, rejected_variance,
-                                                                             ignored_variance, unmodeled_variance (relative to the
+                                                                             QC summary card: accepted_variance and rejected_variance
+                                                                             (relative to the variance modeled by the ICA
+                                                                             decomposition), unmodeled_variance (relative to the
                                                                              raw optimally-combined data), and retained_variance.
 "ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
                                                                              an added "output" field for each node. The output field

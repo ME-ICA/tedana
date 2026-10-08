@@ -79,9 +79,9 @@ def calculate_variance_summary(selector, data_optcom_masked, mixing):
 
     Adds, as percentages:
 
-    - ``accepted_variance``, ``rejected_variance``, ``ignored_variance``: sums of
-      per-component ``"variance explained"`` grouped by classification. These are
-      relative to the ICA decomposition and together sum to ~100%.
+    - ``accepted_variance``, ``rejected_variance``: sums of per-component
+      ``"variance explained"`` grouped by classification. These are relative to the
+      variance modeled by the ICA decomposition and together sum to ~100%.
     - ``unmodeled_variance`` = ``100 - total_r2``, where ``total_r2`` is the variance of
       the raw optimally-combined data explained by the full decomposition.
     - ``retained_variance``: variance of the denoised data (rejected components removed)
@@ -97,7 +97,7 @@ def calculate_variance_summary(selector, data_optcom_masked, mixing):
     """
     component_table = selector.component_table_
 
-    for label in ("accepted", "rejected", "ignored"):
+    for label in ("accepted", "rejected"):
         label_mask = component_table["classification"] == label
         selector.cross_component_metrics_[f"{label}_variance"] = float(
             component_table.loc[label_mask, "variance explained"].sum()

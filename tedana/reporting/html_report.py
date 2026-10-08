@@ -157,7 +157,7 @@ def _update_template_bokeh(
     status_table : str or None
         HTML table of component statuses created by _generate_tree_tables()
     qc_card : list of dict
-        Display rows created by _generate_qc_card()
+        Display sections created by _generate_qc_card()
 
     Returns
     -------
@@ -424,69 +424,106 @@ def _generate_qc_card(
     n_vols,
     n_comps,
     tree_node_count,
-    version,
 ):
-    """Assemble display rows of precomputed run-level QC values for the summary card.
+    """Assemble grouped display rows of precomputed run-level QC values for the summary card.
 
-    Returns a list of ``{"label": str, "value": str}`` rows. Performs no scientific
-    computation; every value is read from precomputed inputs.
+    Returns a list of ``{"title": str, "rows": list}`` sections, where each row is a
+    ``{"label": str, "value": str}`` dict. Performs no scientific computation; every
+    value is read from precomputed inputs.
     """
     counts = component_table["classification"].value_counts().to_dict()
     n_total = int(len(component_table))
     n_accepted = int(counts.get("accepted", 0))
     n_rejected = int(counts.get("rejected", 0))
-    n_ignored = int(counts.get("ignored", 0))
 
     ccm = cross_comp_metrics_dict or {}
 
-    rows = [
+    sections = [
         {
-            "label": "Components",
-            "value": (
-                f"{n_total} total | {n_accepted} accepted | "
-                f"{n_rejected} rejected | {n_ignored} ignored"
-            ),
+            "title": "Components and variance",
+            "rows": [
+                {
+                    "label": "Components",
+                    "value": f"{n_total} total | {n_accepted} accepted | {n_rejected} rejected",
+                },
+                {
+                    "label": "Accepted modeled variance",
+                    "value": _fmt_num(ccm.get("accepted_variance"), "%"),
+                },
+                {
+                    "label": "Rejected modeled variance",
+                    "value": _fmt_num(ccm.get("rejected_variance"), "%"),
+                },
+                {
+                    "label": "Unmodeled variance",
+                    "value": _fmt_num(ccm.get("unmodeled_variance"), "%"),
+                },
+                {
+                    "label": "Retained variance",
+                    "value": _fmt_num(ccm.get("retained_variance"), "%"),
+                },
+            ],
         },
-        {"label": "Variance accepted", "value": _fmt_num(ccm.get("accepted_variance"), "%")},
-        {"label": "Variance rejected", "value": _fmt_num(ccm.get("rejected_variance"), "%")},
-        {"label": "Variance unmodeled", "value": _fmt_num(ccm.get("unmodeled_variance"), "%")},
-        {"label": "Variance retained", "value": _fmt_num(ccm.get("retained_variance"), "%")},
-        {"label": "Kappa elbow", "value": _fmt_num(kappa_elbow, decimals=2)},
-        {"label": "Rho elbow", "value": _fmt_num(rho_elbow, decimals=2)},
         {
-            "label": "Dimensions",
-            "value": (
-                f"{n_vols} volumes | {ccm.get('n_echos', 'n/a')} echoes | " f"{n_comps} components"
-            ),
+            "title": "Decision criteria",
+            "rows": [
+                {"label": "Kappa elbow", "value": _fmt_num(kappa_elbow, decimals=2)},
+                {"label": "Rho elbow", "value": _fmt_num(rho_elbow, decimals=2)},
+                {
+                    "label": "Decision-tree nodes",
+                    "value": "n/a" if tree_node_count is None else str(tree_node_count),
+                },
+            ],
         },
         {
-            "label": "Decision-tree nodes",
-            "value": "n/a" if tree_node_count is None else str(tree_node_count),
+            "title": "Data dimensions",
+            "rows": [
+                {
+                    "label": "Dimensions",
+                    "value": (
+                        f"{n_vols} volumes | {ccm.get('n_echos', 'n/a')} echoes | "
+                        f"{n_comps} components"
+                    ),
+                },
+            ],
         },
-        {"label": "tedana version", "value": str(version)},
     ]
 
     if decay_metrics_dict:
-        rows.append(
-            {"label": "Mean T2*", "value": _fmt_num(decay_metrics_dict.get("t2star_mean"), " ms")}
+        decay_rows = []
+        # T2* is stored in seconds; display it in milliseconds.
+        t2star_mean = decay_metrics_dict.get("t2star_mean")
+        decay_rows.append(
+            {
+                "label": "Mean T2*",
+                "value": _fmt_num(None if t2star_mean is None else 1000 * t2star_mean, " ms"),
+            }
         )
-        rows.append(
+        decay_rows.append(
             {"label": "Median RMSE", "value": _fmt_num(decay_metrics_dict.get("rmse_median"))}
         )
         fit_vox = decay_metrics_dict.get("n_voxels_fit_mask")
         base_vox = decay_metrics_dict.get("n_voxels_base_mask")
         fit_vox_txt = "n/a" if fit_vox is None else str(fit_vox)
         base_vox_txt = "n/a" if base_vox is None else str(base_vox)
-        rows.append(
+        decay_rows.append(
             {
                 "label": "Fit-mask voxels",
                 "value": f"{fit_vox_txt} of {base_vox_txt} base-mask voxels",
             }
         )
+        good_echo_counts = decay_metrics_dict.get("good_echo_voxel_counts")
+        if good_echo_counts:
+            # JSON round-tripping turns the integer keys into strings.
+            good_echo_txt = " | ".join(
+                f"{n_echoes} echoes: {good_echo_counts[key]}"
+                for n_echoes, key in sorted((int(k), k) for k in good_echo_counts)
+            )
+            decay_rows.append({"label": "Voxels by good-echo count", "value": good_echo_txt})
         if decay_metrics_dict.get("n_fit_failures") is not None:
             after = decay_metrics_dict.get("n_fit_failures_after_interpolation")
             after_txt = "n/a" if after is None else str(after)
-            rows.append(
+            decay_rows.append(
                 {
                     "label": "Fit failures",
                     "value": (
@@ -495,8 +532,9 @@ def _generate_qc_card(
                     ),
                 }
             )
+        sections.append({"title": "Decay model", "rows": decay_rows})
 
-    return rows
+    return sections
 
 
 def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_sne) -> None:
@@ -678,7 +716,6 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
         n_vols=n_vols,
         n_comps=n_comps,
         tree_node_count=tree_node_count,
-        version=__version__,
     )
 
     body = _update_template_bokeh(
