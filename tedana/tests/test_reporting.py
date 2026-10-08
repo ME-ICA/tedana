@@ -4,7 +4,10 @@ import json
 import re
 import shutil
 from os.path import dirname, join
+from pathlib import Path
+from types import SimpleNamespace
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,6 +22,65 @@ def test_smoke_trim_edge_zeros():
     """Ensures that trim_edge_zeros works with random inputs."""
     arr = np.random.random((100, 100))
     assert reporting.static_figures._trim_edge_zeros(arr) is not None
+
+
+def test_comp_figures_smoke(tmp_path, monkeypatch):
+    """Load component maps once and generate one PNG per component."""
+    component_maps = np.arange(16, dtype=np.float32).reshape(2, 2, 2, 2)
+    component_maps_file = tmp_path / "components.nii.gz"
+    nb.save(nb.Nifti1Image(component_maps, np.eye(4)), component_maps_file)
+
+    reference_img = nb.Nifti1Image(np.zeros((2, 2, 2, 4)), np.eye(4))
+    component_table = pd.DataFrame(
+        {
+            "classification": ["accepted", "rejected"],
+            "classification_tags": ["Likely BOLD", "Low variance"],
+            "variance explained": [60.0, 40.0],
+            "kappa": [10.0, 2.0],
+            "rho": [2.0, 10.0],
+        },
+    )
+    mixing = np.arange(8, dtype=float).reshape(4, 2)
+    figures_dir = tmp_path / "figures"
+    figures_dir.mkdir()
+    io_generator = SimpleNamespace(
+        get_name=lambda name: (str(component_maps_file) if name == "ICA components img" else None),
+        reference_img=reference_img,
+        out_dir=str(tmp_path),
+        prefix="sub-01_",
+    )
+    original_load = nb.load
+    load_calls = []
+    plotted_maps = []
+
+    def tracked_load(filename):
+        load_calls.append(filename)
+        return original_load(filename)
+
+    def fake_plot_component(**kwargs):
+        assert kwargs["stat_img"].shape == (2, 2, 2)
+        plotted_maps.append(kwargs["stat_img"].get_fdata())
+        Path(kwargs["out_file"]).touch()
+
+    monkeypatch.setattr(reporting.static_figures.nb, "load", tracked_load)
+    monkeypatch.setattr(reporting.static_figures, "plot_component", fake_plot_component)
+
+    reporting.static_figures.comp_figures(
+        component_table=component_table,
+        mixing=mixing,
+        io_generator=io_generator,
+        png_cmap="coolwarm",
+    )
+
+    assert load_calls == [str(component_maps_file)]
+    np.testing.assert_array_equal(
+        np.stack(plotted_maps, axis=-1),
+        component_maps,
+    )
+    assert sorted(path.name for path in figures_dir.glob("*.png")) == [
+        "sub-01_comp_000.png",
+        "sub-01_comp_001.png",
+    ]
 
 
 def test_calculate_rejected_components_impact():
@@ -144,6 +206,26 @@ def test_plot_heatmap_nonfinite_distances_warns_and_succeeds(tmp_path):
             out_file=str(out_file),
         )
 
+    assert out_file.exists()
+
+
+def test_plot_stat_mosaic_writes_output(tmp_path):
+    import nibabel as nb
+    import numpy as np
+
+    from tedana.reporting import static_figures
+
+    affine = np.eye(4)
+    data = np.abs(np.random.RandomState(0).randn(12, 12, 12)).astype("float32")
+    img = nb.Nifti1Image(data, affine)
+    in_file = tmp_path / "map.nii.gz"
+    img.to_filename(in_file)
+    mask = nb.Nifti1Image(np.ones((12, 12, 12), dtype="int16"), affine)
+
+    out_file = tmp_path / "map.svg"
+    static_figures._plot_stat_mosaic(
+        in_file=str(in_file), out_file=str(out_file), cmap="Reds", mask_img=mask
+    )
     assert out_file.exists()
 
 
@@ -342,3 +424,67 @@ def test_generate_qc_card_omits_decay_when_absent():
     )
     labels = {r["label"] for r in rows}
     assert "Mean T2*" not in labels
+
+
+def test_pca_results_writes_svgs(tmp_path):
+    import numpy as np
+
+    from tedana.reporting import static_figures
+
+    (tmp_path / "figures").mkdir()
+
+    class _IO:
+        prefix = ""
+        out_dir = str(tmp_path)
+
+    n = 12
+    criteria = np.random.RandomState(0).rand(3, n)
+    n_components = np.array([3, 4, 5, 6, 7])
+    all_varex = np.linspace(0.1, 1.0, n)
+
+    static_figures.pca_results(criteria, n_components, all_varex, _IO())
+
+    assert (tmp_path / "figures" / "pca_criteria.svg").exists()
+    assert (tmp_path / "figures" / "pca_variance_explained.svg").exists()
+    assert not (tmp_path / "figures" / "pca_criteria.png").exists()
+
+
+def test_update_template_bokeh_pca_tab(tmp_path):
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for name in ("pca_criteria.svg", "pca_variance_explained.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="tab-pca"' in body
+    assert 'id="pane-pca"' in body
+    assert 'id="pcaCriteriaPlot"' in body
+    assert 'id="pcaVariancePlot"' in body
+    # PCA pane sits between Info and ICA.
+    assert body.index('id="pane-info"') < body.index('id="pane-pca"') < body.index('id="pane-ica"')
+
+
+def test_update_template_bokeh_omits_empty_curvefit_quality(tmp_path):
+    """The Curve-fit quality heading is not shown when it would have no content."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    # T2* estimate present (so the Decay tab exists), but no RMSE/variance/failures.
+    for name in ("t2star_brain.svg", "t2star_histogram.svg"):
+        (figures / name).touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-decay"' in body
+    assert "Parameter estimates" in body
+    assert "Curve-fit quality" not in body
+
+
+def test_update_template_bokeh_no_pca_tab(tmp_path):
+    figures = tmp_path / "figures"
+    figures.mkdir()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-pca"' not in body
+    assert 'id="tab-pca"' not in body

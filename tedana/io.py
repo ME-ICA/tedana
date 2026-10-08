@@ -355,7 +355,10 @@ class OutputGenerator:
         img = masking.unmask(data.T, mask)
         if img.ndim == 4:
             # Only set the TR for 4D images.
-            img.header.set_zooms(self.reference_img.header.get_zooms())
+            zooms = self.reference_img.header.get_zooms()
+            if len(zooms) == 3:
+                zooms = zooms + (1.0,)
+            img.header.set_zooms(zooms)
 
         img.to_filename(name)
 
@@ -769,7 +772,7 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(data_optcom, mask, component_table, mixing, io_generator):
+def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixing_orig=None):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -782,11 +785,14 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
         "classification".
-    mixing : (C x T) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    ref_img : :obj:`str` or img_like
+    io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
+    mixing_orig : (T x C) array_like or None, optional
+        Non-orthogonalized mixing matrix.
+        If defined, it will be used for the component maps, but not for denoising.
 
     See Also
     --------
@@ -807,17 +813,30 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator):
     desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted components.
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
+    desc-ICAOrth_components.nii.gz               Spatial component maps for all components from
+                                                 orthogonalized mixing matrix. Only created if
+                                                 tedort and verbose are enabled.
     =========================================    ===============================================
     """
     acc = component_table[component_table.classification == "accepted"].index.values
     write_split_ts(data_optcom, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(data_optcom, mixing)
+    if mixing_orig is not None:
+        mixing_for_denoising = mixing
+        mixing_for_components = mixing_orig
+    else:
+        mixing_for_denoising = mixing_for_components = mixing
+
+    ts_pes = get_coeffs(data_optcom, mixing_for_components)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
+    if io_generator.verbose and (mixing_orig is not None):
+        ts_pes_orth = get_coeffs(data_optcom, mixing_for_denoising)
+        fout = io_generator.save_file(ts_pes_orth, "ICA orthogonalized components img")
+        LGR.info(f"Writing orthogonalized ICA coefficient feature set: {fout}")
 
     data_optcom_z = stats.zscore(data_optcom[mask, :], axis=-1)
-    mixing_z = stats.zscore(mixing, axis=0)
+    mixing_z = stats.zscore(mixing_for_components, axis=0)
     betas_oc = get_coeffs(data_optcom_z, mixing_z)
     fout = io_generator.save_file(betas_oc, "z-scored ICA components img", mask=mask)
     del data_optcom_z, mixing_z
@@ -1069,6 +1088,7 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
     ----------
     data : list of str
         List of paths to input files. May only have one element for z-concatenated data.
+        Input files may be 3D single-volume images or 4D time series.
     mask_img : nibabel image
         Mask image to apply
     n_echos : int
@@ -1079,7 +1099,8 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
     Returns
     -------
     data_cat : (Mb x E x T) array
-        Masked multi-echo data where Mb is samples in base mask, E is echoes, T is time
+        Masked multi-echo data where Mb is samples in base mask, E is echoes, T is time.
+        3D inputs are returned with a singleton time dimension.
 
     Notes
     -----
@@ -1090,13 +1111,15 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
     # Precompute mask boolean array once (C-order matches numpy boolean indexing semantics).
     mask_bool = np.asanyarray(mask_img.dataobj).astype(bool)
 
-    def _mask_4d(img):
-        """Return (Mb x T) array from a 4D image using mask_bool."""
+    def _mask_img(img):
+        """Return (Mb x T) array from a 3D or 4D image using mask_bool."""
         if img.shape[:3] != mask_bool.shape:
             raise ValueError("Image/mask shape mismatch")
         arr = np.asarray(img.dataobj, dtype=dtype)
-        if arr.ndim != 4:
-            raise ValueError("Expected 4D image")
+        if arr.ndim == 3:
+            arr = arr[..., np.newaxis]
+        elif arr.ndim != 4:
+            raise ValueError("Expected 3D or 4D image")
         # boolean indexing on first 3 dims yields (Mb, T)
         return arr[mask_bool]
 
@@ -1112,8 +1135,10 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
         n_z = data_img.shape[2] // n_echos
         # Load full z-concatenated data once, then slice per echo in numpy.
         arr = np.asarray(data_img.dataobj, dtype=dtype)
-        if arr.ndim != 4:
-            raise ValueError("Expected 4D z-concatenated image")
+        if arr.ndim == 3:
+            arr = arr[..., np.newaxis]
+        elif arr.ndim != 4:
+            raise ValueError("Expected 3D or 4D z-concatenated image")
         masked = []
         for i_echo in range(n_echos):
             echo_arr = arr[:, :, i_echo * n_z : (i_echo + 1) * n_z, :]
@@ -1125,7 +1150,7 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
     else:
         # Fast path: direct indexing (avoids nilearn overhead)
         try:
-            masked = [_mask_4d(_convert_to_nifti1(nb.load(f))) for f in data]
+            masked = [_mask_img(_convert_to_nifti1(nb.load(f))) for f in data]
             return np.stack(masked, axis=1)
         except Exception:
             # Slow, robust fallback
@@ -1133,11 +1158,14 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
             masked = []
             for img in data_imgs:
                 m = masking.apply_mask(img, mask_img)
-                # nilearn returns (T, Mb) for 4D inputs. For 3D inputs it returns (Mb,),
-                # which would silently produce an incorrectly shaped output.
-                if m.ndim != 2:
-                    raise ValueError("Expected 4D image")
-                masked.append(m.T.astype(dtype, copy=False))
+                if m.ndim == 1:
+                    m = m[:, np.newaxis]
+                elif m.ndim == 2:
+                    # nilearn returns (T, Mb) for 4D inputs.
+                    m = m.T
+                else:
+                    raise ValueError("Expected 3D or 4D image")
+                masked.append(m.astype(dtype, copy=False))
             return np.stack(masked, axis=1)
 
 
@@ -1200,7 +1228,8 @@ def load_ref_img(data, n_echos):
     Parameters
     ----------
     data : list of str
-        List of paths to input files
+        List of paths to input files. Echo-specific files may be 3D single-volume
+        images or 4D time series.
     n_echos : int
         Number of echoes in the data
 
@@ -1217,7 +1246,10 @@ def load_ref_img(data, n_echos):
         # z-cat data
         data_img = _convert_to_nifti1(nb.load(data[0]))
         n_z = data_img.shape[2] // n_echos
-        arr = data_img.slicer[:, :, :n_z, :].get_fdata()
+        if data_img.ndim == 3:
+            arr = np.asanyarray(data_img.dataobj)[:, :, :n_z]
+        else:
+            arr = data_img.slicer[:, :, :n_z, :].get_fdata()
         # Using slicer to create the image messes up the affine, so we need to create the
         # image manually. Use a header copy with dimensions updated to match the ref array,
         # since the original header describes the full z-concatenated volume.
