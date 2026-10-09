@@ -348,6 +348,30 @@ def test_load_data_nilearn_zcat_mask_shape_mismatch(tmp_path):
         )
 
 
+def test_load_data_nilearn_zcat_indivisible_volumes(tmp_path):
+    """Z-concatenated inputs must have volumes evenly divisible by n_echos."""
+    affine = np.eye(4)
+    x, y, n_z, n_vols, n_echos = 4, 3, 2, 5, 3
+    z_cat = (n_z * n_echos) + 1  # one extra volume: not divisible by n_echos
+
+    mask_img = nb.Nifti1Image(np.ones((x, y, n_z), dtype=np.uint8), affine)
+
+    arr = np.zeros((x, y, z_cat, n_vols), dtype=np.float32)
+    zcat_path = tmp_path / "zcat_extra.nii.gz"
+    nb.Nifti1Image(arr, affine).to_filename(zcat_path)
+
+    with pytest.raises(ValueError, match="not evenly divisible by the number of echoes"):
+        me.load_data_nilearn(
+            [str(zcat_path)],
+            mask_img=mask_img,
+            n_echos=n_echos,
+            dtype=np.float32,
+        )
+
+    with pytest.raises(ValueError, match="not evenly divisible by the number of echoes"):
+        me.load_ref_img([str(zcat_path)], n_echos=n_echos)
+
+
 def test_load_data_nilearn_multi_echo_mask_shape_mismatch_executes_fastpath_check(
     tmp_path, monkeypatch
 ):
@@ -439,6 +463,28 @@ def test_load_data_nilearn_multi_echo_fallback_path(tmp_path, monkeypatch):
     assert out.shape == expected.shape
     assert out.dtype == np.float32
     assert np.allclose(out, expected)
+
+
+def test_load_data_nilearn_file_count_mismatch(tmp_path):
+    """The number of echo files must match n_echos."""
+    affine = np.eye(4)
+    shape3d = (4, 3, 2)
+
+    mask_img = nb.Nifti1Image(np.ones(shape3d, dtype=np.uint8), affine)
+
+    echo = np.random.RandomState(0).rand(*shape3d, 5).astype(np.float32)
+    e1_path = tmp_path / "echo1.nii.gz"
+    e2_path = tmp_path / "echo2.nii.gz"
+    nb.Nifti1Image(echo, affine).to_filename(e1_path)
+    nb.Nifti1Image(echo, affine).to_filename(e2_path)
+
+    with pytest.raises(ValueError, match="does not match the number of echoes"):
+        me.load_data_nilearn(
+            [str(e1_path), str(e2_path)],
+            mask_img=mask_img,
+            n_echos=3,
+            dtype=np.float32,
+        )
 
 
 def test_convert_to_nifti1():
