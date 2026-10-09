@@ -220,6 +220,15 @@ def _get_parser():
         default=1,
     )
     performance_args.add_argument(
+        "--backend",
+        choices=["cpu", "cuda", "auto"],
+        help=(
+            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "'auto' uses CUDA when available and otherwise uses CPU."
+        ),
+        default="cpu",
+    )
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -269,6 +278,7 @@ def t2smap_workflow(
     quiet=False,
     overwrite=False,
     n_threads=1,
+    backend="cpu",
     t2smap_command=None,
 ):
     """
@@ -332,6 +342,9 @@ def t2smap_workflow(
         Number of threads to use. Used by threadpoolctl to set the parameter
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
+    backend : {'cpu', 'cuda', 'auto'}, optional
+        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
+        only. Default is 'cpu'.
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
 
@@ -500,6 +513,7 @@ def t2smap_workflow(
         io_generator=io_generator,
         data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
+        backend=backend,
     )
 
     LGR.info("Computing optimal combination")
