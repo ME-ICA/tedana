@@ -430,6 +430,22 @@
 
 <!-- Info tab -->
 <div class="tab-pane" id="pane-info" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
+  <div class="qc-summary-card">
+    <h1>tedana QC summary</h1>
+    <table>
+      {% for section in qcCard %}
+      <tr>
+        <th colspan="2" style="text-align: left; padding-top: 0.75em; border-bottom: 1px solid #ccc;">{{ section.title }}</th>
+      </tr>
+      {% for row in section.rows %}
+      <tr>
+        <td style="text-align: left; padding-right: 1em; white-space: nowrap; font-weight: 600;">{{ row.label }}</td>
+        <td>{{ row.value }}</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </table>
+  </div>
   <div class="info">
     <h1>Info</h1>
     {{ info }}

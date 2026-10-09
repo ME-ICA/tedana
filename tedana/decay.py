@@ -815,6 +815,99 @@ def rmse_of_fit_decay_ts(
     return rmse_map, rmse_df
 
 
+def generate_decay_metrics(
+    *,
+    t2star,
+    s0,
+    rmse_map,
+    adaptive_mask,
+    n_fit_failures=None,
+    n_fit_failures_after_interpolation=None,
+):
+    """Summarize decay-fit quality into a dict for the QC report.
+
+    All array inputs are in base-mask sample space (one entry per base-mask voxel)
+    and must be 1D (``(S,)``). This function is only meaningful for scalar,
+    per-voxel summaries; time-varying (``fitmode == "ts"``) maps are not supported.
+
+    Parameters
+    ----------
+    t2star, s0, rmse_map : (S,) array_like
+        Full T2*, S0, and fit-RMSE maps in base-mask sample space. Must be 1D.
+    adaptive_mask : (S,) array_like
+        Integer count of good echoes per base-mask voxel (0 means no good echo).
+        Must be 1D.
+    n_fit_failures, n_fit_failures_after_interpolation : int or None
+        Curve-fit failure counts. ``None`` when curve-fitting was not used, in which
+        case the corresponding keys are omitted from the returned dict.
+
+    Returns
+    -------
+    dict
+
+    Raises
+    ------
+    ValueError
+        If any of ``adaptive_mask``, ``t2star``, ``s0``, or ``rmse_map`` is not 1D.
+        This most often happens when ``fitmode == "ts"`` produces 2D
+        (voxels x time) maps, for which a scalar summary is ill-defined.
+    """
+    adaptive_mask = np.asarray(adaptive_mask)
+    for name, arr in (
+        ("adaptive_mask", adaptive_mask),
+        ("t2star", t2star),
+        ("s0", s0),
+        ("rmse_map", rmse_map),
+    ):
+        arr = np.asarray(arr)
+        if arr.ndim != 1:
+            raise ValueError(
+                "generate_decay_metrics expects 1D base-mask-space arrays; "
+                f"got shape {arr.shape} for '{name}'."
+            )
+
+    fit_mask = adaptive_mask >= 1
+
+    def _finite_mean_median(arr):
+        arr = np.asarray(arr, dtype=float)[fit_mask]
+        # Exclude zeros: modify_t2s_s0_maps fills NaN S0 values with 0.0, and
+        # those placeholders would otherwise bias the mean/median.
+        arr = arr[np.isfinite(arr) & (arr != 0)]
+        if arr.size == 0:
+            return None, None
+        return float(np.mean(arr)), float(np.median(arr))
+
+    t2star_mean, t2star_median = _finite_mean_median(t2star)
+    s0_mean, s0_median = _finite_mean_median(s0)
+
+    rmse = np.asarray(rmse_map, dtype=float)[fit_mask]
+    rmse = rmse[np.isfinite(rmse)]
+    rmse_mean = float(np.mean(rmse)) if rmse.size else None
+    rmse_median = float(np.median(rmse)) if rmse.size else None
+
+    good_echo_voxel_counts = {
+        int(n): int((adaptive_mask == n).sum()) for n in np.unique(adaptive_mask[fit_mask])
+    }
+
+    metrics = {
+        "t2star_mean": t2star_mean,
+        "t2star_median": t2star_median,
+        "s0_mean": s0_mean,
+        "s0_median": s0_median,
+        "rmse_mean": rmse_mean,
+        "rmse_median": rmse_median,
+        "n_voxels_base_mask": int(adaptive_mask.size),
+        "n_voxels_fit_mask": int(fit_mask.sum()),
+        "good_echo_voxel_counts": good_echo_voxel_counts,
+    }
+    if n_fit_failures is not None:
+        metrics["n_fit_failures"] = int(n_fit_failures)
+    if n_fit_failures_after_interpolation is not None:
+        metrics["n_fit_failures_after_interpolation"] = int(n_fit_failures_after_interpolation)
+
+    return metrics
+
+
 def t2smap_subworkflow(
     data_cat,
     tes,
@@ -861,6 +954,9 @@ def t2smap_subworkflow(
     t2s_full : (Mb x T) :obj:`numpy.ndarray`
         The full T2* map.
     """
+    n_fit_failures = None
+    n_fit_failures_after_interpolation = None
+
     data_for_fit = (
         data_without_excluded_vols if data_without_excluded_vols is not None else data_cat
     )
@@ -992,6 +1088,11 @@ def t2smap_subworkflow(
         failures_map = first_pass_failures.astype(np.uint8)
         if interpolate_failing_voxels and first_pass_failures.any():
             failures_map += failures.astype(np.uint8)
+
+        n_fit_failures = int(first_pass_failures.sum())
+        if interpolate_failing_voxels and first_pass_failures.any():
+            n_fit_failures_after_interpolation = int(failures.sum())
+
         io_generator.save_file(failures_map, "fit failures img", mask=mask_denoise)
 
         if io_generator.verbose:
@@ -1040,7 +1141,21 @@ def t2smap_subworkflow(
         s0=s0_full,
         fitmode=fitmode,
     )
-    del s0_full
     io_generator.save_file(rmse_map, "rmse img")
     io_generator.save_file(rmse_df, "confounds tsv")
+
+    if fitmode == "all":
+        # In fitmode == "ts", the T2*/S0/RMSE maps are time-varying (Mb x T), so a
+        # single scalar summary per voxel is ill-defined and decay metrics are
+        # simply not written.
+        decay_metrics = generate_decay_metrics(
+            t2star=t2s_full,
+            s0=s0_full,
+            rmse_map=rmse_map,
+            adaptive_mask=masksum_denoise,
+            n_fit_failures=n_fit_failures,
+            n_fit_failures_after_interpolation=n_fit_failures_after_interpolation,
+        )
+        io_generator.save_file(decay_metrics, "decay metrics json")
+
     return t2s_full

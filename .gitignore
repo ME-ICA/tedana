@@ -126,3 +126,6 @@ ENV/
 # vim swap files
 *.swp
 
+
+# Local agent instruction files
+CLAUDE.md

@@ -8,4 +8,5 @@ T2starmap.nii.gz
 figures
 t2smap_call.sh
 desc-confounds_timeseries.tsv
+desc-decay_metrics.json
 desc-rmse_statmap.nii.gz
