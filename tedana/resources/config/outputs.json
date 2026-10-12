@@ -43,6 +43,10 @@
         "orig": "ica_components",
         "bidsv1.5.0": "desc-ICA_components"
     },
+    "ICA orthogonalized components img": {
+        "orig": "ica_orth_components",
+        "bidsv1.5.0": "desc-ICAOrth_components"
+    },
     "z-scored PCA components img": {
         "orig": "pca_components",
         "bidsv1.5.0": "desc-PCA_stat-z_components"
@@ -234,6 +238,10 @@
     "ICA orthogonalized mixing tsv": {
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
+    },
+    "decay metrics json": {
+        "orig": "decay_metrics",
+        "bidsv1.5.0": "desc-decay_metrics"
     },
     "registry json": {
         "orig": "registry",

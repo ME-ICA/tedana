@@ -4,7 +4,10 @@ import json
 import re
 import shutil
 from os.path import dirname, join
+from pathlib import Path
+from types import SimpleNamespace
 
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,6 +22,65 @@ def test_smoke_trim_edge_zeros():
     """Ensures that trim_edge_zeros works with random inputs."""
     arr = np.random.random((100, 100))
     assert reporting.static_figures._trim_edge_zeros(arr) is not None
+
+
+def test_comp_figures_smoke(tmp_path, monkeypatch):
+    """Load component maps once and generate one PNG per component."""
+    component_maps = np.arange(16, dtype=np.float32).reshape(2, 2, 2, 2)
+    component_maps_file = tmp_path / "components.nii.gz"
+    nb.save(nb.Nifti1Image(component_maps, np.eye(4)), component_maps_file)
+
+    reference_img = nb.Nifti1Image(np.zeros((2, 2, 2, 4)), np.eye(4))
+    component_table = pd.DataFrame(
+        {
+            "classification": ["accepted", "rejected"],
+            "classification_tags": ["Likely BOLD", "Low variance"],
+            "variance explained": [60.0, 40.0],
+            "kappa": [10.0, 2.0],
+            "rho": [2.0, 10.0],
+        },
+    )
+    mixing = np.arange(8, dtype=float).reshape(4, 2)
+    figures_dir = tmp_path / "figures"
+    figures_dir.mkdir()
+    io_generator = SimpleNamespace(
+        get_name=lambda name: (str(component_maps_file) if name == "ICA components img" else None),
+        reference_img=reference_img,
+        out_dir=str(tmp_path),
+        prefix="sub-01_",
+    )
+    original_load = nb.load
+    load_calls = []
+    plotted_maps = []
+
+    def tracked_load(filename):
+        load_calls.append(filename)
+        return original_load(filename)
+
+    def fake_plot_component(**kwargs):
+        assert kwargs["stat_img"].shape == (2, 2, 2)
+        plotted_maps.append(kwargs["stat_img"].get_fdata())
+        Path(kwargs["out_file"]).touch()
+
+    monkeypatch.setattr(reporting.static_figures.nb, "load", tracked_load)
+    monkeypatch.setattr(reporting.static_figures, "plot_component", fake_plot_component)
+
+    reporting.static_figures.comp_figures(
+        component_table=component_table,
+        mixing=mixing,
+        io_generator=io_generator,
+        png_cmap="coolwarm",
+    )
+
+    assert load_calls == [str(component_maps_file)]
+    np.testing.assert_array_equal(
+        np.stack(plotted_maps, axis=-1),
+        component_maps,
+    )
+    assert sorted(path.name for path in figures_dir.glob("*.png")) == [
+        "sub-01_comp_000.png",
+        "sub-01_comp_001.png",
+    ]
 
 
 def test_calculate_rejected_components_impact():
@@ -78,6 +140,32 @@ def test_calculate_rejected_components_impact_no_acc():
     assert np.isnan(
         selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"]
     )
+
+
+def test_calculate_variance_summary_sets_keys():
+    import numpy as np
+
+    selector = sample_selector()
+    mixing = sample_mixing_matrix()
+    n_vols = mixing.shape[0]
+    rng = np.random.default_rng(0)
+    data_optcom_masked = rng.standard_normal((50, n_vols))
+
+    reporting.quality_metrics.calculate_variance_summary(selector, data_optcom_masked, mixing)
+
+    ccm = selector.cross_component_metrics_
+    for key in (
+        "accepted_variance",
+        "rejected_variance",
+        "unmodeled_variance",
+        "retained_variance",
+    ):
+        assert key in ccm
+        assert isinstance(ccm[key], float)
+
+    # Class-wise variance (decomposition frame) sums to ~ total variance explained.
+    assert 0.0 <= ccm["retained_variance"] <= 100.0
+    assert 0.0 <= ccm["unmodeled_variance"] <= 100.0
 
 
 def test_plot_heatmap_nonfinite_distances_warns_and_succeeds(tmp_path):
@@ -173,6 +261,7 @@ def _render_body(tmp_path, **kwargs):
         "tsne": "",
         "tree_table": None,
         "status_table": None,
+        "qc_card": [],
     }
     render_kwargs.update(kwargs)
     return html_report._update_template_bokeh(**render_kwargs)
@@ -279,6 +368,95 @@ def test_generate_tree_tables(tmp_path):
     assert "kappa, rho" in tree_table
     assert "pure-table" in tree_table
     assert "ICA_00" in status_table
+
+
+def _qc_card_labels(sections):
+    return {r["label"]: r["value"] for section in sections for r in section["rows"]}
+
+
+def test_generate_qc_card_rows():
+    component_table = pd.DataFrame(
+        {
+            "classification": ["accepted", "accepted", "rejected"],
+            "variance explained": [30.0, 26.4, 43.6],
+        }
+    )
+    ccm = {
+        "accepted_variance": 56.4,
+        "rejected_variance": 43.6,
+        "unmodeled_variance": 12.0,
+        "retained_variance": 70.0,
+        "n_echos": 4,
+    }
+    # Values as read back from desc-decay_metrics.json (T2* in seconds, string keys).
+    decay = {
+        "t2star_mean": 0.0382,
+        "rmse_median": 2.8,
+        "n_voxels_fit_mask": 139812,
+        "good_echo_voxel_counts": {"10": 5, "2": 7, "4": 139800},
+    }
+
+    sections = html_report._generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict=ccm,
+        decay_metrics_dict=decay,
+        kappa_elbow=12.7,
+        rho_elbow=9.4,
+        n_vols=200,
+        n_comps=3,
+        tree_node_count=8,
+    )
+
+    titles = [section["title"] for section in sections]
+    assert titles == [
+        "Components and variance",
+        "Decision criteria",
+        "Data dimensions",
+        "Decay model",
+    ]
+    labels = _qc_card_labels(sections)
+    assert labels["Components"] == "3 total | 2 accepted | 1 rejected"
+    assert "56.4%" in labels["Accepted modeled variance"]
+    assert "12.0%" in labels["Unmodeled variance"]
+    assert labels["Mean T2*"] == "38.2 ms"
+    assert labels["Voxels by good-echo count"] == "2 echoes: 7 | 4 echoes: 139800 | 10 echoes: 5"
+    assert "tedana version" not in labels
+    # Missing decay sub-fields (here n_voxels_base_mask) degrade to "n/a", never "None".
+    assert "None" not in labels["Fit-mask voxels"]
+    assert "n/a" in labels["Fit-mask voxels"]
+
+
+def test_generate_qc_card_omits_decay_when_absent():
+    component_table = pd.DataFrame({"classification": ["accepted"], "variance explained": [100.0]})
+    sections = html_report._generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict={},
+        decay_metrics_dict=None,
+        kappa_elbow=None,
+        rho_elbow=None,
+        n_vols=100,
+        n_comps=1,
+        tree_node_count=None,
+    )
+    assert "Decay model" not in [section["title"] for section in sections]
+    assert "Mean T2*" not in _qc_card_labels(sections)
+
+
+def test_update_template_bokeh_renders_qc_card_sections(tmp_path):
+    qc_card = [
+        {
+            "title": "Components and variance",
+            "rows": [{"label": "Components", "value": "2 total"}],
+        },
+        {"title": "Decay model", "rows": [{"label": "Mean T2*", "value": "30.0 ms"}]},
+    ]
+
+    body = _render_body(tmp_path, qc_card=qc_card)
+
+    assert "Components and variance" in body
+    assert "Decay model" in body
+    assert "30.0 ms" in body
+    assert body.index("Components and variance") < body.index("Decay model")
 
 
 def test_pca_results_writes_svgs(tmp_path):
