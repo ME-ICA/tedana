@@ -60,6 +60,7 @@ def _resolve_backend(backend):
     -----
     Logs a warning when ``backend`` is ``"auto"`` and CUDA is unavailable.
     """
+    backend = backend.lower()
     if backend not in {"cpu", "cuda", "auto"}:
         raise ValueError("backend must be one of 'cpu', 'cuda', or 'auto'")
     if backend == "cpu":
@@ -70,6 +71,8 @@ def _resolve_backend(backend):
 
         if cp.cuda.runtime.getDeviceCount() < 1:
             raise RuntimeError("No CUDA devices were detected")
+        else:
+            LGR.info(f"Running with {cp.cuda.runtime.getDeviceCount()} GPUs")
     except Exception as exc:
         if backend == "cuda":
             raise RuntimeError(
