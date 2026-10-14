@@ -420,7 +420,277 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
     }
 
 
-def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
+def _project_complex_s0(xp, signal, echo_times, r2star, frequency_hz):
+    """Solve per-group complex S0 for fixed R2*/frequency and return the residuals.
+
+    Parameters
+    ----------
+    xp : module
+        Array module (:mod:`numpy` or :mod:`cupy`).
+    signal : (B, G, E) complex array
+        Batched complex data with ``G`` groups of ``E`` echoes per problem.
+    echo_times : (E,) array
+        Echo times in seconds.
+    r2star, frequency_hz : (B,) array
+        Shared R2* (s^-1) and off-resonance frequency (Hz) for each problem.
+
+    Returns
+    -------
+    basis : (B, E) complex array
+        Decay basis ``exp((-R2* + 1j*2*pi*f) * TE)``.
+    basis_norm : (B,) array
+        Squared norm of ``basis``.
+    s0 : (B, G) complex array
+        Least-squares complex S0 for each group.
+    residual : (B, G, E) complex array
+        ``s0 * basis - signal``.
+    cost : (B,) array
+        Half the sum of squared residual magnitudes.
+    """
+    basis = xp.exp((-r2star[:, None] + 2j * np.pi * frequency_hz[:, None]) * echo_times[None, :])
+    basis_norm = xp.sum(basis.real**2 + basis.imag**2, axis=1)
+    s0 = xp.sum(xp.conj(basis)[:, None, :] * signal, axis=2) / basis_norm[:, None]
+    residual = s0[:, :, None] * basis[:, None, :] - signal
+    cost = 0.5 * xp.sum(residual.real**2 + residual.imag**2, axis=(1, 2))
+    return basis, basis_norm, s0, residual, cost
+
+
+def _gauss_newton_complex(xp, signal, echo_times, basis, basis_norm, s0, residual):
+    """Build the 2x2 Gauss--Newton system for the variable-projection functional.
+
+    The residual ``P y - y`` (with ``P`` the projection onto the decay basis)
+    is differentiated exactly with respect to R2* and frequency, including the
+    dependence of the projected S0 on those parameters.
+
+    Returns
+    -------
+    a00, a01, a11 : (B,) array
+        Entries of ``J^T J`` for ``[R2*, frequency_hz]``.
+    g0, g1 : (B,) array
+        Entries of ``J^T r``.
+    """
+    d_basis_r2star = -echo_times[None, :] * basis
+    d_basis_freq = 2j * np.pi * echo_times[None, :] * basis
+    jacobians = []
+    for d_basis in (d_basis_r2star, d_basis_freq):
+        d_norm = 2.0 * xp.sum((xp.conj(basis) * d_basis).real, axis=1)
+        d_proj = xp.sum(xp.conj(d_basis)[:, None, :] * signal, axis=2)
+        coefficient = (d_proj - s0 * d_norm[:, None]) / basis_norm[:, None]
+        jacobians.append(
+            d_basis[:, None, :] * s0[:, :, None] + basis[:, None, :] * coefficient[:, :, None]
+        )
+    jac_r2star, jac_freq = jacobians
+
+    def _inner(left, right):
+        return xp.sum((xp.conj(left) * right).real, axis=(1, 2))
+
+    return (
+        _inner(jac_r2star, jac_r2star),
+        _inner(jac_r2star, jac_freq),
+        _inner(jac_freq, jac_freq),
+        _inner(jac_r2star, residual),
+        _inner(jac_freq, residual),
+    )
+
+
+def _fit_complex_groups_batched(
+    xp,
+    signal,
+    echo_times,
+    fit_groups=None,
+    min_r2star=MIN_R2STAR,
+    n_iterations=100,
+    tolerance=1e-7,
+):
+    """Fit shared R2*/frequency with per-group complex S0 for a batch of problems.
+
+    This is a vectorized Levenberg--Marquardt solver for the variable-projection
+    form of the complex monoexponential model. Each of the ``B`` problems has
+    ``G`` groups of ``E`` echoes that share R2* and frequency, while each group
+    has its own complex S0, which is solved analytically. It covers every
+    complex fit mode: ``fitmode="all"`` and ``"ts"`` are problems with a single
+    group, and ``fitmode="varys0"`` uses one group per volume. The solver is
+    written against an array module so that the same code runs on the CPU
+    (NumPy) and on CUDA devices (CuPy).
+
+    Parameters
+    ----------
+    xp : module
+        Array module (:mod:`numpy` or :mod:`cupy`).
+    signal : (B, G, E) complex array
+        Finite complex data, already on the device associated with ``xp``.
+    echo_times : (E,) array
+        Echo times in seconds. Must not all be equal.
+    fit_groups : (G,) bool array or None, optional
+        Groups used to estimate R2*/frequency. S0 is solved for all groups.
+        None uses every group.
+    min_r2star : float, optional
+        Lower bound on R2* in s^-1. Default is ``MIN_R2STAR``.
+    n_iterations : int, optional
+        Maximum number of Levenberg--Marquardt iterations. Default is 100.
+    tolerance : float, optional
+        Relative size of the undamped Gauss--Newton step below which a problem
+        is considered converged. Default is 1e-7.
+
+    Returns
+    -------
+    r2star, frequency_hz : (B,) array
+        Estimated R2* (s^-1) and frequency (Hz).
+    s0 : (B, G) complex array
+        Complex S0 for every group, including those excluded by ``fit_groups``.
+    converged : (B,) bool array
+        Whether each problem reached a stationary point of the bounded problem.
+    """
+    signal = xp.asarray(signal, dtype=xp.complex128)
+    echo_times = xp.asarray(echo_times, dtype=xp.float64)
+    fit_signal = signal if fit_groups is None else signal[:, xp.asarray(fit_groups)]
+
+    # Initial values mirror _initial_complex_decay_params: per-group log-linear
+    # magnitude and unwrapped-phase fits, summarized by the median across groups.
+    centered_te = echo_times - xp.mean(echo_times)
+    te_ss = xp.sum(centered_te**2)
+    log_amplitude = xp.log(xp.maximum(xp.abs(fit_signal), np.finfo(float).tiny))
+    phase = xp.unwrap(xp.angle(fit_signal), axis=-1)
+    r2star_groups = xp.maximum(-xp.sum(centered_te * log_amplitude, axis=-1) / te_ss, 0.0)
+    freq_groups = xp.sum(centered_te * phase, axis=-1) / te_ss / (2.0 * np.pi)
+    r2star = xp.maximum(xp.median(r2star_groups, axis=1), min_r2star)
+    frequency_hz = xp.median(freq_groups, axis=1)
+
+    damping = xp.full(r2star.shape, 1e-3)
+    converged = xp.zeros(r2star.shape, dtype=bool)
+    basis, basis_norm, s0, residual, cost = _project_complex_s0(
+        xp, fit_signal, echo_times, r2star, frequency_hz
+    )
+    for i_iter in range(n_iterations):
+        a00, a01, a11, g0, g1 = _gauss_newton_complex(
+            xp, fit_signal, echo_times, basis, basis_norm, s0, residual
+        )
+
+        # Undamped step, projected onto the R2* bound, measures stationarity.
+        determinant = a00 * a11 - a01 * a01
+        step_r2star = -(a11 * g0 - a01 * g1) / determinant
+        step_freq = -(a00 * g1 - a01 * g0) / determinant
+        at_bound = (r2star <= min_r2star) & (step_r2star < 0)
+        step_freq = xp.where(at_bound, -g1 / a11, step_freq)
+        step_r2star = xp.where(at_bound, 0.0, step_r2star)
+        relative_step = xp.maximum(
+            xp.abs(step_r2star) / xp.maximum(r2star, 1.0),
+            xp.abs(step_freq) / (xp.abs(frequency_hz) + 1.0),
+        )
+        converged = xp.isfinite(relative_step) & (relative_step < tolerance)
+        if i_iter % 5 == 4 and bool(xp.all(converged)):
+            break
+
+        # Levenberg--Marquardt step with Marquardt (diagonal) scaling.
+        d00 = a00 * (1.0 + damping)
+        d11 = a11 * (1.0 + damping)
+        determinant = d00 * d11 - a01 * a01
+        new_r2star = xp.maximum(r2star - (d11 * g0 - a01 * g1) / determinant, min_r2star)
+        new_freq = frequency_hz - (d00 * g1 - a01 * g0) / determinant
+        new_basis, new_norm, new_s0, new_residual, new_cost = _project_complex_s0(
+            xp, fit_signal, echo_times, new_r2star, new_freq
+        )
+        accept = (
+            xp.isfinite(new_cost)
+            & xp.isfinite(new_r2star)
+            & xp.isfinite(new_freq)
+            & (new_cost <= cost)
+            & ~converged
+        )
+        r2star = xp.where(accept, new_r2star, r2star)
+        frequency_hz = xp.where(accept, new_freq, frequency_hz)
+        basis = xp.where(accept[:, None], new_basis, basis)
+        basis_norm = xp.where(accept, new_norm, basis_norm)
+        s0 = xp.where(accept[:, None], new_s0, s0)
+        residual = xp.where(accept[:, None, None], new_residual, residual)
+        cost = xp.where(accept, new_cost, cost)
+        damping = xp.where(
+            accept, xp.maximum(damping * 0.1, 1e-12), xp.minimum(damping * 10.0, 1e12)
+        )
+
+    basis, basis_norm, s0, _, _ = _project_complex_s0(xp, signal, echo_times, r2star, frequency_hz)
+    converged &= xp.isfinite(r2star) & xp.isfinite(frequency_hz) & (basis_norm > 0)
+    converged &= xp.all(xp.isfinite(s0), axis=1)
+    # A poor (e.g., frequency-aliased) starting point can lead the solver into a
+    # degenerate valley where R2* grows until S0 fits only the first echo.
+    # Treat decay of more than exp(-20) across the echo train as a failure so
+    # that those problems are refit by the SciPy implementation.
+    echo_span = xp.max(echo_times) - xp.min(echo_times)
+    converged &= r2star * echo_span < 20.0
+    return r2star, frequency_hz, s0, converged
+
+
+def _fit_complex_groups_cuda(signal, echo_times, fit_groups=None, batch_size=None):
+    """Run :func:`_fit_complex_groups_batched` on a CUDA device in batches.
+
+    Parameters
+    ----------
+    signal : (B, G, E) complex :obj:`numpy.ndarray`
+        Complex data for ``B`` problems.
+    echo_times : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds.
+    fit_groups : (G,) bool :obj:`numpy.ndarray` or None, optional
+        Groups used to estimate R2*/frequency.
+    batch_size : int or None, optional
+        Maximum number of problems transferred to the GPU at once. Batches are
+        always limited to at most 2**22 complex samples, which bounds device
+        memory use to roughly 1-2 GB. None (default) applies only that limit.
+        The solver's run time is dominated by kernel launches, so larger
+        batches are much faster.
+
+    Returns
+    -------
+    r2star, frequency_hz : (B,) :obj:`numpy.ndarray`
+        Estimated R2* and frequency. Zero for failed problems.
+    s0 : (B, G) complex :obj:`numpy.ndarray`
+        Complex S0. Zero for failed problems.
+    failures : (B,) bool :obj:`numpy.ndarray`
+        Problems that had non-finite inputs or did not converge, and must be
+        refit on the CPU.
+    """
+    import cupy as cp
+
+    n_problems, n_groups, n_echoes = signal.shape
+    r2star = np.zeros(n_problems)
+    frequency_hz = np.zeros(n_problems)
+    s0 = np.zeros((n_problems, n_groups), dtype=np.complex128)
+    failures = np.ones(n_problems, dtype=bool)
+    max_batch_size = max(1, 2**22 // (n_groups * n_echoes))
+    batch_size = max_batch_size if batch_size is None else min(batch_size, max_batch_size)
+
+    for first in range(0, n_problems, batch_size):
+        batch = signal[first : first + batch_size]
+        valid = np.flatnonzero(np.isfinite(batch).all(axis=(1, 2)))
+        if valid.size == 0:
+            continue
+
+        r2_gpu, freq_gpu, s0_gpu, converged_gpu = _fit_complex_groups_batched(
+            cp, cp.asarray(batch[valid]), echo_times, fit_groups=fit_groups
+        )
+        converged = cp.asnumpy(converged_gpu)
+        output_idx = first + valid[converged]
+        r2star[output_idx] = cp.asnumpy(r2_gpu)[converged]
+        frequency_hz[output_idx] = cp.asnumpy(freq_gpu)[converged]
+        s0[output_idx] = cp.asnumpy(s0_gpu)[converged]
+        failures[output_idx] = False
+
+    cp.cuda.Stream.null.synchronize()
+    return r2star, frequency_hz, s0, failures
+
+
+def _cuda_batch_size():
+    """Read an optional CUDA batch size cap from ``TEDANA_CUDA_BATCH_SIZE``."""
+    if "TEDANA_CUDA_BATCH_SIZE" not in os.environ:
+        return None
+    batch_size = int(os.environ["TEDANA_CUDA_BATCH_SIZE"])
+    if batch_size < 1:
+        raise ValueError("TEDANA_CUDA_BATCH_SIZE must be a positive integer")
+    return batch_size
+
+
+def fit_complex_monoexponential(
+    data_cat, echo_times, adaptive_mask, report=True, n_threads=1, backend="cpu"
+):
     """Fit a complex monoexponential decay model per voxel across all timepoints.
 
     Echoes and timepoints are flattened into a single fit per voxel (the
@@ -439,6 +709,9 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
         Whether to log a description of this step. Default is True.
     n_threads : int, optional
         Number of threads. If None or <= 0, uses all CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend. ``cuda`` fits voxels in batches on the GPU and refits
+        any that do not converge with SciPy. Default is ``cpu``.
 
     Returns
     -------
@@ -446,6 +719,9 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
         ``(Md,)`` arrays ``t2s``, ``s0`` (magnitude), ``r2star``,
         ``frequency_hz``, ``phase0``, and boolean ``failures``.
     """
+    backend = utils._resolve_backend(backend)
+    if backend == "cuda":
+        cuda_batch_size = _cuda_batch_size()
     if n_threads is None or n_threads <= 0:
         n_threads = os.cpu_count() or 1
     if report:
@@ -482,6 +758,19 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
         data_2d = data_cat[:, :echo_num, :].reshape(n_samp, -1)
         echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
 
+        if backend == "cuda":
+            r2_gpu, freq_gpu, s0_gpu, gpu_failures = _fit_complex_groups_cuda(
+                data_2d[voxel_idx, None, :], echo_times_1d, batch_size=cuda_batch_size
+            )
+            gpu_voxels = voxel_idx[~gpu_failures]
+            r2star[gpu_voxels] = r2_gpu[~gpu_failures]
+            frequency_hz[gpu_voxels] = freq_gpu[~gpu_failures]
+            s0_mag[gpu_voxels] = np.abs(s0_gpu[~gpu_failures, 0])
+            phase0[gpu_voxels] = np.angle(s0_gpu[~gpu_failures, 0])
+            voxel_idx = voxel_idx[gpu_failures]
+            if voxel_idx.size:
+                LGR.debug("Refitting %d CUDA non-convergent voxel(s) with SciPy.", voxel_idx.size)
+
         results = Parallel(n_jobs=n_threads)(
             delayed(_fit_complex_decay_1d)(
                 data_2d[voxel],
@@ -489,7 +778,9 @@ def fit_complex_monoexponential(data_cat, echo_times, adaptive_mask, report=True
                 lower_bounds=lower_bounds,
                 upper_bounds=upper_bounds,
             )
-            for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo complex NLLS")
+            for voxel in tqdm(
+                voxel_idx, desc=f"{echo_num}-echo complex NLLS", disable=backend == "cuda"
+            )
         )
 
         for voxel, res in zip(voxel_idx, results):
@@ -641,7 +932,9 @@ def _fit_complex_decay_joint(
     }
 
 
-def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None, n_threads=1):
+def fit_complex_decay(
+    data, phase, tes, adaptive_mask, fitmode, use_volumes=None, n_threads=1, backend="cpu"
+):
     """Estimate complex T2*/S0 maps from magnitude and phase data.
 
     Parameters
@@ -664,6 +957,8 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
         ``None`` uses all volumes.
     n_threads : int, optional
         Number of threads. If None or <= 0, uses all CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend. Default is ``cpu``.
 
     Returns
     -------
@@ -673,6 +968,7 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
         ``(Md, T)``. For ``"varys0"``: ``t2s``/``r2star``/``frequency_hz``/
         ``failures`` are ``(Md,)`` and ``s0``/``phase0`` are ``(Md, T)``.
     """
+    backend = utils._resolve_backend(backend)
     if n_threads is None or n_threads <= 0:
         n_threads = os.cpu_count() or 1
     data = np.asarray(data)
@@ -682,38 +978,38 @@ def fit_complex_decay(data, phase, tes, adaptive_mask, fitmode, use_volumes=None
     n_samp, _, n_vols = complex_data.shape
 
     if fitmode == "all":
-        return fit_complex_monoexponential(complex_data, tes, adaptive_mask, n_threads=n_threads)
+        return fit_complex_monoexponential(
+            complex_data, tes, adaptive_mask, n_threads=n_threads, backend=backend
+        )
 
     if fitmode == "ts":
-        keys = ("t2s", "s0", "r2star", "frequency_hz", "phase0")
-        out = {k: np.zeros((n_samp, n_vols)) for k in keys}
-        out["failures"] = np.zeros((n_samp, n_vols), dtype=bool)
-        report = True
-        for vol in range(n_vols):
-            res = fit_complex_monoexponential(
-                complex_data[:, :, vol][:, :, None],
-                tes,
-                adaptive_mask,
-                report=report,
-                n_threads=n_threads,
-            )
-            for k in keys:
-                out[k][:, vol] = res[k]
-            out["failures"][:, vol] = res["failures"]
-            report = False
-        return out
+        # Every (voxel, volume) pair is an independent single-volume fit, so
+        # flatten them into one set of samples and fit them all at once.
+        n_echos = complex_data.shape[1]
+        res = fit_complex_monoexponential(
+            complex_data.transpose(0, 2, 1).reshape(n_samp * n_vols, n_echos)[:, :, None],
+            tes,
+            np.repeat(adaptive_mask, n_vols),
+            n_threads=n_threads,
+            backend=backend,
+        )
+        return {k: v.reshape(n_samp, n_vols) for k, v in res.items()}
 
     if fitmode == "varys0":
         if use_volumes is None:
             use_volumes = np.ones(n_vols, dtype=bool)
         else:
             use_volumes = np.asarray(use_volumes, dtype=bool)
-        return _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_threads)
+        return _fit_complex_decay_varys0(
+            complex_data, tes, adaptive_mask, use_volumes, n_threads, backend=backend
+        )
 
     raise ValueError(f"Unknown fitmode option: {fitmode}")
 
 
-def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_threads):
+def _fit_complex_decay_varys0(
+    complex_data, tes, adaptive_mask, use_volumes, n_threads, backend="cpu"
+):
     """Joint-fit driver: shared R2*/frequency, per-volume complex S0.
 
     Parameters
@@ -728,6 +1024,8 @@ def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_t
         Volumes used for the shared R2*/frequency estimate.
     n_threads : int
         Number of threads.
+    backend : {"cpu", "cuda"}, optional
+        Compute backend. Default is ``cpu``.
 
     Returns
     -------
@@ -766,9 +1064,27 @@ def _fit_complex_decay_varys0(complex_data, tes, adaptive_mask, use_volumes, n_t
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
+        if backend == "cuda":
+            r2_gpu, freq_gpu, s0_gpu, gpu_failures = _fit_complex_groups_cuda(
+                complex_data[voxel_idx, :echo_num, :].transpose(0, 2, 1),
+                tes[:echo_num],
+                fit_groups=use_volumes,
+                batch_size=_cuda_batch_size(),
+            )
+            gpu_voxels = voxel_idx[~gpu_failures]
+            r2star[gpu_voxels] = r2_gpu[~gpu_failures]
+            frequency_hz[gpu_voxels] = freq_gpu[~gpu_failures]
+            s0_mag[gpu_voxels, :] = np.abs(s0_gpu[~gpu_failures])
+            phase0[gpu_voxels, :] = np.angle(s0_gpu[~gpu_failures])
+            voxel_idx = voxel_idx[gpu_failures]
+            if voxel_idx.size:
+                LGR.debug("Refitting %d CUDA non-convergent voxel(s) with SciPy.", voxel_idx.size)
+
         results = Parallel(n_jobs=n_threads)(
             delayed(_fit_voxel)(voxel, echo_num)
-            for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo varys0 NLLS")
+            for voxel in tqdm(
+                voxel_idx, desc=f"{echo_num}-echo varys0 NLLS", disable=backend == "cuda"
+            )
         )
 
         for voxel, res in results:
@@ -1735,6 +2051,7 @@ def t2smap_subworkflow(
                 fitmode=fitmode,
                 use_volumes=use_volumes,
                 n_threads=n_threads,
+                backend=backend,
             )
         else:
             phase_for_fit = phase_cat if use_volumes is None else phase_cat[:, :, use_volumes]
@@ -1745,6 +2062,7 @@ def t2smap_subworkflow(
                 adaptive_mask=masksum_masked,
                 fitmode=fitmode,
                 n_threads=n_threads,
+                backend=backend,
             )
         t2s_full = complex_results["t2s"]
         s0_full = complex_results["s0"]

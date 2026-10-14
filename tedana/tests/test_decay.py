@@ -601,3 +601,86 @@ def test_rmse_of_fit_decay_ts_varys0():
     )
     assert rmse_map.shape == (n_vox,)
     assert len(rmse_df) == n_vol
+
+
+def _cuda_available():
+    try:
+        return utils._resolve_backend("cuda") == "cuda"
+    except RuntimeError:
+        return False
+
+
+requires_cuda = pytest.mark.skipif(not _cuda_available(), reason="CUDA backend unavailable")
+
+
+@pytest.fixture
+def noisy_complex_testdata():
+    """Noisy complex data with per-volume S0 and a mixed adaptive mask."""
+    rng = np.random.default_rng(3)
+    tes = np.array([0.012, 0.028, 0.044, 0.060])
+    n_vox, n_vol = 40, 6
+    r2star = rng.uniform(15, 50, n_vox)
+    freq = rng.uniform(-8, 8, n_vox)
+    # S0 phase is shared across volumes so that every fit mode is well posed.
+    s0 = (
+        rng.uniform(500, 1500, n_vox)[:, None]
+        * rng.uniform(0.9, 1.1, (n_vox, n_vol))
+        * np.exp(1j * rng.uniform(-3, 3, n_vox))[:, None]
+    )
+    data = s0[:, None, :] * np.exp((-r2star + 2j * np.pi * freq)[:, None, None] * tes[:, None])
+    data += rng.normal(scale=5, size=data.shape) + 1j * rng.normal(scale=5, size=data.shape)
+    adaptive_mask = rng.choice([1, 2, 3, 4], size=n_vox, p=[0.1, 0.2, 0.2, 0.5])
+    return dict(
+        mag=np.abs(data),
+        phase=np.angle(data),
+        tes=tes,
+        adaptive_mask=adaptive_mask,
+        r2star=r2star,
+        freq=freq,
+    )
+
+
+def test__fit_complex_groups_batched_matches_scipy_joint_fit(noisy_complex_testdata):
+    """The vectorized solver reaches the same optimum as the SciPy varys0 fit."""
+    d = noisy_complex_testdata
+    complex_data = d["mag"] * np.exp(1j * d["phase"])
+    signal = complex_data.transpose(0, 2, 1)  # (B, T, E)
+    use_volumes = np.array([True, True, False, True, True, True])
+    r2star, freq, s0, converged = me._fit_complex_groups_batched(
+        np, signal, d["tes"], fit_groups=use_volumes
+    )
+    assert converged.all()
+    assert s0.shape == signal.shape[:2]
+    for i_vox in range(signal.shape[0]):
+        ref = me._fit_complex_decay_joint(
+            signal[i_vox, use_volumes], d["tes"], min_r2star=me.MIN_R2STAR
+        )
+        assert np.isclose(r2star[i_vox], ref["r2star"], rtol=1e-5)
+        assert np.isclose(freq[i_vox], ref["frequency_hz"], rtol=1e-5, atol=1e-5)
+        ref_s0 = me._solve_complex_s0(signal[i_vox], d["tes"], ref["r2star"], ref["frequency_hz"])
+        assert np.allclose(s0[i_vox], ref_s0, rtol=1e-5)
+
+
+def test__fit_complex_groups_batched_respects_r2star_bound():
+    """A flat decay is pinned at MIN_R2STAR and still reported as converged."""
+    tes = np.array([0.008, 0.020, 0.032, 0.044, 0.056])
+    signal = me.complex_decay_model(tes, 200.0 * np.exp(1j * 0.3), 0.0, 1.0)[None, None, :]
+    r2star, freq, _, converged = me._fit_complex_groups_batched(np, signal, tes)
+    assert converged.all()
+    assert np.isclose(r2star[0], me.MIN_R2STAR)
+    assert np.isclose(freq[0], 1.0, atol=1e-6)
+
+
+@requires_cuda
+@pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
+def test_fit_complex_decay_cuda_matches_cpu(noisy_complex_testdata, fitmode):
+    """The CUDA backend reproduces the SciPy estimates for every complex fit mode."""
+    d = noisy_complex_testdata
+    args = (d["mag"], d["phase"], d["tes"], d["adaptive_mask"], fitmode)
+    cpu = me.fit_complex_decay(*args, backend="cpu")
+    gpu = me.fit_complex_decay(*args, backend="cuda")
+    assert np.array_equal(cpu["failures"], gpu["failures"])
+    for key in ("t2s", "s0", "frequency_hz"):
+        assert np.allclose(gpu[key], cpu[key], rtol=1e-4, atol=1e-6), key
+    phase_diff = np.angle(np.exp(1j * (gpu["phase0"] - cpu["phase0"])))
+    assert np.allclose(phase_diff, 0, atol=1e-4)

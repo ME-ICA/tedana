@@ -239,7 +239,7 @@ def _get_parser():
         "--backend",
         choices=["cpu", "cuda", "auto"],
         help=(
-            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "Compute backend. CUDA accelerates curvefit and nlls T2*/S0 estimation. "
             "'auto' uses CUDA when available and otherwise uses CPU."
         ),
         default="cpu",
@@ -367,8 +367,8 @@ def t2smap_workflow(
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
     backend : {'cpu', 'cuda', 'auto'}, optional
-        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
-        only. Default is 'cpu'.
+        Compute backend. CUDA accelerates curvefit and nlls T2*/S0 estimation.
+        Default is 'cpu'.
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
 
