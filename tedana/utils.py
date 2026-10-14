@@ -77,7 +77,8 @@ def _resolve_backend(backend):
         if backend == "cuda":
             raise RuntimeError(
                 "The CUDA backend requires CuPy and an available CUDA device. "
-                "Install tedana with its GPU extra and verify the NVIDIA driver."
+                "Install tedana with its GPU extra (tedana[gpu]) to install an appropriate "
+                "version of CuPy."
             ) from exc
         LGR.warning("CUDA backend unavailable (%s); falling back to CPU.", exc)
         return "cpu"
