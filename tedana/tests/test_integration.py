@@ -367,8 +367,8 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
         "desc-ICAAccepted_components.nii.gz",
         "desc-ICAAccepted_stat-z_components.nii.gz",
         "desc-PCACrossComponent_metrics.json",
-        "figures/pca_criteria.png",
-        "figures/pca_variance_explained.png",
+        "figures/pca_criteria.svg",
+        "figures/pca_variance_explained.svg",
     ]
     # Since robustica with only 4 iterations might result in a variable number of finale comps,
     #  using max_expected_comp=-1 to not check the number of component files.
@@ -463,8 +463,8 @@ def test_integration_three_echo_external_regressors_single_model(skip_integratio
     # Files for PCA component estimation are not expected because a fixed % variance was specified
     unexpected_files = [
         "desc-PCACrossComponent_metrics.json",
-        "figures/pca_criteria.png",
-        "figures/pca_variance_explained.png",
+        "figures/pca_criteria.svg",
+        "figures/pca_variance_explained.svg",
     ]
     check_integration_outputs(
         fn,

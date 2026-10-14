@@ -30,6 +30,62 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
+def _resolve_backend(backend):
+    """Resolve a requested execution backend without importing CUDA on the CPU path.
+
+    This shared resolver lets individual workflow steps opt into accelerators
+    while keeping CUDA optional for CPU-only installations.
+
+    Parameters
+    ----------
+    backend : {"cpu", "cuda", "auto"}
+        Requested execution backend. ``"cpu"`` always selects the CPU.
+        ``"cuda"`` requires CuPy and at least one CUDA device. ``"auto"``
+        selects CUDA when available and otherwise falls back to the CPU.
+
+    Returns
+    -------
+    resolved_backend : {"cpu", "cuda"}
+        Available backend selected for the requested configuration.
+
+    Raises
+    ------
+    ValueError
+        If ``backend`` is not ``"cpu"``, ``"cuda"``, or ``"auto"``.
+    RuntimeError
+        If ``backend`` is ``"cuda"`` and CuPy cannot be imported or no CUDA
+        device is available.
+
+    Warns
+    -----
+    Logs a warning when ``backend`` is ``"auto"`` and CUDA is unavailable.
+    """
+    backend = backend.lower()
+    if backend not in {"cpu", "cuda", "auto"}:
+        raise ValueError("backend must be one of 'cpu', 'cuda', or 'auto'")
+    if backend == "cpu":
+        return "cpu"
+
+    try:
+        import cupy as cp
+
+        if cp.cuda.runtime.getDeviceCount() < 1:
+            raise RuntimeError("No CUDA devices were detected")
+        else:
+            LGR.info(f"Running with {cp.cuda.runtime.getDeviceCount()} GPUs")
+    except Exception as exc:
+        if backend == "cuda":
+            raise RuntimeError(
+                "The CUDA backend requires CuPy and an available CUDA device. "
+                "Install tedana with its GPU extra (tedana[gpu]) to install an appropriate "
+                "version of CuPy."
+            ) from exc
+        LGR.warning("CUDA backend unavailable (%s); falling back to CPU.", exc)
+        return "cpu"
+
+    return "cuda"
+
+
 def make_adaptive_mask(data, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
@@ -760,7 +816,8 @@ def check_te_values(te_values):
     Raises
     ------
     ValueError
-        If TE values are not positive or appear to be in unexpected units.
+        If TE values are not positive, appear to be in unexpected units, or are
+        not in ascending order.
 
     Notes
     -----
@@ -771,13 +828,14 @@ def check_te_values(te_values):
     - If all TE values are >= 1: values are assumed to be in milliseconds, a
       deprecation warning is logged, and values are converted to seconds
     - Mixed values or negative values raise an error
-
+    - TE values must be in ascending order, matching the echo order of the
+      input data files
     """
     te_values = np.array(te_values)
     if all((te_values > 0) & (te_values < 1)):
         # Values appear to be in seconds (expected per BIDS) - return as-is
         LGR.debug("TE values appear to be in seconds.")
-        return te_values.tolist()
+        checked_te_values = te_values.tolist()
     elif all(te_values >= 1):
         # Values appear to be in milliseconds (deprecated) - convert to seconds
         LGR.warning(
@@ -785,12 +843,19 @@ def check_te_values(te_values):
             "be provided in seconds. Support for millisecond TE values is deprecated and will "
             "be removed in a future version. Please provide TE values in seconds."
         )
-        return (te_values / 1000).tolist()
+        checked_te_values = (te_values / 1000).tolist()
     else:
         raise ValueError(
             "TE values must be positive and either all in seconds (values < 1, preferred per "
             "BIDS convention) or all in milliseconds (values >= 1, deprecated)."
         )
+
+    if not np.all(np.diff(te_values) > 0):
+        raise ValueError(
+            "TE values must be in ascending order, matching the order of the input data files."
+        )
+
+    return checked_te_values
 
 
 def log_newsletter_info():

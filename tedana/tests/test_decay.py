@@ -1,6 +1,7 @@
 """Tests for tedana.decay."""
 
 import os.path as op
+import sys
 
 import nibabel as nb
 import numpy as np
@@ -10,6 +11,16 @@ from tedana import combine
 from tedana import decay as me
 from tedana import io, utils
 from tedana.tests.utils import get_test_data_path
+
+
+def test_backend_validation_and_auto_fallback(monkeypatch, caplog):
+    """The optional CUDA backend must not affect the default CPU installation."""
+    with pytest.raises(ValueError, match="backend must be one of"):
+        utils._resolve_backend("not-a-backend")
+
+    monkeypatch.setitem(sys.modules, "cupy", None)
+    assert utils._resolve_backend("auto") == "cpu"
+    assert "falling back to CPU" in caplog.text
 
 
 @pytest.fixture(scope="module")
@@ -294,6 +305,56 @@ def test_rmse_includes_adaptive_mask_one():
     )
     am1 = adaptive_mask == 1
     assert np.all(np.isfinite(rmse_map[am1]))
+
+
+def test_generate_decay_metrics_basic():
+    # 5 base-mask voxels; voxel 0 has 0 good echoes (outside fit mask).
+    adaptive_mask = np.array([0, 1, 2, 3, 3])
+    t2star = np.array([np.nan, 20.0, 40.0, 60.0, 80.0])
+    s0 = np.array([np.nan, 100.0, 200.0, 300.0, 400.0])
+    rmse_map = np.array([np.nan, 1.0, 2.0, 3.0, 4.0])
+
+    metrics = me.generate_decay_metrics(
+        t2star=t2star,
+        s0=s0,
+        rmse_map=rmse_map,
+        adaptive_mask=adaptive_mask,
+        n_fit_failures=2,
+        n_fit_failures_after_interpolation=1,
+    )
+
+    assert metrics["n_voxels_base_mask"] == 5
+    assert metrics["n_voxels_fit_mask"] == 4
+    assert metrics["good_echo_voxel_counts"] == {1: 1, 2: 1, 3: 2}
+    # Means/medians computed over the 4 fit-mask voxels only.
+    assert metrics["t2star_mean"] == 50.0
+    assert metrics["t2star_median"] == 50.0
+    assert metrics["rmse_median"] == 2.5
+    assert metrics["n_fit_failures"] == 2
+    assert metrics["n_fit_failures_after_interpolation"] == 1
+
+
+def test_generate_decay_metrics_omits_failures_when_none():
+    metrics = me.generate_decay_metrics(
+        t2star=np.array([10.0, 20.0]),
+        s0=np.array([100.0, 200.0]),
+        rmse_map=np.array([1.0, 2.0]),
+        adaptive_mask=np.array([1, 2]),
+    )
+    assert "n_fit_failures" not in metrics
+    assert "n_fit_failures_after_interpolation" not in metrics
+
+
+def test_generate_decay_metrics_rejects_2d_input():
+    """2D (voxels x time) maps (e.g. fitmode == "ts") must raise, not silently flatten."""
+    t2star_2d = np.ones((4, 3))
+    with pytest.raises(ValueError, match="1D"):
+        me.generate_decay_metrics(
+            t2star=t2star_2d,
+            s0=np.ones((4, 3)),
+            rmse_map=np.ones(4),
+            adaptive_mask=np.array([1, 2, 3, 3]),
+        )
 
 
 # TODO: BREAK AND UNIT TESTS

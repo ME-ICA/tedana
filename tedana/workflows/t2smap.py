@@ -36,7 +36,8 @@ def _get_parser():
         type=lambda x: is_valid_file(parser, x),
         help=(
             "Multi-echo dataset for analysis. "
-            "A set of echo-specific files in ascending order. "
+            "A set of echo-specific 3D or 4D files in ascending order, "
+            "or one 3D or 4D z-concatenated file. "
             "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
@@ -219,6 +220,15 @@ def _get_parser():
         default=1,
     )
     performance_args.add_argument(
+        "--backend",
+        choices=["cpu", "cuda", "auto"],
+        help=(
+            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "'auto' uses CUDA when available and otherwise uses CPU."
+        ),
+        default="cpu",
+    )
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -268,6 +278,7 @@ def t2smap_workflow(
     quiet=False,
     overwrite=False,
     n_threads=1,
+    backend="cpu",
     t2smap_command=None,
 ):
     """
@@ -279,7 +290,8 @@ def t2smap_workflow(
     ----------
     data : :obj:`str` or :obj:`list` of :obj:`str`
         Either a single z-concatenated file (single-entry list or str) or a
-        list of echo-specific files, in ascending order.
+        list of echo-specific files, in ascending order. Files may be 3D
+        single-volume images or 4D time series.
     tes : :obj:`list`
         List of echo times associated with data. Values should be in seconds
         per BIDS convention. Millisecond values are still accepted but deprecated.
@@ -330,6 +342,9 @@ def t2smap_workflow(
         Number of threads to use. Used by threadpoolctl to set the parameter
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
+    backend : {'cpu', 'cuda', 'auto'}, optional
+        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
+        only. Default is 'cpu'.
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
 
@@ -443,6 +458,8 @@ def t2smap_workflow(
 
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
+    if combmode == "paid" and n_vols == 1:
+        raise ValueError("PAID combination requires more than one volume.")
 
     # Create mask for volumes to use based on exclude indices
     if n_exclude > 0:
@@ -496,6 +513,7 @@ def t2smap_workflow(
         io_generator=io_generator,
         data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
+        backend=backend,
     )
 
     LGR.info("Computing optimal combination")
