@@ -1,6 +1,7 @@
 """Tests for tedana.decay."""
 
 import os.path as op
+import sys
 
 import nibabel as nb
 import numpy as np
@@ -10,6 +11,16 @@ from tedana import combine
 from tedana import decay as me
 from tedana import io, utils
 from tedana.tests.utils import get_test_data_path
+
+
+def test_backend_validation_and_auto_fallback(monkeypatch, caplog):
+    """The optional CUDA backend must not affect the default CPU installation."""
+    with pytest.raises(ValueError, match="backend must be one of"):
+        utils._resolve_backend("not-a-backend")
+
+    monkeypatch.setitem(sys.modules, "cupy", None)
+    assert utils._resolve_backend("auto") == "cpu"
+    assert "falling back to CPU" in caplog.text
 
 
 @pytest.fixture(scope="module")
@@ -225,6 +236,125 @@ def test_smoke_fit_decay_curvefit_ts():
     assert t2s_var.ndim == 2
     assert s0_var.ndim == 2
     assert t2s_s0_covar.ndim == 2
+
+
+def _make_decaying_data(adaptive_mask, tes, n_times=5, seed=0):
+    """Synthesize multi-echo data that follows a clean monoexponential decay.
+
+    Used so that curve_fit converges and produces finite covariances.
+    """
+    rng = np.random.RandomState(seed)
+    n_samples = adaptive_mask.shape[0]
+    n_echos = len(tes)
+    tes = np.asarray(tes)
+    s0_true = rng.uniform(800, 1200, size=n_samples)
+    t2s_true = rng.uniform(0.02, 0.06, size=n_samples)
+    data = np.zeros((n_samples, n_echos, n_times))
+    for echo in range(n_echos):
+        signal = s0_true * np.exp(-tes[echo] / t2s_true)
+        data[:, echo, :] = signal[:, None]
+    data += rng.normal(scale=1.0, size=data.shape)
+    return data
+
+
+def test_fit_decay_curvefit_populates_variance_at_adaptive_mask_one():
+    """Voxels with adaptive_mask == 1 should get real variance/covariance values.
+
+    They are fit with two echoes (like adaptive_mask == 2 voxels), so their
+    curve_fit covariances must be carried into the full maps rather than dropped
+    (left as zero), which would render as empty voxels in the report figures.
+    """
+    tes = [0.0145, 0.0385, 0.0625]
+    n_samples = 60
+    adaptive_mask = np.full(n_samples, 3, dtype=int)
+    adaptive_mask[:20] = 1  # voxels with only one good echo
+    data = _make_decaying_data(adaptive_mask, tes)
+
+    t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = me.fit_decay(
+        data, tes, adaptive_mask, "curvefit"
+    )
+
+    am1 = adaptive_mask == 1
+    converged = am1 & ~failures
+    assert converged.any(), "Expected at least one converged adaptive_mask == 1 voxel"
+    # Converged adaptive_mask == 1 voxels must have real (nonzero) variances,
+    # matching the fact that their T2*/S0 estimates are also populated.
+    assert np.all(t2s_var[converged] != 0)
+    assert np.all(s0_var[converged] != 0)
+    assert np.all(t2s_s0_covar[converged] != 0)
+
+
+def test_rmse_includes_adaptive_mask_one():
+    """rmse_of_fit_decay_ts should return finite RMSE for adaptive_mask == 1 voxels."""
+    tes = [0.0145, 0.0385, 0.0625]
+    n_samples = 60
+    n_times = 5
+    adaptive_mask = np.full(n_samples, 3, dtype=int)
+    adaptive_mask[:20] = 1
+    data = _make_decaying_data(adaptive_mask, tes, n_times=n_times)
+
+    t2s, s0, _, _, _, _ = me.fit_decay(data, tes, adaptive_mask, "curvefit")
+
+    rmse_map, rmse_df = me.rmse_of_fit_decay_ts(
+        data=data,
+        tes=tes,
+        adaptive_mask=adaptive_mask,
+        t2s=t2s,
+        s0=s0,
+        fitmode="all",
+    )
+    am1 = adaptive_mask == 1
+    assert np.all(np.isfinite(rmse_map[am1]))
+
+
+def test_generate_decay_metrics_basic():
+    # 5 base-mask voxels; voxel 0 has 0 good echoes (outside fit mask).
+    adaptive_mask = np.array([0, 1, 2, 3, 3])
+    t2star = np.array([np.nan, 20.0, 40.0, 60.0, 80.0])
+    s0 = np.array([np.nan, 100.0, 200.0, 300.0, 400.0])
+    rmse_map = np.array([np.nan, 1.0, 2.0, 3.0, 4.0])
+
+    metrics = me.generate_decay_metrics(
+        t2star=t2star,
+        s0=s0,
+        rmse_map=rmse_map,
+        adaptive_mask=adaptive_mask,
+        n_fit_failures=2,
+        n_fit_failures_after_interpolation=1,
+    )
+
+    assert metrics["n_voxels_base_mask"] == 5
+    assert metrics["n_voxels_fit_mask"] == 4
+    assert metrics["good_echo_voxel_counts"] == {1: 1, 2: 1, 3: 2}
+    # Means/medians computed over the 4 fit-mask voxels only.
+    assert metrics["t2star_mean"] == 50.0
+    assert metrics["t2star_median"] == 50.0
+    assert metrics["rmse_median"] == 2.5
+    assert metrics["n_fit_failures"] == 2
+    assert metrics["n_fit_failures_after_interpolation"] == 1
+
+
+def test_generate_decay_metrics_omits_failures_when_none():
+    metrics = me.generate_decay_metrics(
+        t2star=np.array([10.0, 20.0]),
+        s0=np.array([100.0, 200.0]),
+        rmse_map=np.array([1.0, 2.0]),
+        adaptive_mask=np.array([1, 2]),
+    )
+    assert "n_fit_failures" not in metrics
+    assert "n_fit_failures_after_interpolation" not in metrics
+
+
+def test_generate_decay_metrics_rejects_2d_input():
+    """2D (voxels x time) maps (e.g. fitmode == "ts") must raise, not silently flatten."""
+    t2star_2d = np.ones((4, 3))
+    with pytest.raises(ValueError, match="1D"):
+        me.generate_decay_metrics(
+            t2star=t2star_2d,
+            s0=np.ones((4, 3)),
+            rmse_map=np.ones(4),
+            adaptive_mask=np.array([1, 2, 3, 3]),
+        )
 
 
 # TODO: BREAK AND UNIT TESTS

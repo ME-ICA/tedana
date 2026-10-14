@@ -325,7 +325,8 @@ def _get_parser():
         help=(
             "Maximum number of attempts for ICA. "
             "If ICA fails to converge, the fixed seed will be updated and ICA will be run again. "
-            "If convergence is achieved before maxrestart attempts, ICA will finish early."
+            "If convergence is achieved before maxrestart attempts, ICA will finish early. "
+            "Must be an integer greater than or equal to 0."
         ),
         default=DEFAULT_N_MAX_RESTART,
     )
@@ -401,6 +402,15 @@ def _get_parser():
         default=1,
     )
     performance_args.add_argument(
+        "--backend",
+        choices=["cpu", "cuda", "auto"],
+        help=(
+            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "'auto' uses CUDA when available and otherwise uses CPU."
+        ),
+        default="cpu",
+    )
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -464,6 +474,7 @@ def tedana_workflow(
     t2smap=None,
     mixing_file=None,
     n_threads=1,
+    backend="cpu",
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -561,9 +572,12 @@ def tedana_workflow(
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
-        Maximum number of attempts for ICA. If ICA fails to converge, the
-        fixed seed will be updated and ICA will be run again. If convergence
-        is achieved before maxrestart attempts, ICA will finish early.
+        Maximum number of restarted decompositions to perform with different random seeds if ICA
+        fails to converge or if no accepted components are found.
+        If no accepted components are found, the fixed seed will be updated and ICA will be run
+        again.
+        If convergence is achieved before maxrestart attempts, ICA will finish early.
+        ICA will stop running if there is convergence prior to reaching this limit.
         Default is 10.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
@@ -599,6 +613,9 @@ def tedana_workflow(
         Number of threads to use. Used by threadpoolctl to set the parameter
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
+    backend : {'cpu', 'cuda', 'auto'}, optional
+        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
+        only. Default is 'cpu'.
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
         run. Default is None.
@@ -808,75 +825,19 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        data_masked = data_cat[mask_denoise, ...]
-        masksum_masked = masksum_denoise[mask_denoise]
-        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
-            data=data_masked,
+        t2s_full = decay.t2smap_subworkflow(
+            data_cat=data_cat,
             tes=tes,
-            adaptive_mask=masksum_masked,
             fittype=fittype,
-            n_threads=n_threads,
-        )
-        del data_masked
-
-        if fittype == "curvefit":
-            io_generator.save_file(
-                failures.astype(np.uint8),
-                "fit failures img",
-                mask=mask_denoise,
-            )
-            if verbose:
-                io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
-                io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img", mask=mask_denoise)
-
-            if interpolate_failing_voxels:
-                if failures.any():
-                    phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
-                    t2s_full = utils.interpolate_masked_values(
-                        t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
-                    )
-                    s0_full = utils.interpolate_masked_values(
-                        s0_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
-                    )
-                else:
-                    LGR.info("No curvefit failures found; skipping interpolation.")
-
-        del failures, t2s_var, s0_var, t2s_s0_covar
-
-        t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-            t2s=t2s_full,
-            s0=s0_full,
-            adaptive_mask=masksum_masked,
-            tes=tes,
-        )
-        del masksum_masked
-
-        t2s_full = utils.unmask(t2s_full, mask_denoise)
-        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
-        s0_limited = utils.unmask(s0_limited, mask_denoise)
-
-        io_generator.save_file(t2s_full, "t2star img")
-        io_generator.save_file(s0_full, "s0 img", mask=mask_denoise)
-        del s0_full
-
-        if verbose:
-            io_generator.save_file(t2s_limited, "limited t2star img")
-            io_generator.save_file(s0_limited, "limited s0 img")
-
-        # Calculate RMSE if S0 and T2* are fit
-        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
-            data=data_cat,
-            tes=tes,
-            adaptive_mask=masksum_denoise,
-            t2s=t2s_limited,
-            s0=s0_limited,
             fitmode="all",
+            mask_denoise=mask_denoise,
+            masksum_denoise=masksum_denoise,
+            interpolate_failing_voxels=interpolate_failing_voxels,
+            io_generator=io_generator,
+            data_without_excluded_vols=None,
+            n_threads=n_threads,
+            backend=backend,
         )
-        io_generator.save_file(rmse_map, "rmse img")
-        io_generator.add_df_to_file(rmse_df, "confounds tsv")
-
-        del s0_limited, t2s_limited
 
     # optimally combine data
     data_optcom = combine.make_optcom(
@@ -1065,6 +1026,9 @@ def tedana_workflow(
     # calculate the fit of rejected to accepted components to use as a quality measure
     # Note: This adds a column to component_table & needs to run before the table is saved
     reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+    reporting.quality_metrics.calculate_variance_summary(
+        selector, data_optcom[mask_clf, :], mixing
+    )
 
     # Save component selector and tree
     selector.to_files(io_generator)
@@ -1091,6 +1055,7 @@ def tedana_workflow(
     component_table = selector.component_table_
 
     mixing_orig = mixing.copy()
+    mixing_orig_df = mixing_df.copy()
     if tedort:
         comps_accepted = selector.accepted_comps_
         comps_rejected = selector.rejected_comps_
@@ -1119,6 +1084,7 @@ def tedana_workflow(
         component_table=component_table,
         mixing=mixing,
         io_generator=io_generator,
+        mixing_orig=mixing_orig if tedort else None,
     )
 
     if "mir" in gscontrol:
@@ -1221,7 +1187,6 @@ def tedana_workflow(
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_optcom,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
@@ -1251,7 +1216,7 @@ def tedana_workflow(
             # Compute correlations between external regressors and ICA components
             corr_df = metrics.external.compute_external_regressor_correlations(
                 external_regressors=external_regressors,
-                mixing=mixing_df,
+                mixing=mixing_orig_df,
             )
 
             # Plot the heatmap

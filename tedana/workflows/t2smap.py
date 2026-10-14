@@ -1,6 +1,7 @@
 """Estimate T2 and S0, and optimally combine data across TEs."""
 
 import argparse
+import datetime
 import logging
 import os
 import os.path as op
@@ -35,7 +36,8 @@ def _get_parser():
         type=lambda x: is_valid_file(parser, x),
         help=(
             "Multi-echo dataset for analysis. "
-            "A set of echo-specific files in ascending order. "
+            "A set of echo-specific 3D or 4D files in ascending order, "
+            "or one 3D or 4D z-concatenated file. "
             "The TEs of the data should match the TEs listed in the -e argument."
         ),
         required=True,
@@ -234,6 +236,15 @@ def _get_parser():
         default=1,
     )
     performance_args.add_argument(
+        "--backend",
+        choices=["cpu", "cuda", "auto"],
+        help=(
+            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "'auto' uses CUDA when available and otherwise uses CPU."
+        ),
+        default="cpu",
+    )
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -284,6 +295,7 @@ def t2smap_workflow(
     quiet=False,
     overwrite=False,
     n_threads=1,
+    backend="cpu",
     t2smap_command=None,
 ):
     """
@@ -295,7 +307,8 @@ def t2smap_workflow(
     ----------
     data : :obj:`str` or :obj:`list` of :obj:`str`
         Either a single z-concatenated file (single-entry list or str) or a
-        list of echo-specific files, in ascending order.
+        list of echo-specific files, in ascending order. Files may be 3D
+        single-volume images or 4D time series.
     tes : :obj:`list`
         List of echo times associated with data. Values should be in seconds
         per BIDS convention. Millisecond values are still accepted but deprecated.
@@ -353,6 +366,9 @@ def t2smap_workflow(
         Number of threads to use. Used by threadpoolctl to set the parameter
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
+    backend : {'cpu', 'cuda', 'auto'}, optional
+        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
+        only. Default is 'cpu'.
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
 
@@ -401,7 +417,12 @@ def t2smap_workflow(
     exclude_idx = parse_volume_indices(exclude)
     n_exclude = len(exclude_idx)
 
-    utils.setup_loggers(quiet=quiet, debug=debug)
+    # create logfile name
+    basename = "t2smap_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname, repname=None, quiet=quiet, debug=debug)
 
     LGR.info(f"Using output directory: {out_dir}")
 
@@ -472,10 +493,24 @@ def t2smap_workflow(
         LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
         data_cat = data_cat[..., dummy_scans:]
 
+    phase_cat = None
+    if fittype == "nlls":
+        LGR.info(f"Loading phase data: {[f for f in phase]}")
+        phase_cat = io.load_data_nilearn(phase, mask_img=mask_img, n_echos=n_echos)
+        if dummy_scans > 0:
+            phase_cat = phase_cat[..., dummy_scans:]
+        if phase_cat.shape != data_cat.shape:
+            raise ValueError(
+                f"Phase shape {phase_cat.shape} does not match data shape {data_cat.shape}."
+            )
+
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
+    if combmode == "paid" and n_vols == 1:
+        raise ValueError("PAID combination requires more than one volume.")
 
     # Create mask for volumes to use based on exclude indices
+    use_volumes = None
     if n_exclude > 0:
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
@@ -509,136 +544,28 @@ def t2smap_workflow(
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
-    if interpolate_failing_voxels and fittype != "curvefit":
+    if interpolate_failing_voxels and fittype not in ("curvefit", "nlls"):
         LGR.warning(
-            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolate_failing_voxels is set but fittype is not 'curvefit' or 'nlls'; "
             "interpolation will be skipped."
         )
 
     LGR.info("Computing T2* map")
-    data_fit = data_without_excluded_vols[mask_denoise, ...]
-    masksum_masked = masksum_denoise[mask_denoise]
-
-    if fittype == "nlls":
-        phase_cat = io.load_data_nilearn(phase, mask_img=mask_img, n_echos=n_echos)
-        if dummy_scans > 0:
-            phase_cat = phase_cat[..., dummy_scans:]
-        if phase_cat.shape != data_cat.shape:
-            raise ValueError(
-                f"Phase shape {phase_cat.shape} does not match data shape {data_cat.shape}."
-            )
-        # For varys0, pass all volumes plus a use_volumes mask; otherwise drop excluded volumes.
-        if fitmode == "varys0":
-            phase_fit = phase_cat[mask_denoise, ...]
-            data_complex_mag = data_cat[mask_denoise, ...]
-            if n_exclude > 0:
-                vol_mask = use_volumes
-            else:
-                vol_mask = np.ones(n_vols, dtype=bool)
-            complex_results = decay.fit_complex_decay(
-                data=data_complex_mag,
-                phase=phase_fit,
-                tes=tes,
-                adaptive_mask=masksum_masked,
-                fitmode="varys0",
-                use_volumes=vol_mask,
-                n_threads=n_threads,
-            )
-        else:
-            if n_exclude == 0:
-                phase_fit = phase_cat[mask_denoise, ...]
-            else:
-                phase_fit = phase_cat[:, :, use_volumes][mask_denoise, ...]
-            complex_results = decay.fit_complex_decay(
-                data=data_fit,
-                phase=phase_fit,
-                tes=tes,
-                adaptive_mask=masksum_masked,
-                fitmode=fitmode,
-                n_threads=n_threads,
-            )
-        t2s_full = complex_results["t2s"]
-        s0_full = complex_results["s0"]
-        failures = complex_results["failures"]
-        t2s_var = s0_var = t2s_s0_covar = None
-    else:
-        decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
-            data=data_fit,
-            tes=tes,
-            adaptive_mask=masksum_masked,
-            fittype=fittype,
-            n_threads=n_threads,
-        )
-    del data_without_excluded_vols
-
-    if fittype in ("curvefit", "nlls"):
-        io_generator.save_file(
-            failures.astype(np.uint8),
-            "fit failures img",
-            mask=mask_denoise,
-        )
-    if fittype == "curvefit" and verbose:
-        io_generator.save_file(t2s_var, "t2star variance img", mask=mask_denoise)
-        io_generator.save_file(s0_var, "s0 variance img", mask=mask_denoise)
-        io_generator.save_file(
-            t2s_s0_covar,
-            "t2star-s0 covariance img",
-            mask=mask_denoise,
-        )
-
-    if fittype == "nlls":
-        io_generator.save_file(
-            utils.unmask(complex_results["frequency_hz"], mask_denoise), "frequency img"
-        )
-        io_generator.save_file(utils.unmask(complex_results["phase0"], mask_denoise), "phase0 img")
-
-        if interpolate_failing_voxels:
-            if failures.any():
-                phys_coords = utils.mask_to_phys_coords(mask_img, mask_denoise)
-                t2s_full = utils.interpolate_masked_values(
-                    t2s_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
-                )
-                s0_full = utils.interpolate_masked_values(
-                    s0_full, failures, mask_img, mask_denoise, phys_coords=phys_coords
-                )
-            else:
-                LGR.info("No curvefit failures found; skipping interpolation.")
-
-    # Delete unused variables
-    del failures, t2s_var, s0_var, t2s_s0_covar
-
-    t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
-        t2s=t2s_full,
-        s0=s0_full,
-        adaptive_mask=masksum_masked,
+    t2s_full = decay.t2smap_subworkflow(
+        data_cat=data_cat,
         tes=tes,
-    )
-    del masksum_masked
-
-    t2s_full = utils.unmask(t2s_full, mask_denoise)
-    s0_full = utils.unmask(s0_full, mask_denoise)
-    t2s_limited = utils.unmask(t2s_limited, mask_denoise)
-    s0_limited = utils.unmask(s0_limited, mask_denoise)
-
-    io_generator.save_file(s0_full, "s0 img")
-    del s0_full
-
-    LGR.info("Calculating model fit quality metrics")
-    rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
-        data=data_cat,
-        tes=tes,
-        adaptive_mask=masksum_denoise,
-        t2s=t2s_limited,
-        s0=s0_limited,
+        fittype=fittype,
         fitmode=fitmode,
+        mask_denoise=mask_denoise,
+        masksum_denoise=masksum_denoise,
+        interpolate_failing_voxels=interpolate_failing_voxels,
+        io_generator=io_generator,
+        data_without_excluded_vols=data_without_excluded_vols,
+        n_threads=n_threads,
+        backend=backend,
+        phase_cat=phase_cat,
+        use_volumes=use_volumes,
     )
-    io_generator.save_file(rmse_map, "rmse img")
-    io_generator.save_file(rmse_df, "confounds tsv")
-    io_generator.save_file(s0_limited, "limited s0 img")
-    del s0_limited
-    io_generator.save_file(t2s_limited, "limited t2star img")
-    del t2s_limited
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
@@ -649,8 +576,6 @@ def t2smap_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
-
-    io_generator.save_file(t2s_full, "t2star img")
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file

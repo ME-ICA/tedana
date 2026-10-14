@@ -58,6 +58,12 @@ tedana_report.html                                                           The
 "s0 img": S0map.nii.gz                                                       Full S0 3D map. If a voxel has at least 1 good
                                                                              echo then the first two echoes will be used to estimate
                                                                              a value
+"decay metrics json": desc-decay_metrics.json                                Precomputed decay-fit QC summary read by the report's
+                                                                             QC summary card: mean/median T2*, S0, and fit RMSE;
+                                                                             base-mask and fit-mask voxel counts; a good-echo voxel
+                                                                             histogram; and, when curve-fitting is used, first-pass
+                                                                             and post-interpolation fit-failure counts. Only written
+                                                                             when fitmode is "all".
 "PCA mixing tsv": desc-PCA_mixing.tsv                                        Mixing matrix (component time series) from PCA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -78,7 +84,7 @@ tedana_report.html                                                           The
                                                                              components and variance explained for multiple options
                                                                              Figures for the cost functions and variance explained
                                                                              are also in
-                                                                             ``./figures//pca_[criteria|variance_explained.png]``
+                                                                             ``./figures//pca_[criteria|variance_explained.svg]``
 "ICA mixing tsv": desc-ICA_mixing.tsv                                        Mixing matrix (component time series) from ICA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -99,6 +105,11 @@ tedana_report.html                                                           The
 "ICA cross component metrics json": desc-ICACrossComponent_metrics.json      Metric names and values that are each a single number
                                                                              calculated across components. For example, kappa and
                                                                              rho elbows.
+                                                                             Also includes aggregate variance measures used by the
+                                                                             QC summary card: accepted_variance and rejected_variance
+                                                                             (relative to the variance modeled by the ICA
+                                                                             decomposition), unmodeled_variance (relative to the
+                                                                             raw optimally-combined data), and retained_variance.
 "ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
                                                                              an added "output" field for each node. The output field
                                                                              contains information about what happened during
@@ -334,7 +345,31 @@ You can also play around with `our demo`_.
 Report Structure
 ----------------
 
-The image below shows a representative report. The left is a summary view
+The report is split into tabs, and only one tab is shown at a time. Select a tab
+to switch between them, or move between them with the left and right arrow keys.
+
+- **Info**: the command that was run, the system and library versions it was run
+  with, a description of the workflow, and the references it cites.
+- **PCA**: the maPCA criteria (AIC/KIC/MDL) curves and the variance-explained
+  curve used to estimate dimensionality. Only shown when a maPCA method
+  (``--tedpca mdl``, ``aic``, or ``kic``) was used.
+- **ICA**: the interactive component plots described below, the robust ICA
+  clustering plot when ``--ica_method robustica`` was used, and the external
+  regressor correlations when external regressors were provided.
+- **Tree**: the component selection decision tree and the classification of every
+  component at each node of that tree.
+- **Carpet**: the carpet plots, and the global signal removal plots when
+  ``--gscontrol`` was used.
+- **Decay**: organized into three sections — *Masking* (the adaptive mask),
+  *Parameter estimates* (the T2* and S0 maps and histograms), and *Curve-fit
+  quality* (the RMSE map and time series, the T2*/S0 estimate variance and
+  covariance maps).
+
+The Decay and Tree tabs are only shown when a workflow produces their contents.
+For example, ``ica_reclassify`` does not re-estimate T2* and S0, so a report
+written to a new output directory by that workflow has no Decay tab.
+
+The image below shows a representative report in the ICA tab. The left is a summary view
 which contains information on all components and the right presents additional
 information for an individual component. One can hover over any pie chart wedge
 or data point in the summary view to see additional information about a
@@ -365,8 +400,13 @@ selection results. It includes four different plots.
   thresholds (black dashed lines) along with other criteria. Most accepted
   components should be greater than the kappa elbow and less than the rho elbow.
   Accepted or rejected components that don't cross those thresholds might be
-  worth additional inspection. Hovering over a component also shows a `Tag`
-  that explains why a component received its classification.
+  worth additional inspection.
+  Hovering over a component shows the component number, the variance explained, and the kappa and rho values.
+  The hover text also shows a `Tag` that explains why a component received its classification.
+  For accepted components, the hover text includes `Var. Expl. by Rej.`.
+  This is a fit of the rejected time series components to the accepted component
+  and is a measure of how much common variance is shared with rejected time series.
+
 
 .. image:: /_static/rep01_kapparhoScatter.png
   :align: center
@@ -564,11 +604,34 @@ and quantification of clusters.
   :align: center
   :height: 400px
 
+*************
+Decision Tree
+*************
+
+The Tree tab summarizes how the component selection decision tree classified the
+components, using two tables.
+
+The first table lists every node of the decision tree in the order it was applied.
+For each node it shows the function that was run, a short label describing what the
+node did, and the number of components that did and did not meet the node's condition.
+The last two counts are only reported for nodes that make a decision, so they are
+blank for setup nodes. This table is a flat view of the same information stored in
+``desc-ICA_decision_tree.json``, and is a quick way to see which criteria drove the
+classification and how many components each one affected.
+
+The second table shows the classification of every component after each node of the
+tree, with one row per component and one column per node. Reading across a row shows
+how a component's label evolved, for example from ``unclassified`` to ``rejected``,
+as the tree was applied. It is the same information stored in
+``desc-ICA_status_table.tsv``, and is useful for understanding why a specific
+component ended up accepted or rejected. The table can be scrolled horizontally when
+a run has many nodes.
+
 ************
 Carpet plots
 ************
 
-In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
+The Carpet tab of ``tedana``'s interactive reports includes carpet plots for the main outputs of the workflow:
 the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data. Each row is a voxel
 and the grayscale is the relative signal changes across time. After denoising, voxels that look very different from others across time
 or time points that are uniformly high or low across voxels are concerning. These carpet plots can be help as a quick quality check for
@@ -584,7 +647,7 @@ should not overly focus on carpet plots and should examine these results in cont
 Adaptive Mask Summary Plot
 **************************
 
-Below the carpet plots is a summary plot of the adaptive mask.
+The Decay tab opens with a summary plot of the adaptive mask.
 
 This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
 
@@ -605,7 +668,7 @@ This figure overlays contours reflecting the boundaries of the following masks o
 T2* and S0 Summary Plots
 ************************
 
-Below the adaptive mask plot are summary plots for the T2* and S0 maps.
+Below the adaptive mask plot, in the same Decay tab, are summary plots for the T2* and S0 maps.
 Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
 The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
 The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
@@ -624,7 +687,7 @@ It is important to note that the histogram is limited from 0 to the 98th percent
 Decay Model Fit Plots
 *********************
 
-Below the T2* and S0 summary plots are the decay model fit plots.
+Below the T2* and S0 summary plots, in the same Decay tab, are the decay model fit plots.
 These plots show residual mean squared error (RMSE) values for the
 monoexponential decay model, based on the T2* and S0 maps.
 
@@ -649,7 +712,7 @@ relatively high RMSE values for runs or timepoints might be a marker of an under
 Global Signal Removal Plots
 ***************************
 
-Below the decay model fit plots are the global signal removal plots, if ``--gscontrol`` was used.
+The Carpet tab also shows the global signal removal plots, if ``--gscontrol`` was used.
 These plots show the voxel-wise global signal weights and the global signal time series.
 
 .. image:: /_static/gsr_plots.png
@@ -658,6 +721,50 @@ These plots show the voxel-wise global signal weights and the global signal time
 
 
 .. _rica-reports:
+
+**********
+PCA Plots
+**********
+
+When the number of components (dimensionality estimation) is done with with the AIC, KIC, or MDL criteria in the PCA step,
+the PCA tab will show one plot for the cost function and one plot for the variance explained by each component.
+For the criteria plots, there should be a local minimum in the cost function that is the estimate of the number of components to retain.
+MDL is the most conservative and will usually have the sharpest and earliest local minimum.
+AIC is the most liberal and will often have a shallower and later local minimum.
+Lines for 90th and 95th percentile of variance explained are included for reference.
+The variance explained plot shows the cumulative variance explained at each code function threshold.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-12_breathing-run-1.png
+  :align: center
+  :height: 300px
+
+These dimensionality estimation methods have two types of failures.
+The following plot shows a very early and sharp local minimum for the MDL threshold.
+An MDL threshold in this case would result in only 19 retained components with 46% of variance explained.
+This is likely too low to appropriately model fMRI data.
+The appropriate amount of variance explained will vary with the number of voxels and volumes,
+acquisition parameters (smaller voxels will mean more thermal noise and less variance explained),
+and structured noise (more head motion means more explainable variance).
+These estimates aren't expected to be identical across a study, but outliers should be examined.
+A very rough rule of thumb is the number of components for whole-brain fMRI should be more than 20% of the number of volumes.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-19_breathing-run-1.png
+  :align: center
+  :height: 300px
+
+The other type of failure is when there is no clear local minimum and the estimate picked a small fluctuation closer to the total number of components.
+This happens most often with the more liberal AIC criterion.
+When this happens, the very high number of components means that the ICA step will be very slow and may not converge.
+If the number of components for whole-brain fMRI is more than 50% of the number of volumes,
+it is worth checking for other problems.
+If the number of fMRI components is more than 70% of the number of volumes,
+the selected dimensionality estimation method probably failed.
+
+.. image:: /_static/pca_criteria_variance_explained_sub-22_breathing-run-2.png
+  :align: center
+  :height: 300px
+
+.. _pca-plots:
 
 **************************
 Rica Interactive Reports

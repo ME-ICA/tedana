@@ -575,6 +575,15 @@ def test_check_te_values(caplog):
     with pytest.raises(ValueError):
         utils.check_te_values([0.5, 2, 3])
 
+    # Check that the error is raised when TE values are not in ascending order
+    with pytest.raises(ValueError, match="ascending order"):
+        utils.check_te_values([0.015, 0.063, 0.039])
+    with pytest.raises(ValueError, match="ascending order"):
+        utils.check_te_values([15, 63, 39])
+    # Repeated TEs are not allowed either
+    with pytest.raises(ValueError, match="ascending order"):
+        utils.check_te_values([0.015, 0.039, 0.039])
+
 
 def test_check_t2s_values(caplog):
     """Ensure that check_t2s_values returns values in seconds."""
