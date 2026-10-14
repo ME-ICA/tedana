@@ -1,6 +1,7 @@
 """Tests for tedana.decay."""
 
 import os.path as op
+import sys
 
 import nibabel as nb
 import numpy as np
@@ -10,6 +11,16 @@ from tedana import combine
 from tedana import decay as me
 from tedana import io, utils
 from tedana.tests.utils import get_test_data_path
+
+
+def test_backend_validation_and_auto_fallback(monkeypatch, caplog):
+    """The optional CUDA backend must not affect the default CPU installation."""
+    with pytest.raises(ValueError, match="backend must be one of"):
+        utils._resolve_backend("not-a-backend")
+
+    monkeypatch.setitem(sys.modules, "cupy", None)
+    assert utils._resolve_backend("auto") == "cpu"
+    assert "falling back to CPU" in caplog.text
 
 
 @pytest.fixture(scope="module")

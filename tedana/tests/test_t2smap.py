@@ -9,6 +9,16 @@ import pytest
 
 from tedana import workflows
 from tedana.tests.utils import get_test_data_path
+from tedana.workflows import t2smap as t2smap_cli
+from tedana.workflows import tedana as tedana_cli
+
+
+def test_backend_cli_option():
+    """Both workflow CLIs expose the shared backend selector."""
+    for parser in (t2smap_cli._get_parser(), tedana_cli._get_parser()):
+        backend = parser._option_string_actions["--backend"]
+        assert backend.default == "cpu"
+        assert backend.choices == ["cpu", "cuda", "auto"]
 
 
 def _write_single_volume_echoes(data_dir, tmp_path):

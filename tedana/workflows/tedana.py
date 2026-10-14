@@ -402,6 +402,15 @@ def _get_parser():
         default=1,
     )
     performance_args.add_argument(
+        "--backend",
+        choices=["cpu", "cuda", "auto"],
+        help=(
+            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "'auto' uses CUDA when available and otherwise uses CPU."
+        ),
+        default="cpu",
+    )
+    performance_args.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -465,6 +474,7 @@ def tedana_workflow(
     t2smap=None,
     mixing_file=None,
     n_threads=1,
+    backend="cpu",
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -603,6 +613,9 @@ def tedana_workflow(
         Number of threads to use. Used by threadpoolctl to set the parameter
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
+    backend : {'cpu', 'cuda', 'auto'}, optional
+        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
+        only. Default is 'cpu'.
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
         run. Default is None.
@@ -823,6 +836,7 @@ def tedana_workflow(
             io_generator=io_generator,
             data_without_excluded_vols=None,
             n_threads=n_threads,
+            backend=backend,
         )
 
     # optimally combine data
