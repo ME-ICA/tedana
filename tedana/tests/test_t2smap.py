@@ -315,12 +315,29 @@ def _make_zero_phase_files(echo_files, out_dir):
     return phase_files
 
 
+def _make_small_mask(mask_file, out_dir):
+    """Restrict a mask to a small central box so per-voxel NLLS tests stay fast."""
+    img = nb.load(mask_file)
+    box = np.zeros(img.shape, dtype=bool)
+    center = [dim // 2 for dim in img.shape]
+    box[
+        center[0] - 5 : center[0] + 5,
+        center[1] - 5 : center[1] + 5,
+        center[2] - 2 : center[2] + 2,
+    ] = True
+    small = nb.Nifti1Image((np.asanyarray(img.dataobj) > 0) & box, img.affine, img.header)
+    small.set_data_dtype(np.uint8)
+    path = op.join(out_dir, "small_mask.nii.gz")
+    small.to_filename(path)
+    return path
+
+
 @pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
 def test_t2smap_nlls(tmp_path, fitmode):
     """t2smap runs with fittype='nlls' across fitmodes and writes expected maps."""
     data_dir = get_test_data_path()
     echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
-    mask = op.join(data_dir, "mask.nii.gz")
+    mask = _make_small_mask(op.join(data_dir, "mask.nii.gz"), str(tmp_path))
     phase_files = _make_zero_phase_files(echo_files, str(tmp_path))
     workflows.t2smap_workflow(
         data=echo_files,
