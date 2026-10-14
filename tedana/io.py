@@ -1132,6 +1132,12 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
         )
         # z-cat data
         data_img = _convert_to_nifti1(nb.load(data[0]))
+        if data_img.shape[2] % n_echos != 0:
+            raise ValueError(
+                f"Z-concatenated image has {data_img.shape[2]} volumes along the "
+                f"concatenated dimension, which is not evenly divisible by the "
+                f"number of echoes ({n_echos})."
+            )
         n_z = data_img.shape[2] // n_echos
         # Load full z-concatenated data once, then slice per echo in numpy.
         arr = np.asarray(data_img.dataobj, dtype=dtype)
@@ -1148,6 +1154,11 @@ def load_data_nilearn(data, mask_img, n_echos, dtype=np.float32):
             masked.append(echo_arr[mask_bool])
         return np.stack(masked, axis=1)
     else:
+        if len(data) != n_echos:
+            raise ValueError(
+                f"Number of input files ({len(data)}) does not match the number "
+                f"of echoes ({n_echos}). Provide one file per echo."
+            )
         # Fast path: direct indexing (avoids nilearn overhead)
         try:
             masked = [_mask_img(_convert_to_nifti1(nb.load(f))) for f in data]
@@ -1245,6 +1256,12 @@ def load_ref_img(data, n_echos):
     if len(data) == 1:
         # z-cat data
         data_img = _convert_to_nifti1(nb.load(data[0]))
+        if data_img.shape[2] % n_echos != 0:
+            raise ValueError(
+                f"Z-concatenated image has {data_img.shape[2]} volumes along the "
+                f"concatenated dimension, which is not evenly divisible by the "
+                f"number of echoes ({n_echos})."
+            )
         n_z = data_img.shape[2] // n_echos
         if data_img.ndim == 3:
             arr = np.asanyarray(data_img.dataobj)[:, :, :n_z]
