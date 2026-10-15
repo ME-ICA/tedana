@@ -384,3 +384,114 @@ def test_t2smap_varys0_requires_nlls(tmp_path):
             fitmode="varys0",
             out_dir=str(tmp_path),
         )
+
+
+def _write_phase_files(echo_files, out_dir, n_vols=None):
+    """Write zero-valued phase NIfTIs, optionally truncated to ``n_vols`` volumes."""
+    phase_files = _make_zero_phase_files(echo_files, out_dir)
+    if n_vols is not None:
+        for path in phase_files:
+            img = nb.load(path)
+            nb.Nifti1Image(img.get_fdata()[..., :n_vols], img.affine, img.header).to_filename(path)
+    return phase_files
+
+
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"fittype": "loglin", "phase": "PHASE"}, "only used with fittype='nlls'"),
+        ({"fittype": "nlls", "phase": "PHASE0"}, "same number of files"),
+        ({"fittype": "nlls", "phase": "SHORT"}, "does not match data shape"),
+    ],
+)
+def test_t2smap_phase_validation(tmp_path, kwargs, match):
+    """Phase inputs are validated against the fit type and the magnitude data."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    phase = {
+        "PHASE": lambda: _make_zero_phase_files(echo_files, str(tmp_path)),
+        "PHASE0": lambda: _make_zero_phase_files(echo_files, str(tmp_path))[0],
+        "SHORT": lambda: _write_phase_files(echo_files, str(tmp_path), n_vols=3),
+    }[kwargs["phase"]]()
+    with pytest.raises(ValueError, match=match):
+        workflows.t2smap_workflow(
+            data=echo_files,
+            tes=[14.5, 38.5, 62.5],
+            mask=_make_small_mask(op.join(data_dir, "mask.nii.gz"), str(tmp_path)),
+            out_dir=str(tmp_path / "out"),
+            **{**kwargs, "phase": phase},
+        )
+
+
+def test_t2smap_nlls_dummy_scans(tmp_path):
+    """Dummy scans are removed from the phase data as well as the magnitude data."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    workflows.t2smap_workflow(
+        data=echo_files,
+        tes=[14.5, 38.5, 62.5],
+        phase=_make_zero_phase_files(echo_files, str(tmp_path)),
+        mask=_make_small_mask(op.join(data_dir, "mask.nii.gz"), str(tmp_path)),
+        fittype="nlls",
+        dummy_scans=2,
+        out_dir=str(tmp_path / "out"),
+    )
+    optcom = nb.load(op.join(tmp_path, "out", "desc-optcom_bold.nii.gz"))
+    assert optcom.shape[-1] == nb.load(echo_files[0]).shape[-1] - 2
+
+
+@pytest.mark.parametrize("fitmode, n_failures", [("all", 3), ("varys0", 3), ("all", 0)])
+def test_t2smap_nlls_interpolates_failures(tmp_path, monkeypatch, caplog, fitmode, n_failures):
+    """Failing nlls fits are interpolated, including volume-wise S0 for varys0."""
+    from tedana import decay
+
+    fit_complex_decay = decay.fit_complex_decay
+
+    def fit_with_failures(*args, **kwargs):
+        result = fit_complex_decay(*args, **kwargs)
+        result["failures"][:] = False
+        result["failures"][:n_failures] = True
+        result["t2s"][:n_failures] = np.nan
+        result["s0"][:n_failures] = np.nan
+        return result
+
+    monkeypatch.setattr(decay, "fit_complex_decay", fit_with_failures)
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    mask = _make_small_mask(op.join(data_dir, "mask.nii.gz"), str(tmp_path))
+    out_dir = tmp_path / "out"
+    workflows.t2smap_workflow(
+        data=echo_files,
+        tes=[14.5, 38.5, 62.5],
+        phase=_make_zero_phase_files(echo_files, str(tmp_path)),
+        mask=mask,
+        fittype="nlls",
+        fitmode=fitmode,
+        interpolate_failing_voxels=True,
+        out_dir=str(out_dir),
+    )
+    in_mask = nb.load(mask).get_fdata() > 0
+    t2s = nb.load(op.join(out_dir, "T2starmap.nii.gz")).get_fdata()[in_mask]
+    s0 = nb.load(op.join(out_dir, "S0map.nii.gz")).get_fdata()[in_mask]
+    assert np.isfinite(t2s).all() and np.isfinite(s0).all()
+    failures = nb.load(op.join(out_dir, "desc-decayFitFailures_mask.nii.gz")).get_fdata()
+    assert failures.sum() == n_failures
+    if n_failures:
+        assert "Interpolating T2*/S0 estimates" in caplog.text
+    else:
+        assert "No nlls failures found" in caplog.text
+
+
+def test_t2smap_interpolation_warns_for_loglin(tmp_path, caplog):
+    """Interpolation is only available for nonlinear fits."""
+    data_dir = get_test_data_path()
+    echo_files = [op.join(data_dir, f"echo{i + 1}.nii.gz") for i in range(3)]
+    workflows.t2smap_workflow(
+        data=echo_files,
+        tes=[14.5, 38.5, 62.5],
+        mask=_make_small_mask(op.join(data_dir, "mask.nii.gz"), str(tmp_path)),
+        fittype="loglin",
+        interpolate_failing_voxels=True,
+        out_dir=str(tmp_path / "out"),
+    )
+    assert "interpolation will be skipped" in caplog.text

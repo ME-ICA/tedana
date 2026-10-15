@@ -2,6 +2,7 @@
 
 import os.path as op
 import sys
+import types
 
 import nibabel as nb
 import numpy as np
@@ -679,8 +680,106 @@ def test_fit_complex_decay_cuda_matches_cpu(noisy_complex_testdata, fitmode):
     args = (d["mag"], d["phase"], d["tes"], d["adaptive_mask"], fitmode)
     cpu = me.fit_complex_decay(*args, backend="cpu")
     gpu = me.fit_complex_decay(*args, backend="cuda")
-    assert np.array_equal(cpu["failures"], gpu["failures"])
+    _assert_complex_fits_match(gpu, cpu)
+
+
+def _assert_complex_fits_match(test, reference):
+    assert np.array_equal(test["failures"], reference["failures"])
     for key in ("t2s", "s0", "frequency_hz"):
-        assert np.allclose(gpu[key], cpu[key], rtol=1e-4, atol=1e-6), key
-    phase_diff = np.angle(np.exp(1j * (gpu["phase0"] - cpu["phase0"])))
+        assert np.allclose(test[key], reference[key], rtol=1e-4, atol=1e-6), key
+    phase_diff = np.angle(np.exp(1j * (test["phase0"] - reference["phase0"])))
     assert np.allclose(phase_diff, 0, atol=1e-4)
+
+
+@pytest.fixture
+def numpy_as_cupy(monkeypatch):
+    """Run the CUDA code paths on the CPU by standing NumPy in for CuPy."""
+    fake_cupy = types.ModuleType("cupy")
+    fake_cupy.__getattr__ = lambda name: getattr(np, name)
+    fake_cupy.asnumpy = np.asarray
+    fake_cupy.cuda = types.SimpleNamespace(
+        Stream=types.SimpleNamespace(null=types.SimpleNamespace(synchronize=lambda: None))
+    )
+    monkeypatch.setitem(sys.modules, "cupy", fake_cupy)
+    monkeypatch.setattr(utils, "_resolve_backend", lambda backend: backend)
+
+
+@pytest.mark.usefixtures("numpy_as_cupy")
+@pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
+def test_fit_complex_decay_cuda_path_on_cpu(noisy_complex_testdata, monkeypatch, fitmode):
+    """The CUDA driver code, including its SciPy fallback, matches the CPU backend.
+
+    An all-NaN voxel cannot be fit on the device, so it exercises the fallback
+    to SciPy, which then reports it as a failure.
+    """
+    d = noisy_complex_testdata
+    mag, phase = d["mag"].copy(), d["phase"].copy()
+    mag[0] = np.nan
+    if fitmode == "all":
+        # One problem per batch, so the all-NaN voxel forms a batch with no valid data.
+        monkeypatch.setenv("TEDANA_CUDA_BATCH_SIZE", "1")
+    args = (mag, phase, d["tes"], d["adaptive_mask"], fitmode)
+    cpu = me.fit_complex_decay(*args, n_threads=None, backend="cpu")
+    cuda = me.fit_complex_decay(*args, backend="cuda")
+    assert np.all(cuda["failures"][0])
+    _assert_complex_fits_match(cuda, cpu)
+
+
+@pytest.mark.usefixtures("numpy_as_cupy")
+def test_cuda_batch_size_must_be_positive(complex_testdata, monkeypatch):
+    """An invalid TEDANA_CUDA_BATCH_SIZE is rejected."""
+    d = complex_testdata
+    monkeypatch.setenv("TEDANA_CUDA_BATCH_SIZE", "0")
+    with pytest.raises(ValueError, match="TEDANA_CUDA_BATCH_SIZE"):
+        me.fit_complex_decay(
+            d["mag"], d["phase"], d["tes"], d["adaptive_mask"], "all", backend="cuda"
+        )
+
+
+def test__initial_complex_decay_params_single_echo():
+    """With one echo, R2* and frequency default to 0 and S0 comes from the echo."""
+    signal = np.array([50.0 * np.exp(1j * 0.4)])
+    params = me._initial_complex_decay_params(signal, np.array([0.01]))
+    assert np.allclose(params, [np.log(50.0), 0.0, 0.0, 0.4])
+
+
+def test__solve_complex_s0_unsolvable_volumes():
+    """S0 is NaN for volumes with too few echoes or a vanishing decay basis."""
+    tes = np.array([0.01, 0.02, 0.03])
+    signal = np.stack([me.complex_decay_model(tes, 100.0 + 0j, 20.0, 0.0)] * 2)
+    signal[1, :2] = np.nan
+    out = me._solve_complex_s0(signal, tes, 20.0, 0.0)
+    assert np.isfinite(out[0]) and np.isnan(out[1])
+    # exp(-1e6 * TE) underflows to zero, so no volume can be solved.
+    assert np.isnan(me._solve_complex_s0(signal, tes, 1e6, 0.0)).all()
+
+
+def test__fit_complex_decay_joint_unfittable(monkeypatch):
+    """The joint fit returns None without usable volumes or when the optimizer errors."""
+    import scipy.optimize
+
+    tes = np.array([0.008, 0.020, 0.032])
+    assert me._fit_complex_decay_joint(np.full((2, 3), np.nan + 0j), tes) is None
+
+    def boom(*args, **kwargs):  # noqa: U100
+        raise RuntimeError("forced failure")
+
+    monkeypatch.setattr(scipy.optimize, "least_squares", boom)
+    signal = np.stack([me.complex_decay_model(tes, 100.0 + 0j, 20.0, 0.0)] * 2)
+    assert me._fit_complex_decay_joint(signal, tes) is None
+
+
+def test_t2smap_subworkflow_nlls_requires_phase():
+    """The nlls branch of the subworkflow needs phase data."""
+    data = np.ones((2, 3, 1))
+    with pytest.raises(ValueError, match="requires phase_cat"):
+        me.t2smap_subworkflow(
+            data_cat=data,
+            tes=[0.01, 0.02, 0.03],
+            fittype="nlls",
+            fitmode="all",
+            mask_denoise=np.ones(2, dtype=bool),
+            masksum_denoise=np.full(2, 3),
+            interpolate_failing_voxels=False,
+            io_generator=None,
+        )
