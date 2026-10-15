@@ -23,6 +23,29 @@ RepLGR = logging.getLogger("REPORT")
 MAX_PHYSIOLOGICAL_T2STAR = 5.0  # seconds
 MIN_R2STAR = 1.0 / MAX_PHYSIOLOGICAL_T2STAR  # s^-1
 
+# A complex fit can fall into a degenerate valley where R2* grows until S0 fits
+# only the first echo. Signal that decays by more than exp(-20) across the echo
+# train is not measurable, so such fits are treated as failures.
+MAX_DECAY_ACROSS_ECHOES = 20.0
+
+
+def _frequency_half_range(echo_times):
+    """Return half the frequency alias period (in Hz) for a set of echo times.
+
+    Phase is only observed modulo 2*pi at each echo, so frequencies differing by
+    ``1 / dTE`` explain evenly spaced echoes equally well. Complex fits are
+    confined to ``initial estimate +/- 1 / (2 * dTE)``, using the shortest echo
+    spacing, which keeps the frequency from drifting to an alias or diverging.
+    """
+    spacing = np.diff(np.unique(np.asarray(echo_times, dtype=float)))
+    return 0.5 / spacing.min()
+
+
+def _is_degenerate_decay(r2star, echo_times):
+    """Flag R2* values that decay by more than ``MAX_DECAY_ACROSS_ECHOES`` across the echoes."""
+    echo_span = np.max(echo_times) - np.min(echo_times)
+    return r2star * echo_span >= MAX_DECAY_ACROSS_ECHOES
+
 
 def _fit_voxels_cuda(
     data_2d,
@@ -362,7 +385,9 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
     echo_times : (E,) array_like
         Echo times in seconds.
     lower_bounds, upper_bounds : (4,) array_like
-        Bounds for ``[log|S0|, R2*, frequency_hz, phase0]``.
+        Bounds for ``[log|S0|, R2*, frequency_hz, phase0]``. The frequency
+        bounds are further limited to one alias period around the initial
+        estimate (see :func:`_frequency_half_range`).
     max_nfev : int or None, optional
         Maximum function evaluations for :func:`scipy.optimize.least_squares`.
 
@@ -371,8 +396,9 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
     result : dict or None
         Dict with ``s0`` (complex), ``r2star``, ``frequency_hz``, ``phase0``,
         ``cost``, ``nfev``, ``success``. ``None`` only when fewer than 2 finite
-        echoes are available. On optimizer error, falls back to the initial
-        estimate with ``success=False``.
+        echoes are available. On optimizer error, or when the fit is degenerate
+        (see :func:`_is_degenerate_decay`), falls back to the initial estimate
+        with ``success=False``.
     """
     signal = np.asarray(signal)
     echo_times = np.asarray(echo_times, dtype=float)
@@ -384,6 +410,12 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
     te_valid = echo_times[valid]
     x0 = _initial_complex_decay_params(y_valid, te_valid)
     x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+    lower_bounds = np.array(lower_bounds, dtype=float)
+    upper_bounds = np.array(upper_bounds, dtype=float)
+    if np.unique(te_valid).size > 1:
+        half_range = _frequency_half_range(te_valid)
+        lower_bounds[2] = max(lower_bounds[2], x0[2] - half_range)
+        upper_bounds[2] = min(upper_bounds[2], x0[2] + half_range)
 
     def residuals(params):
         log_s0_abs, r2, freq, phi0 = params
@@ -392,11 +424,7 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
             residual = pred - y_valid
         return np.concatenate([residual.real, residual.imag])
 
-    try:
-        result = scipy.optimize.least_squares(
-            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
-        )
-    except (ValueError, RuntimeError, FloatingPointError):
+    def initial_estimate():
         log_s0_abs, r2star, frequency_hz, phase0 = x0
         return {
             "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
@@ -408,7 +436,17 @@ def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max
             "success": False,
         }
 
+    try:
+        result = scipy.optimize.least_squares(
+            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
+        )
+    except (ValueError, RuntimeError, FloatingPointError):
+        return initial_estimate()
+
     log_s0_abs, r2star, frequency_hz, phase0 = result.x
+    if _is_degenerate_decay(r2star, te_valid):
+        return initial_estimate()
+
     return {
         "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
         "r2star": r2star,
@@ -519,8 +557,8 @@ def _fit_complex_groups_batched(
         Array module (:mod:`numpy` or :mod:`cupy`).
     signal : (B, G, E) complex array
         Finite complex data, already on the device associated with ``xp``.
-    echo_times : (E,) array
-        Echo times in seconds. Must not all be equal.
+    echo_times : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds, on the host. Must not all be equal.
     fit_groups : (G,) bool array or None, optional
         Groups used to estimate R2*/frequency. S0 is solved for all groups.
         None uses every group.
@@ -539,8 +577,18 @@ def _fit_complex_groups_batched(
     s0 : (B, G) complex array
         Complex S0 for every group, including those excluded by ``fit_groups``.
     converged : (B,) bool array
-        Whether each problem reached a stationary point of the bounded problem.
+        Whether each problem reached a stationary point of the bounded problem
+        without becoming degenerate (see :func:`_is_degenerate_decay`).
+
+    Notes
+    -----
+    R2* is bounded below by ``min_r2star`` and frequency is confined to one
+    alias period around its initial estimate (see :func:`_frequency_half_range`),
+    matching the SciPy implementation.
     """
+    echo_times = np.asarray(echo_times, dtype=float)
+    half_range = _frequency_half_range(echo_times)
+    echo_span = echo_times.max() - echo_times.min()
     signal = xp.asarray(signal, dtype=xp.complex128)
     echo_times = xp.asarray(echo_times, dtype=xp.float64)
     fit_signal = signal if fit_groups is None else signal[:, xp.asarray(fit_groups)]
@@ -555,6 +603,8 @@ def _fit_complex_groups_batched(
     freq_groups = xp.sum(centered_te * phase, axis=-1) / te_ss / (2.0 * np.pi)
     r2star = xp.maximum(xp.median(r2star_groups, axis=1), min_r2star)
     frequency_hz = xp.median(freq_groups, axis=1)
+    min_freq = frequency_hz - half_range
+    max_freq = frequency_hz + half_range
 
     damping = xp.full(r2star.shape, 1e-3)
     converged = xp.zeros(r2star.shape, dtype=bool)
@@ -566,27 +616,38 @@ def _fit_complex_groups_batched(
             xp, fit_signal, echo_times, basis, basis_norm, s0, residual
         )
 
-        # Undamped step, projected onto the R2* bound, measures stationarity.
+        # A parameter is held at its bound when the undamped step points outward;
+        # the other parameter then takes a one-dimensional step.
         determinant = a00 * a11 - a01 * a01
         step_r2star = -(a11 * g0 - a01 * g1) / determinant
         step_freq = -(a00 * g1 - a01 * g0) / determinant
-        at_bound = (r2star <= min_r2star) & (step_r2star < 0)
-        step_freq = xp.where(at_bound, -g1 / a11, step_freq)
-        step_r2star = xp.where(at_bound, 0.0, step_r2star)
+        hold_r2star = (r2star <= min_r2star) & (step_r2star < 0)
+        hold_freq = ((frequency_hz <= min_freq) & (step_freq < 0)) | (
+            (frequency_hz >= max_freq) & (step_freq > 0)
+        )
+
+        # The projected undamped step measures stationarity.
+        proj_r2star = xp.where(hold_r2star, 0.0, xp.where(hold_freq, -g0 / a00, step_r2star))
+        proj_freq = xp.where(hold_freq, 0.0, xp.where(hold_r2star, -g1 / a11, step_freq))
         relative_step = xp.maximum(
-            xp.abs(step_r2star) / xp.maximum(r2star, 1.0),
-            xp.abs(step_freq) / (xp.abs(frequency_hz) + 1.0),
+            xp.abs(proj_r2star) / xp.maximum(r2star, 1.0),
+            xp.abs(proj_freq) / (xp.abs(frequency_hz) + 1.0),
         )
         converged = xp.isfinite(relative_step) & (relative_step < tolerance)
         if i_iter % 5 == 4 and bool(xp.all(converged)):
             break
 
-        # Levenberg--Marquardt step with Marquardt (diagonal) scaling.
+        # Levenberg--Marquardt step with Marquardt (diagonal) scaling, projected
+        # the same way and clipped to the bounds.
         d00 = a00 * (1.0 + damping)
         d11 = a11 * (1.0 + damping)
         determinant = d00 * d11 - a01 * a01
-        new_r2star = xp.maximum(r2star - (d11 * g0 - a01 * g1) / determinant, min_r2star)
-        new_freq = frequency_hz - (d00 * g1 - a01 * g0) / determinant
+        lm_r2star = -(d11 * g0 - a01 * g1) / determinant
+        lm_freq = -(d00 * g1 - a01 * g0) / determinant
+        lm_r2star = xp.where(hold_r2star, 0.0, xp.where(hold_freq, -g0 / d00, lm_r2star))
+        lm_freq = xp.where(hold_freq, 0.0, xp.where(hold_r2star, -g1 / d11, lm_freq))
+        new_r2star = xp.maximum(r2star + lm_r2star, min_r2star)
+        new_freq = xp.clip(frequency_hz + lm_freq, min_freq, max_freq)
         new_basis, new_norm, new_s0, new_residual, new_cost = _project_complex_s0(
             xp, fit_signal, echo_times, new_r2star, new_freq
         )
@@ -611,12 +672,9 @@ def _fit_complex_groups_batched(
     basis, basis_norm, s0, _, _ = _project_complex_s0(xp, signal, echo_times, r2star, frequency_hz)
     converged &= xp.isfinite(r2star) & xp.isfinite(frequency_hz) & (basis_norm > 0)
     converged &= xp.all(xp.isfinite(s0), axis=1)
-    # A poor (e.g., frequency-aliased) starting point can lead the solver into a
-    # degenerate valley where R2* grows until S0 fits only the first echo.
-    # Treat decay of more than exp(-20) across the echo train as a failure so
-    # that those problems are refit by the SciPy implementation.
-    echo_span = xp.max(echo_times) - xp.min(echo_times)
-    converged &= r2star * echo_span < 20.0
+    # Degenerate fits are handed to the SciPy implementation, which flags them
+    # as failures if it reaches the same solution.
+    converged &= r2star * echo_span < MAX_DECAY_ACROSS_ECHOES
     return r2star, frequency_hz, s0, converged
 
 
@@ -869,7 +927,9 @@ def _fit_complex_decay_joint(
     max_r2star : float, optional
         Upper bound for R2* in s^-1. Default is inf.
     max_frequency_hz : float, optional
-        Symmetric bound for off-resonance in Hz. Default is inf.
+        Symmetric bound for off-resonance in Hz. Default is inf. Frequency is
+        also limited to one alias period around the initial estimate (see
+        :func:`_frequency_half_range`).
     max_nfev : int or None, optional
         Maximum function evaluations.
 
@@ -878,7 +938,9 @@ def _fit_complex_decay_joint(
     result : dict or None
         Scalar ``r2star``, ``frequency_hz``, ``cost``, ``nfev``, ``success``
         and ``(T,)`` arrays ``s0`` (complex) and ``phase0``. ``None`` if no
-        volume has >= 2 finite echoes or optimization fails.
+        volume has >= 2 finite echoes or optimization fails. If the fit is
+        degenerate (see :func:`_is_degenerate_decay`), the initial estimate is
+        returned with ``success=False``.
     """
     signal = np.asarray(signal)
     echo_times = np.asarray(echo_times, dtype=float)
@@ -897,6 +959,9 @@ def _fit_complex_decay_joint(
     upper_bounds = np.array([max_r2star, max_frequency_hz])
     x0 = np.array([float(np.nanmedian(initial[:, 1])), float(np.nanmedian(initial[:, 2]))])
     x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+    half_range = _frequency_half_range(echo_times)
+    lower_bounds[1] = max(lower_bounds[1], x0[1] - half_range)
+    upper_bounds[1] = min(upper_bounds[1], x0[1] + half_range)
 
     def residuals(params):
         r2, freq = params
@@ -920,15 +985,19 @@ def _fit_complex_decay_joint(
         return None
 
     r2star, frequency_hz = result.x
+    cost, nfev, success = result.cost, result.nfev, result.success
+    if _is_degenerate_decay(r2star, echo_times):
+        r2star, frequency_hz = x0
+        cost, nfev, success = np.nan, 0, False
     s0 = _solve_complex_s0(signal, echo_times, r2star, frequency_hz)
     return {
         "s0": s0,
         "phase0": np.angle(s0),
         "r2star": float(r2star),
         "frequency_hz": float(frequency_hz),
-        "cost": result.cost,
-        "nfev": result.nfev,
-        "success": result.success,
+        "cost": cost,
+        "nfev": nfev,
+        "success": success,
     }
 
 

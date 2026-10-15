@@ -694,6 +694,10 @@ def _assert_complex_fits_match(test, reference):
 @pytest.fixture
 def numpy_as_cupy(monkeypatch):
     """Run the CUDA code paths on the CPU by standing NumPy in for CuPy."""
+    _use_numpy_as_cupy(monkeypatch)
+
+
+def _use_numpy_as_cupy(monkeypatch):
     fake_cupy = types.ModuleType("cupy")
     fake_cupy.__getattr__ = lambda name: getattr(np, name)
     fake_cupy.asnumpy = np.asarray
@@ -783,3 +787,71 @@ def test_t2smap_subworkflow_nlls_requires_phase():
             interpolate_failing_voxels=False,
             io_generator=None,
         )
+
+
+@pytest.fixture
+def noise_echo_trains():
+    """Pure-noise complex echo trains, where frequency is unidentifiable."""
+    rng = np.random.default_rng(4)
+    tes = np.array([0.006, 0.0115, 0.017, 0.0225, 0.028])
+    signal = rng.normal(size=(200, len(tes))) + 1j * rng.normal(size=(200, len(tes)))
+    return signal * 100, tes
+
+
+def test_complex_fits_keep_frequency_within_one_alias_period(noise_echo_trains):
+    """Frequency cannot drift beyond one alias period around its initial estimate."""
+    signal, tes = noise_echo_trains
+    half_range = me._frequency_half_range(tes)
+    lower = np.array([-np.inf, me.MIN_R2STAR, -np.inf, -np.inf])
+    upper = np.full(4, np.inf)
+    for train in signal:
+        init = me._initial_complex_decay_params(train, tes)[2]
+        res = me._fit_complex_decay_1d(train, tes, lower_bounds=lower, upper_bounds=upper)
+        assert abs(res["frequency_hz"] - init) <= half_range * (1 + 1e-9)
+        joint = me._fit_complex_decay_joint(train[None], tes, min_r2star=me.MIN_R2STAR)
+        assert abs(joint["frequency_hz"] - init) <= half_range * (1 + 1e-9)
+
+    _, freq, _, _ = me._fit_complex_groups_batched(np, signal[:, None, :], tes)
+    init = np.array([me._initial_complex_decay_params(train, tes)[2] for train in signal])
+    assert np.all(np.abs(freq - init) <= half_range * (1 + 1e-9))
+
+
+def _first_echo_only_signal():
+    """Signal at the first echo only, which drives an unconstrained fit to R2* -> inf."""
+    tes = np.array([0.006, 0.0115, 0.017, 0.0225, 0.028])
+    signal = np.array([500.0, 1e-3, 1e-3j, -1e-3, -1e-3j]) * np.exp(1j * 0.3)
+    return signal, tes
+
+
+def test_scipy_complex_fits_flag_degenerate_solutions():
+    """Fits that decay by more than exp(-20) across the echoes are failures."""
+    signal, tes = _first_echo_only_signal()
+    lower = np.array([-np.inf, me.MIN_R2STAR, -np.inf, -np.inf])
+    upper = np.full(4, np.inf)
+    res = me._fit_complex_decay_1d(signal, tes, lower_bounds=lower, upper_bounds=upper)
+    assert res["success"] is False
+    assert not me._is_degenerate_decay(res["r2star"], tes)
+    assert np.isfinite(res["s0"]) and abs(res["s0"]) < 1e4
+
+    joint = me._fit_complex_decay_joint(np.stack([signal, signal * 2]), tes)
+    assert joint["success"] is False
+    assert not me._is_degenerate_decay(joint["r2star"], tes)
+
+
+@pytest.mark.parametrize("backend", ["cpu", "cuda"])
+@pytest.mark.parametrize("fitmode", ["all", "ts", "varys0"])
+def test_fit_complex_decay_flags_degenerate_voxels(monkeypatch, backend, fitmode):
+    """Degenerate voxels are reported as failures with finite values on every path."""
+    if backend == "cuda":
+        _use_numpy_as_cupy(monkeypatch)
+    signal, tes = _first_echo_only_signal()
+    good = me.complex_decay_model(tes, 400.0 * np.exp(1j * 0.3), 25.0, 5.0)
+    data = np.stack([signal, good])[:, :, None].repeat(3, axis=2)  # (2, E, T)
+    out = me.fit_complex_decay(
+        np.abs(data), np.angle(data), tes, np.full(2, len(tes)), fitmode, backend=backend
+    )
+    failures = out["failures"].reshape(2, -1)
+    assert failures[0].all() and not failures[1].any()
+    for key in ("t2s", "s0", "frequency_hz"):
+        assert np.isfinite(out[key]).all(), key
+    assert np.allclose(out["t2s"].reshape(2, -1)[1], 1 / 25.0, rtol=1e-6)
