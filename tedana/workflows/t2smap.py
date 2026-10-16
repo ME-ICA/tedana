@@ -389,7 +389,10 @@ def t2smap_workflow(
     T2starmap.nii.gz              Estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
-    S0map.nii.gz                  S0 3D map or 4D timeseries.
+    S0map.nii.gz                  S0 3D map or 4D timeseries. With ``fittype``
+                                  'nlls', S0 is complex and is written instead
+                                  as part-mag_S0map.nii.gz and
+                                  part-phase_S0map.nii.gz.
     desc-limited_T2starmap.nii.gz Limited T2* map/timeseries. The difference between
                                   the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains

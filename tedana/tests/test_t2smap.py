@@ -348,9 +348,14 @@ def test_t2smap_nlls(tmp_path, fitmode):
         fittype="nlls",
         fitmode=fitmode,
         out_dir=str(tmp_path),
+        verbose=True,
     )
     assert op.exists(op.join(tmp_path, "T2starmap.nii.gz"))
-    assert op.exists(op.join(tmp_path, "S0map.nii.gz"))
+    # S0 is complex, so its magnitude and phase are labeled with the BIDS part entity.
+    assert op.exists(op.join(tmp_path, "part-mag_S0map.nii.gz"))
+    assert op.exists(op.join(tmp_path, "part-mag_desc-limited_S0map.nii.gz"))
+    assert not op.exists(op.join(tmp_path, "S0map.nii.gz"))
+    assert not op.exists(op.join(tmp_path, "desc-limited_S0map.nii.gz"))
     assert op.exists(op.join(tmp_path, "desc-nlls_fieldmap.nii.gz"))
     assert op.exists(op.join(tmp_path, "part-phase_S0map.nii.gz"))
     assert op.exists(op.join(tmp_path, "desc-optcom_bold.nii.gz"))
@@ -360,7 +365,7 @@ def test_t2smap_nlls(tmp_path, fitmode):
     with open(op.join(tmp_path, "part-phase_S0map.json")) as fo:
         assert json.load(fo)["Units"] == "rad"
     # varys0 should produce a 4D S0 timeseries; all/ts produce 3D/4D maps respectively
-    s0 = nb.load(op.join(tmp_path, "S0map.nii.gz"))
+    s0 = nb.load(op.join(tmp_path, "part-mag_S0map.nii.gz"))
     if fitmode == "varys0":
         assert s0.ndim == 4
 
@@ -478,7 +483,7 @@ def test_t2smap_nlls_interpolates_failures(tmp_path, monkeypatch, caplog, fitmod
     )
     in_mask = nb.load(mask).get_fdata() > 0
     t2s = nb.load(op.join(out_dir, "T2starmap.nii.gz")).get_fdata()[in_mask]
-    s0 = nb.load(op.join(out_dir, "S0map.nii.gz")).get_fdata()[in_mask]
+    s0 = nb.load(op.join(out_dir, "part-mag_S0map.nii.gz")).get_fdata()[in_mask]
     assert np.isfinite(t2s).all() and np.isfinite(s0).all()
     failures = nb.load(op.join(out_dir, "desc-decayFitFailures_mask.nii.gz")).get_fdata()
     assert failures.sum() == n_failures

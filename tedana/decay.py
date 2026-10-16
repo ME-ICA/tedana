@@ -2160,7 +2160,8 @@ def t2smap_subworkflow(
                 "Units": "rad",
                 "Description": (
                     "Phase of the complex S0 (signal extrapolated to TE = 0) from the complex "
-                    "monoexponential (nlls) T2*/S0 fit. The magnitude of S0 is in the S0 map."
+                    "monoexponential (nlls) T2*/S0 fit. The magnitude of S0 is in the "
+                    "matching part-mag S0 map."
                 ),
             },
             "phase0 json",
@@ -2351,12 +2352,15 @@ def t2smap_subworkflow(
     t2s_full = utils.unmask(t2s_full, mask_denoise)
     s0_full = utils.unmask(s0_full, mask_denoise)
 
+    # The complex fit also writes the S0 phase (part-phase), so its S0 magnitude
+    # is labeled part-mag to pair with it.
+    s0_suffix = " magnitude img" if fittype == "nlls" else " img"
     io_generator.save_file(t2s_full, "t2star img")
-    io_generator.save_file(s0_full, "s0 img")
+    io_generator.save_file(s0_full, "s0" + s0_suffix)
     if io_generator.verbose:
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
-        io_generator.save_file(s0_limited, "limited s0 img")
+        io_generator.save_file(s0_limited, "limited s0" + s0_suffix)
         io_generator.save_file(t2s_limited, "limited t2star img")
 
     del s0_limited, t2s_limited

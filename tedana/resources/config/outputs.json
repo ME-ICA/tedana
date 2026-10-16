@@ -11,6 +11,10 @@
         "orig": "s0vG",
         "bidsv1.5.0": "S0map"
     },
+    "s0 magnitude img": {
+        "orig": "s0vG",
+        "bidsv1.5.0": "part-mag_S0map"
+    },
     "fit failures img": {
         "orig": "fit_failures",
         "bidsv1.5.0": "desc-decayFitFailures_mask"
@@ -98,6 +102,10 @@
     "limited s0 img": {
         "orig": "s0v",
         "bidsv1.5.0": "desc-limited_S0map"
+    },
+    "limited s0 magnitude img": {
+        "orig": "s0v",
+        "bidsv1.5.0": "part-mag_desc-limited_S0map"
     },
     "whitened img": {
         "orig": "ts_OC_whitened",
