@@ -174,6 +174,38 @@ Key: Filename                                                                Con
 "t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap.nii.gz    Covariance of the T2* and S0 estimates.
 ===========================================================================  =====================================================
 
+If ``fittype`` is "nlls"
+------------------------
+
+Only available in ``t2smap``. The complex (magnitude and phase) fit writes
+``T2starmap.nii.gz`` and ``S0map.nii.gz`` as usual, with S0 as the magnitude of the
+complex S0, plus the files below. With ``fitmode='varys0'``, T2* is 3D while
+``S0map.nii.gz`` is 4D, with one value per volume.
+
+===========================================================================  =====================================================
+Key: Filename                                                                Content
+===========================================================================  =====================================================
+"fit failures img": desc-decayFitFailures_mask.nii.gz                        Voxels (or, for ``fitmode='ts'``, voxel-volume pairs)
+                                                                             where the complex fit failed. Includes degenerate fits
+                                                                             whose signal would decay by more than e^-20 across the
+                                                                             echo train; these keep the initial log-linear
+                                                                             estimate. Failing voxels are interpolated when
+                                                                             ``interpolate_failing_voxels`` is set.
+"frequency img": desc-nlls_fieldmap.nii.gz                                   Off-resonance frequency (B0 field map), in Hz. 3D,
+                                                                             or 4D for ``fitmode='ts'``. The frequency is only
+                                                                             determined to within half the alias period of the
+                                                                             echo spacing, 1/(2*dTE) Hz, of its initial estimate;
+                                                                             it is not spatially unwrapped and includes chemical
+                                                                             shift and any echo-time-dependent phase errors.
+"frequency json": desc-nlls_fieldmap.json                                    Sidecar for the field map, with ``"Units": "Hz"``.
+"phase0 img": part-phase_S0map.nii.gz                                        Phase of the complex S0 (the signal extrapolated to
+                                                                             TE = 0), in radians. ``S0map.nii.gz`` holds its
+                                                                             magnitude. 3D for ``fitmode='all'`` and 4D (one
+                                                                             value per volume) for ``fitmode='ts'`` and
+                                                                             ``fitmode='varys0'``.
+"phase0 json": part-phase_S0map.json                                         Sidecar for the S0 phase map, with ``"Units": "rad"``.
+===========================================================================  =====================================================
+
 If ``tedort`` is True
 ---------------------
 

@@ -2141,7 +2141,30 @@ def t2smap_subworkflow(
 
         io_generator.save_file(failures.astype(np.uint8), "fit failures img", mask=mask_denoise)
         io_generator.save_file(complex_results["frequency_hz"], "frequency img", mask=mask_denoise)
+        io_generator.save_file(
+            {
+                "Units": "Hz",
+                "Description": (
+                    "Off-resonance frequency (B0 field map) estimated by the complex "
+                    "monoexponential (nlls) T2*/S0 fit. The frequency is only determined to "
+                    f"within +/- {_frequency_half_range(tes):.1f} Hz (half the alias period "
+                    "of the echo spacing) of its initial estimate, is not spatially unwrapped, "
+                    "and includes chemical shift and any echo-time-dependent phase errors."
+                ),
+            },
+            "frequency json",
+        )
         io_generator.save_file(complex_results["phase0"], "phase0 img", mask=mask_denoise)
+        io_generator.save_file(
+            {
+                "Units": "rad",
+                "Description": (
+                    "Phase of the complex S0 (signal extrapolated to TE = 0) from the complex "
+                    "monoexponential (nlls) T2*/S0 fit. The magnitude of S0 is in the S0 map."
+                ),
+            },
+            "phase0 json",
+        )
 
         if interpolate_failing_voxels and failures.any():
             LGR.info("Interpolating T2*/S0 estimates for %d failing fit(s).", n_fit_failures)

@@ -1,5 +1,6 @@
 """Tests for t2smap."""
 
+import json
 import os.path as op
 from shutil import rmtree
 
@@ -350,9 +351,14 @@ def test_t2smap_nlls(tmp_path, fitmode):
     )
     assert op.exists(op.join(tmp_path, "T2starmap.nii.gz"))
     assert op.exists(op.join(tmp_path, "S0map.nii.gz"))
-    assert op.exists(op.join(tmp_path, "frequencyHzmap.nii.gz"))
-    assert op.exists(op.join(tmp_path, "phase0map.nii.gz"))
+    assert op.exists(op.join(tmp_path, "desc-nlls_fieldmap.nii.gz"))
+    assert op.exists(op.join(tmp_path, "part-phase_S0map.nii.gz"))
     assert op.exists(op.join(tmp_path, "desc-optcom_bold.nii.gz"))
+    # BIDS requires Units for fieldmap and phase images.
+    with open(op.join(tmp_path, "desc-nlls_fieldmap.json")) as fo:
+        assert json.load(fo)["Units"] == "Hz"
+    with open(op.join(tmp_path, "part-phase_S0map.json")) as fo:
+        assert json.load(fo)["Units"] == "rad"
     # varys0 should produce a 4D S0 timeseries; all/ts produce 3D/4D maps respectively
     s0 = nb.load(op.join(tmp_path, "S0map.nii.gz"))
     if fitmode == "varys0":
