@@ -11,6 +11,10 @@
         "orig": "s0vG",
         "bidsv1.5.0": "S0map"
     },
+    "s0 magnitude img": {
+        "orig": "s0vG",
+        "bidsv1.5.0": "part-mag_S0map"
+    },
     "fit failures img": {
         "orig": "fit_failures",
         "bidsv1.5.0": "desc-decayFitFailures_mask"
@@ -22,6 +26,22 @@
     "s0 variance img": {
         "orig": "s0_var",
         "bidsv1.5.0": "stat-variance_desc-s0_statmap"
+    },
+    "frequency img": {
+        "orig": "frequencyHz",
+        "bidsv1.5.0": "desc-nlls_fieldmap"
+    },
+    "frequency json": {
+        "orig": "frequencyHz",
+        "bidsv1.5.0": "desc-nlls_fieldmap"
+    },
+    "phase0 img": {
+        "orig": "phase0",
+        "bidsv1.5.0": "part-phase_S0map"
+    },
+    "phase0 json": {
+        "orig": "phase0",
+        "bidsv1.5.0": "part-phase_S0map"
     },
     "t2star-s0 covariance img": {
         "orig": "t2s_s0_covar",
@@ -82,6 +102,10 @@
     "limited s0 img": {
         "orig": "s0v",
         "bidsv1.5.0": "desc-limited_S0map"
+    },
+    "limited s0 magnitude img": {
+        "orig": "s0v",
+        "bidsv1.5.0": "part-mag_desc-limited_S0map"
     },
     "whitened img": {
         "orig": "ts_OC_whitened",

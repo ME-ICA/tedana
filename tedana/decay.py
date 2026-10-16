@@ -16,6 +16,36 @@ from tedana import utils
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
+# Brain T2* at typical field strengths is well under a second. This generous
+# ceiling leaves real estimates untouched while preventing the nonlinear fits
+# from driving R2* toward 0, which would send T2* = 1/R2* to absurd (and, once
+# cast to float32, infinite) values.
+MAX_PHYSIOLOGICAL_T2STAR = 5.0  # seconds
+MIN_R2STAR = 1.0 / MAX_PHYSIOLOGICAL_T2STAR  # s^-1
+
+# A complex fit can fall into a degenerate valley where R2* grows until S0 fits
+# only the first echo. Signal that decays by more than exp(-20) across the echo
+# train is not measurable, so such fits are treated as failures.
+MAX_DECAY_ACROSS_ECHOES = 20.0
+
+
+def _frequency_half_range(echo_times):
+    """Return half the frequency alias period (in Hz) for a set of echo times.
+
+    Phase is only observed modulo 2*pi at each echo, so frequencies differing by
+    ``1 / dTE`` explain evenly spaced echoes equally well. Complex fits are
+    confined to ``initial estimate +/- 1 / (2 * dTE)``, using the shortest echo
+    spacing, which keeps the frequency from drifting to an alias or diverging.
+    """
+    spacing = np.diff(np.unique(np.asarray(echo_times, dtype=float)))
+    return 0.5 / spacing.min()
+
+
+def _is_degenerate_decay(r2star, echo_times):
+    """Flag R2* values that decay by more than ``MAX_DECAY_ACROSS_ECHOES`` across the echoes."""
+    echo_span = np.max(echo_times) - np.min(echo_times)
+    return r2star * echo_span >= MAX_DECAY_ACROSS_ECHOES
+
 
 def _fit_voxels_cuda(
     data_2d,
@@ -278,6 +308,877 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
         return (voxel, popt[0], popt[1], False, cov[0, 0], cov[1, 1], cov[0, 1])
     except (RuntimeError, ValueError):
         return (voxel, None, None, True, None, None, None)
+
+
+def complex_decay_model(echo_times, s0, r2star, frequency_hz=0.0, modulation=1.0):
+    """Evaluate a single-pool complex R2* decay model.
+
+    The model is ``S(TE) = S0 * exp((-R2* + 1j*2*pi*f) * TE) * modulation``.
+    ``s0`` is complex and absorbs the initial phase. ``modulation`` is a
+    forward-compatibility hook for a future Dahnke correction; pass 1 for none.
+
+    Parameters
+    ----------
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    s0 : complex or array_like
+        Complex signal at TE=0.
+    r2star : float or array_like
+        R2* decay rate in s^-1.
+    frequency_hz : float or array_like, optional
+        Off-resonance frequency in Hz. Default is 0.0.
+    modulation : complex or array_like, optional
+        Through-slice modulation term. Default is 1.0 (no modulation).
+
+    Returns
+    -------
+    signal : :obj:`numpy.ndarray`
+        Complex predicted signal, broadcast over the inputs.
+    """
+    echo_times = np.asarray(echo_times, dtype=float)
+    decay = -np.asarray(r2star) + 1j * 2.0 * np.pi * np.asarray(frequency_hz)
+    return np.asarray(s0) * np.exp(decay * echo_times) * np.asarray(modulation)
+
+
+def _initial_complex_decay_params(signal, echo_times):
+    """Derive initial ``[log|S0|, R2*, frequency_hz, phase0]`` for one echo train.
+
+    Parameters
+    ----------
+    signal : (E,) array_like
+        Complex echo train for one sample.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+
+    Returns
+    -------
+    params : (4,) :obj:`numpy.ndarray`
+        Initial estimates from a log-linear magnitude fit (slope -> R2*,
+        intercept -> log|S0|) and an unwrapped-phase linear fit
+        (slope -> frequency_hz, intercept -> phase0).
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    amplitude = np.maximum(np.abs(signal), np.finfo(float).tiny)
+    if echo_times.size > 1:
+        slope, intercept = np.polyfit(echo_times, np.log(amplitude), 1)
+        r2star = max(0.0, -float(slope))
+        phase = np.unwrap(np.angle(signal))
+        phase_slope, phase_intercept = np.polyfit(echo_times, phase, 1)
+        frequency_hz = float(phase_slope / (2.0 * np.pi))
+        phase0 = float(phase_intercept)
+    else:
+        intercept = float(np.log(amplitude[0]))
+        r2star = 0.0
+        frequency_hz = 0.0
+        phase0 = float(np.angle(signal[0]))
+    return np.array([float(intercept), r2star, frequency_hz, phase0], dtype=float)
+
+
+def _fit_complex_decay_1d(signal, echo_times, *, lower_bounds, upper_bounds, max_nfev=None):
+    """Fit one complex echo train with nonlinear least squares.
+
+    Parameters
+    ----------
+    signal : (E,) array_like
+        Complex-valued data for one sample.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    lower_bounds, upper_bounds : (4,) array_like
+        Bounds for ``[log|S0|, R2*, frequency_hz, phase0]``. The frequency
+        bounds are further limited to one alias period around the initial
+        estimate (see :func:`_frequency_half_range`).
+    max_nfev : int or None, optional
+        Maximum function evaluations for :func:`scipy.optimize.least_squares`.
+
+    Returns
+    -------
+    result : dict or None
+        Dict with ``s0`` (complex), ``r2star``, ``frequency_hz``, ``phase0``,
+        ``cost``, ``nfev``, ``success``. ``None`` only when fewer than 2 finite
+        echoes are available. On optimizer error, or when the fit is degenerate
+        (see :func:`_is_degenerate_decay`), falls back to the initial estimate
+        with ``success=False``.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    if int(valid.sum()) < 2:
+        return None
+
+    y_valid = signal[valid]
+    te_valid = echo_times[valid]
+    x0 = _initial_complex_decay_params(y_valid, te_valid)
+    x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+    lower_bounds = np.array(lower_bounds, dtype=float)
+    upper_bounds = np.array(upper_bounds, dtype=float)
+    if np.unique(te_valid).size > 1:
+        half_range = _frequency_half_range(te_valid)
+        lower_bounds[2] = max(lower_bounds[2], x0[2] - half_range)
+        upper_bounds[2] = min(upper_bounds[2], x0[2] + half_range)
+
+    def residuals(params):
+        log_s0_abs, r2, freq, phi0 = params
+        with np.errstate(over="ignore", invalid="ignore"):
+            pred = complex_decay_model(te_valid, np.exp(log_s0_abs) * np.exp(1j * phi0), r2, freq)
+            residual = pred - y_valid
+        return np.concatenate([residual.real, residual.imag])
+
+    def initial_estimate():
+        log_s0_abs, r2star, frequency_hz, phase0 = x0
+        return {
+            "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
+            "r2star": r2star,
+            "frequency_hz": frequency_hz,
+            "phase0": phase0,
+            "cost": np.nan,
+            "nfev": 0,
+            "success": False,
+        }
+
+    try:
+        result = scipy.optimize.least_squares(
+            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
+        )
+    except (ValueError, RuntimeError, FloatingPointError):
+        return initial_estimate()
+
+    log_s0_abs, r2star, frequency_hz, phase0 = result.x
+    if _is_degenerate_decay(r2star, te_valid):
+        return initial_estimate()
+
+    return {
+        "s0": np.exp(log_s0_abs) * np.exp(1j * phase0),
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "phase0": phase0,
+        "cost": result.cost,
+        "nfev": result.nfev,
+        "success": result.success,
+    }
+
+
+def _project_complex_s0(xp, signal, echo_times, r2star, frequency_hz):
+    """Solve per-group complex S0 for fixed R2*/frequency and return the residuals.
+
+    Parameters
+    ----------
+    xp : module
+        Array module (:mod:`numpy` or :mod:`cupy`).
+    signal : (B, G, E) complex array
+        Batched complex data with ``G`` groups of ``E`` echoes per problem.
+    echo_times : (E,) array
+        Echo times in seconds.
+    r2star, frequency_hz : (B,) array
+        Shared R2* (s^-1) and off-resonance frequency (Hz) for each problem.
+
+    Returns
+    -------
+    basis : (B, E) complex array
+        Decay basis ``exp((-R2* + 1j*2*pi*f) * TE)``.
+    basis_norm : (B,) array
+        Squared norm of ``basis``.
+    s0 : (B, G) complex array
+        Least-squares complex S0 for each group.
+    residual : (B, G, E) complex array
+        ``s0 * basis - signal``.
+    cost : (B,) array
+        Half the sum of squared residual magnitudes.
+    """
+    basis = xp.exp((-r2star[:, None] + 2j * np.pi * frequency_hz[:, None]) * echo_times[None, :])
+    basis_norm = xp.sum(basis.real**2 + basis.imag**2, axis=1)
+    s0 = xp.sum(xp.conj(basis)[:, None, :] * signal, axis=2) / basis_norm[:, None]
+    residual = s0[:, :, None] * basis[:, None, :] - signal
+    cost = 0.5 * xp.sum(residual.real**2 + residual.imag**2, axis=(1, 2))
+    return basis, basis_norm, s0, residual, cost
+
+
+def _gauss_newton_complex(xp, signal, echo_times, basis, basis_norm, s0, residual):
+    """Build the 2x2 Gauss--Newton system for the variable-projection functional.
+
+    The residual ``P y - y`` (with ``P`` the projection onto the decay basis)
+    is differentiated exactly with respect to R2* and frequency, including the
+    dependence of the projected S0 on those parameters.
+
+    Returns
+    -------
+    a00, a01, a11 : (B,) array
+        Entries of ``J^T J`` for ``[R2*, frequency_hz]``.
+    g0, g1 : (B,) array
+        Entries of ``J^T r``.
+    """
+    d_basis_r2star = -echo_times[None, :] * basis
+    d_basis_freq = 2j * np.pi * echo_times[None, :] * basis
+    jacobians = []
+    for d_basis in (d_basis_r2star, d_basis_freq):
+        d_norm = 2.0 * xp.sum((xp.conj(basis) * d_basis).real, axis=1)
+        d_proj = xp.sum(xp.conj(d_basis)[:, None, :] * signal, axis=2)
+        coefficient = (d_proj - s0 * d_norm[:, None]) / basis_norm[:, None]
+        jacobians.append(
+            d_basis[:, None, :] * s0[:, :, None] + basis[:, None, :] * coefficient[:, :, None]
+        )
+    jac_r2star, jac_freq = jacobians
+
+    def _inner(left, right):
+        return xp.sum((xp.conj(left) * right).real, axis=(1, 2))
+
+    return (
+        _inner(jac_r2star, jac_r2star),
+        _inner(jac_r2star, jac_freq),
+        _inner(jac_freq, jac_freq),
+        _inner(jac_r2star, residual),
+        _inner(jac_freq, residual),
+    )
+
+
+def _fit_complex_groups_batched(
+    xp,
+    signal,
+    echo_times,
+    fit_groups=None,
+    min_r2star=MIN_R2STAR,
+    n_iterations=100,
+    tolerance=1e-7,
+):
+    """Fit shared R2*/frequency with per-group complex S0 for a batch of problems.
+
+    This is a vectorized Levenberg--Marquardt solver for the variable-projection
+    form of the complex monoexponential model. Each of the ``B`` problems has
+    ``G`` groups of ``E`` echoes that share R2* and frequency, while each group
+    has its own complex S0, which is solved analytically. It covers every
+    complex fit mode: ``fitmode="all"`` and ``"ts"`` are problems with a single
+    group, and ``fitmode="varys0"`` uses one group per volume. The solver is
+    written against an array module so that the same code runs on the CPU
+    (NumPy) and on CUDA devices (CuPy).
+
+    Parameters
+    ----------
+    xp : module
+        Array module (:mod:`numpy` or :mod:`cupy`).
+    signal : (B, G, E) complex array
+        Finite complex data, already on the device associated with ``xp``.
+    echo_times : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds, on the host. Must not all be equal.
+    fit_groups : (G,) bool array or None, optional
+        Groups used to estimate R2*/frequency. S0 is solved for all groups.
+        None uses every group.
+    min_r2star : float, optional
+        Lower bound on R2* in s^-1. Default is ``MIN_R2STAR``.
+    n_iterations : int, optional
+        Maximum number of Levenberg--Marquardt iterations. Default is 100.
+    tolerance : float, optional
+        Relative size of the undamped Gauss--Newton step below which a problem
+        is considered converged. Default is 1e-7.
+
+    Returns
+    -------
+    r2star, frequency_hz : (B,) array
+        Estimated R2* (s^-1) and frequency (Hz).
+    s0 : (B, G) complex array
+        Complex S0 for every group, including those excluded by ``fit_groups``.
+    converged : (B,) bool array
+        Whether each problem reached a stationary point of the bounded problem
+        without becoming degenerate (see :func:`_is_degenerate_decay`).
+
+    Notes
+    -----
+    R2* is bounded below by ``min_r2star`` and frequency is confined to one
+    alias period around its initial estimate (see :func:`_frequency_half_range`),
+    matching the SciPy implementation.
+    """
+    echo_times = np.asarray(echo_times, dtype=float)
+    half_range = _frequency_half_range(echo_times)
+    echo_span = echo_times.max() - echo_times.min()
+    signal = xp.asarray(signal, dtype=xp.complex128)
+    echo_times = xp.asarray(echo_times, dtype=xp.float64)
+    fit_signal = signal if fit_groups is None else signal[:, xp.asarray(fit_groups)]
+
+    # Initial values mirror _initial_complex_decay_params: per-group log-linear
+    # magnitude and unwrapped-phase fits, summarized by the median across groups.
+    centered_te = echo_times - xp.mean(echo_times)
+    te_ss = xp.sum(centered_te**2)
+    log_amplitude = xp.log(xp.maximum(xp.abs(fit_signal), np.finfo(float).tiny))
+    phase = xp.unwrap(xp.angle(fit_signal), axis=-1)
+    r2star_groups = xp.maximum(-xp.sum(centered_te * log_amplitude, axis=-1) / te_ss, 0.0)
+    freq_groups = xp.sum(centered_te * phase, axis=-1) / te_ss / (2.0 * np.pi)
+    r2star = xp.maximum(xp.median(r2star_groups, axis=1), min_r2star)
+    frequency_hz = xp.median(freq_groups, axis=1)
+    min_freq = frequency_hz - half_range
+    max_freq = frequency_hz + half_range
+
+    damping = xp.full(r2star.shape, 1e-3)
+    converged = xp.zeros(r2star.shape, dtype=bool)
+    basis, basis_norm, s0, residual, cost = _project_complex_s0(
+        xp, fit_signal, echo_times, r2star, frequency_hz
+    )
+    for i_iter in range(n_iterations):
+        a00, a01, a11, g0, g1 = _gauss_newton_complex(
+            xp, fit_signal, echo_times, basis, basis_norm, s0, residual
+        )
+
+        # A parameter is held at its bound when the undamped step points outward;
+        # the other parameter then takes a one-dimensional step.
+        determinant = a00 * a11 - a01 * a01
+        step_r2star = -(a11 * g0 - a01 * g1) / determinant
+        step_freq = -(a00 * g1 - a01 * g0) / determinant
+        hold_r2star = (r2star <= min_r2star) & (step_r2star < 0)
+        hold_freq = ((frequency_hz <= min_freq) & (step_freq < 0)) | (
+            (frequency_hz >= max_freq) & (step_freq > 0)
+        )
+
+        # The projected undamped step measures stationarity.
+        proj_r2star = xp.where(hold_r2star, 0.0, xp.where(hold_freq, -g0 / a00, step_r2star))
+        proj_freq = xp.where(hold_freq, 0.0, xp.where(hold_r2star, -g1 / a11, step_freq))
+        relative_step = xp.maximum(
+            xp.abs(proj_r2star) / xp.maximum(r2star, 1.0),
+            xp.abs(proj_freq) / (xp.abs(frequency_hz) + 1.0),
+        )
+        converged = xp.isfinite(relative_step) & (relative_step < tolerance)
+        if i_iter % 5 == 4 and bool(xp.all(converged)):
+            break
+
+        # Levenberg--Marquardt step with Marquardt (diagonal) scaling, projected
+        # the same way and clipped to the bounds.
+        d00 = a00 * (1.0 + damping)
+        d11 = a11 * (1.0 + damping)
+        determinant = d00 * d11 - a01 * a01
+        lm_r2star = -(d11 * g0 - a01 * g1) / determinant
+        lm_freq = -(d00 * g1 - a01 * g0) / determinant
+        lm_r2star = xp.where(hold_r2star, 0.0, xp.where(hold_freq, -g0 / d00, lm_r2star))
+        lm_freq = xp.where(hold_freq, 0.0, xp.where(hold_r2star, -g1 / d11, lm_freq))
+        new_r2star = xp.maximum(r2star + lm_r2star, min_r2star)
+        new_freq = xp.clip(frequency_hz + lm_freq, min_freq, max_freq)
+        new_basis, new_norm, new_s0, new_residual, new_cost = _project_complex_s0(
+            xp, fit_signal, echo_times, new_r2star, new_freq
+        )
+        accept = (
+            xp.isfinite(new_cost)
+            & xp.isfinite(new_r2star)
+            & xp.isfinite(new_freq)
+            & (new_cost <= cost)
+            & ~converged
+        )
+        r2star = xp.where(accept, new_r2star, r2star)
+        frequency_hz = xp.where(accept, new_freq, frequency_hz)
+        basis = xp.where(accept[:, None], new_basis, basis)
+        basis_norm = xp.where(accept, new_norm, basis_norm)
+        s0 = xp.where(accept[:, None], new_s0, s0)
+        residual = xp.where(accept[:, None, None], new_residual, residual)
+        cost = xp.where(accept, new_cost, cost)
+        damping = xp.where(
+            accept, xp.maximum(damping * 0.1, 1e-12), xp.minimum(damping * 10.0, 1e12)
+        )
+
+    basis, basis_norm, s0, _, _ = _project_complex_s0(xp, signal, echo_times, r2star, frequency_hz)
+    converged &= xp.isfinite(r2star) & xp.isfinite(frequency_hz) & (basis_norm > 0)
+    converged &= xp.all(xp.isfinite(s0), axis=1)
+    # Degenerate fits are handed to the SciPy implementation, which flags them
+    # as failures if it reaches the same solution.
+    converged &= r2star * echo_span < MAX_DECAY_ACROSS_ECHOES
+    return r2star, frequency_hz, s0, converged
+
+
+def _fit_complex_groups_cuda(signal, echo_times, fit_groups=None, batch_size=None):
+    """Run :func:`_fit_complex_groups_batched` on a CUDA device in batches.
+
+    Parameters
+    ----------
+    signal : (B, G, E) complex :obj:`numpy.ndarray`
+        Complex data for ``B`` problems.
+    echo_times : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds.
+    fit_groups : (G,) bool :obj:`numpy.ndarray` or None, optional
+        Groups used to estimate R2*/frequency.
+    batch_size : int or None, optional
+        Maximum number of problems transferred to the GPU at once. Batches are
+        always limited to at most 2**22 complex samples, which bounds device
+        memory use to roughly 1-2 GB. None (default) applies only that limit.
+        The solver's run time is dominated by kernel launches, so larger
+        batches are much faster.
+
+    Returns
+    -------
+    r2star, frequency_hz : (B,) :obj:`numpy.ndarray`
+        Estimated R2* and frequency. Zero for failed problems.
+    s0 : (B, G) complex :obj:`numpy.ndarray`
+        Complex S0. Zero for failed problems.
+    failures : (B,) bool :obj:`numpy.ndarray`
+        Problems that had non-finite inputs or did not converge, and must be
+        refit on the CPU.
+    """
+    import cupy as cp
+
+    n_problems, n_groups, n_echoes = signal.shape
+    r2star = np.zeros(n_problems)
+    frequency_hz = np.zeros(n_problems)
+    s0 = np.zeros((n_problems, n_groups), dtype=np.complex128)
+    failures = np.ones(n_problems, dtype=bool)
+    max_batch_size = max(1, 2**22 // (n_groups * n_echoes))
+    batch_size = max_batch_size if batch_size is None else min(batch_size, max_batch_size)
+
+    for first in range(0, n_problems, batch_size):
+        batch = signal[first : first + batch_size]
+        valid = np.flatnonzero(np.isfinite(batch).all(axis=(1, 2)))
+        if valid.size == 0:
+            continue
+
+        r2_gpu, freq_gpu, s0_gpu, converged_gpu = _fit_complex_groups_batched(
+            cp, cp.asarray(batch[valid]), echo_times, fit_groups=fit_groups
+        )
+        converged = cp.asnumpy(converged_gpu)
+        output_idx = first + valid[converged]
+        r2star[output_idx] = cp.asnumpy(r2_gpu)[converged]
+        frequency_hz[output_idx] = cp.asnumpy(freq_gpu)[converged]
+        s0[output_idx] = cp.asnumpy(s0_gpu)[converged]
+        failures[output_idx] = False
+
+    cp.cuda.Stream.null.synchronize()
+    return r2star, frequency_hz, s0, failures
+
+
+def _cuda_batch_size():
+    """Read an optional CUDA batch size cap from ``TEDANA_CUDA_BATCH_SIZE``."""
+    if "TEDANA_CUDA_BATCH_SIZE" not in os.environ:
+        return None
+    batch_size = int(os.environ["TEDANA_CUDA_BATCH_SIZE"])
+    if batch_size < 1:
+        raise ValueError("TEDANA_CUDA_BATCH_SIZE must be a positive integer")
+    return batch_size
+
+
+def fit_complex_monoexponential(
+    data_cat, echo_times, adaptive_mask, report=True, n_threads=1, backend="cpu"
+):
+    """Fit a complex monoexponential decay model per voxel across all timepoints.
+
+    Echoes and timepoints are flattened into a single fit per voxel (the
+    complex analog of the ``fittype="curvefit"``/``fitmode="all"`` scheme),
+    using the adaptive mask to choose how many echoes each voxel uses.
+
+    Parameters
+    ----------
+    data_cat : (Md x E x T) :obj:`numpy.ndarray`
+        Complex multi-echo data. Md is samples in the denoising mask.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel. See ``make_adaptive_mask``.
+    report : bool, optional
+        Whether to log a description of this step. Default is True.
+    n_threads : int, optional
+        Number of threads. If None or <= 0, uses all CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend. ``cuda`` fits voxels in batches on the GPU and refits
+        any that do not converge with SciPy. Default is ``cpu``.
+
+    Returns
+    -------
+    result : dict
+        ``(Md,)`` arrays ``t2s``, ``s0`` (magnitude), ``r2star``,
+        ``frequency_hz``, ``phase0``, and boolean ``failures``.
+    """
+    backend = utils._resolve_backend(backend)
+    if backend == "cuda":
+        cuda_batch_size = _cuda_batch_size()
+    if n_threads is None or n_threads <= 0:
+        n_threads = os.cpu_count() or 1
+    if report:
+        RepLGR.info(
+            "A complex monoexponential model was fit to the magnitude and "
+            "phase data at each voxel using nonlinear least squares, jointly "
+            "estimating T2*, S0, off-resonance frequency, and initial phase."
+        )
+    echo_times = np.asarray(echo_times, dtype=float)
+    n_samp, _, n_vols = data_cat.shape
+
+    echos_to_run = np.unique(adaptive_mask)
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
+    # R2* is bounded below by MIN_R2STAR so a (near-)flat decay cannot drive
+    # T2* = 1/R2* toward infinity.
+    lower_bounds = np.array([-np.inf, MIN_R2STAR, -np.inf, -np.inf])
+    upper_bounds = np.array([np.inf, np.inf, np.inf, np.inf])
+
+    r2star = np.zeros(n_samp)
+    s0_mag = np.zeros(n_samp)
+    frequency_hz = np.zeros(n_samp)
+    phase0 = np.zeros(n_samp)
+    failures = np.zeros(n_samp, dtype=bool)
+
+    for echo_num in echos_to_run:
+        if echo_num == 2:
+            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
+
+        data_2d = data_cat[:, :echo_num, :].reshape(n_samp, -1)
+        echo_times_1d = np.repeat(echo_times[:echo_num], n_vols)
+
+        if backend == "cuda":
+            r2_gpu, freq_gpu, s0_gpu, gpu_failures = _fit_complex_groups_cuda(
+                data_2d[voxel_idx, None, :], echo_times_1d, batch_size=cuda_batch_size
+            )
+            gpu_voxels = voxel_idx[~gpu_failures]
+            r2star[gpu_voxels] = r2_gpu[~gpu_failures]
+            frequency_hz[gpu_voxels] = freq_gpu[~gpu_failures]
+            s0_mag[gpu_voxels] = np.abs(s0_gpu[~gpu_failures, 0])
+            phase0[gpu_voxels] = np.angle(s0_gpu[~gpu_failures, 0])
+            voxel_idx = voxel_idx[gpu_failures]
+            if voxel_idx.size:
+                LGR.debug("Refitting %d CUDA non-convergent voxel(s) with SciPy.", voxel_idx.size)
+
+        results = Parallel(n_jobs=n_threads)(
+            delayed(_fit_complex_decay_1d)(
+                data_2d[voxel],
+                echo_times_1d,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+            )
+            for voxel in tqdm(
+                voxel_idx, desc=f"{echo_num}-echo complex NLLS", disable=backend == "cuda"
+            )
+        )
+
+        for voxel, res in zip(voxel_idx, results):
+            if res is None:
+                failures[voxel] = True
+                continue
+            r2star[voxel] = res["r2star"]
+            s0_mag[voxel] = np.abs(res["s0"])
+            frequency_hz[voxel] = res["frequency_hz"]
+            phase0[voxel] = res["phase0"]
+            failures[voxel] = not res["success"]
+
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+        t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
+
+    return {
+        "t2s": t2s,
+        "s0": s0_mag,
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "phase0": phase0,
+        "failures": failures,
+    }
+
+
+def _solve_complex_s0(signal, echo_times, r2star, frequency_hz):
+    """Analytically solve per-volume complex S0 for fixed R2*/frequency.
+
+    Parameters
+    ----------
+    signal : (T, E) array_like
+        Complex data for one voxel; volumes on axis 0, echoes on axis 1.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    r2star : float
+        Shared R2* in s^-1.
+    frequency_hz : float
+        Shared off-resonance frequency in Hz.
+
+    Returns
+    -------
+    s0 : (T,) :obj:`numpy.ndarray`
+        Complex S0 per volume. NaN for volumes with fewer than 2 finite echoes.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    n_vols = signal.shape[0]
+    with np.errstate(over="ignore", invalid="ignore"):
+        decay = np.exp((-r2star + 1j * 2.0 * np.pi * frequency_hz) * echo_times)
+    s0 = np.full(n_vols, np.nan + 1j * np.nan, dtype=np.complex128)
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    for vol in range(n_vols):
+        echo_mask = valid[vol]
+        if int(echo_mask.sum()) < 2:
+            continue
+        basis = decay[echo_mask]
+        denom = np.sum(np.abs(basis) ** 2)
+        if denom <= 0 or not np.isfinite(denom):
+            continue
+        s0[vol] = np.sum(np.conj(basis) * signal[vol, echo_mask]) / denom
+    return s0
+
+
+def _fit_complex_decay_joint(
+    signal,
+    echo_times,
+    *,
+    min_r2star=0.0,
+    max_r2star=np.inf,
+    max_frequency_hz=np.inf,
+    max_nfev=None,
+):
+    """Fit one voxel with shared R2*/frequency and per-volume complex S0.
+
+    Per-volume complex S0 is linear given fixed R2*/frequency and is solved
+    analytically inside the residual, keeping the optimizer to two parameters.
+
+    Parameters
+    ----------
+    signal : (T, E) array_like
+        Complex data for one voxel; volumes on axis 0, echoes on axis 1.
+    echo_times : (E,) array_like
+        Echo times in seconds.
+    min_r2star : float, optional
+        Lower bound for R2* in s^-1. Default is 0.0.
+    max_r2star : float, optional
+        Upper bound for R2* in s^-1. Default is inf.
+    max_frequency_hz : float, optional
+        Symmetric bound for off-resonance in Hz. Default is inf. Frequency is
+        also limited to one alias period around the initial estimate (see
+        :func:`_frequency_half_range`).
+    max_nfev : int or None, optional
+        Maximum function evaluations.
+
+    Returns
+    -------
+    result : dict or None
+        Scalar ``r2star``, ``frequency_hz``, ``cost``, ``nfev``, ``success``
+        and ``(T,)`` arrays ``s0`` (complex) and ``phase0``. ``None`` if no
+        volume has >= 2 finite echoes or optimization fails. If the fit is
+        degenerate (see :func:`_is_degenerate_decay`), the initial estimate is
+        returned with ``success=False``.
+    """
+    signal = np.asarray(signal)
+    echo_times = np.asarray(echo_times, dtype=float)
+    valid = np.isfinite(signal.real) & np.isfinite(signal.imag)
+    valid_vols = np.flatnonzero(valid.sum(axis=1) >= 2)
+    if valid_vols.size == 0:
+        return None
+
+    initial = np.asarray(
+        [
+            _initial_complex_decay_params(signal[vol, valid[vol]], echo_times[valid[vol]])
+            for vol in valid_vols
+        ]
+    )
+    lower_bounds = np.array([min_r2star, -max_frequency_hz])
+    upper_bounds = np.array([max_r2star, max_frequency_hz])
+    x0 = np.array([float(np.nanmedian(initial[:, 1])), float(np.nanmedian(initial[:, 2]))])
+    x0 = np.minimum(np.maximum(x0, lower_bounds), upper_bounds)
+    half_range = _frequency_half_range(echo_times)
+    lower_bounds[1] = max(lower_bounds[1], x0[1] - half_range)
+    upper_bounds[1] = min(upper_bounds[1], x0[1] + half_range)
+
+    def residuals(params):
+        r2, freq = params
+        with np.errstate(over="ignore", invalid="ignore"):
+            s0_est = _solve_complex_s0(signal, echo_times, r2, freq)
+            parts = []
+            for vol in valid_vols:
+                if not np.isfinite(s0_est[vol]):
+                    continue
+                echo_mask = valid[vol]
+                pred = complex_decay_model(echo_times[echo_mask], s0_est[vol], r2, freq)
+                residual = pred - signal[vol, echo_mask]
+                parts.extend([residual.real, residual.imag])
+        return np.concatenate(parts)
+
+    try:
+        result = scipy.optimize.least_squares(
+            residuals, x0, bounds=(lower_bounds, upper_bounds), max_nfev=max_nfev
+        )
+    except (ValueError, RuntimeError, FloatingPointError):
+        return None
+
+    r2star, frequency_hz = result.x
+    cost, nfev, success = result.cost, result.nfev, result.success
+    if _is_degenerate_decay(r2star, echo_times):
+        r2star, frequency_hz = x0
+        cost, nfev, success = np.nan, 0, False
+    s0 = _solve_complex_s0(signal, echo_times, r2star, frequency_hz)
+    return {
+        "s0": s0,
+        "phase0": np.angle(s0),
+        "r2star": float(r2star),
+        "frequency_hz": float(frequency_hz),
+        "cost": cost,
+        "nfev": nfev,
+        "success": success,
+    }
+
+
+def fit_complex_decay(
+    data, phase, tes, adaptive_mask, fitmode, use_volumes=None, n_threads=1, backend="cpu"
+):
+    """Estimate complex T2*/S0 maps from magnitude and phase data.
+
+    Parameters
+    ----------
+    data : (Md x E x T) :obj:`numpy.ndarray`
+        Magnitude multi-echo data in the denoising mask.
+    phase : (Md x E x T) :obj:`numpy.ndarray`
+        Phase multi-echo data in radians, same shape as ``data``.
+    tes : (E,) array_like
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel.
+    fitmode : {"all", "ts", "varys0"}
+        ``"all"`` fits one model per voxel across all timepoints. ``"ts"`` fits
+        per voxel and timepoint. ``"varys0"`` shares R2*/frequency across
+        timepoints with per-volume complex S0.
+    use_volumes : (T,) :obj:`numpy.ndarray` of bool or None, optional
+        For ``"varys0"`` only: volumes used to estimate the shared
+        R2*/frequency. Per-volume S0 is computed for all volumes regardless.
+        ``None`` uses all volumes.
+    n_threads : int, optional
+        Number of threads. If None or <= 0, uses all CPU cores.
+    backend : {"cpu", "cuda", "auto"}, optional
+        Compute backend. Default is ``cpu``.
+
+    Returns
+    -------
+    result : dict
+        For ``"all"``: ``(Md,)`` arrays ``t2s``, ``s0``, ``r2star``,
+        ``frequency_hz``, ``phase0``, ``failures``. For ``"ts"``: same keys as
+        ``(Md, T)``. For ``"varys0"``: ``t2s``/``r2star``/``frequency_hz``/
+        ``failures`` are ``(Md,)`` and ``s0``/``phase0`` are ``(Md, T)``.
+    """
+    backend = utils._resolve_backend(backend)
+    if n_threads is None or n_threads <= 0:
+        n_threads = os.cpu_count() or 1
+    data = np.asarray(data)
+    phase = np.asarray(phase)
+    tes = np.asarray(tes, dtype=float)
+    complex_data = data * np.exp(1j * phase)
+    n_samp, _, n_vols = complex_data.shape
+
+    if fitmode == "all":
+        return fit_complex_monoexponential(
+            complex_data, tes, adaptive_mask, n_threads=n_threads, backend=backend
+        )
+
+    if fitmode == "ts":
+        # Every (voxel, volume) pair is an independent single-volume fit, so
+        # flatten them into one set of samples and fit them all at once.
+        n_echos = complex_data.shape[1]
+        res = fit_complex_monoexponential(
+            complex_data.transpose(0, 2, 1).reshape(n_samp * n_vols, n_echos)[:, :, None],
+            tes,
+            np.repeat(adaptive_mask, n_vols),
+            n_threads=n_threads,
+            backend=backend,
+        )
+        return {k: v.reshape(n_samp, n_vols) for k, v in res.items()}
+
+    if fitmode == "varys0":
+        if use_volumes is None:
+            use_volumes = np.ones(n_vols, dtype=bool)
+        else:
+            use_volumes = np.asarray(use_volumes, dtype=bool)
+        return _fit_complex_decay_varys0(
+            complex_data, tes, adaptive_mask, use_volumes, n_threads, backend=backend
+        )
+
+    raise ValueError(f"Unknown fitmode option: {fitmode}")
+
+
+def _fit_complex_decay_varys0(
+    complex_data, tes, adaptive_mask, use_volumes, n_threads, backend="cpu"
+):
+    """Joint-fit driver: shared R2*/frequency, per-volume complex S0.
+
+    Parameters
+    ----------
+    complex_data : (Md x E x T) :obj:`numpy.ndarray`
+        Complex multi-echo data.
+    tes : (E,) :obj:`numpy.ndarray`
+        Echo times in seconds.
+    adaptive_mask : (Md,) :obj:`numpy.ndarray`
+        Number of good echoes per voxel.
+    use_volumes : (T,) :obj:`numpy.ndarray` of bool
+        Volumes used for the shared R2*/frequency estimate.
+    n_threads : int
+        Number of threads.
+    backend : {"cpu", "cuda"}, optional
+        Compute backend. Default is ``cpu``.
+
+    Returns
+    -------
+    result : dict
+        ``(Md,)`` ``t2s``, ``r2star``, ``frequency_hz``, ``failures`` and
+        ``(Md, T)`` ``s0`` (magnitude) and ``phase0``.
+    """
+    n_samp, _, n_vols = complex_data.shape
+    echos_to_run = np.unique(adaptive_mask)
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
+    r2star = np.zeros(n_samp)
+    frequency_hz = np.zeros(n_samp)
+    failures = np.zeros(n_samp, dtype=bool)
+    s0_mag = np.zeros((n_samp, n_vols))
+    phase0 = np.zeros((n_samp, n_vols))
+
+    def _fit_voxel(voxel, echo_num):
+        # (T, E) for the shared fit (used volumes only) and all volumes for S0
+        signal_all = complex_data[voxel, :echo_num, :].T
+        joint = _fit_complex_decay_joint(
+            signal_all[use_volumes], tes[:echo_num], min_r2star=MIN_R2STAR
+        )
+        if joint is None:
+            return voxel, None
+        s0_all = _solve_complex_s0(
+            signal_all, tes[:echo_num], joint["r2star"], joint["frequency_hz"]
+        )
+        return voxel, {"joint": joint, "s0_all": s0_all}
+
+    for echo_num in echos_to_run:
+        if echo_num == 2:
+            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
+
+        if backend == "cuda":
+            r2_gpu, freq_gpu, s0_gpu, gpu_failures = _fit_complex_groups_cuda(
+                complex_data[voxel_idx, :echo_num, :].transpose(0, 2, 1),
+                tes[:echo_num],
+                fit_groups=use_volumes,
+                batch_size=_cuda_batch_size(),
+            )
+            gpu_voxels = voxel_idx[~gpu_failures]
+            r2star[gpu_voxels] = r2_gpu[~gpu_failures]
+            frequency_hz[gpu_voxels] = freq_gpu[~gpu_failures]
+            s0_mag[gpu_voxels, :] = np.abs(s0_gpu[~gpu_failures])
+            phase0[gpu_voxels, :] = np.angle(s0_gpu[~gpu_failures])
+            voxel_idx = voxel_idx[gpu_failures]
+            if voxel_idx.size:
+                LGR.debug("Refitting %d CUDA non-convergent voxel(s) with SciPy.", voxel_idx.size)
+
+        results = Parallel(n_jobs=n_threads)(
+            delayed(_fit_voxel)(voxel, echo_num)
+            for voxel in tqdm(
+                voxel_idx, desc=f"{echo_num}-echo varys0 NLLS", disable=backend == "cuda"
+            )
+        )
+
+        for voxel, res in results:
+            if res is None:
+                failures[voxel] = True
+                continue
+            joint = res["joint"]
+            r2star[voxel] = joint["r2star"]
+            frequency_hz[voxel] = joint["frequency_hz"]
+            failures[voxel] = not joint["success"]
+            s0_all = res["s0_all"]
+            s0_mag[voxel, :] = np.abs(s0_all)
+            phase0[voxel, :] = np.angle(s0_all)
+
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+        t2s = np.where(r2star > 0, 1.0 / r2star, np.inf)
+
+    return {
+        "t2s": t2s,
+        "r2star": r2star,
+        "frequency_hz": frequency_hz,
+        "s0": s0_mag,
+        "phase0": phase0,
+        "failures": failures,
+    }
 
 
 def fit_monoexponential(
@@ -898,13 +1799,16 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     :math:`T_2^*` values less than or equal to zero with 0.001 s.
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
-    It also replaces NaN values in the :math:`S_0` map with 0.
+    It also replaces NaN, infinite, and float32-unrepresentable values in the :math:`S_0` map
+    with 0.
     """
     # Apply floors and ceilings to the T2* and S0 maps
     t2s[np.isinf(t2s)] = 0.5  # why 0.5 s?
     t2s[t2s <= 0] = 0.001  # set negative values to a small positive value
     t2s = _apply_t2s_floor(t2s, tes)
-    s0[np.isnan(s0)] = 0.0  # why 0?
+    # Zero out NaN, inf, and values too large to represent in float32
+    s0_f32_max = np.finfo(np.float32).max
+    s0[~np.isfinite(s0) | (np.abs(s0) > s0_f32_max)] = 0.0
 
     t2s_limited = t2s.copy()
     s0_limited = s0.copy()
@@ -915,6 +1819,10 @@ def modify_t2s_s0_maps(t2s, s0, adaptive_mask, tes):
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5, interpolation_method="lower")
     LGR.debug(f"Setting cap on T2* map at {cap_t2s * 10:.5f}")
+    # Apply the cap to both the full and limited maps. Without it, blown-up
+    # finite estimates from a poorly constrained fit leak into the full map (and
+    # overflow to +Inf when saved as float32).
+    t2s[t2s > cap_t2s * 10] = cap_t2s
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     return t2s, s0, t2s_limited, s0_limited
@@ -927,7 +1835,7 @@ def rmse_of_fit_decay_ts(
     adaptive_mask: np.ndarray,
     t2s: np.ndarray,
     s0: np.ndarray,
-    fitmode: Literal["all", "ts"],
+    fitmode: Literal["all", "ts", "varys0"],
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
 
@@ -947,8 +1855,8 @@ def rmse_of_fit_decay_ts(
         :func:`~tedana.decay.fit_decay_ts`.
     s0 : (Mb [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
-    fitmode : {"fit", "all"}
-        Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
+    fitmode : {"all", "ts", "varys0"}
+        Whether the T2* and S0 estimates are volume-wise ("ts", "varys0") or not ("all").
 
     Returns
     -------
@@ -983,6 +1891,9 @@ def rmse_of_fit_decay_ts(
         elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
+        elif fitmode == "varys0":
+            s0_echo = s0[use_vox, :]
+            t2s_echo = np.tile(t2s[use_vox][:, np.newaxis], (1, n_vols))
         else:
             raise ValueError(f"Unknown fitmode option {fitmode}")
 
@@ -1139,6 +2050,8 @@ def t2smap_subworkflow(
     data_without_excluded_vols=None,
     n_threads=1,
     backend="cpu",
+    phase_cat=None,
+    use_volumes=None,
 ):
     """Fit a T2* map to the data.
 
@@ -1149,10 +2062,12 @@ def t2smap_subworkflow(
         and `T` is time.
     tes : (E,) :obj:`list`
         Echo times.
-    fittype : {"curvefit", "loglinear"}
-        The type of model fit to use.
-    fitmode : {"all", "ts"}
-        Whether the T2* and S0 estimates are volume-wise ("all") or not ("ts").
+    fittype : {"curvefit", "loglin", "nlls"}
+        The type of model fit to use. ``"nlls"`` fits a complex model and
+        requires ``phase_cat``.
+    fitmode : {"all", "ts", "varys0"}
+        Whether the T2* and S0 estimates are volume-wise ("ts"), not ("all"),
+        or share T2* across volumes with volume-wise S0 ("varys0"; nlls only).
     mask_denoise : (Mb,) :obj:`numpy.ndarray`
         Boolean array indicating which voxels to include in the fit.
     masksum_denoise : (Mb,) :obj:`numpy.ndarray`
@@ -1170,10 +2085,16 @@ def t2smap_subworkflow(
     data_without_excluded_vols : (Mb x E x T) :obj:`numpy.ndarray` or None, optional
         Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
         and `T` is time. If None, the data_cat is used.
+    phase_cat : (Mb x E x T) :obj:`numpy.ndarray` or None, optional
+        Phase data in radians, matching ``data_cat``. Required for ``fittype="nlls"``.
+    use_volumes : (T,) :obj:`numpy.ndarray` of bool or None, optional
+        Volumes of ``data_cat`` retained in ``data_without_excluded_vols``.
+        Used to select matching phase volumes for ``fittype="nlls"``.
+        None means all volumes are used.
 
     Returns
     -------
-    t2s_full : (Mb x T) :obj:`numpy.ndarray`
+    t2s_full : (Mb [x T]) :obj:`numpy.ndarray`
         The full T2* map.
     """
     n_fit_failures = None
@@ -1184,15 +2105,103 @@ def t2smap_subworkflow(
     )
     data_for_fit = data_for_fit[mask_denoise, ...]
     masksum_masked = masksum_denoise[mask_denoise]
-    decay_function = fit_decay if fitmode == "all" else fit_decay_ts
-    t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
-        data=data_for_fit,
-        tes=tes,
-        adaptive_mask=masksum_masked,
-        fittype=fittype,
-        n_threads=n_threads,
-        backend=backend,
-    )
+    if fittype == "nlls":
+        if phase_cat is None:
+            raise ValueError("fittype='nlls' requires phase_cat.")
+
+        if fitmode == "varys0":
+            # Per-volume S0 is estimated for every volume, so fit all volumes and
+            # let use_volumes select those informing the shared R2*/frequency.
+            complex_results = fit_complex_decay(
+                data=data_cat[mask_denoise, ...],
+                phase=phase_cat[mask_denoise, ...],
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fitmode=fitmode,
+                use_volumes=use_volumes,
+                n_threads=n_threads,
+                backend=backend,
+            )
+        else:
+            phase_for_fit = phase_cat if use_volumes is None else phase_cat[:, :, use_volumes]
+            complex_results = fit_complex_decay(
+                data=data_for_fit,
+                phase=phase_for_fit[mask_denoise, ...],
+                tes=tes,
+                adaptive_mask=masksum_masked,
+                fitmode=fitmode,
+                n_threads=n_threads,
+                backend=backend,
+            )
+        t2s_full = complex_results["t2s"]
+        s0_full = complex_results["s0"]
+        failures = complex_results["failures"]
+        t2s_var = s0_var = t2s_s0_covar = None
+        n_fit_failures = int(failures.sum())
+
+        io_generator.save_file(failures.astype(np.uint8), "fit failures img", mask=mask_denoise)
+        io_generator.save_file(complex_results["frequency_hz"], "frequency img", mask=mask_denoise)
+        io_generator.save_file(
+            {
+                "Units": "Hz",
+                "Description": (
+                    "Off-resonance frequency (B0 field map) estimated by the complex "
+                    "monoexponential (nlls) T2*/S0 fit. The frequency is only determined to "
+                    f"within +/- {_frequency_half_range(tes):.1f} Hz (half the alias period "
+                    "of the echo spacing) of its initial estimate, is not spatially unwrapped, "
+                    "and includes chemical shift and any echo-time-dependent phase errors."
+                ),
+            },
+            "frequency json",
+        )
+        io_generator.save_file(complex_results["phase0"], "phase0 img", mask=mask_denoise)
+        io_generator.save_file(
+            {
+                "Units": "rad",
+                "Description": (
+                    "Phase of the complex S0 (signal extrapolated to TE = 0) from the complex "
+                    "monoexponential (nlls) T2*/S0 fit. The magnitude of S0 is in the "
+                    "matching part-mag S0 map."
+                ),
+            },
+            "phase0 json",
+        )
+
+        if interpolate_failing_voxels and failures.any():
+            LGR.info("Interpolating T2*/S0 estimates for %d failing fit(s).", n_fit_failures)
+            phys_coords = utils.mask_to_phys_coords(io_generator.mask, mask_denoise)
+            t2s_full = utils.interpolate_masked_values(
+                t2s_full,
+                failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+            # In varys0 mode, S0 is (Md x T) while failures are per voxel.
+            s0_failures = (
+                np.broadcast_to(failures[:, None], s0_full.shape)
+                if s0_full.ndim > failures.ndim
+                else failures
+            )
+            s0_full = utils.interpolate_masked_values(
+                s0_full,
+                s0_failures,
+                io_generator.mask,
+                mask_denoise,
+                phys_coords=phys_coords,
+            )
+        elif interpolate_failing_voxels:
+            LGR.info("No nlls failures found; skipping interpolation.")
+    else:
+        decay_function = fit_decay if fitmode == "all" else fit_decay_ts
+        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay_function(
+            data=data_for_fit,
+            tes=tes,
+            adaptive_mask=masksum_masked,
+            fittype=fittype,
+            n_threads=n_threads,
+            backend=backend,
+        )
 
     if fittype == "curvefit":
         # Track the first-pass failures so the saved failures map can encode
@@ -1343,12 +2352,15 @@ def t2smap_subworkflow(
     t2s_full = utils.unmask(t2s_full, mask_denoise)
     s0_full = utils.unmask(s0_full, mask_denoise)
 
+    # The complex fit also writes the S0 phase (part-phase), so its S0 magnitude
+    # is labeled part-mag to pair with it.
+    s0_suffix = " magnitude img" if fittype == "nlls" else " img"
     io_generator.save_file(t2s_full, "t2star img")
-    io_generator.save_file(s0_full, "s0 img")
+    io_generator.save_file(s0_full, "s0" + s0_suffix)
     if io_generator.verbose:
         t2s_limited = utils.unmask(t2s_limited, mask_denoise)
         s0_limited = utils.unmask(s0_limited, mask_denoise)
-        io_generator.save_file(s0_limited, "limited s0 img")
+        io_generator.save_file(s0_limited, "limited s0" + s0_suffix)
         io_generator.save_file(t2s_limited, "limited t2star img")
 
     del s0_limited, t2s_limited

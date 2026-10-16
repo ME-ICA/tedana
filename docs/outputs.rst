@@ -174,6 +174,44 @@ Key: Filename                                                                Con
 "t2star-s0 covariance img": stat-covariance_desc-t2star+s0_statmap.nii.gz    Covariance of the T2* and S0 estimates.
 ===========================================================================  =====================================================
 
+If ``fittype`` is "nlls"
+------------------------
+
+Only available in ``t2smap``. The complex (magnitude and phase) fit writes
+``T2starmap.nii.gz`` as usual. S0 is complex, so its magnitude and phase are written
+as a pair labeled with the BIDS ``part`` entity, and the magnitude replaces
+``S0map.nii.gz`` (and, if ``verbose`` is set, ``desc-limited_S0map.nii.gz``). With
+``fitmode='varys0'``, T2* is 3D while the S0 maps are 4D, with one value per volume.
+
+===========================================================================  =====================================================
+Key: Filename                                                                Content
+===========================================================================  =====================================================
+"s0 magnitude img": part-mag_S0map.nii.gz                                    Magnitude of the complex S0. Takes the place of
+                                                                             ``S0map.nii.gz`` and follows the same conventions.
+"limited s0 magnitude img": part-mag_desc-limited_S0map.nii.gz               Limited S0 magnitude map/time series, written if
+                                                                             ``verbose`` is set. Takes the place of
+                                                                             ``desc-limited_S0map.nii.gz``.
+"fit failures img": desc-decayFitFailures_mask.nii.gz                        Voxels (or, for ``fitmode='ts'``, voxel-volume pairs)
+                                                                             where the complex fit failed. Includes degenerate fits
+                                                                             whose signal would decay by more than e^-20 across the
+                                                                             echo train; these keep the initial log-linear
+                                                                             estimate. Failing voxels are interpolated when
+                                                                             ``interpolate_failing_voxels`` is set.
+"frequency img": desc-nlls_fieldmap.nii.gz                                   Off-resonance frequency (B0 field map), in Hz. 3D,
+                                                                             or 4D for ``fitmode='ts'``. The frequency is only
+                                                                             determined to within half the alias period of the
+                                                                             echo spacing, 1/(2*dTE) Hz, of its initial estimate;
+                                                                             it is not spatially unwrapped and includes chemical
+                                                                             shift and any echo-time-dependent phase errors.
+"frequency json": desc-nlls_fieldmap.json                                    Sidecar for the field map, with ``"Units": "Hz"``.
+"phase0 img": part-phase_S0map.nii.gz                                        Phase of the complex S0 (the signal extrapolated to
+                                                                             TE = 0), in radians. ``part-mag_S0map.nii.gz`` holds
+                                                                             its magnitude. 3D for ``fitmode='all'`` and 4D (one
+                                                                             value per volume) for ``fitmode='ts'`` and
+                                                                             ``fitmode='varys0'``.
+"phase0 json": part-phase_S0map.json                                         Sidecar for the S0 phase map, with ``"Units": "rad"``.
+===========================================================================  =====================================================
+
 If ``tedort`` is True
 ---------------------
 
