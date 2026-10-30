@@ -1,5 +1,6 @@
 """Tests for tedana.io."""
 
+import gzip
 import json
 import os
 from unittest import mock
@@ -496,6 +497,50 @@ def test_convert_to_nifti1():
 
     with pytest.raises(ValueError, match=r"has more than 1 dimensions"):
         me._convert_to_nifti1(afni_img, max_dim=1)
+
+
+def _random_img(shape=(6, 5, 4, 3), dtype="float32"):
+    rng = np.random.default_rng(0)
+    data = (rng.standard_normal(shape) * 100 + 1000).astype(dtype)
+    return nb.Nifti1Image(data, np.diag([2.0, 2.0, 2.0, 1.0]))
+
+
+@pytest.mark.parametrize("shape", [(6, 5, 4), (6, 5, 4, 3)])
+@pytest.mark.parametrize("dtype", ["float32", "float64", "int16"])
+def test_write_nifti_matches_nibabel(tmp_path, shape, dtype):
+    """Test that the ISA-L file decompresses to exactly the bytes nibabel writes."""
+    img = _random_img(shape=shape, dtype=dtype)
+    img.to_filename(tmp_path / "zlib.nii.gz")
+    me.write_nifti(img, str(tmp_path / "isal.nii.gz"))
+
+    with gzip.open(tmp_path / "zlib.nii.gz") as a, gzip.open(tmp_path / "isal.nii.gz") as b:
+        assert a.read() == b.read()
+
+    assert img.get_filename() == str(tmp_path / "isal.nii.gz")
+    out = nb.load(tmp_path / "isal.nii.gz")
+    assert out.get_data_dtype() == np.dtype(dtype)
+    assert np.array_equal(np.asanyarray(out.dataobj), np.asanyarray(img.dataobj))
+
+
+def test_write_nifti_is_deterministic(tmp_path):
+    """Test that two writes of one image are byte-identical, with no name or time in the header."""
+    img = _random_img()
+    me.write_nifti(img, str(tmp_path / "a.nii.gz"))
+    me.write_nifti(img, str(tmp_path / "b.nii.gz"))
+    raw = (tmp_path / "a.nii.gz").read_bytes()
+    assert raw == (tmp_path / "b.nii.gz").read_bytes()
+    assert raw[:2] == b"\x1f\x8b"
+    assert not raw[3] & 0x08  # FNAME flag
+    assert raw[4:8] == b"\x00\x00\x00\x00"  # MTIME
+
+
+def test_write_nifti_leaves_uncompressed_files_uncompressed(tmp_path):
+    """Test that a .nii file is written uncompressed."""
+    img = _random_img()
+    me.write_nifti(img, str(tmp_path / "x.nii"))
+    assert (tmp_path / "x.nii").read_bytes()[:2] != b"\x1f\x8b"
+    out = nb.load(tmp_path / "x.nii")
+    assert np.array_equal(np.asanyarray(out.dataobj), np.asanyarray(img.dataobj))
 
 
 def test_smoke_filewrite():
