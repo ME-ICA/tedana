@@ -40,8 +40,9 @@ def _resolve_backend(backend):
     ----------
     backend : {"cpu", "cuda", "auto"}
         Requested execution backend. ``"cpu"`` always selects the CPU.
-        ``"cuda"`` requires CuPy and at least one CUDA device. ``"auto"``
-        selects CUDA when available and otherwise falls back to the CPU.
+        ``"cuda"`` requires CuPy, at least one CUDA device, and the CUDA
+        toolkit headers CuPy needs to compile kernels. ``"auto"`` selects CUDA
+        when available and otherwise falls back to the CPU.
 
     Returns
     -------
@@ -53,8 +54,8 @@ def _resolve_backend(backend):
     ValueError
         If ``backend`` is not ``"cpu"``, ``"cuda"``, or ``"auto"``.
     RuntimeError
-        If ``backend`` is ``"cuda"`` and CuPy cannot be imported or no CUDA
-        device is available.
+        If ``backend`` is ``"cuda"`` and CuPy cannot be imported, no CUDA
+        device is available, or CuPy cannot compile and run a kernel.
 
     Warns
     -----
@@ -71,14 +72,17 @@ def _resolve_backend(backend):
 
         if cp.cuda.runtime.getDeviceCount() < 1:
             raise RuntimeError("No CUDA devices were detected")
-        else:
-            LGR.info(f"Running with {cp.cuda.runtime.getDeviceCount()} GPUs")
+
+        # CuPy compiles kernels on first use, which fails without the CUDA
+        # toolkit headers even when a device is present, so run a tiny kernel.
+        float(cp.exp(cp.zeros(1)).sum())
+        LGR.info(f"Running with {cp.cuda.runtime.getDeviceCount()} GPUs")
     except Exception as exc:
         if backend == "cuda":
             raise RuntimeError(
-                "The CUDA backend requires CuPy and an available CUDA device. "
-                "Install tedana with its GPU extra (tedana[gpu]) to install an appropriate "
-                "version of CuPy."
+                "The CUDA backend requires CuPy, an available CUDA device, and the CUDA "
+                "toolkit headers. Install tedana with its GPU extra (tedana[gpu]) to install "
+                "an appropriate version of CuPy and the CUDA toolkit."
             ) from exc
         LGR.warning("CUDA backend unavailable (%s); falling back to CPU.", exc)
         return "cpu"
