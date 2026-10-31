@@ -43,6 +43,18 @@ def _get_parser():
         required=True,
     )
     required_args.add_argument(
+        "--phase",
+        dest="phase",
+        nargs="+",
+        metavar="FILE",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "Phase images for each echo, in radians, in ascending echo order "
+            "matching -d. Required when --fittype is 'nlls'."
+        ),
+        default=None,
+    )
+    required_args.add_argument(
         "-e",
         dest="tes",
         nargs="+",
@@ -153,23 +165,27 @@ def _get_parser():
     decay_args.add_argument(
         "--fittype",
         dest="fittype",
-        choices=["loglin", "curvefit"],
+        choices=["loglin", "curvefit", "nlls"],
         help=(
             "Desired T2*/S0 fitting method. "
             '"loglin" means that a linear model is fit to the log of the data. '
             '"curvefit" means that a more computationally demanding monoexponential model is fit '
             "to the raw data. "
+            '"nlls" fits a complex monoexponential model to magnitude+phase data and requires '
+            "--phase. "
         ),
         default="loglin",
     )
     decay_args.add_argument(
         "--fitmode",
         dest="fitmode",
-        choices=["all", "ts"],
+        choices=["all", "ts", "varys0"],
         help=(
             "Monoexponential model fitting scheme. "
             '"all" means that the model is fit, per voxel, across all timepoints. '
-            '"ts" means that the model is fit, per voxel and per timepoint.'
+            '"ts" means that the model is fit, per voxel and per timepoint. '
+            '"varys0" (nlls only) shares R2*/frequency across timepoints while '
+            "allowing complex S0 to vary per timepoint. "
         ),
         default="all",
     )
@@ -223,7 +239,7 @@ def _get_parser():
         "--backend",
         choices=["cpu", "cuda", "auto"],
         help=(
-            "Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation only. "
+            "Compute backend. CUDA accelerates curvefit and nlls T2*/S0 estimation. "
             "'auto' uses CUDA when available and otherwise uses CPU."
         ),
         default="cpu",
@@ -269,6 +285,7 @@ def t2smap_workflow(
     dummy_scans=0,
     exclude=None,
     masktype=["dropout"],
+    phase=None,
     fittype="loglin",
     interpolate_failing_voxels=False,
     fitmode="all",
@@ -316,21 +333,28 @@ def t2smap_workflow(
         Default is to not exclude any volumes.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
-    fittype : {'loglin', 'curvefit'}, optional
+    phase : :obj:`list` of :obj:`str`, optional
+        Phase images for each echo, in radians, in ascending echo order matching ``data``.
+        Required when ``fittype`` is ``'nlls'``. Default is None.
+    fittype : {'loglin', 'curvefit', 'nlls'}, optional
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of
         the data.
         'curvefit' means to use a monoexponential fit to the raw data,
         which is slightly slower but may be more accurate.
+        'nlls' fits a complex monoexponential model to magnitude+phase data
+        and requires ``phase``.
     interpolate_failing_voxels : :obj:`bool`, optional
         If ``True`` and ``fittype='curvefit'``, replace T2*/S0 values for
         voxels where the monoexponential fit failed with nearest-neighbor
         interpolated values from non-failing neighbors.
         Ignored if ``fittype='loglin'``. Default is ``False``.
-    fitmode : {'all', 'ts'}, optional
+    fitmode : {'all', 'ts', 'varys0'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
         'ts' means that the model is fit, per voxel and per timepoint.
+        'varys0' (nlls only) shares R2*/frequency across timepoints while
+        allowing complex S0 to vary per timepoint.
         Default is 'all'.
     combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
@@ -343,8 +367,8 @@ def t2smap_workflow(
         outside of the workflow function, as well as the number of threads to use
         for the decay model fitting. Default is 1.
     backend : {'cpu', 'cuda', 'auto'}, optional
-        Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
-        only. Default is 'cpu'.
+        Compute backend. CUDA accelerates curvefit and nlls T2*/S0 estimation.
+        Default is 'cpu'.
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
 
@@ -365,7 +389,10 @@ def t2smap_workflow(
     T2starmap.nii.gz              Estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
-    S0map.nii.gz                  S0 3D map or 4D timeseries.
+    S0map.nii.gz                  S0 3D map or 4D timeseries. With ``fittype``
+                                  'nlls', S0 is complex and is written instead
+                                  as part-mag_S0map.nii.gz and
+                                  part-phase_S0map.nii.gz.
     desc-limited_T2starmap.nii.gz Limited T2* map/timeseries. The difference between
                                   the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains
@@ -424,6 +451,16 @@ def t2smap_workflow(
             "Please set fitmode='all' or remove the exclude argument."
         )
 
+    if fittype == "nlls" and phase is None:
+        raise ValueError("fittype='nlls' requires phase images (--phase).")
+    if phase is not None and fittype != "nlls":
+        raise ValueError("phase images are only used with fittype='nlls'.")
+    if fitmode == "varys0" and fittype != "nlls":
+        raise ValueError("fitmode='varys0' is only valid with fittype='nlls'.")
+
+    if isinstance(phase, str):
+        phase = [phase]
+
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
@@ -432,6 +469,9 @@ def t2smap_workflow(
     # coerce data to samples x echos x time array
     if isinstance(data, str):
         data = [data]
+
+    if phase is not None and len(phase) != len(data):
+        raise ValueError("--phase must have the same number of files as -d.")
 
     # Initialize OutputGenerator with reference image
     # XXX: This doesn't support AFNI data yet.
@@ -456,12 +496,24 @@ def t2smap_workflow(
         LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
         data_cat = data_cat[..., dummy_scans:]
 
+    phase_cat = None
+    if fittype == "nlls":
+        LGR.info(f"Loading phase data: {[f for f in phase]}")
+        phase_cat = io.load_data_nilearn(phase, mask_img=mask_img, n_echos=n_echos)
+        if dummy_scans > 0:
+            phase_cat = phase_cat[..., dummy_scans:]
+        if phase_cat.shape != data_cat.shape:
+            raise ValueError(
+                f"Phase shape {phase_cat.shape} does not match data shape {data_cat.shape}."
+            )
+
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
     if combmode == "paid" and n_vols == 1:
         raise ValueError("PAID combination requires more than one volume.")
 
     # Create mask for volumes to use based on exclude indices
+    use_volumes = None
     if n_exclude > 0:
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
@@ -495,9 +547,9 @@ def t2smap_workflow(
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
-    if interpolate_failing_voxels and fittype != "curvefit":
+    if interpolate_failing_voxels and fittype not in ("curvefit", "nlls"):
         LGR.warning(
-            "interpolate_failing_voxels is set but fittype is not 'curvefit'; "
+            "interpolate_failing_voxels is set but fittype is not 'curvefit' or 'nlls'; "
             "interpolation will be skipped."
         )
 
@@ -514,6 +566,8 @@ def t2smap_workflow(
         data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
         backend=backend,
+        phase_cat=phase_cat,
+        use_volumes=use_volumes,
     )
 
     LGR.info("Computing optimal combination")
