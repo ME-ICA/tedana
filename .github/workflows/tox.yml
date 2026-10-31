@@ -57,6 +57,14 @@ jobs:
           uv tool install --with=tox-uv --with=tox-gh-actions tox
       - name: Show tox config
         run: tox c
+      # Unit tests load the three-echo dataset from OSF, so cache it between runs.
+      # The min environment installs tedana non-editably, so its tests look for the
+      # data elsewhere and do not benefit from this cache.
+      - name: Cache test data
+        uses: actions/cache@v6.1.0
+        with:
+          path: .testing_data_cache/three-echo/TED.three-echo
+          key: testdata-v1-three-echo-${{ hashFiles('tedana/tests/utils.py') }}
       - name: Run tox
         run: tox -v --exit-and-dump-after 1200
       - uses: codecov/codecov-action@v7.1.1
