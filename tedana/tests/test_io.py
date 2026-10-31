@@ -753,3 +753,25 @@ def test_add_dict_to_file():
 
     # Cleanup
     os.remove(fname)
+
+
+def test_get_name_part_entity(tmp_path):
+    """part adds a BIDS part entity in spec order and is ignored by other conventions."""
+    ref_img = os.path.join(data_dir, "mask.nii.gz")
+    bids = me.OutputGenerator(ref_img, out_dir=str(tmp_path / "bids"), make_figures=False)
+    assert bids.get_name("s0 img") == str(tmp_path / "bids" / "S0map.nii.gz")
+    assert bids.get_name("s0 img", part="mag") == str(tmp_path / "bids" / "part-mag_S0map.nii.gz")
+    assert bids.get_name("limited s0 img", part="mag") == str(
+        tmp_path / "bids" / "part-mag_desc-limited_S0map.nii.gz"
+    )
+    assert me._add_part_entity("echo-1_desc-ICA_components", "phase") == (
+        "echo-1_part-phase_desc-ICA_components"
+    )
+
+    orig = me.OutputGenerator(
+        ref_img,
+        convention="orig",
+        out_dir=str(tmp_path / "orig"),
+        make_figures=False,
+    )
+    assert orig.get_name("s0 img", part="mag") == orig.get_name("s0 img")

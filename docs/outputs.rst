@@ -186,11 +186,12 @@ as a pair labeled with the BIDS ``part`` entity, and the magnitude replaces
 ===========================================================================  =====================================================
 Key: Filename                                                                Content
 ===========================================================================  =====================================================
-"s0 magnitude img": part-mag_S0map.nii.gz                                    Magnitude of the complex S0. Takes the place of
-                                                                             ``S0map.nii.gz`` and follows the same conventions.
-"limited s0 magnitude img": part-mag_desc-limited_S0map.nii.gz               Limited S0 magnitude map/time series, written if
+"s0 img": part-mag_S0map.nii.gz                                              Magnitude of the complex S0. Takes the place of
+                                                                             ``S0map.nii.gz`` (same key) and follows the same
+                                                                             conventions.
+"limited s0 img": part-mag_desc-limited_S0map.nii.gz                         Limited S0 magnitude map/time series, written if
                                                                              ``verbose`` is set. Takes the place of
-                                                                             ``desc-limited_S0map.nii.gz``.
+                                                                             ``desc-limited_S0map.nii.gz`` (same key).
 "fit failures img": desc-decayFitFailures_mask.nii.gz                        Voxels (or, for ``fitmode='ts'``, voxel-volume pairs)
                                                                              where the complex fit failed. Includes degenerate fits
                                                                              whose signal would decay by more than e^-20 across the
