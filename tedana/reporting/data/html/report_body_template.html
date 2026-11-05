@@ -522,23 +522,37 @@
       Because ICA components are not orthogonal, the accepted, rejected, and unmodeled
       maps do not necessarily sum to 100%.
     </p>
-    {% for desc, title in [
-      ("ICA", "All components"),
-      ("ICAAccepted", "Accepted components"),
-      ("ICARejected", "Rejected components"),
-      ("ICAUnmodeled", "Unmodeled variance"),
-    ] %}
-    {% if varexpPlots[desc] %}
-    <h2>{{ title }}</h2>
-    <div class="carpet-plots-image">
-      <img
-        id="varexpMap{{ desc }}"
-        src="{{ varexpPlots[desc] }}"
-        style="width: 95%; max-width: 1200px; height: auto"
-      />
+    <div class="carpet-wrapper">
+      <div class="carpet-buttons">
+        {% for desc, title, color in [
+          ("ICA", "All components", "blue"),
+          ("ICAAccepted", "Accepted components", "green"),
+          ("ICARejected", "Rejected components", "red"),
+          ("ICAUnmodeled", "Unmodeled variance", "yellow"),
+        ] %}
+        {% if varexpPlots[desc] %}
+        <button
+          class="{{ color }}"
+          type="button"
+          id="varexpButton{{ desc }}"
+          data-src="{{ varexpPlots[desc] }}"
+          aria-pressed="{{ 'true' if desc == 'ICA' else 'false' }}"
+          onClick="updateVarexpPlot(this)"
+        >
+          {{ title }}
+        </button>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="carpet-plots-image">
+        <img
+          id="imgVarexpPlot"
+          src="{{ varexpPlots.ICA }}"
+          alt="ICA variance explained map: All components"
+          style="width: 95%; max-width: 1200px; height: auto"
+        />
+      </div>
     </div>
-    {% endif %}
-    {% endfor %}
   </div>
   {% endif %}
   {% if externalRegressorsExist %}
@@ -747,6 +761,16 @@
 
     // Update the image source
     document.getElementById("imgCarpetPlot").src = carpetPlot;
+  }
+
+  function updateVarexpPlot(button) {
+    // Show the variance explained map for the clicked button
+    const img = document.getElementById("imgVarexpPlot");
+    img.src = button.dataset.src;
+    img.alt = "ICA variance explained map: " + button.textContent.trim();
+    button.parentElement.querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-pressed", b === button ? "true" : "false");
+    });
   }
 
   // Tab switching, following the ARIA tabs pattern

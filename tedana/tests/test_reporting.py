@@ -668,11 +668,33 @@ def test_update_template_bokeh_ica_variance_maps(tmp_path):
 
     assert "ICA variance explained maps" in body
     ica_pane = body[body.index('id="pane-ica"') : body.index('id="pane-carpet"')]
+    # One button per map switches a single image, which starts on the full ICA map
     for desc in ("ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
-        assert f'id="varexpMap{desc}"' in ica_pane
-        assert f'src="./figures/desc-{desc}_stat-varexp_statmap.svg"' in ica_pane
+        assert f'id="varexpButton{desc}"' in ica_pane
+        assert f'data-src="./figures/desc-{desc}_stat-varexp_statmap.svg"' in ica_pane
+
+    assert ica_pane.count('id="imgVarexpPlot"') == 1
+    assert 'src="./figures/desc-ICA_stat-varexp_statmap.svg"' in ica_pane
+    assert re.search(r'id="varexpButtonICA"[^>]*aria-pressed="true"', ica_pane)
+    assert re.search(r'id="varexpButtonICARejected"[^>]*aria-pressed="false"', ica_pane)
+    assert "function updateVarexpPlot" in body
 
     assert 'id="pane-pca"' not in body
+
+
+def test_update_template_bokeh_ica_variance_maps_skips_missing(tmp_path):
+    """Buttons are only shown for maps that exist."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for desc in ("ICA", "ICAUnmodeled"):
+        (figures / f"desc-{desc}_stat-varexp_statmap.svg").touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="varexpButtonICA"' in body
+    assert 'id="varexpButtonICAUnmodeled"' in body
+    assert 'id="varexpButtonICAAccepted"' not in body
+    assert 'id="varexpButtonICARejected"' not in body
 
 
 def test_update_template_bokeh_pca_variance_map_only(tmp_path):
