@@ -17,6 +17,7 @@ import nibabel as nb
 import numpy as np
 import pandas as pd
 import requests
+from isal.igzip import IGzipFile
 from nilearn import __version__ as nilearn_version
 from nilearn import masking
 from packaging.version import Version
@@ -322,7 +323,7 @@ class OutputGenerator:
         """
         data_type = type(data)
         if isinstance(data, nb.nifti1.Nifti1Image):
-            data.to_filename(name)
+            write_nifti(data, name)
             return
         elif not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
@@ -360,7 +361,7 @@ class OutputGenerator:
                 zooms = zooms + (1.0,)
             img.header.set_zooms(zooms)
 
-        img.to_filename(name)
+        write_nifti(img, name)
 
     def save_json(self, data, name):
         """Save dictionary data to a json file.
@@ -513,6 +514,31 @@ class InputHarvester:
         d = self._registry
         d["root"] = self._base_dir
         return d
+
+
+def write_nifti(img, name):
+    """Write a NIfTI image to a file, compressing ``.nii.gz`` files with ISA-L.
+
+    nibabel compresses ``.nii.gz`` files with zlib. ISA-L writes the same gzip format,
+    several times faster. As in nibabel, the gzip header holds no file name or
+    modification time, so the output is deterministic.
+
+    Parameters
+    ----------
+    img : nibabel.Nifti1Image
+        Image to write.
+    name : str
+        Full file path for output file. Files ending in ``.gz`` are compressed.
+    """
+    if not str(name).endswith(".gz"):
+        img.to_filename(name)
+        return
+
+    with open(name, "wb") as fobj, IGzipFile("", "wb", fileobj=fobj, mtime=0) as gzobj:
+        img.to_file_map({"image": nb.FileHolder(filename=name, fileobj=gzobj)})
+
+    # Point the image at the file on disk, as to_filename does.
+    img.file_map = img.filespec_to_file_map(name)
 
 
 def versiontuple(v):
