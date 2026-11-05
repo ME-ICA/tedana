@@ -709,3 +709,48 @@ def test_update_template_bokeh_pca_variance_map_only(tmp_path):
     assert 'id="pcaVarexpMap"' in body
     assert 'id="pcaCriteriaPlot"' not in body
     assert "ICA variance explained maps" not in body
+
+
+def test_plot_variance_explained_maps_share_slices(tmp_path, monkeypatch):
+    """All variance explained maps are drawn on the same slices, chosen from the base mask."""
+    from tedana.io import OutputGenerator
+    from tedana.reporting import static_figures
+
+    rng = np.random.default_rng(0)
+    mask_arr = np.zeros((12, 12, 12), dtype=np.int16)
+    mask_arr[2:10, 2:10, 2:10] = 1
+    mask_img = nb.Nifti1Image(mask_arr, np.eye(4))
+    io_generator = OutputGenerator(mask_img, out_dir=str(tmp_path))
+    io_generator.mask = mask_img
+
+    # Maps with very different spatial patterns, which nilearn would otherwise slice differently
+    n_voxels = int(mask_arr.sum())
+    for key, _ in static_figures.VARIANCE_EXPLAINED_FIGURES:
+        values = np.zeros(n_voxels)
+        hot = rng.choice(n_voxels, size=5, replace=False)
+        values[hot] = 100
+        io_generator.save_file(values, key)
+
+    from nilearn.plotting.displays import MosaicSlicer
+
+    # Record the slices of every mosaic display that a map is drawn on
+    drawn = []
+    original_add_overlay = MosaicSlicer.add_overlay
+
+    def _record(self, *args, **kwargs):
+        drawn.append({d: tuple(float(c) for c in cs) for d, cs in self.cut_coords.items()})
+        return original_add_overlay(self, *args, **kwargs)
+
+    monkeypatch.setattr(MosaicSlicer, "add_overlay", _record)
+
+    static_figures.plot_variance_explained_maps(io_generator=io_generator)
+
+    assert len(drawn) == len(static_figures.VARIANCE_EXPLAINED_FIGURES)
+    assert all(slices == drawn[0] for slices in drawn)
+
+    # The mask spans voxels 2-9 in each direction, and the affine is the identity, so the
+    # slices are evenly spaced strictly inside that range
+    expected = tuple(float(c) for c in np.linspace(2, 9, 9)[1:-1])
+    assert drawn[0] == {"x": expected, "y": expected, "z": expected}
+    for _, name in static_figures.VARIANCE_EXPLAINED_FIGURES:
+        assert (tmp_path / "figures" / f"{name}.svg").exists()

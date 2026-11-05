@@ -606,6 +606,7 @@ def _plot_stat_mosaic(
     threshold=None,
     vlim=None,
     cbar_tick_format=None,
+    cut_coords=None,
 ):
     """Render one continuous statistical map as a mosaic, with consistent styling.
 
@@ -632,12 +633,29 @@ def _plot_stat_mosaic(
     cbar_tick_format : str or None, optional
         Format string for the colorbar tick labels, passed to ``plot_stat_map`` only when
         not None. The nilearn default (``"%.2g"``) renders 100 as "1e+02".
+    cut_coords : dict or None, optional
+        World coordinates of the slices to show, with keys "x", "y", and "z"
+        (see :func:`_mosaic_cut_coords`). If None, nilearn picks slices based on the
+        values in ``in_file``, so different maps get different slices.
     """
     if vlim is None:
         data = masking.apply_mask(in_file, mask_img)
         p02, p98 = np.percentile(data, [2, 98])
     else:
         p02, p98 = vlim
+
+    if cut_coords is not None:
+        _plot_fixed_mosaic(
+            in_file=in_file,
+            out_file=out_file,
+            cmap=cmap,
+            vmin=p02,
+            vmax=p98,
+            threshold=threshold,
+            cbar_tick_format=cbar_tick_format,
+            cut_coords=cut_coords,
+        )
+        return
 
     kwargs = dict(
         bg_img=None,
@@ -663,6 +681,87 @@ def _plot_stat_mosaic(
 
     if display is not None:
         display.close()
+
+
+def _mosaic_cut_coords(mask_img, n_cuts=7):
+    """Choose evenly spaced mosaic slices that span a mask.
+
+    In each direction, ``n_cuts`` slices are spaced evenly between the edges of the mask,
+    leaving out the edges themselves, where there is little brain to show.
+
+    Parameters
+    ----------
+    mask_img : img_like
+        Mask whose extent the slices should span.
+    n_cuts : int, optional
+        Number of slices in each direction. Default is 7, as in nilearn's mosaic.
+
+    Returns
+    -------
+    cut_coords : dict
+        World coordinates of the slices, with keys "x", "y", and "z".
+    """
+    mask_img = image.load_img(mask_img)
+    ijk = np.column_stack(np.nonzero(np.asanyarray(mask_img.dataobj)))
+    xyz = nb.affines.apply_affine(mask_img.affine, ijk)
+    cut_coords = {}
+    for i_dim, direction in enumerate("xyz"):
+        low, high = xyz[:, i_dim].min(), xyz[:, i_dim].max()
+        cut_coords[direction] = np.linspace(low, high, n_cuts + 2)[1:-1]
+
+    return cut_coords
+
+
+def _plot_fixed_mosaic(
+    *,
+    in_file,
+    out_file,
+    cmap,
+    vmin,
+    vmax,
+    threshold,
+    cbar_tick_format,
+    cut_coords,
+):
+    """Render a mosaic on given slices, matching ``_plot_stat_mosaic``'s styling.
+
+    ``plot_stat_map`` always chooses mosaic slices from the image it draws, and does not
+    accept slice positions for the mosaic display mode, so this builds the display
+    directly with a slicer that keeps the slices it is given.
+    """
+    from nilearn.plotting.displays import MosaicSlicer
+
+    class _FixedMosaicSlicer(MosaicSlicer):
+        @classmethod
+        def find_cut_coords(cls, img=None, threshold=None, cut_coords=None):  # noqa:U100
+            # Keep the given slices instead of choosing them from the image
+            return cut_coords
+
+    overlay_kwargs = {}
+    if cbar_tick_format is not None:
+        overlay_kwargs["cbar_tick_format"] = cbar_tick_format
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        display = _FixedMosaicSlicer.init_with_figure(
+            img=None,
+            cut_coords=cut_coords,
+            black_bg=True,
+            colorbar=True,
+        )
+        display.add_overlay(
+            image.load_img(in_file),
+            threshold=1e-6 if threshold is None else threshold,
+            colorbar=True,
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            interpolation="nearest",
+            **overlay_kwargs,
+        )
+        display.savefig(out_file)
+
+    display.close()
 
 
 def plot_t2star_and_s0(
@@ -1292,14 +1391,19 @@ def plot_variance_explained_maps(
     """Plot voxel-wise maps of the percent variance explained by the decompositions.
 
     All maps share a fixed 0-100% color scale, so they can be compared to one another
-    and across runs. Maps that were not written (for example, the PCA map when a mixing
-    matrix was provided) are skipped.
+    and across runs. They also share the same slices, spaced evenly across the base mask,
+    so that switching between maps in the report shows the same parts of the brain.
+    Maps that were not written (for example, the PCA map when a mixing matrix was
+    provided) are skipped.
 
     Parameters
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
-        The output generator for this workflow.
+        The output generator for this workflow. Its ``mask`` must be set.
     """
+    # nilearn otherwise picks each map's slices from that map's own values
+    cut_coords = _mosaic_cut_coords(io_generator.mask)
+
     for key, name in VARIANCE_EXPLAINED_FIGURES:
         # Only plot maps written by this run, not stale files from an earlier run
         if key not in io_generator.registry:
@@ -1313,4 +1417,5 @@ def plot_variance_explained_maps(
             mask_img=None,
             vlim=(0, 100),
             cbar_tick_format="%d",
+            cut_coords=cut_coords,
         )
