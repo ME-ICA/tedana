@@ -597,12 +597,13 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
-def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None):
+def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None, vlim=None):
     """Render one continuous statistical map as a mosaic, with consistent styling.
 
-    Values are windowed to the 2nd-98th percentile computed within ``mask_img``. This is
-    the shared implementation behind the T2*, S0, RMSE, and variance/covariance brain maps
-    so their sizing, colorbar, clipping, and titling stay consistent.
+    Values are windowed to the 2nd-98th percentile computed within ``mask_img``, unless
+    ``vlim`` is provided. This is the shared implementation behind the T2*, S0, RMSE,
+    variance/covariance, and variance explained brain maps so their sizing, colorbar,
+    clipping, and titling stay consistent.
 
     Parameters
     ----------
@@ -612,13 +613,19 @@ def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None):
         Full path of the SVG to write.
     cmap : str
         Matplotlib/nilearn colormap name.
-    mask_img : img_like
-        Mask used to compute the display percentiles.
+    mask_img : img_like or None
+        Mask used to compute the display percentiles. Unused when ``vlim`` is provided.
     threshold : float or None, optional
         Passed to ``plot_stat_map`` only when not None (preserves per-map behavior).
+    vlim : tuple of float or None, optional
+        Fixed (vmin, vmax) for the color scale. If None, the 2nd and 98th percentiles
+        within ``mask_img`` are used.
     """
-    data = masking.apply_mask(in_file, mask_img)
-    p02, p98 = np.percentile(data, [2, 98])
+    if vlim is None:
+        data = masking.apply_mask(in_file, mask_img)
+        p02, p98 = np.percentile(data, [2, 98])
+    else:
+        p02, p98 = vlim
 
     kwargs = dict(
         bg_img=None,
@@ -1250,4 +1257,44 @@ def plot_decay_variance(
             cmap="Reds",
             mask_img=mask_img,
             threshold=0,
+        )
+
+
+#: Variance explained maps shown in the report: (registry key, figure name).
+VARIANCE_EXPLAINED_FIGURES = (
+    ("PCA varexp img", "desc-PCA_stat-varexp_statmap"),
+    ("ICA varexp img", "desc-ICA_stat-varexp_statmap"),
+    ("ICA accepted varexp img", "desc-ICAAccepted_stat-varexp_statmap"),
+    ("ICA rejected varexp img", "desc-ICARejected_stat-varexp_statmap"),
+    ("ICA unmodeled varexp img", "desc-ICAUnmodeled_stat-varexp_statmap"),
+)
+
+
+def plot_variance_explained_maps(
+    *,
+    io_generator: io.OutputGenerator,
+):
+    """Plot voxel-wise maps of the percent variance explained by the decompositions.
+
+    All maps share a fixed 0-100% color scale, so they can be compared to one another
+    and across runs. Maps that were not written (for example, the PCA map when a mixing
+    matrix was provided) are skipped.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    """
+    for key, name in VARIANCE_EXPLAINED_FIGURES:
+        # Only plot maps written by this run, not stale files from an earlier run
+        if key not in io_generator.registry:
+            continue
+
+        plot_name = f"{io_generator.prefix}{name}.svg"
+        _plot_stat_mosaic(
+            in_file=io_generator.get_name(key),
+            out_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+            cmap="viridis",
+            mask_img=None,
+            vlim=(0, 100),
         )

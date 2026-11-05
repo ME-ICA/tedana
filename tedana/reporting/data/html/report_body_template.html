@@ -465,6 +465,7 @@
 {% if pcaExists %}
 <!-- PCA tab -->
 <div class="tab-pane" id="pane-pca" role="tabpanel" aria-labelledby="tab-pca" tabindex="0">
+  {% if mapcaExists %}
   <div class="carpet-plots">
     <h1>PCA dimensionality</h1>
     <h2>maPCA criteria</h2>
@@ -484,6 +485,23 @@
       />
     </div>
   </div>
+  {% endif %}
+  {% if varexpPlots.PCA %}
+  <div class="carpet-plots">
+    <h1>PCA variance explained map</h1>
+    <p>
+      Percent of each voxel's variance in the optimally combined data that is explained by
+      the PCA components retained for ICA (0-100%).
+    </p>
+    <div class="carpet-plots-image">
+      <img
+        id="pcaVarexpMap"
+        src="{{ varexpPlots.PCA }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -494,6 +512,35 @@
     {{ content }}
   </div>
   <div>{{ tsne }}</div>
+  {% if varexpPlots.ICA %}
+  <div class="carpet-plots">
+    <h1>ICA variance explained maps</h1>
+    <p>
+      Percent of each voxel's variance in the optimally combined data (0-100%).
+      The accepted and rejected maps show the variance of the data reconstructed from
+      only those components, using betas from the full ICA model.
+      Because ICA components are not orthogonal, the accepted, rejected, and unmodeled
+      maps do not necessarily sum to 100%.
+    </p>
+    {% for desc, title in [
+      ("ICA", "All components"),
+      ("ICAAccepted", "Accepted components"),
+      ("ICARejected", "Rejected components"),
+      ("ICAUnmodeled", "Unmodeled variance"),
+    ] %}
+    {% if varexpPlots[desc] %}
+    <h2>{{ title }}</h2>
+    <div class="carpet-plots-image">
+      <img
+        id="varexpMap{{ desc }}"
+        src="{{ varexpPlots[desc] }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
   {% if externalRegressorsExist %}
   <div class="carpet-plots">
     <div class="carpet-plots-image">

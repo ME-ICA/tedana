@@ -118,6 +118,22 @@ tedana_report.html                                                           The
                                                                              status of each component after each node was run.
                                                                              Columns are only added for runs where component
                                                                              statuses can change.
+"PCA varexp img": desc-PCA_stat-varexp_statmap.nii.gz                        Percent of each voxel's variance in the optimally
+                                                                             combined data explained by the PCA components
+                                                                             retained for ICA. Not written when a mixing matrix
+                                                                             is provided.
+"ICA varexp img": desc-ICA_stat-varexp_statmap.nii.gz                        Percent of each voxel's variance in the optimally
+                                                                             combined data explained by all ICA components.
+"ICA accepted varexp img": desc-ICAAccepted_stat-varexp_statmap.nii.gz       Variance of the accepted components' contribution to
+                                                                             each voxel, as a percent of the voxel's total
+                                                                             variance. Betas come from the full ICA model.
+"ICA rejected varexp img": desc-ICARejected_stat-varexp_statmap.nii.gz       Variance of the rejected components' contribution to
+                                                                             each voxel, as a percent of the voxel's total
+                                                                             variance. Betas come from the full ICA model.
+                                                                             Because components are not orthogonal, the accepted,
+                                                                             rejected, and unmodeled maps need not sum to 100.
+"ICA unmodeled varexp img": desc-ICAUnmodeled_stat-varexp_statmap.nii.gz     Percent of each voxel's variance not explained by the
+                                                                             ICA components (100 minus the ICA varexp map).
 "ICA accepted components img": desc-ICAAccepted_components.nii.gz            High-kappa ICA coefficient feature set
 "z-scored ICA accepted components img": desc-ICAAcceptedZ_components.nii.gz  Z-normalized spatial component maps
 report.txt                                                                   A summary report for the workflow with relevant
@@ -763,6 +779,40 @@ the selected dimensionality estimation method probably failed.
 .. image:: /_static/pca_criteria_variance_explained_sub-22_breathing-run-2.png
   :align: center
   :height: 300px
+
+
+**************************
+Variance Explained Maps
+**************************
+
+The report also shows where in the brain each decomposition explains variance.
+Each map shows, for every voxel, the percent of that voxel's variance in the
+optimally combined data that is explained, on a fixed 0-100% color scale so that
+maps can be compared with one another and across runs.
+
+The PCA tab shows the variance explained by the PCA components that were retained for ICA.
+This map is not produced when a mixing matrix is provided, because PCA is skipped.
+Areas with low values contain signal that was discarded during dimensionality reduction,
+and so cannot be modeled by the ICA.
+
+The ICA tab shows four maps:
+
+- **All components**: the variance explained by the full ICA model.
+- **Accepted components**: the variance of the data reconstructed from only the accepted components.
+- **Rejected components**: the variance of the data reconstructed from only the rejected components.
+  This is the variance that is removed during denoising.
+- **Unmodeled variance**: the variance not explained by the ICA model (100% minus the first map).
+  This variance is retained in the denoised data.
+
+The accepted and rejected maps use the betas from the full ICA model.
+Because ICA components are not orthogonal, the accepted, rejected, and unmodeled maps
+do not necessarily sum to 100%.
+Spatially focal patterns in these maps can help to identify problems.
+For example, a large amount of rejected variance in one region may reflect motion
+or another artifact concentrated there,
+while widespread unmodeled variance may suggest that too few components were retained.
+The maps are also written out as ``desc-[PCA|ICA|ICAAccepted|ICARejected|ICAUnmodeled]_stat-varexp_statmap.nii.gz``,
+so that they can be compared across runs and participants.
 
 .. _pca-plots:
 

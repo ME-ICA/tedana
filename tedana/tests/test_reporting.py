@@ -521,3 +521,166 @@ def test_update_template_bokeh_no_pca_tab(tmp_path):
 
     assert 'id="pane-pca"' not in body
     assert 'id="tab-pca"' not in body
+
+
+def _orthogonal_decomposition(n_vols=60, n_comps=4, n_voxels=20, seed=0):
+    """Build data from zero-mean, orthogonal component time series plus orthogonal noise."""
+    rng = np.random.default_rng(seed)
+    raw = rng.standard_normal((n_vols, n_comps + n_voxels))
+    raw -= raw.mean(axis=0)
+    basis, _ = np.linalg.qr(raw)
+    mixing = basis[:, :n_comps]
+    noise = basis[:, n_comps:].T
+    betas = rng.standard_normal((n_voxels, n_comps))
+    data = betas.dot(mixing.T) + 0.5 * noise + 10  # Constant offset is removed
+    return data, mixing
+
+
+def test_calculate_variance_explained_maps_orthogonal():
+    """With orthogonal components, the accepted, rejected, and unmodeled maps sum to 100."""
+    data, mixing = _orthogonal_decomposition()
+    # One voxel with no variance, and one fully explained by the components
+    data[0, :] = 5
+    data[1, :] = mixing.dot([1, -2, 0.5, 3])
+    component_table = pd.DataFrame(
+        {"classification": ["accepted", "rejected", "accepted", "rejected"]}
+    )
+
+    maps = reporting.quality_metrics.calculate_variance_explained_maps(
+        data,
+        mixing,
+        component_table,
+    )
+
+    assert set(maps) == {"total", "accepted", "rejected", "unmodeled"}
+    for values in maps.values():
+        assert values.shape == (data.shape[0],)
+        assert np.all(values >= 0)
+        assert np.all(values <= 100 + 1e-8)
+        assert values[0] == 0
+
+    np.testing.assert_allclose(maps["unmodeled"][1:], 100 - maps["total"][1:], atol=1e-8)
+    np.testing.assert_allclose(maps["total"][1], 100)
+    np.testing.assert_allclose(
+        (maps["accepted"] + maps["rejected"] + maps["unmodeled"])[1:],
+        100,
+    )
+
+    # Variance explained by the full model matches R-squared from a direct fit
+    dmdata = data[2:] - data[2:].mean(axis=1, keepdims=True)
+    resid = dmdata - dmdata.dot(mixing).dot(mixing.T)
+    r2 = 100 * (1 - (resid**2).sum(axis=1) / (dmdata**2).sum(axis=1))
+    np.testing.assert_allclose(maps["total"][2:], r2)
+
+
+def test_calculate_variance_explained_maps_no_table():
+    """Without a component table, only the total map is calculated."""
+    data, mixing = _orthogonal_decomposition()
+    maps = reporting.quality_metrics.calculate_variance_explained_maps(data, mixing)
+    assert set(maps) == {"total"}
+
+
+def _varexp_io_generator(tmp_path, n_voxels):
+    """Make an OutputGenerator over a small 3D grid whose mask has ``n_voxels`` voxels."""
+    from tedana.io import OutputGenerator
+
+    mask_arr = np.zeros((4, 4, 4), dtype=np.int16)
+    mask_arr.flat[:n_voxels] = 1
+    mask_img = nb.Nifti1Image(mask_arr, np.eye(4))
+    io_generator = OutputGenerator(mask_img, out_dir=str(tmp_path))
+    io_generator.mask = mask_img
+    io_generator.save_file(mask_arr[mask_arr > 0], "adaptive mask img")
+    return io_generator
+
+
+@pytest.mark.parametrize("include_pca", [True, False])
+def test_write_and_plot_variance_explained_maps(tmp_path, include_pca):
+    """The maps are written in percent, and only maps from this run are plotted."""
+    data, mixing = _orthogonal_decomposition(n_voxels=40)
+    io_generator = _varexp_io_generator(tmp_path, n_voxels=data.shape[0])
+    # Restrict to a subset of the voxels, as the workflow does with the denoising mask
+    mask = np.ones(data.shape[0], dtype=bool)
+    mask[:5] = False
+    component_table = pd.DataFrame(
+        {"classification": ["accepted", "rejected", "accepted", "rejected"]}
+    )
+    if include_pca:
+        # The rejected PCA component should be excluded from the PCA map
+        pca_mixing = np.column_stack([mixing[:, :2], mixing[:, 2:].sum(axis=1)])
+        io_generator.save_file(pd.DataFrame(pca_mixing), "PCA mixing tsv")
+        io_generator.save_file(
+            pd.DataFrame({"classification": ["accepted", "accepted", "rejected"]}),
+            "PCA metrics tsv",
+        )
+
+    reporting.quality_metrics.write_variance_explained_maps(
+        data_optcom=data,
+        mixing=mixing,
+        component_table=component_table,
+        mask=mask,
+        io_generator=io_generator,
+        include_pca=include_pca,
+    )
+
+    ica_keys = [
+        "ICA varexp img",
+        "ICA accepted varexp img",
+        "ICA rejected varexp img",
+        "ICA unmodeled varexp img",
+    ]
+    expected_keys = ica_keys + (["PCA varexp img"] if include_pca else [])
+    for key in expected_keys:
+        values = nb.load(io_generator.get_name(key)).get_fdata().ravel()[: data.shape[0]]
+        assert np.all(values[:5] == 0)
+        assert np.all(values[5:] >= 0)
+        assert np.all(values[5:] <= 100 + 1e-4)
+
+    assert ("PCA varexp img" in io_generator.registry) == include_pca
+
+    if include_pca:
+        expected = reporting.quality_metrics.calculate_variance_explained_maps(
+            data[mask],
+            mixing[:, :2],
+        )["total"]
+        pca_map = nb.load(io_generator.get_name("PCA varexp img")).get_fdata().ravel()
+        np.testing.assert_allclose(pca_map[5 : data.shape[0]], expected, rtol=1e-5)
+
+    reporting.static_figures.plot_variance_explained_maps(io_generator=io_generator)
+
+    figures = tmp_path / "figures"
+    for desc in ("ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
+        assert (figures / f"desc-{desc}_stat-varexp_statmap.svg").exists()
+
+    assert (figures / "desc-PCA_stat-varexp_statmap.svg").exists() == include_pca
+
+
+def test_update_template_bokeh_ica_variance_maps(tmp_path):
+    """The ICA variance explained maps appear in the ICA tab without creating a PCA tab."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    for desc in ("ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
+        (figures / f"desc-{desc}_stat-varexp_statmap.svg").touch()
+
+    body = _render_body(tmp_path)
+
+    assert "ICA variance explained maps" in body
+    ica_pane = body[body.index('id="pane-ica"') : body.index('id="pane-carpet"')]
+    for desc in ("ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
+        assert f'id="varexpMap{desc}"' in ica_pane
+        assert f'src="./figures/desc-{desc}_stat-varexp_statmap.svg"' in ica_pane
+
+    assert 'id="pane-pca"' not in body
+
+
+def test_update_template_bokeh_pca_variance_map_only(tmp_path):
+    """A PCA variance explained map alone creates the PCA tab, without the maPCA figures."""
+    figures = tmp_path / "figures"
+    figures.mkdir()
+    (figures / "desc-PCA_stat-varexp_statmap.svg").touch()
+
+    body = _render_body(tmp_path)
+
+    assert 'id="pane-pca"' in body
+    assert 'id="pcaVarexpMap"' in body
+    assert 'id="pcaCriteriaPlot"' not in body
+    assert "ICA variance explained maps" not in body

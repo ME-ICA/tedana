@@ -1087,6 +1087,16 @@ def tedana_workflow(
         mixing_orig=mixing_orig if tedort else None,
     )
 
+    # Write out voxel-wise maps of the variance explained by the PCA and ICA decompositions
+    reporting.quality_metrics.write_variance_explained_maps(
+        data_optcom=data_optcom,
+        mixing=mixing,
+        component_table=component_table,
+        mask=mask_denoise,
+        io_generator=io_generator,
+        include_pca=mixing_file is None,
+    )
+
     if "mir" in gscontrol:
         gsc.minimum_image_regression(
             data_optcom=data_optcom,
@@ -1204,6 +1214,8 @@ def tedana_workflow(
                 reporting.static_figures.plot_decay_variance(
                     io_generator=io_generator,
                 )
+
+        reporting.static_figures.plot_variance_explained_maps(io_generator=io_generator)
 
         if gscontrol:
             reporting.static_figures.plot_gscontrol(
