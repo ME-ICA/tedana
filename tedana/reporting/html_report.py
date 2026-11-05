@@ -210,9 +210,19 @@ def _update_template_bokeh(
     pca_variance_filename = f"{prefix}pca_variance_explained.svg"
     pca_criteria_plot = f"./figures/{pca_criteria_filename}"
     pca_variance_plot = f"./figures/{pca_variance_filename}"
-    pca_exists = (
+    mapca_exists = (
         pca_criteria_filename in files_in_figures and pca_variance_filename in files_in_figures
     )
+
+    # Check for voxel-wise variance explained maps
+    varexp_plots = {}
+    for desc in ("PCA", "ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
+        varexp_filename = f"{prefix}desc-{desc}_stat-varexp_statmap.svg"
+        if varexp_filename in files_in_figures:
+            varexp_plots[desc] = f"./figures/{varexp_filename}"
+
+    LGR.info(f"Variance explained maps exist: {sorted(varexp_plots)}")
+    pca_exists = mapca_exists or "PCA" in varexp_plots
 
     # Check for gscontrol images
     gsr_filename = f"{prefix}gsr_boldmap.svg"
@@ -304,6 +314,8 @@ def _update_template_bokeh(
         statusTable=status_table,
         qcCard=qc_card,
         pcaExists=pca_exists,
+        mapcaExists=mapca_exists,
+        varexpPlots=varexp_plots,
         pcaCriteriaPlot=pca_criteria_plot,
         pcaVariancePlot=pca_variance_plot,
     )

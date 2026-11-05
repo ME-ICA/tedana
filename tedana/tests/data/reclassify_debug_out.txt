@@ -17,6 +17,10 @@ sub-testymctestface_ica_metrics.json
 sub-testymctestface_ica_metrics.tsv
 sub-testymctestface_ica_mir_mixing.tsv
 sub-testymctestface_ica_mixing.tsv
+sub-testymctestface_ica_varexp.nii.gz
+sub-testymctestface_ica_accepted_varexp.nii.gz
+sub-testymctestface_ica_rejected_varexp.nii.gz
+sub-testymctestface_ica_unmodeled_varexp.nii.gz
 sub-testymctestface_ica_orth_mixing.tsv
 sub-testymctestface_ica_status_table.tsv
 sub-testymctestface_registry.json
