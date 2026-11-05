@@ -597,7 +597,16 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
-def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None, vlim=None):
+def _plot_stat_mosaic(
+    *,
+    in_file,
+    out_file,
+    cmap,
+    mask_img,
+    threshold=None,
+    vlim=None,
+    cbar_tick_format=None,
+):
     """Render one continuous statistical map as a mosaic, with consistent styling.
 
     Values are windowed to the 2nd-98th percentile computed within ``mask_img``, unless
@@ -620,6 +629,9 @@ def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None, vlim
     vlim : tuple of float or None, optional
         Fixed (vmin, vmax) for the color scale. If None, the 2nd and 98th percentiles
         within ``mask_img`` are used.
+    cbar_tick_format : str or None, optional
+        Format string for the colorbar tick labels, passed to ``plot_stat_map`` only when
+        not None. The nilearn default (``"%.2g"``) renders 100 as "1e+02".
     """
     if vlim is None:
         data = masking.apply_mask(in_file, mask_img)
@@ -641,6 +653,9 @@ def _plot_stat_mosaic(*, in_file, out_file, cmap, mask_img, threshold=None, vlim
     )
     if threshold is not None:
         kwargs["threshold"] = threshold
+
+    if cbar_tick_format is not None:
+        kwargs["cbar_tick_format"] = cbar_tick_format
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
@@ -1297,4 +1312,5 @@ def plot_variance_explained_maps(
             cmap="viridis",
             mask_img=None,
             vlim=(0, 100),
+            cbar_tick_format="%d",
         )

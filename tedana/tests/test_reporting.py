@@ -649,7 +649,10 @@ def test_write_and_plot_variance_explained_maps(tmp_path, include_pca):
 
     figures = tmp_path / "figures"
     for desc in ("ICA", "ICAAccepted", "ICARejected", "ICAUnmodeled"):
-        assert (figures / f"desc-{desc}_stat-varexp_statmap.svg").exists()
+        svg = (figures / f"desc-{desc}_stat-varexp_statmap.svg").read_text()
+        # Colorbar ticks are integers, not nilearn's default "%.2g" (which gives "1e+02")
+        assert "<!-- 100 -->" in svg
+        assert "1e+02" not in svg
 
     assert (figures / "desc-PCA_stat-varexp_statmap.svg").exists() == include_pca
 
