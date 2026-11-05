@@ -1030,6 +1030,40 @@ def get_sample_mask(n_input_vols, dummy_scans=0, exclude=None):
     return sample_mask
 
 
+def get_tr_seconds(img):
+    """Return an image's repetition time in seconds, using the header's time units.
+
+    Parameters
+    ----------
+    img : :obj:`nibabel.spatialimages.SpatialImage`
+        A 4D image.
+
+    Returns
+    -------
+    tr : :obj:`float` or None
+        Repetition time in seconds, or None if the image is not 4D or the header's TR
+        is not positive. Millisecond and microsecond time units are converted to
+        seconds; seconds and unknown units are used as is.
+    """
+    if img.ndim != 4:
+        return None
+
+    tr = float(img.header.get_zooms()[3])
+    if tr <= 0:
+        return None
+
+    time_unit = None
+    if hasattr(img.header, "get_xyzt_units"):
+        time_unit = img.header.get_xyzt_units()[1]
+
+    if time_unit == "msec":
+        tr /= 1000.0
+    elif time_unit == "usec":
+        tr /= 1_000_000.0
+
+    return tr
+
+
 def _longest_run(values):
     """Return the length of the longest run of True values in a 1D boolean array."""
     longest = current = 0

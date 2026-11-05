@@ -751,6 +751,34 @@ def test_make_censoring_table():
     assert table["time"].isna().all()
 
 
+@pytest.mark.parametrize(
+    "unit, header_tr, expected",
+    [
+        ("sec", 2.0, 2.0),
+        ("msec", 2000.0, 2.0),
+        ("usec", 2_000_000.0, 2.0),
+        ("unknown", 2.0, 2.0),
+        ("sec", 0.0, None),
+    ],
+)
+def test_get_tr_seconds(unit, header_tr, expected):
+    """TRs are converted to seconds based on the header's time units."""
+    img = nib.Nifti1Image(np.zeros((2, 2, 2, 3), dtype=np.float32), np.eye(4))
+    img.header.set_zooms((1.0, 1.0, 1.0, header_tr))
+    img.header.set_xyzt_units(xyz="mm", t=unit)
+    tr = utils.get_tr_seconds(img)
+    if expected is None:
+        assert tr is None
+    else:
+        assert tr == pytest.approx(expected)
+
+
+def test_get_tr_seconds_3d():
+    """3D images have no TR."""
+    img = nib.Nifti1Image(np.zeros((2, 2, 2), dtype=np.float32), np.eye(4))
+    assert utils.get_tr_seconds(img) is None
+
+
 def test_get_censoring_metadata():
     """The censoring sidecar summarizes the censoring pattern."""
     sample_mask = np.array([True, False, False, True, False, True, True, True])

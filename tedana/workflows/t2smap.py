@@ -396,8 +396,7 @@ def t2smap_workflow(
         os.mkdir(out_dir)
 
     # Parse exclude parameter early, so malformed strings fail before any work is done
-    exclude_idx = parse_volume_indices(exclude)
-    n_exclude = len(exclude_idx)
+    parse_volume_indices(exclude)
 
     # create logfile name
     basename = "t2smap_"
@@ -423,12 +422,6 @@ def t2smap_workflow(
     # Save system info to json
     info_dict = utils.get_system_version_info()
     info_dict["Command"] = t2smap_command
-
-    if fitmode == "ts" and n_exclude > 0:
-        raise ValueError(
-            "Excluding volumes is not supported for fitmode='ts'. "
-            "Please set fitmode='all' or remove the exclude argument."
-        )
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -457,11 +450,26 @@ def t2smap_workflow(
     n_input_vols = ref_img.shape[3] if ref_img.ndim == 4 else 1
     sample_mask = utils.get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
     censoring = not sample_mask.all()
+    if censoring and fitmode == "ts":
+        raise ValueError(
+            "Excluding volumes is not supported for fitmode='ts'. "
+            "Please set fitmode='all' or remove the exclude argument."
+        )
+
+    if censoring and combmode == "paid" and sample_mask.sum() < 2:
+        raise ValueError(
+            "PAID combination requires more than one retained volume, "
+            f"but only {sample_mask.sum()} volume(s) remain after exclusion."
+        )
+
     if censoring:
         retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
+        # Pass the sample mask only when censoring, so uncensored runs are unchanged
+        fit_sample_mask = sample_mask
     else:
         # Preserve the existing behavior, which uses every input volume
         retained_input_vols = None
+        fit_sample_mask = None
 
     mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None, volumes=retained_input_vols)
     io_generator.register_mask(mask_img)
@@ -486,13 +494,12 @@ def t2smap_workflow(
         )
         data_without_excluded_vols = data_cat[:, :, sample_mask]
 
-        tr = float(ref_img.header.get_zooms()[-1]) if ref_img.ndim == 4 else 0.0
-        if tr <= 0:
+        tr = utils.get_tr_seconds(ref_img)
+        if tr is None:
             LGR.warning(
                 "The data do not have a valid repetition time in the header, so the "
                 "censoring table's 'time' column will be empty."
             )
-            tr = None
 
         io_generator.save_file(
             utils.make_censoring_table(sample_mask, dummy_scans=dummy_scans, tr=tr),
@@ -534,16 +541,19 @@ def t2smap_workflow(
         data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
         backend=backend,
+        sample_mask=fit_sample_mask,
     )
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
+    # (PAID weights are estimated from retained volumes only)
     data_optcom = combine.make_optcom(
         data_cat,
         tes,
         masksum_denoise,
         t2s=t2s_full,
         combmode=combmode,
+        sample_mask=fit_sample_mask,
     )
     io_generator.save_file(data_optcom, "combined img")
 
