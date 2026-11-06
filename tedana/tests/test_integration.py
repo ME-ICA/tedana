@@ -602,7 +602,10 @@ def test_integration_three_echo_external_regressors_single_model(skip_integratio
         out_dir,
         max_expected_comp=42,
         unexpected_files=unexpected_files,
-        extra_expected_files=["figures/confound_correlations.svg"],
+        extra_expected_files=[
+            "figures/confound_correlations.svg",
+            "figures/external_regressors_timeseries.svg",
+        ],
     )
 
     assert "It is strongly recommended to provide an external mask," in caplog.text
@@ -643,7 +646,10 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
     check_integration_outputs(
         fn,
         out_dir,
-        extra_expected_files=["figures/confound_correlations.svg"],
+        extra_expected_files=[
+            "figures/confound_correlations.svg",
+            "figures/external_regressors_timeseries.svg",
+        ],
     )
 
 
@@ -727,6 +733,7 @@ def test_integration_three_echo_external_regressors_censoring(
     assert correlation_columns
     assert np.isfinite(metrics_table[correlation_columns].to_numpy()).all()
     assert op.isfile(op.join(out_dir, "figures", "confound_correlations.svg"))
+    assert op.isfile(op.join(out_dir, "figures", "external_regressors_timeseries.svg"))
     assert op.isfile(op.join(out_dir, "desc-censoring_timeseries.tsv"))
 
 

@@ -126,6 +126,7 @@ The Legendre detrending basis is built on the full time grid and then subset,
 and the ``max_rp_corr`` metric computes the regressors' derivatives and time shifts on the full grid
 before dropping censored volumes, so these follow the volumes' true acquisition times.
 The external regressor correlations shown in the report also use the retained volumes only.
+The report also plots each external regressor's time series, with the censored volumes shaded gray.
 
 Some options do not support censoring yet, and raise an error if combined with ``--exclude``:
 the moving-average PCA options (``--tedpca aic``, the default, as well as ``kic`` and ``mdl``),

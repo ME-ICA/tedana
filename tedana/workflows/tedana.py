@@ -1413,6 +1413,17 @@ def tedana_workflow(
             )
 
         if external_regressors is not None:
+            reporting.static_figures.plot_external_regressors(
+                external_regressors=external_regressors,
+                out_file=os.path.join(
+                    io_generator.out_dir,
+                    "figures",
+                    f"{io_generator.prefix}external_regressors_timeseries.svg",
+                ),
+                tr=img_t_r,
+                sample_mask=fit_sample_mask,
+            )
+
             # Compute correlations between external regressors and ICA components,
             # over retained volumes only (censored mixing rows are projected estimates)
             corr_regressors = external_regressors

@@ -12,7 +12,12 @@ from nilearn import plotting
 from tedana import io, utils
 from tedana.decomposition import project_censored_mixing
 from tedana.metrics.frequency import calculate_hfc
-from tedana.reporting.static_figures import _censored_runs, _mark_censored_volumes
+from tedana.reporting.static_figures import (
+    _censored_runs,
+    _mark_censored_volumes,
+    _shade_censored_volumes,
+    plot_external_regressors,
+)
 from tedana.tests.utils import get_test_data_path
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.tedana import _check_censoring_options, tedana_workflow
@@ -312,3 +317,39 @@ def test_mark_censored_volumes_on_carpet(n_vols):
     _mark_censored_volumes(fig, None)
     assert len(carpet_ax.patches) == n_patches
     plt.close(fig)
+
+
+def test_shade_censored_volumes():
+    """Each run of censored volumes gets one gray band covering exactly those volumes."""
+    sample_mask = np.ones(20, dtype=bool)
+    sample_mask[[2, 3, 10]] = False
+    fig, ax = plt.subplots()
+    _shade_censored_volumes(ax, sample_mask)
+    extents = [tuple(patch.get_x() + np.array([0, patch.get_width()])) for patch in ax.patches]
+    assert extents == [(1.5, 3.5), (9.5, 10.5)]
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("censor", [False, True])
+def test_plot_external_regressors(tmp_path, censor):
+    """The external regressor plot has one panel per regressor and shades censored volumes."""
+    rng = np.random.default_rng(0)
+    regressors = pd.DataFrame(rng.standard_normal((30, 3)), columns=["trans_x", "rot_y", "csf"])
+    sample_mask = None
+    if censor:
+        sample_mask = np.ones(30, dtype=bool)
+        sample_mask[[4, 5, 20]] = False
+
+    out_file = tmp_path / "external_regressors_timeseries.svg"
+    plot_external_regressors(
+        external_regressors=regressors,
+        out_file=str(out_file),
+        tr=2.0,
+        sample_mask=sample_mask,
+    )
+    assert out_file.is_file()
+    svg = out_file.read_text()
+    for name in regressors.columns:
+        assert name in svg
+
+    assert ("3 of 30 volumes censored" in svg) == censor

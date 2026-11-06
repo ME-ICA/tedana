@@ -49,6 +49,69 @@ def _censored_runs(sample_mask):
     return list(zip(edges[::2], edges[1::2]))
 
 
+def _shade_censored_volumes(ax, sample_mask):
+    """Shade each run of censored volumes on a time-series axis with a gray band.
+
+    Parameters
+    ----------
+    ax : :obj:`matplotlib.axes.Axes`
+        Axis whose x values are volume indices.
+    sample_mask : (T,) array_like of bool
+        True for retained volumes.
+    """
+    for start, stop in _censored_runs(sample_mask):
+        ax.axvspan(start - 0.5, stop - 0.5, color="0.8", linewidth=0, zorder=0)
+
+
+def plot_external_regressors(*, external_regressors, out_file, tr, sample_mask=None):
+    """Plot each external regressor's time series, shading censored volumes.
+
+    Parameters
+    ----------
+    external_regressors : (T x R) :obj:`pandas.DataFrame`
+        External regressors, one row per post-dummy volume.
+    out_file : :obj:`str`
+        The output file name.
+    tr : :obj:`float`
+        Repetition time, in seconds.
+    sample_mask : (T,) array_like of bool or None, optional
+        True for retained volumes. Censored volumes are shaded gray; their regressor
+        values were not used in any fit. Default is None (nothing censored).
+    """
+    names = list(external_regressors.columns)
+    n_vols = external_regressors.shape[0]
+    fig, axes = plt.subplots(
+        len(names),
+        1,
+        sharex=True,
+        figsize=(12, 0.8 * len(names) + 1.5),
+        squeeze=False,
+    )
+    axes = axes[:, 0]
+    for ax, name in zip(axes, names):
+        ax.plot(np.arange(n_vols), external_regressors[name].to_numpy(), color="C0", linewidth=1)
+        if sample_mask is not None:
+            _shade_censored_volumes(ax, sample_mask)
+
+        ax.set_ylabel(name, rotation=0, ha="right", va="center", fontsize=9)
+        ax.tick_params(axis="y", labelsize=7)
+        ax.margins(x=0)
+        ax.spines[["top", "right"]].set_visible(False)
+
+    axes[-1].set_xlabel("Volume")
+    ax_seconds = axes[0].secondary_xaxis("top", functions=(lambda x: x * tr, lambda s: s / tr))
+    ax_seconds.set_xlabel("Time (s)")
+    title = "External regressors"
+    if sample_mask is not None:
+        n_censored = int((~np.asarray(sample_mask, dtype=bool)).sum())
+        title += f" (gray: {n_censored} of {n_vols} volumes censored)"
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(out_file)
+    plt.close(fig)
+
+
 def _mark_censored_volumes(fig, sample_mask):
     """Mark censored volumes with a strip of red bars just above a nilearn carpet plot.
 
@@ -380,8 +443,7 @@ def plot_component(
     ax_ts.set_yticks([])
     if sample_mask is not None:
         # Shade censored volumes; their values are projections, not fitted ICA values
-        for vol in np.flatnonzero(~np.asarray(sample_mask, dtype=bool)):
-            ax_ts.axvspan(vol - 0.5, vol + 0.5, color="0.8", linewidth=0, zorder=0)
+        _shade_censored_volumes(ax_ts, sample_mask)
 
     max_xticks = 10
     xloc = plt.MaxNLocator(max_xticks)
