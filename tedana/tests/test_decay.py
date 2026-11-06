@@ -2,6 +2,7 @@
 
 import os.path as op
 import sys
+import types
 
 import nibabel as nb
 import numpy as np
@@ -21,6 +22,25 @@ def test_backend_validation_and_auto_fallback(monkeypatch, caplog):
     monkeypatch.setitem(sys.modules, "cupy", None)
     assert utils._resolve_backend("auto") == "cpu"
     assert "falling back to CPU" in caplog.text
+
+
+def test_backend_requires_working_kernels(monkeypatch, caplog):
+    """A device without the CUDA headers needed to compile kernels is not usable."""
+
+    def _fail_to_compile(values):
+        raise RuntimeError(f"Failed to find CUDA headers (compiling exp for {values.dtype}).")
+
+    fake_cupy = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(runtime=types.SimpleNamespace(getDeviceCount=lambda: 1)),
+        zeros=np.zeros,
+        exp=_fail_to_compile,
+    )
+    monkeypatch.setitem(sys.modules, "cupy", fake_cupy)
+
+    assert utils._resolve_backend("auto") == "cpu"
+    assert "Failed to find CUDA headers" in caplog.text
+    with pytest.raises(RuntimeError, match="CUDA toolkit headers"):
+        utils._resolve_backend("cuda")
 
 
 @pytest.fixture(scope="module")
