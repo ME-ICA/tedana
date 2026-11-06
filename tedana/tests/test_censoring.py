@@ -325,8 +325,14 @@ def test_shade_censored_volumes():
     sample_mask[[2, 3, 10]] = False
     fig, ax = plt.subplots()
     _shade_censored_volumes(ax, sample_mask)
-    extents = [tuple(patch.get_x() + np.array([0, patch.get_width()])) for patch in ax.patches]
-    assert extents == [(1.5, 3.5), (9.5, 10.5)]
+    # axvspan returns a Polygon in older matplotlib and a Rectangle in newer versions,
+    # so read each band's x extent from its vertices in data coordinates
+    extents = []
+    for patch in ax.patches:
+        x = ax.transData.inverted().transform(patch.get_verts())[:, 0]
+        extents.append((x.min(), x.max()))
+
+    assert extents == [pytest.approx((1.5, 3.5)), pytest.approx((9.5, 10.5))]
     plt.close(fig)
 
 
