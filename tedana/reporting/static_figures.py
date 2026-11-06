@@ -23,6 +23,25 @@ MPL_LGR.setLevel(logging.WARNING)
 RepLGR = logging.getLogger("REPORT")
 
 
+def _get_tr(io_generator):
+    """Return the reference image's TR in seconds, falling back to the raw header value."""
+    tr = utils.get_tr_seconds(io_generator.reference_img)
+    if tr is None:
+        tr = io_generator.reference_img.header.get_zooms()[-1]
+
+    return tr
+
+
+def _get_sample_mask(io_generator):
+    """Return the run's temporal sample mask from the censoring table, or None."""
+    fname = io_generator.get_name("censoring tsv")
+    if not fname or not os.path.isfile(fname):
+        return None
+
+    sample_mask = pd.read_table(fname)["sample_mask"].to_numpy().astype(bool)
+    return None if sample_mask.all() else sample_mask
+
+
 def _trim_edge_zeros(arr):
     """
     Trims away the zero-filled slices that surround many 3/4D arrays.
@@ -211,6 +230,7 @@ def plot_component(
     title,
     out_file,
     classification_linestyle="solid",
+    sample_mask=None,
 ):
     """Create a figure with a component's spatial map, time series, and power spectrum.
 
@@ -237,6 +257,10 @@ def plot_component(
     classification_linestyle : str, optional
         Matplotlib line style for the time series and power spectrum, providing a
         redundant (non-color) cue for the classification. Default is "solid".
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). If given, censored volumes are
+        shaded in the time series panel and the spectrum panel is labeled as a
+        Lomb-Scargle periodogram. Default is None.
     """
     import matplotlib.image as mpimg
     from matplotlib import gridspec
@@ -296,6 +320,10 @@ def plot_component(
     )
     ax_ts.set_xlim(0, len(component_timeseries) - 1)
     ax_ts.set_yticks([])
+    if sample_mask is not None:
+        # Shade censored volumes; their values are projections, not fitted ICA values
+        for vol in np.flatnonzero(~np.asarray(sample_mask, dtype=bool)):
+            ax_ts.axvspan(vol - 0.5, vol + 0.5, color="0.8", linewidth=0, zorder=0)
 
     max_xticks = 10
     xloc = plt.MaxNLocator(max_xticks)
@@ -325,7 +353,9 @@ def plot_component(
     ax_fft.plot(
         frequencies, power_spectrum, color=classification_color, linestyle=classification_linestyle
     )
-    ax_fft.set_title("One-Sided FFT")
+    ax_fft.set_title(
+        "One-Sided FFT" if sample_mask is None else "Lomb-Scargle periodogram (retained volumes)"
+    )
     ax_fft.set_xlabel("Frequency (Hz)")
     ax_fft.set_xlim(0, frequencies.max())
     ax_fft.set_yticks([])
@@ -351,6 +381,7 @@ def _generate_single_component_figure(
     png_cmap,
     out_dir,
     prefix,
+    sample_mask=None,
 ):
     """Generate a figure for a single component.
 
@@ -372,6 +403,8 @@ def _generate_single_component_figure(
         Output directory path.
     prefix : str
         Prefix for the output file name.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). Default is None.
     """
     classification = component_table.loc[compnum, "classification"]
     classification_tags = str(component_table.loc[compnum, "classification_tags"])
@@ -394,7 +427,8 @@ def _generate_single_component_figure(
 
     # Get fft and freqs for this component
     # adapted from @dangom
-    spectrum, freqs = utils.get_spectrum(component_timeseries, tr)
+    # (Lomb-Scargle over retained volumes when censored)
+    spectrum, freqs = utils.get_spectrum(component_timeseries, tr, sample_mask=sample_mask)
 
     plot_name = f"{prefix}comp_{str(compnum).zfill(3)}.png"
     compplot_name = os.path.join(out_dir, "figures", plot_name)
@@ -410,6 +444,7 @@ def _generate_single_component_figure(
         title=plt_title,
         out_file=compplot_name,
         classification_linestyle=line_style,
+        sample_mask=sample_mask,
     )
 
 
@@ -437,7 +472,8 @@ def comp_figures(component_table, mixing, io_generator, png_cmap):
     component_betas_arr = np.asanyarray(component_betas_img.dataobj)
 
     # Get repetition time from reference image
-    tr = io_generator.reference_img.header.get_zooms()[-1]
+    tr = _get_tr(io_generator)
+    sample_mask = _get_sample_mask(io_generator)
 
     for compnum in component_table.index.values:
         component_img = nb.Nifti1Image(
@@ -454,6 +490,7 @@ def comp_figures(component_table, mixing, io_generator, png_cmap):
             png_cmap=png_cmap,
             out_dir=io_generator.out_dir,
             prefix=io_generator.prefix,
+            sample_mask=sample_mask,
         )
 
 
@@ -740,7 +777,7 @@ def plot_rmse(
     mask_img = image.binarize_img(mask_img, threshold=1.5, two_sided=False, copy_header=True)
 
     # Get repetition time from reference image
-    tr = io_generator.reference_img.header.get_zooms()[-1]
+    tr = _get_tr(io_generator)
 
     # Load the confounds file
     confounds_df = pd.read_table(confounds_file)
@@ -919,7 +956,7 @@ def plot_gscontrol(
         confounds_df = pd.read_table(confounds_file)
 
         # Get repetition time from reference image
-        tr = io_generator.reference_img.header.get_zooms()[-1]
+        tr = _get_tr(io_generator)
 
     if "gsr" in gscontrol:
         gsr_img = nb.load(io_generator.get_name("gs img"))

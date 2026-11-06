@@ -83,6 +83,47 @@ zero good echoes. Here is more information on the `creation and use of the adapt
 .. _AFNI: http://afni.nimh.nih.gov
 .. _creation and use of the adaptive mask: approach.html#adaptive-mask-generation
 
+.. _censoring volumes:
+
+**********************************************************************
+[tedana] Can I exclude (censor) high-motion volumes from tedana?
+**********************************************************************
+
+Yes. Pass the volumes to censor with ``--exclude``
+(for example, volumes whose framewise displacement exceeds a threshold).
+The indices are 0-based and refer to the input volumes, before ``--dummy-scans`` are removed.
+They can be individual volumes (``0,5,10``), Python-style ranges (``5:10`` is volumes 5 through 9),
+or both (``0,5:10,15``).
+
+Censored volumes are excluded from every estimate:
+the brain and adaptive masks, the T2\*/S0 maps, PCA, ICA, the component metrics and classification,
+and the coefficients used for denoising.
+They are *not* removed from the outputs, so the time series keep their original length and timing:
+
+- The optimally combined data contain the observed values at every volume.
+- The ICA mixing matrix (``desc-ICA_mixing.tsv``) contains the fitted ICA values at retained volumes.
+  At censored volumes it contains estimates obtained by regressing those volumes onto the component maps
+  that were estimated from the retained volumes (analogous to the second stage of dual regression).
+  These are not values that the ICA itself produced.
+- The denoised, accepted, and rejected time series are reconstructed at censored volumes from the model
+  fit to the retained volumes. **They are still not valid observations, and censored volumes must still be
+  excluded from downstream analyses**, including any temporal filtering.
+- The PCA mixing matrix (``desc-PCA_mixing.tsv``) has ``n/a`` at censored volumes.
+
+Which volumes were censored is recorded in ``desc-censoring_timeseries.tsv``
+(with a JSON sidecar summarizing the censoring and the projection), and ``ica_reclassify`` reuses it automatically.
+With censoring, the HFC metric and the component power spectra in the report are computed with a
+floating-mean Lomb-Scargle periodogram at the retained volumes' acquisition times, rather than an FFT.
+
+Some options do not support censoring yet, and raise an error if combined with ``--exclude``:
+the moving-average PCA options (``--tedpca aic``, the default, as well as ``kic`` and ``mdl``),
+because they assume contiguous time points; ``--gscontrol gsr`` and ``--gscontrol mir``;
+and external regressors (``--external``).
+Use, for example, ``--tedpca kundu`` or a variance threshold such as ``--tedpca 0.95`` instead.
+
+Censoring removes data from every estimate, so heavy censoring leaves less data for PCA and ICA,
+and can bias spectral metrics. tedana warns when at least 10% of volumes are censored.
+
 ************************************
 [tedana] ICA has failed to converge.
 ************************************

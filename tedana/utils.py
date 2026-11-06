@@ -411,24 +411,135 @@ def andb(arrs):
     return result
 
 
-def get_spectrum(data: np.array, tr: float = 1.0):
+def get_spectrum(data: np.array, tr: float = 1.0, sample_mask=None):
     """
     Return the power spectrum and corresponding frequencies.
 
     Done when provided with a component time course and repitition time.
+    Without censoring, this is the squared magnitude of the FFT. With censoring,
+    it is a floating-mean Lomb-Scargle periodogram of the retained volumes at their
+    original acquisition times (see :func:`lomb_scargle_power`).
 
     Parameters
     ----------
     data : (S, ) array_like
         A timeseries S, on which you would like to perform an fft.
+        With censoring, either the full-length series (censored values are ignored)
+        or the retained values only.
     tr : :obj:`float`
         Repetition time (TR) of the data
+    sample_mask : (T,) array_like of bool or None, optional
+        Volumes retained (True) or censored (False). If None or all True, the FFT
+        is used. Default is None.
     """
-    # adapted from @dangom
-    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
-    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
-    idx = np.argsort(freqs)
-    return power_spectrum[idx], freqs[idx]
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+
+    if sample_mask is None or sample_mask.all():
+        # adapted from @dangom
+        power_spectrum = np.abs(np.fft.rfft(data)) ** 2
+        freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+        idx = np.argsort(freqs)
+        return power_spectrum[idx], freqs[idx]
+
+    power_spectrum, freqs = lomb_scargle_power(np.asarray(data)[:, None], tr, sample_mask)
+    return power_spectrum[:, 0], freqs
+
+
+def lomb_scargle_frequencies(n_vols, tr):
+    """Return the frequency grid used for Lomb-Scargle periodograms.
+
+    Parameters
+    ----------
+    n_vols : :obj:`int`
+        Number of volumes in the full (uncensored) time series.
+    tr : :obj:`float`
+        Repetition time, in seconds.
+
+    Returns
+    -------
+    freqs : (F,) :obj:`numpy.ndarray`
+        Frequencies ``k / (n_vols * tr)`` for ``k = 1 .. n_vols // 2``. This is the
+        FFT grid of the full series without the zero frequency, so it reaches the
+        nominal Nyquist frequency for even ``n_vols``.
+    """
+    return np.arange(1, n_vols // 2 + 1) / (n_vols * tr)
+
+
+def lomb_scargle_power(data, tr, sample_mask):
+    """Compute floating-mean Lomb-Scargle periodograms of censored time series.
+
+    Parameters
+    ----------
+    data : (T x C) or (R x C) array_like
+        Time series in columns, either full length (``T`` rows; censored rows are
+        ignored) or retained rows only (``R = sample_mask.sum()`` rows).
+    tr : :obj:`float`
+        Repetition time, in seconds.
+    sample_mask : (T,) array_like of bool
+        Volumes retained (True) or censored (False). Defines the acquisition times of
+        the retained rows and the frequency grid.
+
+    Returns
+    -------
+    power : (F x C) :obj:`numpy.ndarray`
+        Unnormalized Lomb-Scargle power (``scipy.signal.lombscargle`` with
+        ``normalize=False`` and ``floating_mean=True``). Columns with no variance
+        have zero power.
+    freqs : (F,) :obj:`numpy.ndarray`
+        Frequencies in Hz, from :func:`lomb_scargle_frequencies`.
+
+    Notes
+    -----
+    The periodogram is evaluated at the actual times of the retained volumes, so
+    censored volumes are neither interpolated nor treated as contiguous. Its power is
+    not on the same scale as an FFT power spectrum.
+    """
+    from scipy.signal import lombscargle
+
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    data = np.asarray(data, dtype=float)
+    if data.ndim != 2:
+        raise ValueError(f"data must be 2D (time x series), not {data.ndim}D")
+
+    n_vols, n_retained = sample_mask.size, int(sample_mask.sum())
+    if data.shape[0] == n_vols:
+        data = data[sample_mask]
+    elif data.shape[0] != n_retained:
+        raise ValueError(
+            f"data have {data.shape[0]} rows, but the sample mask has {n_vols} volumes "
+            f"({n_retained} retained)."
+        )
+
+    if n_retained < 3:
+        raise ValueError(
+            f"At least 3 retained volumes are needed for a Lomb-Scargle periodogram, "
+            f"not {n_retained}."
+        )
+
+    if tr is None or tr <= 0:
+        raise ValueError(f"A positive repetition time is required, not {tr}.")
+
+    times = np.flatnonzero(sample_mask) * float(tr)
+    freqs = lomb_scargle_frequencies(n_vols, tr)
+    power = np.zeros((freqs.size, data.shape[1]))
+    for i_col in range(data.shape[1]):
+        y = data[:, i_col]
+        if not np.all(np.isfinite(y)):
+            raise ValueError("Lomb-Scargle input contains non-finite values.")
+
+        if np.ptp(y) == 0:
+            continue
+
+        power[:, i_col] = lombscargle(
+            times,
+            y,
+            2 * np.pi * freqs,
+            normalize=False,
+            floating_mean=True,
+        )
+
+    return power, freqs
 
 
 def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="bi"):

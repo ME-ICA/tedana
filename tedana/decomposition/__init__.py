@@ -2,7 +2,8 @@
 # ex: set sts=4 ts=4 sw=4 et:
 """Functions for decomposing BOLD signals."""
 
+from tedana.decomposition.censoring import project_censored_mixing
 from tedana.decomposition.ica import tedica
 from tedana.decomposition.pca import tedpca
 
-__all__ = ["tedpca", "tedica"]
+__all__ = ["tedpca", "tedica", "project_censored_mixing"]

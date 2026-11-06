@@ -72,14 +72,17 @@ tedana_report.html                                                           The
                                                                              0 = censored). Only written when ``--exclude``
                                                                              censors at least one volume. Censored volumes stay in
                                                                              the output time series, but must still be excluded
-                                                                             from downstream analyses.
+                                                                             from downstream analyses. See :ref:`censoring volumes`.
 "censoring json": desc-censoring_timeseries.json                             Column descriptions and a censoring summary (number
                                                                              and fraction of censored volumes, longest run of
-                                                                             censored volumes) for the censoring table.
+                                                                             censored volumes) for the censoring table. For tedana,
+                                                                             also how the ICA mixing matrix was filled in at
+                                                                             censored volumes, with conditioning diagnostics.
 "PCA mixing tsv": desc-PCA_mixing.tsv                                        Mixing matrix (component time series) from PCA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
-                                                                             component number.
+                                                                             component number. With censoring, censored volumes
+                                                                             are ``n/a``.
 "PCA decomposition json": desc-PCA_decomposition.json                        Metadata for the PCA decomposition.
 "z-scored PCA components img": desc-PCA_stat-z_components.nii.gz             Component weight maps from PCA decomposition.
                                                                              Each map corresponds to the same component index in
@@ -100,7 +103,8 @@ tedana_report.html                                                           The
 "ICA mixing tsv": desc-ICA_mixing.tsv                                        Mixing matrix (component time series) from ICA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
-                                                                             component number.
+                                                                             component number. With censoring, censored volumes
+                                                                             hold projected estimates, not fitted ICA values.
 "ICA components img": desc-ICA_components.nii.gz                             Full ICA coefficient feature set.
 "z-scored ICA components img": desc-ICA_stat-z_components.nii.gz             Z-statistic component weight maps from ICA
                                                                              decomposition.

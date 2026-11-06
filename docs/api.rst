@@ -97,6 +97,7 @@ API
    tedica
    ica.r_ica
    ica.f_ica
+   project_censored_mixing
 
 
 .. _api_metrics_ref:
@@ -309,6 +310,8 @@ API
    andb
    dice
    get_spectrum
+   lomb_scargle_frequencies
+   lomb_scargle_power
    make_adaptive_mask
    threshold_map
    unmask

@@ -178,6 +178,28 @@ def _get_parser():
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
     )
+    masking_args.add_argument(
+        "--exclude",
+        dest="exclude",
+        type=str,
+        help=(
+            "Volume indices to censor (e.g., high-motion volumes). "
+            "Censored volumes are excluded from every estimate: masks, T2*/S0, PCA, ICA, "
+            "component metrics and classification, and denoising coefficients. "
+            "They remain in the output time series, so the time axis is preserved, "
+            "but their values are reconstructions and must still be excluded from "
+            "downstream analyses. "
+            "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
+            "or a mix of the two (e.g., '0,5:10,15'). "
+            "Indices are 0-based and refer to the input volumes, before dummy scans are "
+            "removed; indices within the dummy scans are ignored. "
+            "As in Python lists, ranges are start-inclusive and end-exclusive. "
+            "Censoring requires a --tedpca option other than 'aic', 'kic', or 'mdl', "
+            "and is not yet supported with --gscontrol or --external. "
+            "Default is to not censor any volumes."
+        ),
+        default=None,
+    )
 
     decay_args = parser.add_argument_group("Decay Model Fitting and Optimal Combination")
     decay_args.add_argument(
@@ -441,6 +463,37 @@ def _get_parser():
     return parser
 
 
+def _check_censoring_options(*, tedpca, gscontrol, external_regressors):
+    """Reject options that cannot yet honor temporal censoring.
+
+    Raises
+    ------
+    ValueError
+        If any requested option would use censored volumes or assume contiguous sampling.
+    """
+    if isinstance(tedpca, str) and tedpca in ("aic", "kic", "mdl"):
+        raise ValueError(
+            f"--tedpca {tedpca} cannot be used with censoring (--exclude). The "
+            "moving-average PCA behind 'aic', 'kic', and 'mdl' assumes contiguous time "
+            "points, and is not yet censoring-aware. Choose another PCA option, for example "
+            "'--tedpca kundu' or a variance threshold such as '--tedpca 0.95'. "
+            "This restriction is temporary."
+        )
+
+    unsupported = [gs for gs in gscontrol if gs in ("gsr", "mir")]
+    if unsupported:
+        raise ValueError(
+            f"--gscontrol {' '.join(unsupported)} is not yet supported with censoring "
+            "(--exclude), because it would estimate quantities from censored volumes."
+        )
+
+    if external_regressors is not None:
+        raise ValueError(
+            "External regressors (--external) are not yet supported with censoring "
+            "(--exclude), because their fits would use censored volumes."
+        )
+
+
 def tedana_workflow(
     data,
     tes,
@@ -475,6 +528,7 @@ def tedana_workflow(
     mixing_file=None,
     n_threads=1,
     backend="cpu",
+    exclude=None,
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -616,6 +670,19 @@ def tedana_workflow(
     backend : {'cpu', 'cuda', 'auto'}, optional
         Compute backend. CUDA currently accelerates curve-fit T2*/S0 estimation
         only. Default is 'cpu'.
+    exclude : :obj:`str` or None, optional
+        Volume indices to censor, e.g., high-motion volumes.
+        Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'),
+        or a mix of the two (e.g., '0,5:10,15').
+        Indices are 0-based and refer to the input volumes, before dummy scans are removed;
+        indices within the dummy scans are ignored.
+        Censored volumes are excluded from every estimate (masks, T2*/S0, PCA, ICA,
+        component metrics and classification, and denoising coefficients), but remain in
+        the output time series. Their values there are reconstructions, and they must still
+        be excluded from downstream analyses (see ``desc-censoring_timeseries.tsv``).
+        Censoring requires ``tedpca`` other than 'aic', 'kic', or 'mdl', and is not yet
+        supported with ``gscontrol`` or ``external_regressors``.
+        Default is None (no censoring).
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
         run. Default is None.
@@ -683,6 +750,9 @@ def tedana_workflow(
     # a float in (0.0, 1.0) or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
+    # Parse exclude early, so malformed strings fail before any work is done
+    utils.parse_volume_indices(exclude)
+
     # For z-catted files, make sure it's a list of size 1
     if isinstance(data, str):
         data = [data]
@@ -711,12 +781,36 @@ def tedana_workflow(
     elif t2smap is not None:
         raise OSError("Argument 't2smap' must be an existing file.")
 
+    # Temporal censoring: build the post-dummy sample mask (True = retained) and reject
+    # options that cannot yet honor it, before any data are loaded
+    n_input_vols = ref_img.shape[3] if ref_img.ndim == 4 else 1
+    sample_mask = utils.get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
+    censoring = not sample_mask.all()
+    if censoring:
+        _check_censoring_options(
+            tedpca=tedpca,
+            gscontrol=gscontrol,
+            external_regressors=external_regressors,
+        )
+        # Keep censored (and dummy) volumes out of the initial EPI mask too
+        retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
+        # Only pass sample masks when censoring, so uncensored runs are unchanged
+        fit_sample_mask = sample_mask
+    else:
+        retained_input_vols = None
+        fit_sample_mask = None
+
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
         "\\citep{dupre2021te}."
     )
 
-    mask_img, t2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap)
+    mask_img, t2s_limited = utils.load_mask(
+        ref_img,
+        mask=mask,
+        t2smap=t2smap,
+        volumes=retained_input_vols,
+    )
     if t2s_limited is not None:
         t2s_full = t2s_limited.copy()
 
@@ -755,9 +849,9 @@ def tedana_workflow(
     n_samp, n_echos, n_vols = data_cat.shape
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
-    # check if TR is 0
-    img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    if img_t_r == 0:
+    # check if TR is 0 (get_tr_seconds also converts msec/usec headers to seconds)
+    img_t_r = utils.get_tr_seconds(io_generator.reference_img)
+    if img_t_r is None:
         raise OSError(
             "Dataset has a TR of 0. This indicates incorrect"
             " header information. To correct this, we recommend"
@@ -767,6 +861,50 @@ def tedana_workflow(
             "\n"
             "to correct your TR to the value it should be."
         )
+
+    if censoring:
+        n_retained = int(sample_mask.sum())
+        LGR.info(
+            f"Censoring {n_vols - n_retained} of {n_vols} volumes "
+            f"(input volume indices: {(np.flatnonzero(~sample_mask) + dummy_scans).tolist()}). "
+            "Censored volumes are excluded from all estimation, but kept in the outputs."
+        )
+        RepLGR.info(
+            f"{n_vols - n_retained} of {n_vols} volumes were censored. Censored volumes were "
+            "excluded from mask generation, T2*/S0 estimation, PCA, ICA, component metrics, "
+            "and the estimation of denoising coefficients. Component time series at "
+            "censored volumes were estimated by regressing those volumes onto the "
+            "component maps estimated from the retained volumes."
+        )
+        io_generator.save_file(
+            utils.make_censoring_table(sample_mask, dummy_scans=dummy_scans, tr=img_t_r),
+            "censoring tsv",
+        )
+        censoring_metadata = utils.get_censoring_metadata(
+            sample_mask,
+            dummy_scans=dummy_scans,
+            exclude=exclude,
+        )
+        censoring_metadata["SpectralEstimator"] = (
+            "Floating-mean Lomb-Scargle periodogram of retained volumes at their acquisition "
+            "times (unnormalized power), used for HFC and component spectra."
+        )
+        censoring_metadata["CensoredOutputValues"] = (
+            "Censored volumes of the denoised, accepted, and rejected time series contain "
+            "values reconstructed from the retained-volume model. They are not valid "
+            "observations and must be excluded from downstream analyses."
+        )
+        if (n_vols - n_retained) / n_vols >= 0.1:
+            LGR.warning(
+                f"{100 * (n_vols - n_retained) / n_vols:.1f}% of volumes are censored. "
+                "Heavy censoring reduces the data available for estimation and can bias "
+                "spectral metrics such as HFC."
+            )
+
+        data_cat_fit = data_cat[:, :, sample_mask]
+    else:
+        n_retained = n_vols
+        data_cat_fit = data_cat
 
     if mixing_file is not None and op.isfile(mixing_file):
         mixing_file = op.abspath(mixing_file)
@@ -788,8 +926,9 @@ def tedana_workflow(
         raise OSError("Argument '--mix' must be an existing file.")
 
     # Create an adaptive mask with at least 1 good echo, for denoising
+    # (from retained volumes only when censoring)
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
-        data_cat,
+        data_cat_fit,
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
@@ -834,20 +973,23 @@ def tedana_workflow(
             masksum_denoise=masksum_denoise,
             interpolate_failing_voxels=interpolate_failing_voxels,
             io_generator=io_generator,
-            data_without_excluded_vols=None,
+            data_without_excluded_vols=data_cat_fit if censoring else None,
             n_threads=n_threads,
             backend=backend,
+            sample_mask=fit_sample_mask,
         )
 
-    # optimally combine data
+    # optimally combine data (every volume; PAID weights from retained volumes only)
     data_optcom = combine.make_optcom(
         data_cat,
         tes,
         masksum_denoise,
         t2s=t2s_full,
         combmode=combmode,
+        sample_mask=fit_sample_mask,
     )
     del t2s_full
+    data_optcom_fit = data_optcom[:, sample_mask] if censoring else data_optcom
 
     if "gsr" in gscontrol:
         # regress out global signal
@@ -868,9 +1010,10 @@ def tedana_workflow(
 
     if mixing_file is None:
         # Identify and remove thermal noise from data
+        # (fit to retained volumes only when censoring)
         data_reduced, n_components = decomposition.tedpca(
-            data_cat,
-            data_optcom,
+            data_cat_fit,
+            data_optcom_fit,
             mask_clf,
             masksum_clf,
             io_generator,
@@ -880,9 +1023,17 @@ def tedana_workflow(
             kdaw=10.0,
             rdaw=1.0,
             low_mem=low_mem,
+            sample_mask=fit_sample_mask,
         )
         if verbose:
-            io_generator.save_file(data_reduced, "whitened img", mask=mask_clf)
+            if censoring:
+                # Keep the time axis; the reduced data are undefined at censored volumes
+                data_reduced_full = np.zeros((data_reduced.shape[0], n_vols), dtype=float)
+                data_reduced_full[:, sample_mask] = data_reduced
+                io_generator.save_file(data_reduced_full, "whitened img", mask=mask_clf)
+                del data_reduced_full
+            else:
+                io_generator.save_file(data_reduced, "whitened img", mask=mask_clf)
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -921,8 +1072,8 @@ def tedana_workflow(
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
             component_table, mixing = metrics.collect.generate_metrics(
-                data_cat=data_cat[mask_clf, ...],
-                data_optcom=data_optcom[mask_clf, :],
+                data_cat=data_cat_fit[mask_clf, ...],
+                data_optcom=data_optcom_fit[mask_clf, :],
                 mixing=mixing,
                 adaptive_mask=masksum_clf[mask_clf],
                 mask_img=unmask(mask_clf, io_generator.mask),
@@ -935,13 +1086,14 @@ def tedana_workflow(
                 external_regressors=external_regressors,
                 external_regressor_config=selector.tree["external_regressor_config"],
                 seed=metric_seed,
+                sample_mask=fit_sample_mask,
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
                 component_table,
                 selector,
                 n_echos=n_echos,
-                n_vols=n_vols,
+                n_vols=n_retained,
                 n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
@@ -975,6 +1127,17 @@ def tedana_workflow(
     else:
         LGR.info("Using supplied mixing matrix from ICA")
         mixing = pd.read_table(mixing_file).values
+        if censoring:
+            if mixing.shape[0] != n_vols:
+                raise ValueError(
+                    f"With censoring, the supplied mixing matrix must have one row per "
+                    f"volume after dummy scan removal ({n_vols}), not {mixing.shape[0]}. "
+                    "Retained-only mixing matrices are not supported."
+                )
+
+            # Metrics use the retained rows only
+            supplied_mixing = mixing
+            mixing = supplied_mixing[sample_mask, :]
 
         # selector = ComponentSelector(tree)
         necessary_metrics = selector.necessary_metrics
@@ -983,8 +1146,8 @@ def tedana_workflow(
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
         component_table, mixing = metrics.collect.generate_metrics(
-            data_cat=data_cat[mask_clf, ...],
-            data_optcom=data_optcom[mask_clf, :],
+            data_cat=data_cat_fit[mask_clf, ...],
+            data_optcom=data_optcom_fit[mask_clf, :],
             mixing=mixing,
             adaptive_mask=masksum_clf[mask_clf],
             mask_img=unmask(mask_clf, io_generator.mask),
@@ -997,12 +1160,13 @@ def tedana_workflow(
             external_regressors=external_regressors,
             external_regressor_config=selector.tree["external_regressor_config"],
             seed=fixed_seed,
+            sample_mask=fit_sample_mask,
         )
         selector = selection.automatic_selection(
             component_table,
             selector,
             n_echos=n_echos,
-            n_vols=n_vols,
+            n_vols=n_retained,
             n_independent_echos=n_independent_echos,
         )
 
@@ -1016,6 +1180,29 @@ def tedana_workflow(
         )
         selector.cross_component_metrics_["robustica_mean_index_quality"] = index_quality
 
+    # With censoring, `mixing` so far holds only the retained rows: the fitted ICA values,
+    # after generate_metrics' sign flips. Expand it to the full time series.
+    mixing_fit = mixing
+    if censoring:
+        if mixing_file is None:
+            mixing, projection_diagnostics = decomposition.project_censored_mixing(
+                data_optcom[mask_clf, :],
+                mixing_fit,
+                sample_mask,
+            )
+            censoring_metadata.update(projection_diagnostics)
+        else:
+            # Keep the user's censored rows, with the same sign flips as the retained rows
+            optimal_sign = component_table["optimal sign"].to_numpy()
+            mixing = supplied_mixing * optimal_sign[None, :]
+            mixing[sample_mask, :] = mixing_fit
+            censoring_metadata["ProjectionMethod"] = (
+                "Censored rows of the mixing matrix were taken from the user-supplied "
+                "mixing matrix (with the same sign flips as the retained rows)."
+            )
+
+        io_generator.save_file(censoring_metadata, "censoring json")
+
     # TODO The ICA mixing matrix should be written out after it is created
     #     It is currently being written after component selection is done
     #     and rewritten if an existing mixing matrix is given as an input
@@ -1025,9 +1212,10 @@ def tedana_workflow(
 
     # calculate the fit of rejected to accepted components to use as a quality measure
     # Note: This adds a column to component_table & needs to run before the table is saved
-    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+    # (Both use the retained volumes only.)
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing_fit)
     reporting.quality_metrics.calculate_variance_summary(
-        selector, data_optcom[mask_clf, :], mixing
+        selector, data_optcom_fit[mask_clf, :], mixing_fit
     )
 
     # Save component selector and tree
@@ -1061,7 +1249,12 @@ def tedana_workflow(
         comps_rejected = selector.rejected_comps_
         acc_ts = mixing[:, comps_accepted]
         rej_ts = mixing[:, comps_rejected]
-        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
+        # Fit the orthogonalization on retained volumes, then apply it to every volume
+        betas = np.linalg.lstsq(
+            mixing_fit[:, comps_accepted],
+            mixing_fit[:, comps_rejected],
+            rcond=None,
+        )[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
         mixing[:, comps_rejected] = resid
@@ -1085,6 +1278,7 @@ def tedana_workflow(
         mixing=mixing,
         io_generator=io_generator,
         mixing_orig=mixing_orig if tedort else None,
+        sample_mask=fit_sample_mask,
     )
 
     if "mir" in gscontrol:
@@ -1098,7 +1292,14 @@ def tedana_workflow(
         )
 
     if verbose:
-        io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
+        io.writeresults_echoes(
+            data_cat,
+            mixing,
+            mask_denoise,
+            component_table,
+            io_generator,
+            sample_mask=fit_sample_mask,
+        )
 
     # Write out registry of outputs
     io_generator.save_self()
@@ -1171,6 +1372,7 @@ def tedana_workflow(
             mixing,
             mask_denoise,
             component_table,
+            sample_mask=fit_sample_mask,
         )
 
         reporting.static_figures.plot_adaptive_mask(

@@ -1,6 +1,7 @@
 """Integration tests for "real" data."""
 
 import glob
+import json
 import logging
 import os
 import os.path as op
@@ -10,6 +11,7 @@ import subprocess
 from importlib.resources import files
 
 import nibabel as nb
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -329,6 +331,129 @@ def test_integration_three_echo(skip_integration, caplog):
     check_integration_outputs(
         fn, out_dir, max_expected_comp=64, extra_expected_files=["tedana_call.sh"]
     )
+
+
+def test_integration_three_echo_censoring(skip_integration, tmp_path):
+    """Censored volumes cannot affect any tedana estimate, and survive reclassification.
+
+    tedana is run twice with the same censoring: on the original data, and on a copy
+    with huge spikes injected into the censored volumes only. Everything estimated
+    from the retained volumes must be identical between the two runs.
+    """
+    if skip_integration:
+        pytest.skip("Skipping three-echo censoring integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    download_test_data(osf_id, test_data_path)
+    in_file = f"{test_data_path}/three_echo_Cornell_zcat.nii.gz"
+
+    in_img = nb.load(in_file)
+    n_vols = in_img.shape[3]
+    censored = np.array([5, 6, 7, 40, 41, n_vols - 1])
+    exclude = ",".join(str(i) for i in censored)
+    sample_mask = np.ones(n_vols, dtype=bool)
+    sample_mask[censored] = False
+
+    # Float32 copies, so the retained volumes are bit-identical between the two inputs
+    header = in_img.header.copy()
+    header.set_data_dtype(np.float32)
+    arr = in_img.get_fdata(dtype=np.float32)
+    spiked_arr = arr.copy()
+    spiked_arr[..., censored] = spiked_arr[..., censored] * 20 + 1e5
+    inputs = {}
+    for label, data in (("orig", arr), ("spiked", spiked_arr)):
+        inputs[label] = str(tmp_path / f"{label}_zcat.nii.gz")
+        nb.Nifti1Image(data, in_img.affine, header).to_filename(inputs[label])
+
+    out_dirs = {label: str(tmp_path / f"out_{label}") for label in inputs}
+    for label in ("orig", "spiked"):
+        args = [
+            "-d",
+            inputs[label],
+            "-e",
+            "14.5",
+            "38.5",
+            "62.5",
+            "--out-dir",
+            out_dirs[label],
+            "--tedpca",
+            "kundu",
+            "--tedort",
+            "--exclude",
+            exclude,
+        ]
+        if label == "spiked":
+            args.append("--no-reports")
+
+        tedana_cli._main(args)
+
+    def _read(label, fname):
+        return pd.read_table(op.join(out_dirs[label], fname))
+
+    # Censoring table and sidecar
+    table = _read("orig", "desc-censoring_timeseries.tsv")
+    np.testing.assert_array_equal(table["sample_mask"].to_numpy().astype(bool), sample_mask)
+    with open(op.join(out_dirs["orig"], "desc-censoring_timeseries.json")) as fobj:
+        metadata = json.load(fobj)
+    assert metadata["NumberOfCensoredVolumes"] == censored.size
+    assert metadata["ProjectionMapsRank"] == len(metadata["RetainedProjectionCorrelation"])
+
+    # Full-length outputs
+    mixing = {label: _read(label, "desc-ICA_mixing.tsv").to_numpy() for label in out_dirs}
+    assert mixing["orig"].shape[0] == n_vols
+    pca_mixing = _read("orig", "desc-PCA_mixing.tsv").to_numpy()
+    assert np.isnan(pca_mixing[~sample_mask]).all()
+    assert np.isfinite(pca_mixing[sample_mask]).all()
+    for fname in ("desc-denoised_bold.nii.gz", "desc-optcom_bold.nii.gz"):
+        assert nb.load(op.join(out_dirs["orig"], fname)).shape[3] == n_vols
+
+    # Invariance of everything estimated from retained volumes
+    np.testing.assert_allclose(mixing["spiked"][sample_mask], mixing["orig"][sample_mask])
+    assert not np.allclose(mixing["spiked"][~sample_mask], mixing["orig"][~sample_mask])
+
+    metrics_tables = {label: _read(label, "desc-tedana_metrics.tsv") for label in out_dirs}
+    pd.testing.assert_series_equal(
+        metrics_tables["spiked"]["classification"],
+        metrics_tables["orig"]["classification"],
+    )
+    for column in ("kappa", "rho", "variance explained", "normalized variance explained"):
+        np.testing.assert_allclose(
+            metrics_tables["spiked"][column],
+            metrics_tables["orig"][column],
+            err_msg=column,
+        )
+
+    for fname in (
+        "desc-adaptiveGoodSignal_mask.nii.gz",
+        "T2starmap.nii.gz",
+        "S0map.nii.gz",
+        "desc-ICA_components.nii.gz",
+        "desc-ICA_stat-z_components.nii.gz",
+    ):
+        orig = nb.load(op.join(out_dirs["orig"], fname)).get_fdata()
+        spiked = nb.load(op.join(out_dirs["spiked"], fname)).get_fdata()
+        np.testing.assert_allclose(spiked, orig, rtol=1e-5, atol=1e-6, err_msg=fname)
+
+    orig = nb.load(op.join(out_dirs["orig"], "desc-denoised_bold.nii.gz")).get_fdata()
+    spiked = nb.load(op.join(out_dirs["spiked"], "desc-denoised_bold.nii.gz")).get_fdata()
+    np.testing.assert_allclose(
+        spiked[..., sample_mask],
+        orig[..., sample_mask],
+        rtol=1e-5,
+        atol=1e-3,
+    )
+
+    # Reclassification reuses the censoring and keeps the time axis
+    reclassify_dir = str(tmp_path / "reclassify")
+    ica_reclassify_workflow(
+        op.join(out_dirs["orig"], "desc-tedana_registry.json"),
+        accept=[0],
+        out_dir=reclassify_dir,
+        tedort=True,
+    )
+    reclassified_table = pd.read_table(op.join(reclassify_dir, "desc-censoring_timeseries.tsv"))
+    pd.testing.assert_frame_equal(reclassified_table, table)
+    assert nb.load(op.join(reclassify_dir, "desc-denoised_bold.nii.gz")).shape[3] == n_vols
 
 
 def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
