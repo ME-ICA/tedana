@@ -644,7 +644,7 @@ def add_decomp_prefix(comp_num, prefix, max_value):
     return comp_name
 
 
-def denoise_ts(data, mixing, mask, component_table):
+def denoise_ts(data, mixing, mask, component_table, sample_mask=None):
     """Apply component classifications to data for denoising.
 
     Parameters
@@ -659,6 +659,10 @@ def denoise_ts(data, mixing, mask, component_table):
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least one column: "classification".
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). If given, the voxel means and
+        the component coefficients are estimated from retained volumes only, and
+        then applied to every volume. If None, all volumes are used. Default is None.
 
     Returns
     -------
@@ -677,11 +681,24 @@ def denoise_ts(data, mixing, mask, component_table):
 
     # mask and de-mean data
     mdata = data[mask]
-    dmdata = mdata.T - mdata.T.mean(axis=0)
+    if sample_mask is None:
+        dmdata = mdata.T - mdata.T.mean(axis=0)
 
-    # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing)
-    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
+        # get variance explained by retained components
+        betas = get_coeffs(dmdata.T, mixing)
+        varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
+    else:
+        # Fit on retained volumes only; censored volumes cannot affect the coefficients
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        mdata_ret = mdata[:, sample_mask]
+        dmdata = mdata_ret.T - mdata_ret.T.mean(axis=0)
+        mixing_ret = mixing[sample_mask, :]
+        betas = get_coeffs(dmdata.T, mixing_ret)
+        varexpl = (
+            1 - ((dmdata.T - betas.dot(mixing_ret.T)) ** 2.0).sum() / (dmdata**2.0).sum()
+        ) * 100
+        LGR.info("Denoising coefficients were estimated from retained volumes only.")
+
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data (already in masked space)
@@ -692,7 +709,15 @@ def denoise_ts(data, mixing, mask, component_table):
 
 
 # File Writing Functions
-def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
+def write_split_ts(
+    data,
+    mixing,
+    mask,
+    component_table,
+    io_generator,
+    echo=0,
+    sample_mask=None,
+):
     """Split `data` into denoised / noise / ignored time series and save to disk.
 
     Parameters
@@ -712,6 +737,9 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
         Echo number to generate filenames, used by some verbose
         functions. Currently this is only not 0 when
         io_generator.verbose==True. Default 0.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained), passed to :func:`denoise_ts`.
+        Default is None.
 
     Returns
     -------
@@ -742,7 +770,13 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     acc = component_table[component_table.classification == "accepted"].index.values
     rej = component_table[component_table.classification == "rejected"].index.values
 
-    dnts, hikts, lowkts = denoise_ts(data, mixing, mask, component_table)
+    dnts, hikts, lowkts = denoise_ts(
+        data,
+        mixing,
+        mask,
+        component_table,
+        sample_mask=sample_mask,
+    )
 
     if len(acc) != 0:
         if echo != 0:
@@ -772,7 +806,15 @@ def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixing_orig=None):
+def writeresults(
+    data_optcom,
+    mask,
+    component_table,
+    mixing,
+    io_generator,
+    mixing_orig=None,
+    sample_mask=None,
+):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -793,6 +835,10 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
     mixing_orig : (T x C) array_like or None, optional
         Non-orthogonalized mixing matrix.
         If defined, it will be used for the component maps, but not for denoising.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). If given, all component maps and
+        denoising coefficients are estimated from retained volumes only, while the
+        denoised time series keep every volume. Default is None.
 
     See Also
     --------
@@ -819,13 +865,27 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
     =========================================    ===============================================
     """
     acc = component_table[component_table.classification == "accepted"].index.values
-    write_split_ts(data_optcom, mixing, mask, component_table, io_generator)
+    write_split_ts(
+        data_optcom,
+        mixing,
+        mask,
+        component_table,
+        io_generator,
+        sample_mask=sample_mask,
+    )
 
     if mixing_orig is not None:
         mixing_for_denoising = mixing
         mixing_for_components = mixing_orig
     else:
         mixing_for_denoising = mixing_for_components = mixing
+
+    # Component maps describe the retained volumes only
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        data_optcom = data_optcom[:, sample_mask]
+        mixing_for_components = mixing_for_components[sample_mask, :]
+        mixing_for_denoising = mixing_for_denoising[sample_mask, :]
 
     ts_pes = get_coeffs(data_optcom, mixing_for_components)
     fout = io_generator.save_file(ts_pes, "ICA components img")
@@ -854,7 +914,7 @@ def writeresults(data_optcom, mask, component_table, mixing, io_generator, mixin
         LGR.info(f"Writing Z-normalized spatial component maps: {fout}")
 
 
-def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
+def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator, sample_mask=None):
     """Save individually denoised echos to disk.
 
     Parameters
@@ -871,6 +931,9 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
         each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). Each echo's coefficients are
+        estimated from retained volumes only. Default is None.
 
     See Also
     --------
@@ -899,6 +962,7 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
             component_table,
             io_generator,
             echo=(i_echo + 1),
+            sample_mask=sample_mask,
         )
 
 

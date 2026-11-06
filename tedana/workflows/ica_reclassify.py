@@ -445,6 +445,34 @@ def ica_reclassify_workflow(
     previous_tree_fname = ioh.get_file_path("ICA decision tree json")
     mixing = np.asarray(ioh.get_file_contents("ICA mixing tsv"))
     adaptive_mask = ioh.get_file_contents("adaptive mask img")
+
+    # Reuse the original run's temporal censoring, if any. Runs without a censoring
+    # table (including runs from older versions of tedana) retain every volume.
+    sample_mask = None
+    if ioh.get_file_path("censoring tsv"):
+        censoring_table = ioh.get_file_contents("censoring tsv")
+        sample_mask = censoring_table["sample_mask"].to_numpy().astype(bool)
+        if sample_mask.size != mixing.shape[0]:
+            raise ValueError(
+                f"The censoring table has {sample_mask.size} volumes, but the mixing matrix "
+                f"has {mixing.shape[0]} rows."
+            )
+
+        if sample_mask.all():
+            sample_mask = None
+        else:
+            LGR.info(
+                f"Reusing the original run's censoring: {(~sample_mask).sum()} of "
+                f"{sample_mask.size} volumes are censored."
+            )
+            unsupported = [gs for gs in gscontrol if gs in ("gsr", "mir")]
+            if unsupported:
+                raise ValueError(
+                    f"--gscontrol {' '.join(unsupported)} is not yet supported for runs "
+                    "with censored volumes."
+                )
+
+    mixing_fit = mixing if sample_mask is None else mixing[sample_mask, :]
     # If global signal was removed in the previous run, we can assume that
     # the user wants to use that file again. If not, use the default of
     # optimally combined data.
@@ -520,13 +548,19 @@ def ica_reclassify_workflow(
         to_copy.append("removed gs combined img")
         to_copy.append("has gs combined img")
 
+    if ioh.get_file_path("censoring tsv"):
+        to_copy.append("censoring tsv")
+        if ioh.get_file_path("censoring json"):
+            to_copy.append("censoring json")
+
     for tc in to_copy:
         print(tc)
         io_generator.save_file(ioh.get_file_contents(tc), tc)
 
     # calculate the fit of rejected to accepted components to use as a quality measure
     # Note: This adds a column to component_table & needs to run before the table is saved
-    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+    # (retained volumes only)
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing_fit)
 
     # Save component selector and tree
     selector.to_files(io_generator)
@@ -544,7 +578,12 @@ def ica_reclassify_workflow(
         comps_rejected = selector.rejected_comps_
         acc_ts = mixing[:, comps_accepted]
         rej_ts = mixing[:, comps_rejected]
-        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
+        # Fit the orthogonalization on retained volumes, then apply it to every volume
+        betas = np.linalg.lstsq(
+            mixing_fit[:, comps_accepted],
+            mixing_fit[:, comps_rejected],
+            rcond=None,
+        )[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
         mixing[:, comps_rejected] = resid
@@ -587,6 +626,7 @@ def ica_reclassify_workflow(
         mixing=mixing,
         io_generator=io_generator,
         mixing_orig=mixing_orig if tedort else None,
+        sample_mask=sample_mask,
     )
 
     if "mir" in gscontrol:
@@ -603,7 +643,14 @@ def ica_reclassify_workflow(
 
     if verbose:
         LGR.debug("Writing out verbose data")
-        io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
+        io.writeresults_echoes(
+            data_cat,
+            mixing,
+            mask_denoise,
+            component_table,
+            io_generator,
+            sample_mask=sample_mask,
+        )
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -651,7 +698,13 @@ def ica_reclassify_workflow(
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
-        dn_ts, hikts, lowkts = io.denoise_ts(data_optcom, mixing, mask_denoise, component_table)
+        dn_ts, hikts, lowkts = io.denoise_ts(
+            data_optcom,
+            mixing,
+            mask_denoise,
+            component_table,
+            sample_mask=sample_mask,
+        )
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_optcom,
