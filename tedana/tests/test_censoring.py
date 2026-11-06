@@ -2,13 +2,17 @@
 
 import os.path as op
 
+import matplotlib.pyplot as plt
+import nibabel as nb
 import numpy as np
 import pandas as pd
 import pytest
+from nilearn import plotting
 
 from tedana import io, utils
 from tedana.decomposition import project_censored_mixing
 from tedana.metrics.frequency import calculate_hfc
+from tedana.reporting.static_figures import _censored_runs, _mark_censored_volumes
 from tedana.tests.utils import get_test_data_path
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.tedana import _check_censoring_options, tedana_workflow
@@ -263,3 +267,49 @@ def test_tedana_cli_exclude_option():
     """The tedana CLI exposes --exclude."""
     parser = tedana_cli._get_parser()
     assert parser._option_string_actions["--exclude"].default is None
+
+
+def test_censored_runs():
+    """Runs of censored volumes are reported as (start, stop) pairs, stop exclusive."""
+    sample_mask = np.array([0, 1, 1, 0, 0, 1, 0], dtype=bool)
+    assert _censored_runs(sample_mask) == [(0, 1), (3, 5), (6, 7)]
+    assert _censored_runs(np.ones(5, dtype=bool)) == []
+
+
+@pytest.mark.parametrize("n_vols", [20, 1000])
+def test_mark_censored_volumes_on_carpet(n_vols):
+    """Censor markers line up with the carpet's columns, including when nilearn downsamples."""
+    rng = np.random.default_rng(0)
+    img = nb.Nifti1Image(rng.standard_normal((3, 3, 3, n_vols)).astype(np.float32), np.eye(4))
+    img.header.set_zooms((1, 1, 1, 2.0))
+    mask_img = nb.Nifti1Image(np.ones((3, 3, 3), dtype=np.uint8), np.eye(4))
+    sample_mask = np.ones(n_vols, dtype=bool)
+    sample_mask[[2, 3, 10]] = False
+
+    fig, ax = plt.subplots()
+    plotting.plot_carpet(
+        img,
+        mask_img,
+        figure=fig,
+        axes=ax,
+        standardize="zscore_sample",
+        title="Data",
+    )
+    carpet_ax = [axis for axis in fig.axes if axis.images][-1]
+    n_patches = len(carpet_ax.patches)
+    _mark_censored_volumes(fig, sample_mask)
+
+    new_patches = carpet_ax.patches[n_patches:]
+    factor = n_vols // carpet_ax.images[-1].get_array().shape[1]
+    assert factor == (1 if n_vols == 20 else 2)
+    assert [(patch.get_x(), patch.get_width()) for patch in new_patches] == [
+        (2 / factor - 0.5, 2 / factor),
+        (10 / factor - 0.5, 1 / factor),
+    ]
+    assert "3 of" in carpet_ax.get_title()
+
+    # No censoring draws nothing
+    n_patches = len(carpet_ax.patches)
+    _mark_censored_volumes(fig, None)
+    assert len(carpet_ax.patches) == n_patches
+    plt.close(fig)

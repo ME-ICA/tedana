@@ -42,6 +42,55 @@ def _get_sample_mask(io_generator):
     return None if sample_mask.all() else sample_mask
 
 
+def _censored_runs(sample_mask):
+    """Return (start, stop) volume indices of each run of censored volumes, stop exclusive."""
+    censored = np.concatenate(([False], ~np.asarray(sample_mask, dtype=bool), [False]))
+    edges = np.flatnonzero(np.diff(censored.astype(int)))
+    return list(zip(edges[::2], edges[1::2]))
+
+
+def _mark_censored_volumes(fig, sample_mask):
+    """Mark censored volumes with a strip of red bars just above a nilearn carpet plot.
+
+    The bars sit outside the carpet, so they do not hide any data.
+
+    Parameters
+    ----------
+    fig : :obj:`matplotlib.figure.Figure`
+        Figure containing a carpet plot from :func:`nilearn.plotting.plot_carpet`.
+    sample_mask : (T,) array_like of bool or None
+        Temporal sample mask, True for retained volumes. Nothing is drawn if None.
+    """
+    if sample_mask is None:
+        return
+
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    # The carpet is the last axes with an image (nilearn may replace the axes it is given)
+    ax = [axis for axis in fig.axes if axis.images][-1]
+    n_columns = ax.images[-1].get_array().shape[1]
+    # nilearn downsamples long runs in time by a power of two; recover the factor
+    factor = 2 ** int(np.round(np.log2(sample_mask.size / n_columns)))
+    trans = ax.get_xaxis_transform()
+    for start, stop in _censored_runs(sample_mask):
+        ax.add_patch(
+            plt.Rectangle(
+                (start / factor - 0.5, 1.01),
+                (stop - start) / factor,
+                0.03,
+                transform=trans,
+                facecolor="tab:red",
+                edgecolor="none",
+                clip_on=False,
+            )
+        )
+
+    n_censored = int((~sample_mask).sum())
+    ax.set_title(
+        f"{ax.get_title()}\n(red: {n_censored} of {sample_mask.size} volumes censored)",
+        pad=22,
+    )
+
+
 def _trim_edge_zeros(arr):
     """
     Trims away the zero-filled slices that surround many 3/4D arrays.
@@ -87,7 +136,12 @@ def carpet_plot(
         If any gscontrol methods were applied, then additional carpet plots will be generated for
         pertinent outputs from those steps.
         Default is None.
+
+    Notes
+    -----
+    If the run was censored, a strip of red bars above each carpet marks the censored volumes.
     """
+    sample_mask = _get_sample_mask(io_generator)
     optcom_img = masking.unmask(optcom_ts.T, io_generator.mask)
     dn_img = masking.unmask(denoised_ts.T, io_generator.mask)
     hik_img = masking.unmask(hikts.T, io_generator.mask)
@@ -103,6 +157,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Optimally Combined Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
@@ -118,6 +173,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Denoised Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
@@ -133,6 +189,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="High-Kappa Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
@@ -148,6 +205,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Low-Kappa Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")

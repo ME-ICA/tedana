@@ -116,6 +116,8 @@ Which volumes were censored is recorded in ``desc-censoring_timeseries.tsv``
 (with a JSON sidecar summarizing the censoring and the projection), and ``ica_reclassify`` reuses it automatically.
 With censoring, the HFC metric and the component power spectra in the report are computed with a
 floating-mean Lomb-Scargle periodogram at the retained volumes' acquisition times, rather than an FFT.
+In the report, red bars above each carpet plot mark the censored volumes,
+and the component time series plots shade them.
 
 Some options do not support censoring yet, and raise an error if combined with ``--exclude``:
 the moving-average PCA options (``--tedpca aic``, the default, as well as ``kic`` and ``mdl``),
