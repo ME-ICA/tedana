@@ -187,7 +187,7 @@ def _get_parser():
             "Censored volumes are excluded from every estimate: masks, T2*/S0, PCA, ICA, "
             "component metrics and classification, and denoising coefficients. "
             "They remain in the output time series, so the time axis is preserved, "
-            "but their values are reconstructions and must still be excluded from "
+            "but their values are not valid observations and must still be excluded from "
             "downstream analyses. "
             "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
             "or a mix of the two (e.g., '0,5:10,15'). "
@@ -678,8 +678,10 @@ def tedana_workflow(
         indices within the dummy scans are ignored.
         Censored volumes are excluded from every estimate (masks, T2*/S0, PCA, ICA,
         component metrics and classification, and denoising coefficients), but remain in
-        the output time series. Their values there are reconstructions, and they must still
-        be excluded from downstream analyses (see ``desc-censoring_timeseries.tsv``).
+        the output time series. Their values there are not valid observations: the denoised
+        data are the optimally combined data minus the estimated rejected-component signal,
+        and the accepted and rejected time series are model estimates. They must still be
+        excluded from downstream analyses (see ``desc-censoring_timeseries.tsv``).
         Censoring requires ``tedpca`` other than 'aic', 'kic', or 'mdl', and is not yet
         supported with ``gscontrol`` or ``external_regressors``.
         Default is None (no censoring).
@@ -890,9 +892,11 @@ def tedana_workflow(
             "times (unnormalized power), used for HFC and component spectra."
         )
         censoring_metadata["CensoredOutputValues"] = (
-            "Censored volumes of the denoised, accepted, and rejected time series contain "
-            "values reconstructed from the retained-volume model. They are not valid "
-            "observations and must be excluded from downstream analyses."
+            "At censored volumes, the denoised time series is the optimally combined data "
+            "minus the rejected-component signal estimated from the retained-volume model, "
+            "so it still contains any artifact in those volumes. The accepted and rejected "
+            "time series are model estimates. None of these are valid observations, and "
+            "censored volumes must be excluded from downstream analyses."
         )
         if (n_vols - n_retained) / n_vols >= 0.1:
             LGR.warning(

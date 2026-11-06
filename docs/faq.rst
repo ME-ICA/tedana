@@ -105,9 +105,11 @@ They are *not* removed from the outputs, so the time series keep their original 
   At censored volumes it contains estimates obtained by regressing those volumes onto the component maps
   that were estimated from the retained volumes (analogous to the second stage of dual regression).
   These are not values that the ICA itself produced.
-- The denoised, accepted, and rejected time series are reconstructed at censored volumes from the model
-  fit to the retained volumes. **They are still not valid observations, and censored volumes must still be
-  excluded from downstream analyses**, including any temporal filtering.
+- At censored volumes, the denoised time series is the optimally combined data minus the rejected-component signal
+  estimated from the model fit to the retained volumes, so it still contains whatever artifact those volumes had.
+  The accepted and rejected time series there are model estimates.
+  **None of these are valid observations, and censored volumes must still be excluded from downstream
+  analyses**, including any temporal filtering.
 - The PCA mixing matrix (``desc-PCA_mixing.tsv``) has ``n/a`` at censored volumes.
 
 Which volumes were censored is recorded in ``desc-censoring_timeseries.tsv``
