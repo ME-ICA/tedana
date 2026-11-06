@@ -137,11 +137,12 @@ def _get_parser():
         dest="exclude",
         type=str,
         help=(
-            "Volume indices to exclude from adaptive mask generation and T2* and S0 estimation, "
+            "Volume indices to exclude from mask generation and T2* and S0 estimation, "
             "but which will be retained in the optimally combined data. "
             "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
             "or a mix of the two (e.g., '0,5:10,15'). "
-            "Indices are 0-based. "
+            "Indices are 0-based and refer to the input volumes, before dummy scans are "
+            "removed; indices within the dummy scans are ignored. "
             "As in Python lists, ranges are start-inclusive and end-exclusive "
             "(for example, '0:5' includes the first [0] through fifth [4] timepoints). "
             "Default is to not exclude any volumes."
@@ -308,11 +309,13 @@ def t2smap_workflow(
         Number of dummy scans to remove from the beginning of the data. Default is 0.
         dummy_scans are excluded from the optimally combined data.
     exclude : :obj:`str`, optional
-        Volume indices to exclude from adaptive mask generation and T2* and S0 estimation,
+        Volume indices to exclude from mask generation and T2* and S0 estimation,
         but which will be retained in the optimally combined data.
         Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'),
         or a mix of the two (e.g., '0,5:10,15').
-        Indices are 0-based.
+        Indices are 0-based and refer to the input volumes, before dummy scans are removed;
+        indices within the dummy scans are ignored.
+        As in Python lists, ranges are start-inclusive and end-exclusive.
         Default is to not exclude any volumes.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
@@ -379,6 +382,9 @@ def t2smap_workflow(
                                   from the first two echos, while the limited map
                                   will have a NaN.
     desc-optcom_bold.nii.gz       Optimally combined timeseries.
+    desc-censoring_timeseries.tsv Per-volume censoring table, with a JSON sidecar.
+                                  Only written if ``exclude`` censors at least
+                                  one volume after dummy scan removal.
     ============================= =================================================
 
     References
@@ -389,9 +395,8 @@ def t2smap_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
-    # Parse exclude parameter
-    exclude_idx = parse_volume_indices(exclude)
-    n_exclude = len(exclude_idx)
+    # Parse exclude parameter early, so malformed strings fail before any work is done
+    parse_volume_indices(exclude)
 
     # create logfile name
     basename = "t2smap_"
@@ -418,12 +423,6 @@ def t2smap_workflow(
     info_dict = utils.get_system_version_info()
     info_dict["Command"] = t2smap_command
 
-    if fitmode == "ts" and n_exclude > 0:
-        raise ValueError(
-            "Excluding volumes is not supported for fitmode='ts'. "
-            "Please set fitmode='all' or remove the exclude argument."
-        )
-
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     tes = utils.check_te_values(tes)
@@ -446,7 +445,33 @@ def t2smap_workflow(
         verbose=verbose,
     )
 
-    mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None)
+    # Build the temporal sample mask (post-dummy; True = retained) before any masking,
+    # so that censored volumes can be kept out of the initial EPI mask as well.
+    n_input_vols = ref_img.shape[3] if ref_img.ndim == 4 else 1
+    sample_mask = utils.get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
+    censoring = not sample_mask.all()
+    if censoring and fitmode == "ts":
+        raise ValueError(
+            "Excluding volumes is not supported for fitmode='ts'. "
+            "Please set fitmode='all' or remove the exclude argument."
+        )
+
+    if censoring and combmode == "paid" and sample_mask.sum() < 2:
+        raise ValueError(
+            "PAID combination requires more than one retained volume, "
+            f"but only {sample_mask.sum()} volume(s) remain after exclusion."
+        )
+
+    if censoring:
+        retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
+        # Pass the sample mask only when censoring, so uncensored runs are unchanged
+        fit_sample_mask = sample_mask
+    else:
+        # Preserve the existing behavior, which uses every input volume
+        retained_input_vols = None
+        fit_sample_mask = None
+
+    mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None, volumes=retained_input_vols)
     io_generator.register_mask(mask_img)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
@@ -461,27 +486,29 @@ def t2smap_workflow(
     if combmode == "paid" and n_vols == 1:
         raise ValueError("PAID combination requires more than one volume.")
 
-    # Create mask for volumes to use based on exclude indices
-    if n_exclude > 0:
-        LGR.info(f"Excluding volumes: {exclude_idx}")
-        # Adjust exclude indices for dummy scans that are already removed
-        exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
-        # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
-        exclude_idx = exclude_idx - dummy_scans
-        n_exclude = len(exclude_idx)
-        if n_exclude == 0:
-            LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
-
-    if n_exclude > 0 and np.max(exclude_idx) > n_vols:
-        raise ValueError(
-            f"The maximum exclude index ({np.max(exclude_idx)}) is greater than the number of "
-            f"timepoints in the data ({n_vols})."
+    if censoring:
+        n_censored = int((~sample_mask).sum())
+        LGR.info(
+            f"Excluding {n_censored} volumes from mask generation and T2*/S0 estimation "
+            f"(input volume indices: {(np.flatnonzero(~sample_mask) + dummy_scans).tolist()})"
         )
-    elif n_exclude > 0:
-        LGR.info(f"Excluding {n_exclude} volumes from adaptive mask and T2*/S0 estimation")
-        use_volumes = np.ones(n_vols, dtype=bool)
-        use_volumes[exclude_idx] = False
-        data_without_excluded_vols = data_cat[:, :, use_volumes]
+        data_without_excluded_vols = data_cat[:, :, sample_mask]
+
+        tr = utils.get_tr_seconds(ref_img)
+        if tr is None:
+            LGR.warning(
+                "The data do not have a valid repetition time in the header, so the "
+                "censoring table's 'time' column will be empty."
+            )
+
+        io_generator.save_file(
+            utils.make_censoring_table(sample_mask, dummy_scans=dummy_scans, tr=tr),
+            "censoring tsv",
+        )
+        io_generator.save_file(
+            utils.get_censoring_metadata(sample_mask, dummy_scans=dummy_scans, exclude=exclude),
+            "censoring json",
+        )
     else:
         data_without_excluded_vols = data_cat.copy()
 
@@ -514,16 +541,19 @@ def t2smap_workflow(
         data_without_excluded_vols=data_without_excluded_vols,
         n_threads=n_threads,
         backend=backend,
+        sample_mask=fit_sample_mask,
     )
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
+    # (PAID weights are estimated from retained volumes only)
     data_optcom = combine.make_optcom(
         data_cat,
         tes,
         masksum_denoise,
         t2s=t2s_full,
         combmode=combmode,
+        sample_mask=fit_sample_mask,
     )
     io_generator.save_file(data_optcom, "combined img")
 
