@@ -75,6 +75,17 @@ def test_flip_components():
         signs_2d = np.array([[1, -1]])
         flip_components(arr1, signs=signs_2d)
 
+    # The component axis is the last one, and must match the signs
+    with pytest.raises(AssertionError):
+        flip_components(arr1.T, signs=signs)
+
+    # A square array (as many components as volumes) flips its columns
+    square = np.array([[1, 2], [3, 4]])
+    np.testing.assert_array_equal(
+        flip_components(square, signs=signs)[0],
+        np.array([[1, -2], [3, -4]]),
+    )
+
 
 def test_dependency_resolver():
     """Test dependency_resolver function."""

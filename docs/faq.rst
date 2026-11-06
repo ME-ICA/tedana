@@ -117,12 +117,19 @@ Which volumes were censored is recorded in ``desc-censoring_timeseries.tsv``
 With censoring, the HFC metric and the component power spectra in the report are computed with a
 floating-mean Lomb-Scargle periodogram at the retained volumes' acquisition times, rather than an FFT.
 In the report, red bars above each carpet plot mark the censored volumes,
-and the component time series plots shade them.
+the component time series plots shade them,
+and the summary card lists the censoring and projection diagnostics.
+
+External regressors (``--external``) still need one row per volume (after dummy scans),
+but their metrics are fit on the retained volumes only.
+The Legendre detrending basis is built on the full time grid and then subset,
+and the ``max_rp_corr`` metric computes the regressors' derivatives and time shifts on the full grid
+before dropping censored volumes, so these follow the volumes' true acquisition times.
+The external regressor correlations shown in the report also use the retained volumes only.
 
 Some options do not support censoring yet, and raise an error if combined with ``--exclude``:
 the moving-average PCA options (``--tedpca aic``, the default, as well as ``kic`` and ``mdl``),
-because they assume contiguous time points; ``--gscontrol gsr`` and ``--gscontrol mir``;
-and external regressors (``--external``).
+because they assume contiguous time points; and ``--gscontrol gsr`` and ``--gscontrol mir``.
 Use, for example, ``--tedpca kundu`` or a variance threshold such as ``--tedpca 0.95`` instead.
 
 Censoring removes data from every estimate, so heavy censoring leaves less data for PCA and ICA,

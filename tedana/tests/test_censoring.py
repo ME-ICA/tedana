@@ -232,11 +232,10 @@ def test_denoise_ts_censored():
 @pytest.mark.parametrize(
     "kwargs, match",
     [
-        ({"tedpca": "aic", "gscontrol": [None], "external_regressors": None}, "--tedpca aic"),
-        ({"tedpca": "mdl", "gscontrol": [None], "external_regressors": None}, "--tedpca mdl"),
-        ({"tedpca": "kundu", "gscontrol": ["gsr"], "external_regressors": None}, "gsr"),
-        ({"tedpca": 0.95, "gscontrol": ["mir"], "external_regressors": None}, "mir"),
-        ({"tedpca": 10, "gscontrol": [None], "external_regressors": "x.tsv"}, "External"),
+        ({"tedpca": "aic", "gscontrol": [None]}, "--tedpca aic"),
+        ({"tedpca": "mdl", "gscontrol": [None]}, "--tedpca mdl"),
+        ({"tedpca": "kundu", "gscontrol": ["gsr"]}, "gsr"),
+        ({"tedpca": 0.95, "gscontrol": ["mir"]}, "mir"),
     ],
 )
 def test_check_censoring_options(kwargs, match):
@@ -248,7 +247,7 @@ def test_check_censoring_options(kwargs, match):
 def test_check_censoring_options_allowed():
     """Supported options pass."""
     for tedpca in ("kundu", "kundu-stabilize", 0.95, 20):
-        _check_censoring_options(tedpca=tedpca, gscontrol=[None], external_regressors=None)
+        _check_censoring_options(tedpca=tedpca, gscontrol=[None])
 
 
 def test_tedana_censoring_rejects_default_tedpca(tmp_path):

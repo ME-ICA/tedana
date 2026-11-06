@@ -195,7 +195,7 @@ def _get_parser():
             "removed; indices within the dummy scans are ignored. "
             "As in Python lists, ranges are start-inclusive and end-exclusive. "
             "Censoring requires a --tedpca option other than 'aic', 'kic', or 'mdl', "
-            "and is not yet supported with --gscontrol or --external. "
+            "and is not yet supported with --gscontrol. "
             "Default is to not censor any volumes."
         ),
         default=None,
@@ -463,7 +463,7 @@ def _get_parser():
     return parser
 
 
-def _check_censoring_options(*, tedpca, gscontrol, external_regressors):
+def _check_censoring_options(*, tedpca, gscontrol):
     """Reject options that cannot yet honor temporal censoring.
 
     Raises
@@ -485,12 +485,6 @@ def _check_censoring_options(*, tedpca, gscontrol, external_regressors):
         raise ValueError(
             f"--gscontrol {' '.join(unsupported)} is not yet supported with censoring "
             "(--exclude), because it would estimate quantities from censored volumes."
-        )
-
-    if external_regressors is not None:
-        raise ValueError(
-            "External regressors (--external) are not yet supported with censoring "
-            "(--exclude), because their fits would use censored volumes."
         )
 
 
@@ -683,7 +677,8 @@ def tedana_workflow(
         and the accepted and rejected time series are model estimates. They must still be
         excluded from downstream analyses (see ``desc-censoring_timeseries.tsv``).
         Censoring requires ``tedpca`` other than 'aic', 'kic', or 'mdl', and is not yet
-        supported with ``gscontrol`` or ``external_regressors``.
+        supported with ``gscontrol``. External regressor metrics are fit on retained
+        volumes only.
         Default is None (no censoring).
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
@@ -792,7 +787,6 @@ def tedana_workflow(
         _check_censoring_options(
             tedpca=tedpca,
             gscontrol=gscontrol,
-            external_regressors=external_regressors,
         )
         # Keep censored (and dummy) volumes out of the initial EPI mask too
         retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
@@ -1419,10 +1413,18 @@ def tedana_workflow(
             )
 
         if external_regressors is not None:
-            # Compute correlations between external regressors and ICA components
+            # Compute correlations between external regressors and ICA components,
+            # over retained volumes only (censored mixing rows are projected estimates)
+            corr_regressors = external_regressors
+            corr_mixing = mixing_orig_df
+            if fit_sample_mask is not None and isinstance(external_regressors, pd.DataFrame):
+                retained_vols = np.flatnonzero(fit_sample_mask)
+                corr_regressors = external_regressors.iloc[retained_vols]
+                corr_mixing = mixing_orig_df.iloc[retained_vols]
+
             corr_df = metrics.external.compute_external_regressor_correlations(
-                external_regressors=external_regressors,
-                mixing=mixing_orig_df,
+                external_regressors=corr_regressors,
+                mixing=corr_mixing,
             )
 
             # Plot the heatmap

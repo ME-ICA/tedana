@@ -6,6 +6,7 @@ import re
 from os.path import join as opj
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
@@ -424,8 +425,11 @@ def _generate_qc_card(
     n_vols,
     n_comps,
     tree_node_count,
+    censoring_dict=None,
 ):
     """Assemble grouped display rows of precomputed run-level QC values for the summary card.
+
+    ``censoring_dict`` is the censoring JSON sidecar, if the run was censored.
 
     Returns a list of ``{"title": str, "rows": list}`` sections, where each row is a
     ``{"label": str, "value": str}`` dict. Performs no scientific computation; every
@@ -533,6 +537,51 @@ def _generate_qc_card(
                 }
             )
         sections.append({"title": "Decay model", "rows": decay_rows})
+
+    if censoring_dict:
+        n_retained = censoring_dict.get("NumberOfRetainedVolumes")
+        n_censored = censoring_dict.get("NumberOfCensoredVolumes")
+        fraction = censoring_dict.get("CensoredFraction")
+        censoring_rows = [
+            {
+                "label": "Volumes",
+                "value": (
+                    f"{n_retained} retained | {n_censored} censored "
+                    f"({_fmt_num(None if fraction is None else 100 * fraction, '%')})"
+                ),
+            },
+            {
+                "label": "Longest censored run",
+                "value": str(censoring_dict.get("LongestCensoredRun", "n/a")),
+            },
+        ]
+        condition_number = censoring_dict.get("ProjectionMapsConditionNumber")
+        if condition_number is not None:
+            censoring_rows.append(
+                {
+                    "label": "Projection condition number",
+                    "value": _fmt_num(condition_number),
+                }
+            )
+
+        correlations = censoring_dict.get("RetainedProjectionCorrelation")
+        if correlations:
+            censoring_rows.append(
+                {
+                    "label": "Projection vs. fitted correlation",
+                    "value": (
+                        f"min {np.min(correlations):.3f} | median {np.median(correlations):.3f}"
+                    ),
+                }
+            )
+
+        censoring_rows.append(
+            {
+                "label": "Censored output values",
+                "value": "Not valid observations; exclude censored volumes downstream",
+            }
+        )
+        sections.append({"title": "Temporal censoring", "rows": censoring_rows})
 
     return sections
 
@@ -707,6 +756,12 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
         if nodes is not None:
             tree_node_count = len(nodes)
 
+    # Read the censoring summary, if the run was censored.
+    censoring_dict = None
+    censoring_path = io_generator.get_name("censoring json")
+    if os.path.exists(censoring_path):
+        censoring_dict = load_json(censoring_path)
+
     qc_card = _generate_qc_card(
         component_table=component_table,
         cross_comp_metrics_dict=cross_comp_metrics_dict,
@@ -716,6 +771,7 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
         n_vols=n_vols,
         n_comps=n_comps,
         tree_node_count=tree_node_count,
+        censoring_dict=censoring_dict,
     )
 
     body = _update_template_bokeh(

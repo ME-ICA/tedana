@@ -460,6 +460,7 @@ def generate_metrics(
             external_regressor_config,
             mixing,
             seed=seed,
+            sample_mask=sample_mask,
         )
     # Write verbose metrics if needed
     if io_generator.verbose:

@@ -398,6 +398,12 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
     assert metadata["NumberOfCensoredVolumes"] == censored.size
     assert metadata["ProjectionMapsRank"] == len(metadata["RetainedProjectionCorrelation"])
 
+    # The report summarizes the censoring
+    with open(op.join(out_dirs["orig"], "tedana_report.html")) as fobj:
+        report = fobj.read()
+    assert "Temporal censoring" in report
+    assert f"{censored.size} censored" in report
+
     # Full-length outputs
     mixing = {label: _read(label, "desc-ICA_mixing.tsv").to_numpy() for label in out_dirs}
     assert mixing["orig"].shape[0] == n_vols
@@ -670,6 +676,58 @@ def test_integration_three_echo_aroma_external(skip_integration):
         mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
         low_mem=True,
     )
+
+
+@pytest.mark.parametrize(
+    "tree_name, metric_columns",
+    [
+        (
+            "demo_external_regressors_motion_task_models",
+            ["Fstat nuisance model", "pval task model", "R2stat nuisance Motion partial model"],
+        ),
+        ("demo_external_aroma", ["max_rp_corr motion model", "HFC"]),
+    ],
+)
+def test_integration_three_echo_external_regressors_censoring(
+    skip_integration,
+    tmp_path,
+    tree_name,
+    metric_columns,
+):
+    """External regressor metrics run with censoring, on retained volumes only."""
+    if skip_integration:
+        pytest.skip("Skipping three-echo external regressors censoring integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    download_test_data(osf_id, test_data_path)
+    external_file = files("tedana") / "tests/data/external_regress_Ftest_3echo.tsv"
+    n_vols = len(pd.read_table(external_file))
+    censored = np.array([5, 6, 7, 40, 41, n_vols - 1])
+
+    out_dir = str(tmp_path / "out")
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=files("tedana") / f"resources/decision_trees/{tree_name}.json",
+        external_regressors=external_file,
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        tedpca="kundu",
+        exclude=",".join(str(i) for i in censored),
+        low_mem=True,
+    )
+
+    metrics_table = pd.read_table(op.join(out_dir, "desc-tedana_metrics.tsv"))
+    for column in metric_columns:
+        assert np.isfinite(metrics_table[column]).all(), column
+
+    correlation_columns = [
+        c for c in metrics_table.columns if c.startswith("external regressor correlation")
+    ]
+    assert correlation_columns
+    assert np.isfinite(metrics_table[correlation_columns].to_numpy()).all()
+    assert op.isfile(op.join(out_dir, "figures", "confound_correlations.svg"))
+    assert op.isfile(op.join(out_dir, "desc-censoring_timeseries.tsv"))
 
 
 def test_integration_reclassify_insufficient_args(skip_integration):

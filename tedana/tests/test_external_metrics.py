@@ -954,3 +954,195 @@ class TestCalculateMaxRpCorr:
         regressors = rng.standard_normal((100, 6))
         with pytest.raises(TypeError):
             external.calculate_max_rp_corr(mixing, regressors)  # positional not allowed
+
+
+# Temporal censoring
+# ------------------
+
+
+def _censored_mask(n_vols):
+    """Censor a block and some scattered volumes."""
+    sample_mask = np.ones(n_vols, dtype=bool)
+    sample_mask[[3, 4, 5, 20, n_vols - 1]] = False
+    return sample_mask
+
+
+def _f_inputs():
+    """External regressors, expanded config, and a random mixing matrix for F-test fits."""
+    external_regressors, n_vols = sample_external_regressors()
+    external_regressors, config = external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=sample_external_regressor_config(),
+        n_vols=n_vols,
+        dummy_scans=0,
+    )
+    mixing = np.random.default_rng(0).standard_normal((n_vols, 4))
+    return external_regressors, config, mixing
+
+
+def test_fit_regressors_all_retained_matches_uncensored():
+    """An all-True sample mask gives exactly the uncensored results."""
+    external_regressors, config, mixing = _f_inputs()
+    expected = external.fit_regressors(
+        sample_comptable(mixing.shape[1]),
+        external_regressors,
+        config,
+        mixing,
+    )
+    result = external.fit_regressors(
+        sample_comptable(mixing.shape[1]),
+        external_regressors,
+        config,
+        mixing,
+        sample_mask=np.ones(len(external_regressors), dtype=bool),
+    )
+    pd.testing.assert_frame_equal(result, expected)
+
+
+def test_fit_regressors_censored_f_stats():
+    """F-test fits use retained volumes and a Legendre basis built on the full time grid."""
+    external_regressors, config, mixing = _f_inputs()
+    n_vols = len(external_regressors)
+    sample_mask = _censored_mask(n_vols)
+    retained = np.flatnonzero(sample_mask)
+
+    result = external.fit_regressors(
+        sample_comptable(mixing.shape[1]),
+        external_regressors,
+        config,
+        mixing[sample_mask],
+        sample_mask=sample_mask,
+    )
+
+    # Reference: fit each model to the retained rows, with the full-grid basis subset
+    expected = sample_comptable(mixing.shape[1])
+    for model_config in config:
+        detrend = sample_detrend_regressors(n_vols, dtrank=None)
+        expected = external.fit_mixing_to_regressors(
+            expected,
+            external_regressors.iloc[retained].reset_index(drop=True),
+            model_config,
+            mixing[sample_mask],
+            detrend.iloc[retained].reset_index(drop=True),
+        )
+
+    pd.testing.assert_frame_equal(result, expected)
+
+    # Censored regressor values cannot affect the F-test fits
+    spiked = external_regressors.copy()
+    spiked.iloc[np.flatnonzero(~sample_mask)] = 1e6
+    result_spiked = external.fit_regressors(
+        sample_comptable(mixing.shape[1]),
+        spiked,
+        config,
+        mixing[sample_mask],
+        sample_mask=sample_mask,
+    )
+    pd.testing.assert_frame_equal(result_spiked, result)
+
+
+def test_fit_regressors_censored_validates_lengths():
+    """Mismatched sample mask, regressors, and mixing lengths raise errors."""
+    external_regressors, config, mixing = _f_inputs()
+    sample_mask = _censored_mask(len(external_regressors))
+    with pytest.raises(ValueError, match="sample mask retains"):
+        external.fit_regressors(
+            sample_comptable(mixing.shape[1]),
+            external_regressors,
+            config,
+            mixing,
+            sample_mask=sample_mask,
+        )
+
+    with pytest.raises(ValueError, match="External regressors have"):
+        external.fit_regressors(
+            sample_comptable(mixing.shape[1]),
+            external_regressors,
+            config,
+            mixing[sample_mask],
+            sample_mask=sample_mask[:-1],
+        )
+
+
+class TestMaxRpCorrCensoring:
+    """Tests for max_rp_corr with a temporal sample mask."""
+
+    def _inputs(self, n_vols=100, seed=0):
+        rng = np.random.default_rng(seed)
+        regressors = rng.standard_normal((n_vols, 6))
+        mixing = np.hstack(
+            (
+                regressors[:, :1] + 0.3 * rng.standard_normal((n_vols, 1)),
+                rng.standard_normal((n_vols, 2)),
+            )
+        )
+        return mixing, regressors, _censored_mask(n_vols)
+
+    def test_all_retained_matches_uncensored(self):
+        """An all-True sample mask gives exactly the uncensored result."""
+        mixing, regressors, _ = self._inputs()
+        expected = external.calculate_max_rp_corr(mixing=mixing, regressors=regressors)
+        result = external.calculate_max_rp_corr(
+            mixing=mixing,
+            regressors=regressors,
+            sample_mask=np.ones(mixing.shape[0], dtype=bool),
+        )
+        np.testing.assert_array_equal(result, expected)
+
+    def test_derivatives_use_full_grid(self):
+        """Derivatives and shifts come from the full grid, not from the retained rows."""
+        mixing, regressors, sample_mask = self._inputs()
+        result = external.calculate_max_rp_corr(
+            mixing=mixing[sample_mask],
+            regressors=regressors,
+            sample_mask=sample_mask,
+        )
+        # Dropping the censored rows first would difference across the gaps instead
+        naive = external.calculate_max_rp_corr(
+            mixing=mixing[sample_mask],
+            regressors=regressors[sample_mask],
+        )
+        assert result.shape == (mixing.shape[1],)
+        assert np.all((result >= 0) & (result <= 1))
+        assert not np.allclose(result, naive)
+
+    def test_validates_lengths(self):
+        """Regressors must cover all volumes and mixing only the retained ones."""
+        mixing, regressors, sample_mask = self._inputs()
+        with pytest.raises(ValueError, match="retained volumes"):
+            external.calculate_max_rp_corr(
+                mixing=mixing,
+                regressors=regressors,
+                sample_mask=sample_mask,
+            )
+
+        with pytest.raises(ValueError, match="volumes in the sample mask"):
+            external.calculate_max_rp_corr(
+                mixing=mixing[sample_mask],
+                regressors=regressors[sample_mask],
+                sample_mask=sample_mask,
+            )
+
+    def test_fit_regressors_with_detrending(self):
+        """max_rp_corr runs through fit_regressors with censoring and detrending."""
+        mixing, regressors, sample_mask = self._inputs()
+        names = [f"mot_{i}" for i in range(regressors.shape[1])]
+        config = [
+            {
+                "regress_ID": "motion",
+                "regressors": names,
+                "detrend": True,
+                "statistic": "max_rp_corr",
+            }
+        ]
+        result = external.fit_regressors(
+            sample_comptable(mixing.shape[1]),
+            pd.DataFrame(regressors, columns=names),
+            config,
+            mixing[sample_mask],
+            sample_mask=sample_mask,
+        )
+        scores = result["max_rp_corr motion model"].to_numpy()
+        assert np.all(np.isfinite(scores))
+        # The component built from the first regressor stands out
+        assert scores[0] > scores[1:].max()
