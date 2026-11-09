@@ -315,6 +315,10 @@ API
    load_mask
    create_legendre_polynomial_basis_set
    parse_volume_indices
+   get_sample_mask
+   make_censoring_table
+   get_censoring_metadata
+   get_tr_seconds
    check_t2s_values
    check_te_values
    setup_loggers

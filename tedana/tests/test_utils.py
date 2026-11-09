@@ -644,6 +644,156 @@ def test_parse_volume_indices():
         utils.parse_volume_indices("-1")
 
 
+def test_parse_volume_indices_empty_and_whitespace():
+    """None, empty, and whitespace-only strings mean no indices."""
+    assert utils.parse_volume_indices(None) == []
+    assert utils.parse_volume_indices("") == []
+    assert utils.parse_volume_indices("   ") == []
+    # Whitespace around entries and duplicates are tolerated
+    assert utils.parse_volume_indices(" 3 , 1:3 , 3 ") == [1, 2, 3]
+
+
+@pytest.mark.parametrize(
+    "indices_str, match",
+    [
+        ("5:3", "is empty"),
+        ("4:4", "is empty"),
+        ("a", "is not an integer"),
+        ("1.5", "is not an integer"),
+        ("0:b", "is not an integer"),
+        ("0,,5", "Empty entries"),
+        ("0,5,", "Empty entries"),
+    ],
+)
+def test_parse_volume_indices_invalid(indices_str, match):
+    """Reversed/empty ranges, non-integers, and empty entries raise clear errors."""
+    with pytest.raises(ValueError, match=match):
+        utils.parse_volume_indices(indices_str)
+
+
+def test_get_sample_mask_no_censoring():
+    """No exclusions give an all-True mask of the post-dummy length."""
+    for exclude in (None, "", "  "):
+        sample_mask = utils.get_sample_mask(10, dummy_scans=2, exclude=exclude)
+        assert sample_mask.dtype == bool
+        assert sample_mask.shape == (8,)
+        assert sample_mask.all()
+
+
+def test_get_sample_mask_indices_and_dummy_offset():
+    """Exclude indices refer to input volumes and are offset by the dummy scans."""
+    sample_mask = utils.get_sample_mask(10, dummy_scans=2, exclude="2,5:7,9")
+    # Input volumes 2, 5, 6, 9 -> post-dummy volumes 0, 3, 4, 7
+    np.testing.assert_array_equal(np.flatnonzero(~sample_mask), [0, 3, 4, 7])
+
+    # Without dummy scans, indices are used as given
+    sample_mask = utils.get_sample_mask(10, exclude="0,9")
+    np.testing.assert_array_equal(np.flatnonzero(~sample_mask), [0, 9])
+
+
+def test_get_sample_mask_across_dummy_boundary(caplog):
+    """Indices within the dummy scans are dropped with a warning."""
+    sample_mask = utils.get_sample_mask(10, dummy_scans=3, exclude="1:5")
+    np.testing.assert_array_equal(np.flatnonzero(~sample_mask), [0, 1])
+    assert "fall within the 3 dummy scan(s)" in caplog.text
+
+
+def test_get_sample_mask_only_dummies(caplog):
+    """Excluding only dummy scans is a no-op with a warning."""
+    sample_mask = utils.get_sample_mask(10, dummy_scans=3, exclude="0:3")
+    assert sample_mask.all()
+    assert "All exclude indices overlap with dummy scans" in caplog.text
+
+
+def test_get_sample_mask_bounds():
+    """The last input volume is valid; the number of input volumes is not."""
+    sample_mask = utils.get_sample_mask(10, dummy_scans=1, exclude="9")
+    np.testing.assert_array_equal(np.flatnonzero(~sample_mask), [8])
+
+    with pytest.raises(ValueError, match=r"Exclude indices \[10\] are out of bounds"):
+        utils.get_sample_mask(10, dummy_scans=1, exclude="10")
+
+    with pytest.raises(ValueError, match=r"between 0 and 9"):
+        utils.get_sample_mask(10, exclude="5:12")
+
+
+def test_get_sample_mask_invalid():
+    """Excluding every remaining volume, or invalid dummy counts, raise errors."""
+    with pytest.raises(ValueError, match="At least one volume must be retained"):
+        utils.get_sample_mask(10, dummy_scans=2, exclude="2:10")
+
+    with pytest.raises(ValueError, match="number of dummy scans"):
+        utils.get_sample_mask(10, dummy_scans=10)
+
+    with pytest.raises(ValueError, match="number of dummy scans"):
+        utils.get_sample_mask(10, dummy_scans=-1)
+
+    with pytest.raises(ValueError, match="at least one volume"):
+        utils.get_sample_mask(0)
+
+
+def test_make_censoring_table():
+    """The censoring table maps post-dummy volumes to input volumes and times."""
+    sample_mask = np.array([True, False, False, True, True])
+    table = utils.make_censoring_table(sample_mask, dummy_scans=2, tr=2.0)
+    assert list(table.columns) == [
+        "volume_index",
+        "original_volume_index",
+        "time",
+        "sample_mask",
+    ]
+    np.testing.assert_array_equal(table["volume_index"], [0, 1, 2, 3, 4])
+    np.testing.assert_array_equal(table["original_volume_index"], [2, 3, 4, 5, 6])
+    np.testing.assert_allclose(table["time"], [0.0, 2.0, 4.0, 6.0, 8.0])
+    np.testing.assert_array_equal(table["sample_mask"], [1, 0, 0, 1, 1])
+
+    table = utils.make_censoring_table(sample_mask, tr=None)
+    assert table["time"].isna().all()
+
+
+@pytest.mark.parametrize(
+    "unit, header_tr, expected",
+    [
+        ("sec", 2.0, 2.0),
+        ("msec", 2000.0, 2.0),
+        ("usec", 2_000_000.0, 2.0),
+        ("unknown", 2.0, 2.0),
+        ("sec", 0.0, None),
+    ],
+)
+def test_get_tr_seconds(unit, header_tr, expected):
+    """TRs are converted to seconds based on the header's time units."""
+    img = nib.Nifti1Image(np.zeros((2, 2, 2, 3), dtype=np.float32), np.eye(4))
+    img.header.set_zooms((1.0, 1.0, 1.0, header_tr))
+    img.header.set_xyzt_units(xyz="mm", t=unit)
+    tr = utils.get_tr_seconds(img)
+    if expected is None:
+        assert tr is None
+    else:
+        assert tr == pytest.approx(expected)
+
+
+def test_get_tr_seconds_3d():
+    """3D images have no TR."""
+    img = nib.Nifti1Image(np.zeros((2, 2, 2), dtype=np.float32), np.eye(4))
+    assert utils.get_tr_seconds(img) is None
+
+
+def test_get_censoring_metadata():
+    """The censoring sidecar summarizes the censoring pattern."""
+    sample_mask = np.array([True, False, False, True, False, True, True, True])
+    metadata = utils.get_censoring_metadata(sample_mask, dummy_scans=1, exclude="2:4,6")
+    assert metadata["ExcludeInput"] == "2:4,6"
+    assert metadata["DummyScans"] == 1
+    assert metadata["NumberOfVolumes"] == 8
+    assert metadata["NumberOfRetainedVolumes"] == 5
+    assert metadata["NumberOfCensoredVolumes"] == 3
+    assert metadata["CensoredFraction"] == pytest.approx(3 / 8)
+    assert metadata["LongestCensoredRun"] == 2
+    for column in ("volume_index", "original_volume_index", "time", "sample_mask"):
+        assert "Description" in metadata[column]
+
+
 def test_interpolate_masked_values_some_failures():
     # 5 voxels in a line (5x1x1). Affine is identity so physical == voxel coords.
     img = nib.Nifti1Image(np.ones((5, 1, 1), dtype=np.uint8), np.eye(4))
