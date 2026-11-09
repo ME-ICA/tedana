@@ -8,6 +8,7 @@ from typing import Union
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from bokeh import __version__ as bokeh_version
 from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
@@ -414,24 +415,135 @@ def andb(arrs):
     return result
 
 
-def get_spectrum(data: np.array, tr: float = 1.0):
+def get_spectrum(data: np.array, tr: float = 1.0, sample_mask=None):
     """
     Return the power spectrum and corresponding frequencies.
 
     Done when provided with a component time course and repitition time.
+    Without censoring, this is the squared magnitude of the FFT. With censoring,
+    it is a floating-mean Lomb-Scargle periodogram of the retained volumes at their
+    original acquisition times (see :func:`lomb_scargle_power`).
 
     Parameters
     ----------
     data : (S, ) array_like
         A timeseries S, on which you would like to perform an fft.
+        With censoring, either the full-length series (censored values are ignored)
+        or the retained values only.
     tr : :obj:`float`
         Repetition time (TR) of the data
+    sample_mask : (T,) array_like of bool or None, optional
+        Volumes retained (True) or censored (False). If None or all True, the FFT
+        is used. Default is None.
     """
-    # adapted from @dangom
-    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
-    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
-    idx = np.argsort(freqs)
-    return power_spectrum[idx], freqs[idx]
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+
+    if sample_mask is None or sample_mask.all():
+        # adapted from @dangom
+        power_spectrum = np.abs(np.fft.rfft(data)) ** 2
+        freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+        idx = np.argsort(freqs)
+        return power_spectrum[idx], freqs[idx]
+
+    power_spectrum, freqs = lomb_scargle_power(np.asarray(data)[:, None], tr, sample_mask)
+    return power_spectrum[:, 0], freqs
+
+
+def lomb_scargle_frequencies(n_vols, tr):
+    """Return the frequency grid used for Lomb-Scargle periodograms.
+
+    Parameters
+    ----------
+    n_vols : :obj:`int`
+        Number of volumes in the full (uncensored) time series.
+    tr : :obj:`float`
+        Repetition time, in seconds.
+
+    Returns
+    -------
+    freqs : (F,) :obj:`numpy.ndarray`
+        Frequencies ``k / (n_vols * tr)`` for ``k = 1 .. n_vols // 2``. This is the
+        FFT grid of the full series without the zero frequency, so it reaches the
+        nominal Nyquist frequency for even ``n_vols``.
+    """
+    return np.arange(1, n_vols // 2 + 1) / (n_vols * tr)
+
+
+def lomb_scargle_power(data, tr, sample_mask):
+    """Compute floating-mean Lomb-Scargle periodograms of censored time series.
+
+    Parameters
+    ----------
+    data : (T x C) or (R x C) array_like
+        Time series in columns, either full length (``T`` rows; censored rows are
+        ignored) or retained rows only (``R = sample_mask.sum()`` rows).
+    tr : :obj:`float`
+        Repetition time, in seconds.
+    sample_mask : (T,) array_like of bool
+        Volumes retained (True) or censored (False). Defines the acquisition times of
+        the retained rows and the frequency grid.
+
+    Returns
+    -------
+    power : (F x C) :obj:`numpy.ndarray`
+        Unnormalized Lomb-Scargle power (``scipy.signal.lombscargle`` with
+        ``normalize=False`` and ``floating_mean=True``). Columns with no variance
+        have zero power.
+    freqs : (F,) :obj:`numpy.ndarray`
+        Frequencies in Hz, from :func:`lomb_scargle_frequencies`.
+
+    Notes
+    -----
+    The periodogram is evaluated at the actual times of the retained volumes, so
+    censored volumes are neither interpolated nor treated as contiguous. Its power is
+    not on the same scale as an FFT power spectrum.
+    """
+    from scipy.signal import lombscargle
+
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    data = np.asarray(data, dtype=float)
+    if data.ndim != 2:
+        raise ValueError(f"data must be 2D (time x series), not {data.ndim}D")
+
+    n_vols, n_retained = sample_mask.size, int(sample_mask.sum())
+    if data.shape[0] == n_vols:
+        data = data[sample_mask]
+    elif data.shape[0] != n_retained:
+        raise ValueError(
+            f"data have {data.shape[0]} rows, but the sample mask has {n_vols} volumes "
+            f"({n_retained} retained)."
+        )
+
+    if n_retained < 3:
+        raise ValueError(
+            f"At least 3 retained volumes are needed for a Lomb-Scargle periodogram, "
+            f"not {n_retained}."
+        )
+
+    if tr is None or tr <= 0:
+        raise ValueError(f"A positive repetition time is required, not {tr}.")
+
+    times = np.flatnonzero(sample_mask) * float(tr)
+    freqs = lomb_scargle_frequencies(n_vols, tr)
+    power = np.zeros((freqs.size, data.shape[1]))
+    for i_col in range(data.shape[1]):
+        y = data[:, i_col]
+        if not np.all(np.isfinite(y)):
+            raise ValueError("Lomb-Scargle input contains non-finite values.")
+
+        if np.ptp(y) == 0:
+            continue
+
+        power[:, i_col] = lombscargle(
+            times,
+            y,
+            2 * np.pi * freqs,
+            normalize=False,
+            floating_mean=True,
+        )
+
+    return power, freqs
 
 
 def threshold_map(img, min_cluster_size, threshold=None, binarize=True, sided="bi"):
@@ -879,7 +991,7 @@ def parse_volume_indices(indices_str):
     (for example, '0:5' includes the first [0] through fifth [4] timepoints).
 
     Supports:
-    - None: None
+    - None or an empty string: []
     - Individual indices: '0,5,10'
     - Ranges: '0:5'
     - Mixed: '0,5:10,15,20:25'
@@ -888,10 +1000,12 @@ def parse_volume_indices(indices_str):
     - Negative indices: '-1,-2,-3'
     - Open-ended ranges: '0:' or ':5'
     - Ranges with step size: '0:5:2' or '::2'
+    - Empty or reversed ranges: '4:4' or '5:3'
+    - Empty entries: '0,,5' or '0,5,'
 
     Parameters
     ----------
-    indices_str : str
+    indices_str : str or None
         Comma-separated string of indices and ranges
 
     Returns
@@ -899,12 +1013,35 @@ def parse_volume_indices(indices_str):
     list of int
         Sorted list of unique volume indices
     """
-    if not indices_str:
+    if indices_str is None or not indices_str.strip():
         return []
+
+    def _parse_index(token):
+        token = token.strip()
+        try:
+            index = int(token)
+        except ValueError:
+            raise ValueError(
+                f"Invalid volume indices string ({indices_str}). '{token}' is not an integer."
+            ) from None
+
+        if index < 0:
+            raise ValueError(
+                f"Invalid volume indices string ({indices_str}). "
+                "Negative indices are not supported."
+            )
+
+        return index
 
     indices = set()
     for item in indices_str.split(","):
         item = item.strip()
+        if item == "":
+            raise ValueError(
+                f"Invalid volume indices string ({indices_str}). "
+                "Empty entries (e.g., from repeated or trailing commas) are not supported."
+            )
+
         if ":" in item:
             # Handle range
             parts = item.split(":")
@@ -913,38 +1050,240 @@ def parse_volume_indices(indices_str):
                     f"Invalid volume indices string ({indices_str}). "
                     "Step sizes are not supported."
                 )
-            elif parts[0] == "" or parts[1] == "":
+            elif parts[0].strip() == "" or parts[1].strip() == "":
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). "
                     "Open-ended ranges are not supported."
                 )
 
-            start, end = int(parts[0]), int(parts[1])
-
-            # Check for negative indices
-            if start < 0 or end < 0:
+            start, end = _parse_index(parts[0]), _parse_index(parts[1])
+            if end <= start:
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). "
-                    "Negative indices are not supported."
+                    f"Range '{item}' is empty; the end of a range must be greater than its start."
                 )
 
             # Range is end-exclusive (like Python lists)
             indices.update(range(start, end))
         else:
-            # Handle single index
-            index = int(item)
-            # Check for negative indices
-            if index < 0:
-                raise ValueError(
-                    f"Invalid volume indices string ({indices_str}). "
-                    "Negative indices are not supported."
-                )
-            indices.add(index)
+            indices.add(_parse_index(item))
 
     return sorted(indices)
 
 
-def load_mask(ref_img, mask=None, t2smap=None):
+def get_sample_mask(n_input_vols, dummy_scans=0, exclude=None):
+    """Build the temporal sample mask from dummy scans and excluded volumes.
+
+    Parameters
+    ----------
+    n_input_vols : :obj:`int`
+        Number of volumes in the input data, *before* dummy scans are removed.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans removed from the beginning of the data. Default is 0.
+    exclude : :obj:`str` or None, optional
+        Volume indices to censor, in the format accepted by :func:`parse_volume_indices`.
+        Indices refer to the input volumes, *before* dummy scans are removed.
+        Indices that fall within the dummy scans are ignored, with a warning.
+        Default is None (no censoring).
+
+    Returns
+    -------
+    sample_mask : (T,) :obj:`numpy.ndarray` of bool
+        Mask over the post-dummy volumes (``T = n_input_vols - dummy_scans``).
+        True means the volume is retained for estimation; False means it is censored.
+
+    Notes
+    -----
+    Post-dummy volume ``i`` corresponds to input volume ``i + dummy_scans``.
+    """
+    if n_input_vols < 1:
+        raise ValueError(f"The data must have at least one volume, not {n_input_vols}.")
+
+    if not 0 <= dummy_scans < n_input_vols:
+        raise ValueError(
+            f"The number of dummy scans ({dummy_scans}) must be non-negative and less than "
+            f"the number of volumes in the data ({n_input_vols})."
+        )
+
+    n_vols = n_input_vols - dummy_scans
+    sample_mask = np.ones(n_vols, dtype=bool)
+
+    exclude_idx = np.array(parse_volume_indices(exclude), dtype=int)
+    if exclude_idx.size == 0:
+        return sample_mask
+
+    out_of_bounds = exclude_idx[exclude_idx >= n_input_vols]
+    if out_of_bounds.size > 0:
+        raise ValueError(
+            f"Exclude indices {out_of_bounds.tolist()} are out of bounds. "
+            f"Indices refer to the input volumes (before dummy scans are removed), "
+            f"so they must be between 0 and {n_input_vols - 1}."
+        )
+
+    in_dummies = exclude_idx[exclude_idx < dummy_scans]
+    if in_dummies.size > 0:
+        LGR.warning(
+            f"Exclude indices {in_dummies.tolist()} fall within the {dummy_scans} dummy "
+            "scan(s), which are already removed, so they will be ignored."
+        )
+
+    censored = exclude_idx[exclude_idx >= dummy_scans] - dummy_scans
+    if censored.size == 0:
+        LGR.warning(
+            f"All exclude indices overlap with dummy scans ({dummy_scans}), "
+            "so no volumes will be censored."
+        )
+        return sample_mask
+
+    sample_mask[censored] = False
+    if not sample_mask.any():
+        raise ValueError(
+            "All volumes remaining after dummy scan removal are excluded. "
+            "At least one volume must be retained."
+        )
+
+    return sample_mask
+
+
+def get_tr_seconds(img):
+    """Return an image's repetition time in seconds, using the header's time units.
+
+    Parameters
+    ----------
+    img : :obj:`nibabel.spatialimages.SpatialImage`
+        A 4D image.
+
+    Returns
+    -------
+    tr : :obj:`float` or None
+        Repetition time in seconds, or None if the image is not 4D or the header's TR
+        is not positive. Millisecond and microsecond time units are converted to
+        seconds; seconds and unknown units are used as is.
+    """
+    if img.ndim != 4:
+        return None
+
+    tr = float(img.header.get_zooms()[3])
+    if tr <= 0:
+        return None
+
+    time_unit = None
+    if hasattr(img.header, "get_xyzt_units"):
+        time_unit = img.header.get_xyzt_units()[1]
+
+    if time_unit == "msec":
+        tr /= 1000.0
+    elif time_unit == "usec":
+        tr /= 1_000_000.0
+
+    return tr
+
+
+def _longest_run(values):
+    """Return the length of the longest run of True values in a 1D boolean array."""
+    longest = current = 0
+    for value in values:
+        current = current + 1 if value else 0
+        longest = max(longest, current)
+
+    return longest
+
+
+def make_censoring_table(sample_mask, dummy_scans=0, tr=None):
+    """Build the per-volume censoring table.
+
+    Parameters
+    ----------
+    sample_mask : (T,) array_like of bool
+        Mask over the post-dummy volumes, where True means retained.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans removed from the beginning of the data. Default is 0.
+    tr : :obj:`float` or None, optional
+        Repetition time, in seconds. If None, the ``time`` column is all missing.
+
+    Returns
+    -------
+    censoring_table : :obj:`pandas.DataFrame`
+        Table with one row per post-dummy volume and the columns
+        ``volume_index`` (0-based, post-dummy), ``original_volume_index``
+        (0-based, input volume), ``time`` (seconds from the first post-dummy volume),
+        and ``sample_mask`` (1 = retained, 0 = censored).
+    """
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    volume_index = np.arange(sample_mask.size)
+    if tr is None:
+        time = np.full(sample_mask.size, np.nan)
+    else:
+        time = volume_index * float(tr)
+
+    return pd.DataFrame(
+        {
+            "volume_index": volume_index,
+            "original_volume_index": volume_index + dummy_scans,
+            "time": time,
+            "sample_mask": sample_mask.astype(int),
+        }
+    )
+
+
+def get_censoring_metadata(sample_mask, dummy_scans=0, exclude=None):
+    """Build the JSON sidecar for the censoring table.
+
+    Parameters
+    ----------
+    sample_mask : (T,) array_like of bool
+        Mask over the post-dummy volumes, where True means retained.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans removed from the beginning of the data. Default is 0.
+    exclude : :obj:`str` or None, optional
+        The volume indices string the user provided.
+
+    Returns
+    -------
+    metadata : :obj:`dict`
+        Column descriptions and a summary of the censoring.
+    """
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    n_vols = sample_mask.size
+    n_censored = int((~sample_mask).sum())
+    return {
+        "volume_index": {
+            "LongName": "Volume index",
+            "Description": "0-based index of the volume after dummy scans are removed.",
+        },
+        "original_volume_index": {
+            "LongName": "Original volume index",
+            "Description": "0-based index of the volume in the input data.",
+        },
+        "time": {
+            "LongName": "Volume onset time",
+            "Description": (
+                "Time of the volume relative to the first volume after dummy scans "
+                "are removed (volume_index multiplied by the repetition time)."
+            ),
+            "Units": "s",
+        },
+        "sample_mask": {
+            "LongName": "Sample mask",
+            "Description": (
+                "Whether the volume was retained for estimation (1) or censored (0). "
+                "Censored volumes are excluded from all model fitting, but remain in "
+                "the output time series to keep the original time axis. "
+                "They must still be excluded from downstream analyses."
+            ),
+            "Levels": {"1": "retained", "0": "censored"},
+        },
+        "ExcludeInput": exclude,
+        "DummyScans": int(dummy_scans),
+        "NumberOfVolumes": int(n_vols),
+        "NumberOfRetainedVolumes": int(n_vols - n_censored),
+        "NumberOfCensoredVolumes": n_censored,
+        "CensoredFraction": n_censored / n_vols,
+        "LongestCensoredRun": _longest_run(~sample_mask),
+    }
+
+
+def load_mask(ref_img, mask=None, t2smap=None, volumes=None):
     """Load mask from user-defined mask or T2* map.
 
     Parameters
@@ -953,6 +1292,11 @@ def load_mask(ref_img, mask=None, t2smap=None):
     mask : str or None
     t2smap : str or None
         Path to T2* map file
+    volumes : array_like of int or None, optional
+        Indices of the ``ref_img`` volumes to use when the mask is computed with
+        ``compute_epi_mask`` (i.e., when neither ``mask`` nor ``t2smap`` is provided).
+        Used to keep censored volumes out of the mask. Ignored for 3D ``ref_img``.
+        If None, all volumes are used. Default is None.
 
     Returns
     -------
@@ -1002,7 +1346,13 @@ def load_mask(ref_img, mask=None, t2smap=None):
             "It is strongly recommended to provide an external mask, "
             "and to visually confirm that mask accurately conforms to data boundaries."
         )
-        mask_img = compute_epi_mask(ref_img)
+        epi_img = ref_img
+        if volumes is not None and ref_img.ndim == 4:
+            from nilearn.image import index_img
+
+            epi_img = index_img(ref_img, np.asarray(volumes, dtype=int))
+
+        mask_img = compute_epi_mask(epi_img)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."

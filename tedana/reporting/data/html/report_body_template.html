@@ -503,6 +503,13 @@
       src="{{ externalRegressorCorrelations }}"
       style="width: 95%; max-width: 1200px; height: auto"
     />
+    {% if externalRegressorTimeseriesExist %}
+    <img
+      id="externalRegressorTimeseries"
+      src="{{ externalRegressorTimeseries }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
+    {% endif %}
     </div>
   </div>
   {% endif %}

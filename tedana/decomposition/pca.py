@@ -62,15 +62,16 @@ def tedpca(
     kdaw=10.0,
     rdaw=1.0,
     low_mem=False,
+    sample_mask=None,
 ):
     r"""Use principal components analysis (PCA) to identify and remove thermal noise from data.
 
     Parameters
     ----------
     data_cat : (Mb x E x T) array_like
-        Input functional data
+        Input functional data. With censoring, the retained volumes only.
     data_optcom : (Mb x T) array_like
-        Optimally combined time series data
+        Optimally combined time series data. With censoring, the retained volumes only.
     mask : (Mb,) array_like
         Boolean mask array. This is more restrictive than the base mask (M), so
         additional masking and unmasking will take place within the function.
@@ -107,6 +108,12 @@ def tedpca(
         Whether to use incremental PCA (for low-memory systems) or not.
         This is only compatible with the "kundu" or "kundu-stabilize" algorithms.
         Default: False
+    sample_mask : (T_full,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained) over the full post-dummy time series.
+        If given, ``data_cat`` and ``data_optcom`` must contain only the retained volumes;
+        the PCA mixing matrix is written out with one row per volume, with ``n/a`` at
+        censored volumes. The moving-average algorithms ("mdl", "aic", "kic") are not
+        allowed, because they assume contiguous time points. Default is None.
 
     Returns
     -------
@@ -217,6 +224,20 @@ def tedpca(
     # Do not z-score the data if using MAPCA
     if algorithm not in ["mdl", "aic", "kic"]:
         data = stats.zscore(data, axis=-1)  # z-score over time
+
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        if sample_mask.sum() != n_vols:
+            raise ValueError(
+                f"The sample mask retains {sample_mask.sum()} volumes, but the data have "
+                f"{n_vols}. Pass retained volumes only."
+            )
+
+        if algorithm in ["mdl", "aic", "kic"]:
+            raise ValueError(
+                f"The '{algorithm}' PCA option is not censoring-aware, because the "
+                "moving-average model assumes contiguous time points."
+            )
 
     if algorithm in ["mdl", "aic", "kic"]:
         # Use un-normalized data for maPCA to match GIFT results
@@ -436,7 +457,14 @@ def tedpca(
         for comp in component_table.index.values
     ]
 
-    mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
+    if sample_mask is not None and not sample_mask.all():
+        # Keep one row per volume; PCA time series are undefined at censored volumes
+        comp_ts_full = np.full((sample_mask.size, comp_ts.shape[1]), np.nan)
+        comp_ts_full[sample_mask, :] = comp_ts
+        mixing_df = pd.DataFrame(data=comp_ts_full, columns=comp_names)
+    else:
+        mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
+
     io_generator.save_file(mixing_df, "PCA mixing tsv")
 
     # Save component table and associated json

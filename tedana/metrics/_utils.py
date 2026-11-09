@@ -109,9 +109,9 @@ def flip_components(*args: npt.NDArray, signs: npt.NDArray) -> npt.NDArray:
     Parameters
     ----------
     *args : array_like
-        Any number of arrays with one dimension the same length as signs.
-        If multiple dimensions share the same size as signs, behavior of this
-        function will be unpredictable.
+        Any number of arrays whose last dimension (components) is the same length as signs.
+        Other dimensions may have the same length, e.g., a mixing matrix with as many
+        components as (retained) volumes.
     signs : array_like of :obj:`int`
         Array of +/- 1 by which to flip the values in each argument.
 
@@ -122,13 +122,9 @@ def flip_components(*args: npt.NDArray, signs: npt.NDArray) -> npt.NDArray:
     """
     assert signs.ndim == 1, 'Argument "signs" must be one-dimensional.'
     for arg in args:
-        assert len(signs) in arg.shape, (
-            'Size of argument "signs" must match size of one dimension in '
-            "each of the input arguments."
-        )
-        assert sum(x == len(signs) for x in arg.shape) == 1, (
-            "Only one dimension of each input argument can match the length "
-            'of argument "signs".'
+        assert arg.shape[-1] == len(signs), (
+            'Size of argument "signs" must match the size of the last (component) '
+            "dimension of each input argument."
         )
     # correct mixing & weights signs based on spatial distribution tails
     return [arg * signs for arg in args]
