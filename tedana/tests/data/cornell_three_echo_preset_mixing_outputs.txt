@@ -20,7 +20,15 @@ desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 desc-confounds_timeseries.tsv
 desc-rmse_statmap.nii.gz
+desc-ICA_stat-varexp_statmap.nii.gz
+desc-ICAAccepted_stat-varexp_statmap.nii.gz
+desc-ICARejected_stat-varexp_statmap.nii.gz
+desc-ICAUnmodeled_stat-varexp_statmap.nii.gz
 figures
+figures/desc-ICA_stat-varexp_statmap.svg
+figures/desc-ICAAccepted_stat-varexp_statmap.svg
+figures/desc-ICARejected_stat-varexp_statmap.svg
+figures/desc-ICAUnmodeled_stat-varexp_statmap.svg
 figures/adaptive_mask.svg
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
