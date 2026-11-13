@@ -865,3 +865,31 @@ def test_make_adaptive_mask_user_adaptive_mask():
 
     with pytest.raises(ValueError, match="between 0 and the number of echoes"):
         utils.make_adaptive_mask(data, adaptive_mask=user_adaptive_mask + n_echos)
+
+
+def test_is_adaptive_mask():
+    """Only integer-valued masks with values above 1 should be detected as adaptive masks."""
+    assert utils._is_adaptive_mask(np.array([0, 1, 2, 3]))
+    assert not utils._is_adaptive_mask(np.array([0, 1, 1, 0]))
+    assert not utils._is_adaptive_mask(np.array([0.0, 0.5, 2.5]))
+    # Empty masks and masks with non-finite values are not adaptive masks
+    assert not utils._is_adaptive_mask(np.zeros(4))
+    assert not utils._is_adaptive_mask(np.array([0, 2, np.inf]))
+
+
+def test_load_mask_adaptive_mask_without_n_echos(tmp_path):
+    """Adaptive masks should load without validation against the number of echoes."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.int16)
+    mask_arr[1, 1, 1] = 5
+    mask_arr[2, 2, 2] = 2
+    mask_path = tmp_path / "adaptive_mask.nii.gz"
+    nb.Nifti1Image(mask_arr, affine).to_filename(mask_path)
+
+    _, _, out_adaptive_mask = utils.load_mask(ref_img, mask=str(mask_path))
+    assert np.array_equal(out_adaptive_mask, mask_arr[mask_arr > 0])
