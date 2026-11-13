@@ -149,6 +149,10 @@ def _get_parser():
         help=(
             "Binary mask of voxels to include in TE Dependent ANAlysis. "
             "Must be in the same space as `data`. "
+            "If the mask contains integer values greater than 1, "
+            "it is treated as an adaptive mask (e.g., from a previous run of tedana), "
+            "where each voxel's value is the number of echoes with good signal, "
+            "and '--masktype' is ignored. "
             "If an explicit mask is not provided, then Nilearn's compute_epi_mask "
             "function will be used to derive a mask from the first echo's data. "
             "Providing a mask is recommended."
@@ -496,7 +500,11 @@ def tedana_workflow(
         Output directory.
     mask : :obj:`str` or None, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be
-        spatially aligned with `data`. If an explicit mask is not provided,
+        spatially aligned with `data`.
+        If the mask contains integer values greater than 1, it is treated as an
+        adaptive mask (e.g., from a previous run of tedana), where each voxel's value
+        is the number of echoes with good signal, and ``masktype`` is ignored.
+        If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
         Since most pipelines use better masking tools,
@@ -716,7 +724,12 @@ def tedana_workflow(
         "\\citep{dupre2021te}."
     )
 
-    mask_img, t2s_limited = utils.load_mask(ref_img, mask=mask, t2smap=t2smap)
+    mask_img, t2s_limited, user_adaptive_mask = utils.load_mask(
+        ref_img,
+        mask=mask,
+        t2smap=t2smap,
+        n_echos=n_echos,
+    )
     if t2s_limited is not None:
         t2s_full = t2s_limited.copy()
 
@@ -793,6 +806,7 @@ def tedana_workflow(
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
+        adaptive_mask=user_adaptive_mask,
     )
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
