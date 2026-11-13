@@ -749,6 +749,12 @@ def _plot_fixed_mosaic(
             black_bg=True,
             colorbar=True,
         )
+        # The mosaic divides the room left for the colorbar's tick labels by the number
+        # of slices, so the labels overlap the last column of slices. Leave 3.5% of the
+        # figure's width for them instead.
+        margin = dict(display._colorbar_margin)
+        margin["left"] = 0.035 * len(display.axes)
+        display._colorbar_margin = margin
         display.add_overlay(
             image.load_img(in_file),
             threshold=1e-6 if threshold is None else threshold,

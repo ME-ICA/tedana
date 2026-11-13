@@ -795,7 +795,14 @@ This map is not produced when a mixing matrix is provided, because PCA is skippe
 Areas with low values contain signal that was discarded during dimensionality reduction,
 and so cannot be modeled by the ICA.
 
-The ICA tab shows four maps:
+.. image:: /_static/pca_variance_explained_map.png
+  :align: center
+  :width: 100%
+
+The ICA tab shows four maps, with buttons above them to switch between the maps,
+as for the carpet plots.
+All of the maps are drawn on the same slices, so switching between them shows the same
+parts of the brain.
 
 - **All components**: the variance explained by the full ICA model.
 - **Accepted components**: the variance of the data reconstructed from only the accepted components.
@@ -803,6 +810,13 @@ The ICA tab shows four maps:
   This is the variance that is removed during denoising.
 - **Unmodeled variance**: the variance not explained by the ICA model (100% minus the first map).
   This variance is retained in the denoised data.
+
+The example below shows all four maps for the three-echo test dataset,
+in which most of the variance is explained by rejected components.
+
+.. image:: /_static/ica_variance_explained_maps.png
+  :align: center
+  :width: 100%
 
 The accepted and rejected maps use the betas from the full ICA model.
 Because ICA components are not orthogonal, the accepted, rejected, and unmodeled maps
