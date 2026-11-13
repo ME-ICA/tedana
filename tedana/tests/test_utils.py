@@ -378,9 +378,12 @@ def test_load_mask_user_mask_converted_to_nifti1(tmp_path):
     mask_path = tmp_path / "mask.nii.gz"
     mask_img.to_filename(mask_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=None)
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(
+        ref_img, mask=str(mask_path), t2smap=None
+    )
     assert isinstance(out_mask_img, nb.Nifti1Image)
     assert out_t2s is None
+    assert out_adaptive_mask is None
     assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr)
 
 
@@ -399,7 +402,9 @@ def test_load_mask_t2smap_only_builds_mask_and_returns_seconds(tmp_path):
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=str(t2s_path))
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(
+        ref_img, mask=None, t2smap=str(t2s_path)
+    )
     assert isinstance(out_mask_img, nb.Nifti1Image)
     out_mask_arr = np.asanyarray(out_mask_img.dataobj)
     assert out_mask_arr.dtype == np.uint8
@@ -432,7 +437,9 @@ def test_load_mask_combines_mask_and_t2smap(tmp_path):
     t2s_path = tmp_path / "t2smap.nii.gz"
     t2s_img.to_filename(t2s_path)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=str(mask_path), t2smap=str(t2s_path))
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(
+        ref_img, mask=str(mask_path), t2smap=str(t2s_path)
+    )
     out_mask_arr = np.asanyarray(out_mask_img.dataobj)
     assert int(out_mask_arr.sum()) == 1
     assert out_mask_arr[1, 1, 1] == 1
@@ -462,11 +469,12 @@ def test_load_mask_falls_back_to_compute_epi_mask(monkeypatch):
 
     monkeypatch.setattr(nm, "compute_epi_mask", _fake_compute_epi_mask)
 
-    out_mask_img, out_t2s = utils.load_mask(ref_img, mask=None, t2smap=None)
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(ref_img, mask=None, t2smap=None)
     assert called["n"] == 1
     assert called["arg"] is ref_img
     assert out_mask_img is sentinel_mask
     assert out_t2s is None
+    assert out_adaptive_mask is None
 
 
 def test_create_legendre_polynomial_basis_set():
@@ -757,3 +765,103 @@ def test_interpolate_masked_values_precomputed_phys_coords():
     assert result[0] == 2.0
     assert result[4] == 4.0
     np.testing.assert_array_equal(result[1:4], data[1:4])
+
+
+def test_load_mask_adaptive_mask(tmp_path):
+    """Integer-valued masks with values above 1 should be treated as adaptive masks."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.int16)
+    mask_arr[1, 1, 1] = 1
+    mask_arr[2, 2, 2] = 3
+    mask_arr[3, 3, 3] = 2
+    mask_path = tmp_path / "adaptive_mask.nii.gz"
+    nb.Nifti1Image(mask_arr, affine).to_filename(mask_path)
+
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(
+        ref_img,
+        mask=str(mask_path),
+        t2smap=None,
+        n_echos=3,
+    )
+    out_mask_arr = np.asanyarray(out_mask_img.dataobj)
+    assert out_t2s is None
+    assert np.array_equal(out_mask_arr, mask_arr > 0)
+    # Values should follow the same voxel order as the binary mask
+    assert np.array_equal(out_adaptive_mask, mask_arr[mask_arr > 0])
+    assert np.issubdtype(out_adaptive_mask.dtype, np.integer)
+
+    # Combined with a T2* map, the adaptive mask should be reduced along with the mask
+    t2s_arr = np.zeros(shape, dtype=np.float32)
+    t2s_arr[1, 1, 1] = 0.03
+    t2s_arr[2, 2, 2] = 0.04
+    t2s_path = tmp_path / "t2smap.nii.gz"
+    nb.Nifti1Image(t2s_arr, affine).to_filename(t2s_path)
+    out_mask_img, out_t2s, out_adaptive_mask = utils.load_mask(
+        ref_img,
+        mask=str(mask_path),
+        t2smap=str(t2s_path),
+        n_echos=3,
+    )
+    assert int(np.asanyarray(out_mask_img.dataobj).sum()) == 2
+    assert np.array_equal(out_adaptive_mask, [1, 3])
+    assert np.allclose(out_t2s, [0.03, 0.04])
+
+    # Adaptive mask values cannot exceed the number of echoes
+    with pytest.raises(ValueError, match="greater than the number of echoes"):
+        utils.load_mask(ref_img, mask=str(mask_path), t2smap=None, n_echos=2)
+
+
+def test_load_mask_nonbinary_float_mask_is_binarized(tmp_path):
+    """Non-integer masks (e.g., probabilistic masks) should still be binarized."""
+    import nibabel as nb
+
+    shape = (5, 5, 5)
+    affine = np.eye(4)
+    ref_img = nb.Nifti1Image(np.zeros(shape, dtype=np.float32), affine)
+
+    mask_arr = np.zeros(shape, dtype=np.float32)
+    mask_arr[1, 1, 1] = 0.5
+    mask_arr[2, 2, 2] = 2.5
+    mask_path = tmp_path / "mask.nii.gz"
+    nb.Nifti1Image(mask_arr, affine).to_filename(mask_path)
+
+    out_mask_img, _, out_adaptive_mask = utils.load_mask(ref_img, mask=str(mask_path), n_echos=3)
+    assert out_adaptive_mask is None
+    assert np.array_equal(np.asanyarray(out_mask_img.dataobj), mask_arr > 0)
+
+
+def test_make_adaptive_mask_user_adaptive_mask():
+    """A user-provided adaptive mask should be used instead of the adaptive mask methods."""
+    rng = np.random.default_rng(0)
+    n_samples, n_echos, n_vols = 20, 4, 10
+    data = rng.uniform(100, 200, size=(n_samples, n_echos, n_vols))
+    user_adaptive_mask = rng.integers(0, n_echos + 1, size=n_samples)
+    # Bad data in the third echo of the first sample should limit it to 2 good echoes
+    user_adaptive_mask[0] = n_echos
+    data[0, 2, :] = 0
+
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        threshold=1,
+        methods=["dropout", "decay"],
+        adaptive_mask=user_adaptive_mask,
+    )
+    expected = user_adaptive_mask.copy()
+    expected[0] = 2
+    assert np.array_equal(adaptive_mask, expected)
+    assert np.array_equal(mask, expected > 0)
+
+    # Re-running with the output adaptive mask should not change it
+    _, adaptive_mask2 = utils.make_adaptive_mask(data, adaptive_mask=adaptive_mask)
+    assert np.array_equal(adaptive_mask2, adaptive_mask)
+
+    with pytest.raises(ValueError, match="does not match"):
+        utils.make_adaptive_mask(data, adaptive_mask=user_adaptive_mask[:-1])
+
+    with pytest.raises(ValueError, match="between 0 and the number of echoes"):
+        utils.make_adaptive_mask(data, adaptive_mask=user_adaptive_mask + n_echos)

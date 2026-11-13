@@ -103,6 +103,10 @@ def _get_parser():
         help=(
             "Binary mask of voxels to include in TE Dependent ANAlysis. "
             "Must be in the same space as `data`. "
+            "If the mask contains integer values greater than 1, "
+            "it is treated as an adaptive mask (e.g., from a previous run of tedana), "
+            "where each voxel's value is the number of echoes with good signal, "
+            "and '--masktype' is ignored. "
             "If an explicit mask is not provided, then Nilearn's compute_epi_mask "
             "function will be used to derive a mask from the first echo's data. "
             "Providing a mask is recommended."
@@ -304,6 +308,9 @@ def t2smap_workflow(
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
+        If the mask contains integer values greater than 1, it is treated as an
+        adaptive mask (e.g., from a previous run of tedana), where each voxel's value
+        is the number of echoes with good signal, and ``masktype`` is ignored.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data. Default is 0.
         dummy_scans are excluded from the optimally combined data.
@@ -446,7 +453,12 @@ def t2smap_workflow(
         verbose=verbose,
     )
 
-    mask_img, _ = utils.load_mask(ref_img, mask=mask, t2smap=None)
+    mask_img, _, user_adaptive_mask = utils.load_mask(
+        ref_img,
+        mask=mask,
+        t2smap=None,
+        n_echos=n_echos,
+    )
     io_generator.register_mask(mask_img)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
@@ -491,6 +503,7 @@ def t2smap_workflow(
         n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
+        adaptive_mask=user_adaptive_mask,
     )
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
