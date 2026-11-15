@@ -128,10 +128,12 @@ before dropping censored volumes, so these follow the volumes' true acquisition 
 The external regressor correlations shown in the report also use the retained volumes only.
 The report also plots each external regressor's time series, with the censored volumes shaded gray.
 
-Some options do not support censoring yet, and raise an error if combined with ``--exclude``:
-the moving-average PCA options (``--tedpca aic``, the default, as well as ``kic`` and ``mdl``),
-because they assume contiguous time points; and ``--gscontrol gsr`` and ``--gscontrol mir``.
-Use, for example, ``--tedpca kundu`` or a variance threshold such as ``--tedpca 0.95`` instead.
+Every ``--tedpca`` option works with censoring, and is fit on the retained volumes only.
+For the moving-average options (``aic``, the default, as well as ``kic`` and ``mdl``),
+the moving-average model describes the data's spatial autocorrelation,
+and time points enter only as dimensions, so dropping censored volumes simply reduces that dimension.
+``--gscontrol gsr`` and ``--gscontrol mir`` do not support censoring yet,
+and raise an error if combined with ``--exclude``.
 
 Censoring removes data from every estimate, so heavy censoring leaves less data for PCA and ICA,
 and can bias spectral metrics. tedana warns when at least 10% of volumes are censored.

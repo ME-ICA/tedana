@@ -234,33 +234,30 @@ def test_denoise_ts_censored():
         np.testing.assert_array_equal(got, exp)
 
 
-@pytest.mark.parametrize(
-    "kwargs, match",
-    [
-        ({"tedpca": "aic", "gscontrol": [None]}, "--tedpca aic"),
-        ({"tedpca": "mdl", "gscontrol": [None]}, "--tedpca mdl"),
-        ({"tedpca": "kundu", "gscontrol": ["gsr"]}, "gsr"),
-        ({"tedpca": 0.95, "gscontrol": ["mir"]}, "mir"),
-    ],
-)
-def test_check_censoring_options(kwargs, match):
+@pytest.mark.parametrize("gscontrol", [["gsr"], ["mir"], ["gsr", "mir"]])
+def test_check_censoring_options(gscontrol):
     """Options that cannot yet honor censoring are rejected."""
-    with pytest.raises(ValueError, match=match):
-        _check_censoring_options(**kwargs)
+    with pytest.raises(ValueError, match="not yet supported with censoring"):
+        _check_censoring_options(gscontrol=gscontrol)
 
 
 def test_check_censoring_options_allowed():
     """Supported options pass."""
-    for tedpca in ("kundu", "kundu-stabilize", 0.95, 20):
-        _check_censoring_options(tedpca=tedpca, gscontrol=[None])
+    _check_censoring_options(gscontrol=[None])
 
 
-def test_tedana_censoring_rejects_default_tedpca(tmp_path):
-    """tedana --exclude fails early with the default (moving-average) PCA."""
+def test_tedana_censoring_rejects_gscontrol(tmp_path):
+    """tedana --exclude fails early with global signal control."""
     data_dir = get_test_data_path()
     data = [op.join(data_dir, f"echo{echo}.nii.gz") for echo in range(1, 4)]
-    with pytest.raises(ValueError, match="--tedpca aic cannot be used with censoring"):
-        tedana_workflow(data, [14.5, 38.5, 62.5], out_dir=str(tmp_path), exclude="2")
+    with pytest.raises(ValueError, match="--gscontrol gsr is not yet supported"):
+        tedana_workflow(
+            data,
+            [14.5, 38.5, 62.5],
+            out_dir=str(tmp_path),
+            exclude="2",
+            gscontrol=["gsr"],
+        )
 
     # Malformed exclude strings fail before anything else
     with pytest.raises(ValueError, match="is empty"):

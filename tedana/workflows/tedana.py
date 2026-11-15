@@ -194,8 +194,7 @@ def _get_parser():
             "Indices are 0-based and refer to the input volumes, before dummy scans are "
             "removed; indices within the dummy scans are ignored. "
             "As in Python lists, ranges are start-inclusive and end-exclusive. "
-            "Censoring requires a --tedpca option other than 'aic', 'kic', or 'mdl', "
-            "and is not yet supported with --gscontrol. "
+            "Censoring is not yet supported with --gscontrol. "
             "Default is to not censor any volumes."
         ),
         default=None,
@@ -463,23 +462,14 @@ def _get_parser():
     return parser
 
 
-def _check_censoring_options(*, tedpca, gscontrol):
+def _check_censoring_options(*, gscontrol):
     """Reject options that cannot yet honor temporal censoring.
 
     Raises
     ------
     ValueError
-        If any requested option would use censored volumes or assume contiguous sampling.
+        If any requested option would use censored volumes.
     """
-    if isinstance(tedpca, str) and tedpca in ("aic", "kic", "mdl"):
-        raise ValueError(
-            f"--tedpca {tedpca} cannot be used with censoring (--exclude). The "
-            "moving-average PCA behind 'aic', 'kic', and 'mdl' assumes contiguous time "
-            "points, and is not yet censoring-aware. Choose another PCA option, for example "
-            "'--tedpca kundu' or a variance threshold such as '--tedpca 0.95'. "
-            "This restriction is temporary."
-        )
-
     unsupported = [gs for gs in gscontrol if gs in ("gsr", "mir")]
     if unsupported:
         raise ValueError(
@@ -676,9 +666,8 @@ def tedana_workflow(
         data are the optimally combined data minus the estimated rejected-component signal,
         and the accepted and rejected time series are model estimates. They must still be
         excluded from downstream analyses (see ``desc-censoring_timeseries.tsv``).
-        Censoring requires ``tedpca`` other than 'aic', 'kic', or 'mdl', and is not yet
-        supported with ``gscontrol``. External regressor metrics are fit on retained
-        volumes only.
+        Censoring is not yet supported with ``gscontrol``. External regressor metrics
+        are fit on retained volumes only.
         Default is None (no censoring).
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
@@ -784,10 +773,7 @@ def tedana_workflow(
     sample_mask = utils.get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
     censoring = not sample_mask.all()
     if censoring:
-        _check_censoring_options(
-            tedpca=tedpca,
-            gscontrol=gscontrol,
-        )
+        _check_censoring_options(gscontrol=gscontrol)
         # Keep censored (and dummy) volumes out of the initial EPI mask too
         retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
         # Only pass sample masks when censoring, so uncensored runs are unchanged

@@ -462,6 +462,82 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
     assert nb.load(op.join(reclassify_dir, "desc-denoised_bold.nii.gz")).shape[3] == n_vols
 
 
+def test_integration_three_echo_censoring_mapca(skip_integration, tmp_path):
+    """The default moving-average PCA (aic) is fit on retained volumes only.
+
+    As in test_integration_three_echo_censoring, tedana is run on the original data and
+    on a copy with huge spikes in the censored volumes; the maPCA criteria and the PCA
+    mixing matrix at retained volumes must not change.
+    """
+    if skip_integration:
+        pytest.skip("Skipping three-echo maPCA censoring integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    download_test_data(osf_id, test_data_path)
+    in_img = nb.load(f"{test_data_path}/three_echo_Cornell_zcat.nii.gz")
+    n_vols = in_img.shape[3]
+    censored = np.array([5, 6, 7, 40, 41, n_vols - 1])
+    sample_mask = np.ones(n_vols, dtype=bool)
+    sample_mask[censored] = False
+
+    header = in_img.header.copy()
+    header.set_data_dtype(np.float32)
+    arr = in_img.get_fdata(dtype=np.float32)
+    spiked_arr = arr.copy()
+    spiked_arr[..., censored] = spiked_arr[..., censored] * 20 + 1e5
+    out_dirs = {}
+    for label, data in (("orig", arr), ("spiked", spiked_arr)):
+        in_file = str(tmp_path / f"{label}_zcat.nii.gz")
+        nb.Nifti1Image(data, in_img.affine, header).to_filename(in_file)
+        out_dirs[label] = str(tmp_path / f"out_{label}")
+        # Default --tedpca (aic)
+        tedana_cli._main(
+            [
+                "-d",
+                in_file,
+                "-e",
+                "14.5",
+                "38.5",
+                "62.5",
+                "--out-dir",
+                out_dirs[label],
+                "--exclude",
+                ",".join(str(i) for i in censored),
+                "--no-reports",
+            ]
+        )
+
+    pca_results = {}
+    pca_mixing = {}
+    for label, out_dir in out_dirs.items():
+        with open(op.join(out_dir, "desc-PCACrossComponent_metrics.json")) as fobj:
+            pca_results[label] = json.load(fobj)
+
+        pca_mixing[label] = pd.read_table(op.join(out_dir, "desc-PCA_mixing.tsv")).to_numpy()
+
+    assert pca_mixing["orig"].shape[0] == n_vols
+    assert np.isnan(pca_mixing["orig"][~sample_mask]).all()
+    assert np.isfinite(pca_mixing["orig"][sample_mask]).all()
+    assert pca_mixing["spiked"].shape == pca_mixing["orig"].shape
+    np.testing.assert_allclose(
+        pca_mixing["spiked"][sample_mask],
+        pca_mixing["orig"][sample_mask],
+        rtol=1e-5,
+        atol=1e-6,
+    )
+
+    for criterion in ("aic", "kic", "mdl"):
+        assert (
+            pca_results["spiked"][criterion]["n_components"]
+            == pca_results["orig"][criterion]["n_components"]
+        )
+        np.testing.assert_allclose(
+            pca_results["spiked"][criterion]["curve"],
+            pca_results["orig"][criterion]["curve"],
+            rtol=1e-6,
+        )
+
+
 def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
     """Integration test three-echo test data, runninga supplied mixing matrix, no accepted."""
 

@@ -112,8 +112,10 @@ def tedpca(
         Temporal censoring mask (True = retained) over the full post-dummy time series.
         If given, ``data_cat`` and ``data_optcom`` must contain only the retained volumes;
         the PCA mixing matrix is written out with one row per volume, with ``n/a`` at
-        censored volumes. The moving-average algorithms ("mdl", "aic", "kic") are not
-        allowed, because they assume contiguous time points. Default is None.
+        censored volumes. Every algorithm is fit on the retained volumes only; for
+        "mdl", "aic", and "kic", the moving-average model describes spatial
+        autocorrelation, and time points enter only as dimensions, so dropping censored
+        volumes simply reduces that dimension. Default is None.
 
     Returns
     -------
@@ -231,12 +233,6 @@ def tedpca(
             raise ValueError(
                 f"The sample mask retains {sample_mask.sum()} volumes, but the data have "
                 f"{n_vols}. Pass retained volumes only."
-            )
-
-        if algorithm in ["mdl", "aic", "kic"]:
-            raise ValueError(
-                f"The '{algorithm}' PCA option is not censoring-aware, because the "
-                "moving-average model assumes contiguous time points."
             )
 
     if algorithm in ["mdl", "aic", "kic"]:
