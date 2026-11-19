@@ -39,6 +39,14 @@
         "orig": "confounds",
         "bidsv1.5.0": "desc-confounds_timeseries"
     },
+    "censoring tsv": {
+        "orig": "censoring",
+        "bidsv1.5.0": "desc-censoring_timeseries"
+    },
+    "censoring json": {
+        "orig": "censoring",
+        "bidsv1.5.0": "desc-censoring_timeseries"
+    },
     "ICA components img": {
         "orig": "ica_components",
         "bidsv1.5.0": "desc-ICA_components"
