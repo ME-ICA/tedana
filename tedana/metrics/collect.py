@@ -39,6 +39,7 @@ def generate_metrics(
     external_regressor_config: Union[List[Dict], None] = None,
     seed: int = 0,
     metrics: Union[List[str], None] = None,
+    sample_mask: Union[npt.NDArray, None] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
@@ -79,6 +80,11 @@ def generate_metrics(
         Random seed for metrics that use random sampling. Default is 0.
     metrics : list
         List of metrics to return
+    sample_mask : (T_full,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained) over the full post-dummy time series.
+        If given, ``data_cat``, ``data_optcom``, and ``mixing`` must contain only the
+        retained volumes (``sample_mask.sum()`` of them), and time-dependent metrics
+        (HFC) use the retained volumes' acquisition times. Default is None.
 
     Returns
     -------
@@ -127,6 +133,14 @@ def generate_metrics(
             f"data_optcom ({data_optcom.shape[1]}), and mixing ({mixing.shape[0]}) do not "
             "match."
         )
+
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        if sample_mask.sum() != mixing.shape[0]:
+            raise ValueError(
+                f"The sample mask retains {sample_mask.sum()} volumes, but the data and "
+                f"mixing matrix have {mixing.shape[0]}. Pass retained volumes only."
+            )
 
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
@@ -428,7 +442,7 @@ def generate_metrics(
         if tr is None:
             raise ValueError("tr must be provided to compute the HFC metric.")
         LGR.info("Calculating high-frequency content (HFC)")
-        component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr)
+        component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr, sample_mask=sample_mask)
 
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
@@ -446,6 +460,7 @@ def generate_metrics(
             external_regressor_config,
             mixing,
             seed=seed,
+            sample_mask=sample_mask,
         )
     # Write verbose metrics if needed
     if io_generator.verbose:
