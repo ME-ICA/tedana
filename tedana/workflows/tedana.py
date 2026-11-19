@@ -777,18 +777,14 @@ def tedana_workflow(
 
     # Temporal censoring: build the post-dummy sample mask (True = retained) and reject
     # options that cannot yet honor it, before any data are loaded
-    n_input_vols = ref_img.shape[3] if ref_img.ndim == 4 else 1
-    sample_mask = utils.get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
-    censoring = not sample_mask.all()
+    sample_mask, retained_input_vols, fit_sample_mask = utils.setup_censoring(
+        ref_img,
+        dummy_scans=dummy_scans,
+        exclude=exclude,
+    )
+    censoring = fit_sample_mask is not None
     if censoring:
         _check_censoring_options(gscontrol=gscontrol)
-        # Keep censored (and dummy) volumes out of the initial EPI mask too
-        retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
-        # Only pass sample masks when censoring, so uncensored runs are unchanged
-        fit_sample_mask = sample_mask
-    else:
-        retained_input_vols = None
-        fit_sample_mask = None
 
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
