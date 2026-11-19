@@ -6,6 +6,10 @@ desc-ICA_components.nii.gz
 desc-ICA_decision_tree.json
 desc-ICA_decomposition.json
 desc-ICA_mixing.tsv
+desc-ICA_stat-varexp_statmap.nii.gz
+desc-ICAAccepted_stat-varexp_statmap.nii.gz
+desc-ICARejected_stat-varexp_statmap.nii.gz
+desc-ICAUnmodeled_stat-varexp_statmap.nii.gz
 desc-ICA_stat-z_components.nii.gz
 desc-ICA_status_table.tsv
 desc-denoised_bold.nii.gz
@@ -13,6 +17,10 @@ desc-tedana_metrics.json
 desc-tedana_metrics.tsv
 desc-tedana_registry.json
 figures
+figures/desc-ICA_stat-varexp_statmap.svg
+figures/desc-ICAAccepted_stat-varexp_statmap.svg
+figures/desc-ICARejected_stat-varexp_statmap.svg
+figures/desc-ICAUnmodeled_stat-varexp_statmap.svg
 ica_reclassify_call.sh
 open_rica_report.py
 references.bib

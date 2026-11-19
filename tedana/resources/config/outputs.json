@@ -239,6 +239,26 @@
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
     },
+    "PCA varexp img": {
+        "orig": "pca_varexp",
+        "bidsv1.5.0": "desc-PCA_stat-varexp_statmap"
+    },
+    "ICA varexp img": {
+        "orig": "ica_varexp",
+        "bidsv1.5.0": "desc-ICA_stat-varexp_statmap"
+    },
+    "ICA accepted varexp img": {
+        "orig": "ica_accepted_varexp",
+        "bidsv1.5.0": "desc-ICAAccepted_stat-varexp_statmap"
+    },
+    "ICA rejected varexp img": {
+        "orig": "ica_rejected_varexp",
+        "bidsv1.5.0": "desc-ICARejected_stat-varexp_statmap"
+    },
+    "ICA unmodeled varexp img": {
+        "orig": "ica_unmodeled_varexp",
+        "bidsv1.5.0": "desc-ICAUnmodeled_stat-varexp_statmap"
+    },
     "decay metrics json": {
         "orig": "decay_metrics",
         "bidsv1.5.0": "desc-decay_metrics"
