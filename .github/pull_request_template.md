@@ -15,6 +15,17 @@ pull request is merged!
 https://help.github.com/articles/closing-issues-using-keywords -->
 Closes # .
 
+AI assistance
+
+<!-- Check all that apply -->
+
+- [ ] This pull request is submitted by a human
+- [ ] I have reviewed all LLM/AI-generated code (if any) and understand it
+- [ ] No LLM/AI tools were used for this contribution
+- [ ] LLM/AI was used for research/understanding/checking only (no generated code)
+- [ ] LLM/AI generated some code
+- [ ] LLM/AI generated most of the code
+
 <!-- Please give a brief overview of what has changed in the PR.
 If you're not sure what to write, consider it a note to the maintainers to indicate
 what they should be looking for when they review the pull request. -->
