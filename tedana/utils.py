@@ -1069,6 +1069,43 @@ def get_sample_mask(n_input_vols, dummy_scans=0, exclude=None):
     return sample_mask
 
 
+def setup_censoring(ref_img, dummy_scans=0, exclude=None):
+    """Build the sample mask and the volume selections that the workflows need for censoring.
+
+    Parameters
+    ----------
+    ref_img : :obj:`nibabel.spatialimages.SpatialImage`
+        Reference image for the input data, *before* dummy scans are removed.
+        Its number of volumes (1 for a 3D image) is the number of input volumes.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans removed from the beginning of the data. Default is 0.
+    exclude : :obj:`str` or None, optional
+        Volume indices to censor, in the format accepted by :func:`parse_volume_indices`.
+        Indices refer to the input volumes, *before* dummy scans are removed.
+        Default is None (no censoring).
+
+    Returns
+    -------
+    sample_mask : (T,) :obj:`numpy.ndarray` of bool
+        Mask over the post-dummy volumes, where True means retained.
+        See :func:`get_sample_mask`.
+    retained_input_vols : :obj:`numpy.ndarray` of int or None
+        Indices of the retained volumes in the input data (i.e., counting dummy scans),
+        for building the initial mask from retained volumes only.
+        None if no volume is censored.
+    fit_sample_mask : (T,) :obj:`numpy.ndarray` of bool or None
+        ``sample_mask`` if any volume is censored, otherwise None.
+        Functions that fit models take this, so runs without censoring are unchanged.
+    """
+    n_input_vols = ref_img.shape[3] if ref_img.ndim == 4 else 1
+    sample_mask = get_sample_mask(n_input_vols, dummy_scans=dummy_scans, exclude=exclude)
+    if sample_mask.all():
+        return sample_mask, None, None
+
+    retained_input_vols = np.flatnonzero(sample_mask) + dummy_scans
+    return sample_mask, retained_input_vols, sample_mask
+
+
 def get_tr_seconds(img):
     """Return an image's repetition time in seconds, using the header's time units.
 

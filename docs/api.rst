@@ -316,6 +316,7 @@ API
    create_legendre_polynomial_basis_set
    parse_volume_indices
    get_sample_mask
+   setup_censoring
    make_censoring_table
    get_censoring_metadata
    get_tr_seconds

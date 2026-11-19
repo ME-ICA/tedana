@@ -740,6 +740,40 @@ def test_get_sample_mask_invalid():
         utils.get_sample_mask(0)
 
 
+def test_setup_censoring():
+    """The helper returns the sample mask, plus input-volume indices and a fit mask."""
+    ref_img = nib.Nifti1Image(np.zeros((2, 2, 2, 10), dtype=np.float32), np.eye(4))
+
+    # Censoring: retained volumes are reported in input-volume (pre-dummy) indices
+    sample_mask, retained_input_vols, fit_sample_mask = utils.setup_censoring(
+        ref_img,
+        dummy_scans=2,
+        exclude="2,5:7,9",
+    )
+    np.testing.assert_array_equal(np.flatnonzero(~sample_mask), [0, 3, 4, 7])
+    np.testing.assert_array_equal(retained_input_vols, [3, 4, 7, 8])
+    assert fit_sample_mask is sample_mask
+
+    # No censoring (including only dummy scans excluded): fit inputs stay None
+    for exclude in (None, "0:2"):
+        sample_mask, retained_input_vols, fit_sample_mask = utils.setup_censoring(
+            ref_img,
+            dummy_scans=2,
+            exclude=exclude,
+        )
+        assert sample_mask.shape == (8,)
+        assert sample_mask.all()
+        assert retained_input_vols is None
+        assert fit_sample_mask is None
+
+    # A 3D reference image has one volume
+    ref_img_3d = nib.Nifti1Image(np.zeros((2, 2, 2), dtype=np.float32), np.eye(4))
+    sample_mask, retained_input_vols, fit_sample_mask = utils.setup_censoring(ref_img_3d)
+    np.testing.assert_array_equal(sample_mask, [True])
+    assert retained_input_vols is None
+    assert fit_sample_mask is None
+
+
 def test_make_censoring_table():
     """The censoring table maps post-dummy volumes to input volumes and times."""
     sample_mask = np.array([True, False, False, True, True])
