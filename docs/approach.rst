@@ -85,6 +85,15 @@ but ICA and the fit maps require at least three good echoes.
     Some brain masking is required because the percentile-based thresholding
     in the adaptive mask will be flawed if it includes all out-of-brain voxels.
 
+    If the provided mask contains integer values greater than 1,
+    ``tedana`` treats it as an adaptive mask
+    (e.g., the ``desc-adaptiveGoodSignal_mask.nii.gz`` file from a previous run)
+    and uses its values directly, instead of generating a new adaptive mask.
+    This means that re-running ``tedana`` with a previous run's adaptive mask
+    will not erode the mask further.
+    Voxels are only removed from a provided adaptive mask where the data are
+    zero, negative, or NaN.
+
 In this eight-echo dataset,
 we can see that the adaptive mask flags later echoes as "bad" in areas we expect
 to suffer most from dropout,
