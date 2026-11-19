@@ -333,7 +333,7 @@ def test_integration_three_echo(skip_integration, caplog):
     )
 
 
-def test_integration_three_echo_censoring(skip_integration, tmp_path):
+def test_integration_three_echo_censoring(skip_integration):
     """Censored volumes cannot affect any tedana estimate, and survive reclassification.
 
     tedana is run twice with the same censoring: on the original data, and on a copy
@@ -344,6 +344,11 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
         pytest.skip("Skipping three-echo censoring integration test")
 
     test_data_path, osf_id = data_for_testing_info("three-echo")
+    base_dir = op.abspath(op.join(test_data_path, "../../outputs/three-echo-censoring"))
+    if op.exists(base_dir):
+        shutil.rmtree(base_dir)
+
+    os.makedirs(base_dir)
     download_test_data(osf_id, test_data_path)
     in_file = f"{test_data_path}/three_echo_Cornell_zcat.nii.gz"
 
@@ -362,10 +367,10 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
     spiked_arr[..., censored] = spiked_arr[..., censored] * 20 + 1e5
     inputs = {}
     for label, data in (("orig", arr), ("spiked", spiked_arr)):
-        inputs[label] = str(tmp_path / f"{label}_zcat.nii.gz")
+        inputs[label] = op.join(base_dir, f"{label}_zcat.nii.gz")
         nb.Nifti1Image(data, in_img.affine, header).to_filename(inputs[label])
 
-    out_dirs = {label: str(tmp_path / f"out_{label}") for label in inputs}
+    out_dirs = {label: op.join(base_dir, f"out_{label}") for label in inputs}
     for label in ("orig", "spiked"):
         args = [
             "-d",
@@ -450,7 +455,7 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
     )
 
     # Reclassification reuses the censoring and keeps the time axis
-    reclassify_dir = str(tmp_path / "reclassify")
+    reclassify_dir = op.join(base_dir, "reclassify")
     ica_reclassify_workflow(
         op.join(out_dirs["orig"], "desc-tedana_registry.json"),
         accept=[0],
@@ -462,7 +467,7 @@ def test_integration_three_echo_censoring(skip_integration, tmp_path):
     assert nb.load(op.join(reclassify_dir, "desc-denoised_bold.nii.gz")).shape[3] == n_vols
 
 
-def test_integration_three_echo_censoring_mapca(skip_integration, tmp_path):
+def test_integration_three_echo_censoring_mapca(skip_integration):
     """The default moving-average PCA (aic) is fit on retained volumes only.
 
     As in test_integration_three_echo_censoring, tedana is run on the original data and
@@ -473,6 +478,11 @@ def test_integration_three_echo_censoring_mapca(skip_integration, tmp_path):
         pytest.skip("Skipping three-echo maPCA censoring integration test")
 
     test_data_path, osf_id = data_for_testing_info("three-echo")
+    base_dir = op.abspath(op.join(test_data_path, "../../outputs/three-echo-censoring-mapca"))
+    if op.exists(base_dir):
+        shutil.rmtree(base_dir)
+
+    os.makedirs(base_dir)
     download_test_data(osf_id, test_data_path)
     in_img = nb.load(f"{test_data_path}/three_echo_Cornell_zcat.nii.gz")
     n_vols = in_img.shape[3]
@@ -487,9 +497,9 @@ def test_integration_three_echo_censoring_mapca(skip_integration, tmp_path):
     spiked_arr[..., censored] = spiked_arr[..., censored] * 20 + 1e5
     out_dirs = {}
     for label, data in (("orig", arr), ("spiked", spiked_arr)):
-        in_file = str(tmp_path / f"{label}_zcat.nii.gz")
+        in_file = op.join(base_dir, f"{label}_zcat.nii.gz")
         nb.Nifti1Image(data, in_img.affine, header).to_filename(in_file)
-        out_dirs[label] = str(tmp_path / f"out_{label}")
+        out_dirs[label] = op.join(base_dir, f"out_{label}")
         # Default --tedpca (aic)
         tedana_cli._main(
             [
@@ -772,7 +782,6 @@ def test_integration_three_echo_aroma_external(skip_integration):
 )
 def test_integration_three_echo_external_regressors_censoring(
     skip_integration,
-    tmp_path,
     tree_name,
     metric_columns,
 ):
@@ -786,7 +795,12 @@ def test_integration_three_echo_external_regressors_censoring(
     n_vols = len(pd.read_table(external_file))
     censored = np.array([5, 6, 7, 40, 41, n_vols - 1])
 
-    out_dir = str(tmp_path / "out")
+    out_dir = op.abspath(
+        op.join(test_data_path, f"../../outputs/three-echo-external-censoring-{tree_name}")
+    )
+    if op.exists(out_dir):
+        shutil.rmtree(out_dir)
+
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
