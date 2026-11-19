@@ -4,13 +4,13 @@
             "name": "The tedana Community"
         },
         {
-            "name": "Ahmed, Zaki",
-            "affiliation": "Mayo Clinic",
-            "orcid": "0000-0001-5648-0590"
+            "name": "Salo, Taylor",
+            "affiliation": "Florida International University",
+            "orcid": "0000-0001-9813-3167"
         },
         {
             "name": "Bandettini, Peter A.",
-            "affiliation": "National Institutes of Health",
+            "affiliation": "National Institute of Mental Health",
             "orcid": "0000-0001-9038-4746"
         },
         {
@@ -24,6 +24,11 @@
             "orcid": "0000-0002-9068-5810"
         },
         {
+            "name": "Davis, Xue",
+            "affiliation": "National Institute of Mental Health",
+            "orcid": "0009-0004-0853-2199"
+        },
+        {
             "name": "Dowdle, Logan T.",
             "affiliation": "Center for Magnetic Resonance Research, University of Minnesota",
             "orcid": "0000-0002-1879-705X"
@@ -34,19 +39,14 @@
             "orcid": "0000-0003-1358-196X"
         },
         {
+            "name": "Goodale, Sarah",
+            "affiliation": "Vanderbilt University",
+            "orcid": "0000-0003-0460-6299"
+        },
+        {
             "name": "Gonzalez-Castillo, Javier",
-            "affiliation": "National Institutes of Health",
+            "affiliation": "National Institute of Mental Health",
             "orcid": "0000-0002-6520-5125"
-        },
-        {
-            "name": "Handwerker, Dan",
-            "affiliation": "National Institutes of Health",
-            "orcid": "0000-0001-7261-4042"
-        },
-        {
-            "name": "Heunis, Stephan",
-            "affiliation": "Eindhoven University of Technology",
-            "orcid": "0000-0003-3503-9872"
         },
         {
             "name": "Kundu, Prantik",
@@ -54,9 +54,9 @@
             "orcid": "0000-0001-9367-3068"
         },
         {
-            "name": "Laird, Angela R.",
-            "affiliation": "Florida International University",
-            "orcid": "0000-0003-3379-8744"
+            "name": "Lamer-Bruno, Kathryn",
+            "affiliation": "University of California, San Diego",
+            "orcid": "0000-0003-0708-1774"
         },
         {
             "name": "Markello, Ross",
@@ -69,32 +69,38 @@
             "orcid": "0000-0002-6533-164X"
         },
         {
-            "name": "Maullin-Sapey, Thomas",
-            "affiliation": "Big Data Institute, University of Oxford",
-            "orcid": "0000-0002-4516-5103"
-        },
-        {
             "name": "Moia, Stefano",
             "affiliation": "Basque Center on Cognition, Brain and Language",
             "orcid": "0000-0002-2553-3327"
         },
         {
             "name": "Molfese, Peter",
-            "affiliation": "National Institutes of Mental Health, CMN",
+            "affiliation": "National Institute of Mental Health",
             "orcid": "0000-0002-3045-9408"
         },
         {
-            "name": "Salo, Taylor",
-            "affiliation": "Florida International University",
-            "orcid": "0000-0001-9813-3167"
+            "name": "Reddy, Neha",
+            "affiliation": "Northwestern University",
+            "orcid": "0000-0001-8938-540X"
         },
         {
-            "name": "Staden, Isla",
-            "orcid": "0000-0002-0795-1154"
+            "name": "Rubin, Marly",
+            "affiliation": "National Institute of Mental Health",
+            "orcid": "0009-0003-5896-0805"
+        },
+        {
+            "name": "Smith, Robert",
+            "affiliation": "Florey Institute of Neuroscience and Mental Health",
+            "orcid": "0000-0003-3636-4642"
+        },
+        {
+            "name": "Tahayori, Bahman",
+            "affiliation": "Florey Institute of Neuroscience and Mental Health",
+            "orcid": "0000-0002-4927-0023"
         },
         {
             "name": "Teves, Joshua",
-            "affiliation": "National Institutes of Mental Health, Section on Functional Imaging Methods",
+            "affiliation": "National Institutes of Mental Health",
             "orcid": "0000-0002-7767-0067"
         },
         {
@@ -103,14 +109,14 @@
             "orcid": "0000-0001-6849-9088"
         },
         {
-            "name": "Vaziri-Pashkam, Maryam",
-            "affiliation": "Laboratory of Brain and Cognition, National Institute of Mental Health",
-            "orcid": "0000-0003-1830-2501"
-        },
-        {
             "name": "Whitaker, Kirstie",
             "affiliation": "The Alan Turing Institute",
             "orcid": "0000-0001-8498-4059"
+        },
+        {
+            "name": "Handwerker, Dan",
+            "affiliation": "National Institute of Mental Health",
+            "orcid": "0000-0001-7261-4042"
         }
     ],
     "keywords": [
