@@ -23,6 +23,22 @@
         "orig": "s0_var",
         "bidsv1.5.0": "stat-variance_desc-s0_statmap"
     },
+    "frequency img": {
+        "orig": "frequencyHz",
+        "bidsv1.5.0": "desc-nlls_fieldmap"
+    },
+    "frequency json": {
+        "orig": "frequencyHz",
+        "bidsv1.5.0": "desc-nlls_fieldmap"
+    },
+    "phase0 img": {
+        "orig": "phase0",
+        "bidsv1.5.0": "part-phase_S0map"
+    },
+    "phase0 json": {
+        "orig": "phase0",
+        "bidsv1.5.0": "part-phase_S0map"
+    },
     "t2star-s0 covariance img": {
         "orig": "t2s_s0_covar",
         "bidsv1.5.0": "stat-covariance_desc-t2star+s0_statmap"
