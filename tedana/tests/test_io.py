@@ -23,7 +23,7 @@ def test_smoke_split_ts():
     """
     Ensures that split_ts returns output when fed in with random inputs.
 
-    Note: classification is ["accepted", "rejected", "ignored"].
+    Note: classification is ["accepted", "rejected"].
     """
     np.random.seed(0)  # seeded because component_table MUST have accepted components
     n_samples = 100
@@ -38,7 +38,7 @@ def test_smoke_split_ts():
     # a "metric," and random classification
     component = np.random.random(n_components)
     metric = np.random.random(n_components)
-    classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
+    classification = np.random.choice(["accepted", "rejected"], n_components)
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
 
@@ -78,7 +78,7 @@ def test_smoke_write_split_ts():
 
     component = np.random.random(n_components)
     metric = np.random.random(n_components)
-    classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
+    classification = np.random.choice(["accepted", "rejected"], n_components)
     df_data = np.column_stack((component, metric, classification))
     component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
     io_generator.verbose = True
@@ -127,7 +127,7 @@ def test_writeresults_uses_original_mixing_for_component_maps():
     mixing = rng.normal(size=(n_times, n_components))
     mixing_orig = rng.normal(size=(n_times, n_components))
     component_table = pd.DataFrame(
-        {"classification": ["rejected", "ignored", "rejected"]},
+        {"classification": ["rejected", "accepted", "rejected"]},
     )
     saved = {}
 

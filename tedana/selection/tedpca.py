@@ -44,8 +44,7 @@ def kundu_tedpca(
     Returns
     -------
     component_table : :obj:`pandas.DataFrame`
-        Component table with components classified as 'accepted', 'rejected',
-        or 'ignored'.
+        Component table with components classified as 'accepted' or 'rejected'.
     metric_metadata : :obj:`dict`
         Dictionary with metadata about calculated metrics.
         Each entry corresponds to a column in ``component_table``.
