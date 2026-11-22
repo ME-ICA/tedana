@@ -64,6 +64,18 @@ tedana_report.html                                                           The
                                                                              histogram; and, when curve-fitting is used, first-pass
                                                                              and post-interpolation fit-failure counts. Only written
                                                                              when fitmode is "all".
+"censoring tsv": desc-censoring_timeseries.tsv                               Per-volume censoring table, with one row per volume
+                                                                             after dummy scan removal. Columns are
+                                                                             ``volume_index`` (0-based, after dummy scans),
+                                                                             ``original_volume_index`` (0-based, input data),
+                                                                             ``time`` (seconds), and ``sample_mask`` (1 = retained,
+                                                                             0 = censored). Only written when ``--exclude``
+                                                                             censors at least one volume. Censored volumes stay in
+                                                                             the output time series, but must still be excluded
+                                                                             from downstream analyses.
+"censoring json": desc-censoring_timeseries.json                             Column descriptions and a censoring summary (number
+                                                                             and fraction of censored volumes, longest run of
+                                                                             censored volumes) for the censoring table.
 "PCA mixing tsv": desc-PCA_mixing.tsv                                        Mixing matrix (component time series) from PCA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the

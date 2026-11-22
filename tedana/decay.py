@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import List, Literal, Tuple
+from typing import List, Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -928,6 +928,7 @@ def rmse_of_fit_decay_ts(
     t2s: np.ndarray,
     s0: np.ndarray,
     fitmode: Literal["all", "ts"],
+    sample_mask: Union[np.ndarray, None] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
 
@@ -949,11 +950,15 @@ def rmse_of_fit_decay_ts(
         Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
     fitmode : {"fit", "all"}
         Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
+    sample_mask : (T,) :obj:`numpy.ndarray` of bool or None, optional
+        Volumes to include in ``rmse_map`` (True = retained). ``rmse_df`` always has
+        one row per volume. If None, all volumes are used. Default is None.
 
     Returns
     -------
     rmse_map : (Mb,) :obj:`numpy.ndarray`
-        Mean root mean squared error of the model fit across all volumes at each voxel.
+        Mean root mean squared error of the model fit across retained volumes
+        (all volumes if ``sample_mask`` is None) at each voxel.
     rmse_df : :obj:`pandas.DataFrame`
         Each column is the root mean squared error of the model fit at each timepoint.
         Columns are mean, standard deviation, and percentiles across voxels. Column labels are
@@ -998,8 +1003,11 @@ def rmse_of_fit_decay_ts(
             )
         rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
 
-    rmse_sum_map = np.nansum(rmse, axis=1)
-    rmse_count_map = np.sum(~np.isnan(rmse), axis=1)
+    # Summarize each voxel over retained volumes only, so censored volumes cannot
+    # affect the RMSE map (or the decay metrics derived from it)
+    rmse_retained = rmse if sample_mask is None else rmse[:, np.asarray(sample_mask, dtype=bool)]
+    rmse_sum_map = np.nansum(rmse_retained, axis=1)
+    rmse_count_map = np.sum(~np.isnan(rmse_retained), axis=1)
     rmse_map = np.full(rmse_sum_map.shape, np.nan, dtype=rmse.dtype)
     np.divide(rmse_sum_map, rmse_count_map, out=rmse_map, where=rmse_count_map > 0)
 
@@ -1139,6 +1147,7 @@ def t2smap_subworkflow(
     data_without_excluded_vols=None,
     n_threads=1,
     backend="cpu",
+    sample_mask=None,
 ):
     """Fit a T2* map to the data.
 
@@ -1170,6 +1179,11 @@ def t2smap_subworkflow(
     data_without_excluded_vols : (Mb x E x T) :obj:`numpy.ndarray` or None, optional
         Multi-echo data array, where `Mb` is samples in base mask, `E` is echos,
         and `T` is time. If None, the data_cat is used.
+    sample_mask : (T,) :obj:`numpy.ndarray` of bool or None, optional
+        Volumes of ``data_cat`` that were retained (True) rather than censored.
+        Used so that the RMSE map and decay metrics summarize retained volumes only.
+        The per-volume RMSE confounds still cover every volume.
+        If None, all volumes are used. Default is None.
 
     Returns
     -------
@@ -1364,6 +1378,7 @@ def t2smap_subworkflow(
         t2s=t2s_full,
         s0=s0_full,
         fitmode=fitmode,
+        sample_mask=sample_mask,
     )
     io_generator.save_file(rmse_map, "rmse img")
     io_generator.save_file(rmse_df, "confounds tsv")
