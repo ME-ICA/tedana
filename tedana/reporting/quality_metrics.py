@@ -1,6 +1,7 @@
 """File to assess quality metrics for components."""
 
 import numpy as np
+import pandas as pd
 
 from tedana.stats import fit_model, get_coeffs
 
@@ -115,3 +116,116 @@ def calculate_variance_summary(selector, data_optcom_masked, mixing):
     rejected_reconstruction = betas[:, rej].dot(mixing.T[rej, :])
     denoised = dmdata.T - rejected_reconstruction
     selector.cross_component_metrics_["retained_variance"] = float((denoised**2).sum() / sst * 100)
+
+
+def _percent_of_variance(sum_squares, sst):
+    """Express sums of squares as a percentage of each voxel's total sum of squares.
+
+    Voxels with no variance are assigned 0.
+    """
+    out = np.zeros(sst.shape, dtype=float)
+    valid = sst > 0
+    out[valid] = 100 * sum_squares[valid] / sst[valid]
+    return out
+
+
+def calculate_variance_explained_maps(data, mixing, component_table=None):
+    """Calculate voxel-wise maps of the percent variance explained by a decomposition.
+
+    The data are regressed on the component time series in each voxel, after removing the
+    mean over time, mirroring :func:`tedana.io.denoise_ts`.
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Data to describe, such as optimally-combined data restricted to a mask.
+    mixing : (T x C) array_like
+        Component time series.
+    component_table : :obj:`pandas.DataFrame` or None, optional
+        Component table with a ``"classification"`` column.
+        If provided, maps for the accepted and rejected components are also calculated.
+        Default is None.
+
+    Returns
+    -------
+    maps : dict of (S,) :obj:`numpy.ndarray`
+        Percent of each voxel's variance, in the range 0-100.
+        ``"total"`` is the variance explained by all components (R-squared x 100).
+        When ``component_table`` is provided, ``"unmodeled"`` (``100 - total``), and
+        ``"accepted"`` and ``"rejected"`` are added.
+        The latter two are the variance of the data reconstructed from only the accepted or
+        rejected components, using the betas from the full model.
+        Because components are not necessarily orthogonal, the accepted, rejected, and
+        unmodeled maps do not necessarily sum to 100.
+    """
+    data = np.asarray(data)
+    mixing = np.asarray(mixing)
+    dmdata = data - data.mean(axis=1, keepdims=True)
+    sst = (dmdata**2).sum(axis=1)
+
+    betas = get_coeffs(dmdata, mixing)
+    sse = ((dmdata - betas.dot(mixing.T)) ** 2).sum(axis=1)
+    unmodeled = _percent_of_variance(sse, sst)
+    maps = {"total": np.where(sst > 0, 100 - unmodeled, 0)}
+
+    if component_table is not None:
+        maps["unmodeled"] = unmodeled
+        for label in ("accepted", "rejected"):
+            idx = component_table.loc[component_table["classification"] == label].index.values
+            reconstruction = betas[:, idx].dot(mixing[:, idx].T)
+            maps[label] = _percent_of_variance((reconstruction**2).sum(axis=1), sst)
+
+    return maps
+
+
+def write_variance_explained_maps(
+    *,
+    data_optcom,
+    mixing,
+    component_table,
+    mask,
+    io_generator,
+    include_pca=True,
+):
+    """Write voxel-wise maps of the percent variance explained by the decompositions.
+
+    Parameters
+    ----------
+    data_optcom : (Mb x T) array_like
+        Optimally-combined data, in the space of the base mask.
+    mixing : (T x C) array_like
+        ICA mixing matrix used for denoising.
+    component_table : :obj:`pandas.DataFrame`
+        ICA component table with a ``"classification"`` column.
+    mask : (Mb,) :obj:`numpy.ndarray` of bool
+        Mask of voxels to describe.
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    include_pca : bool, optional
+        Whether to also write the PCA map, which requires the "PCA mixing tsv" and
+        "PCA metrics tsv" outputs. Default is True.
+
+    Notes
+    -----
+    Writes the "ICA varexp img", "ICA accepted varexp img", "ICA rejected varexp img",
+    "ICA unmodeled varexp img", and, if ``include_pca`` is True, "PCA varexp img" outputs.
+    The PCA map uses the PCA components that were retained for ICA.
+    """
+    data = data_optcom[mask, :]
+
+    ica_maps = calculate_variance_explained_maps(data, mixing, component_table)
+    keys = {
+        "total": "ICA varexp img",
+        "accepted": "ICA accepted varexp img",
+        "rejected": "ICA rejected varexp img",
+        "unmodeled": "ICA unmodeled varexp img",
+    }
+    for label, key in keys.items():
+        io_generator.save_file(ica_maps[label], key, mask=mask)
+
+    if include_pca:
+        pca_mixing = pd.read_table(io_generator.get_name("PCA mixing tsv")).to_numpy()
+        pca_table = pd.read_table(io_generator.get_name("PCA metrics tsv"))
+        retained = (pca_table["classification"] == "accepted").to_numpy()
+        pca_maps = calculate_variance_explained_maps(data, pca_mixing[:, retained])
+        io_generator.save_file(pca_maps["total"], "PCA varexp img", mask=mask)

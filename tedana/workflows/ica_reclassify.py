@@ -589,6 +589,16 @@ def ica_reclassify_workflow(
         mixing_orig=mixing_orig if tedort else None,
     )
 
+    # The PCA is not rerun, so only the ICA variance explained maps are updated
+    reporting.quality_metrics.write_variance_explained_maps(
+        data_optcom=data_optcom,
+        mixing=mixing,
+        component_table=component_table,
+        mask=mask_denoise,
+        io_generator=io_generator,
+        include_pca=False,
+    )
+
     if "mir" in gscontrol:
         io_generator.overwrite = True
         gsc.minimum_image_regression(
@@ -668,6 +678,7 @@ def ica_reclassify_workflow(
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
+        reporting.static_figures.plot_variance_explained_maps(io_generator=io_generator)
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels=None, similarity_t_sne=None)
