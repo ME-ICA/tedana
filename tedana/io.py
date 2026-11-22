@@ -693,7 +693,7 @@ def denoise_ts(data, mixing, mask, component_table):
 
 # File Writing Functions
 def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
-    """Split `data` into denoised / noise / ignored time series and save to disk.
+    """Split `data` into denoised / high-Kappa / low-Kappa time series and save to disk.
 
     Parameters
     ----------

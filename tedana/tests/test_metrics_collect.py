@@ -64,6 +64,7 @@ def test_get_metadata():
     assert "Levels" in metadata["classification"]
     assert "accepted" in metadata["classification"]["Levels"]
     assert "rejected" in metadata["classification"]["Levels"]
+    assert "ignored" not in metadata["classification"]["Levels"]
 
     # Check optimal sign has Levels with integers
     assert "Levels" in metadata["optimal sign"]

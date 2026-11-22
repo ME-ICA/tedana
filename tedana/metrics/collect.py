@@ -717,10 +717,6 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Levels": {
                 "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
                 "rejected": ("A non-BOLD component excluded from denoised and high-Kappa data."),
-                "ignored": (
-                    "A low-variance component included in denoised, "
-                    "but excluded from high-Kappa data."
-                ),
             },
         }
 
@@ -731,10 +727,6 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Levels": {
                 "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
                 "rejected": ("A non-BOLD component excluded from denoised and high-Kappa data."),
-                "ignored": (
-                    "A low-variance component included in denoised, "
-                    "but excluded from high-Kappa data."
-                ),
             },
         }
     if "classification_tags" in component_table:
