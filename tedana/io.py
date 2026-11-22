@@ -226,13 +226,17 @@ class OutputGenerator:
             mask = _convert_to_nifti1(nb.load(mask), max_dim=3)
         self.mask = mask
 
-    def get_name(self, description, **kwargs):
+    def get_name(self, description, part=None, **kwargs):
         """Generate a file full path to simplify file output.
 
         Parameters
         ----------
         description : str
             The description of the file. Must be a key in ``self.config``.
+        part : {None, "mag", "phase", "real", "imag"}, optional
+            Component of complex-valued data held in the file. For BIDS
+            conventions, it is added as a ``part-<label>`` entity. Other
+            conventions ignore it. Default is None.
         kwargs : keyword arguments
             Additional arguments used to format the base filename string.
             The most common is ``echo``.
@@ -257,6 +261,9 @@ class OutputGenerator:
         name_kwargs = {k: v for k, v in kwargs.items() if k in name_variables}
 
         name = name.format(**name_kwargs)
+        if part is not None and self.convention.startswith("bids"):
+            name = _add_part_entity(name, part)
+
         name = op.join(self.out_dir, self.prefix + name + extension)
         return name
 
@@ -529,6 +536,52 @@ def versiontuple(v):
         Tuple of ints corresponding to the version string.
     """
     return tuple(map(int, (v.split("."))))
+
+
+# BIDS entities that precede ``part`` in the entity order of the BIDS specification.
+_ENTITIES_BEFORE_PART = (
+    "sub",
+    "ses",
+    "sample",
+    "task",
+    "tracksys",
+    "acq",
+    "nuc",
+    "voi",
+    "ce",
+    "trc",
+    "stain",
+    "rec",
+    "dir",
+    "run",
+    "mod",
+    "echo",
+    "flip",
+    "inv",
+    "mt",
+)
+
+
+def _add_part_entity(name, part):
+    """Insert a BIDS ``part-<label>`` entity into a filename stem.
+
+    The entity is placed according to the BIDS entity order, after entities such
+    as ``echo`` and before ones such as ``desc``.
+
+    Examples
+    --------
+    >>> _add_part_entity("S0map", "mag")
+    'part-mag_S0map'
+    >>> _add_part_entity("echo-1_desc-limited_S0map", "phase")
+    'echo-1_part-phase_desc-limited_S0map'
+    """
+    fields = name.split("_")
+    i_field = 0
+    while i_field < len(fields) - 1 and fields[i_field].split("-")[0] in _ENTITIES_BEFORE_PART:
+        i_field += 1
+
+    fields.insert(i_field, f"part-{part}")
+    return "_".join(fields)
 
 
 def get_fields(name):
