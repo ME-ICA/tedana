@@ -440,6 +440,38 @@ def test_generate_qc_card_omits_decay_when_absent():
     )
     assert "Decay model" not in [section["title"] for section in sections]
     assert "Mean T2*" not in _qc_card_labels(sections)
+    assert "Temporal censoring" not in [section["title"] for section in sections]
+
+
+def test_generate_qc_card_censoring_section():
+    """A censored run gets a censoring section built from the censoring JSON."""
+    component_table = pd.DataFrame({"classification": ["accepted"], "variance explained": [100.0]})
+    censoring = {
+        "NumberOfVolumes": 100,
+        "NumberOfRetainedVolumes": 90,
+        "NumberOfCensoredVolumes": 10,
+        "CensoredFraction": 0.1,
+        "LongestCensoredRun": 4,
+        "ProjectionMapsConditionNumber": 21.5,
+        "RetainedProjectionCorrelation": [0.99, 0.95, 0.999],
+    }
+    sections = html_report._generate_qc_card(
+        component_table=component_table,
+        cross_comp_metrics_dict={},
+        decay_metrics_dict=None,
+        kappa_elbow=None,
+        rho_elbow=None,
+        n_vols=100,
+        n_comps=1,
+        tree_node_count=None,
+        censoring_dict=censoring,
+    )
+    assert sections[-1]["title"] == "Temporal censoring"
+    labels = _qc_card_labels(sections)
+    assert labels["Volumes"] == "90 retained | 10 censored (10.0%)"
+    assert labels["Longest censored run"] == "4"
+    assert labels["Projection condition number"] == "21.5"
+    assert labels["Projection vs. fitted correlation"] == "min 0.950 | median 0.990"
 
 
 def test_update_template_bokeh_renders_qc_card_sections(tmp_path):

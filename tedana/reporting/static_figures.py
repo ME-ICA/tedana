@@ -23,6 +23,137 @@ MPL_LGR.setLevel(logging.WARNING)
 RepLGR = logging.getLogger("REPORT")
 
 
+def _get_tr(io_generator):
+    """Return the reference image's TR in seconds, falling back to the raw header value."""
+    tr = utils.get_tr_seconds(io_generator.reference_img)
+    if tr is None:
+        tr = io_generator.reference_img.header.get_zooms()[-1]
+
+    return tr
+
+
+def _get_sample_mask(io_generator):
+    """Return the run's temporal sample mask from the censoring table, or None."""
+    fname = io_generator.get_name("censoring tsv")
+    if not fname or not os.path.isfile(fname):
+        return None
+
+    sample_mask = pd.read_table(fname)["sample_mask"].to_numpy().astype(bool)
+    return None if sample_mask.all() else sample_mask
+
+
+def _censored_runs(sample_mask):
+    """Return (start, stop) volume indices of each run of censored volumes, stop exclusive."""
+    censored = np.concatenate(([False], ~np.asarray(sample_mask, dtype=bool), [False]))
+    edges = np.flatnonzero(np.diff(censored.astype(int)))
+    return list(zip(edges[::2], edges[1::2]))
+
+
+def _shade_censored_volumes(ax, sample_mask):
+    """Shade each run of censored volumes on a time-series axis with a gray band.
+
+    Parameters
+    ----------
+    ax : :obj:`matplotlib.axes.Axes`
+        Axis whose x values are volume indices.
+    sample_mask : (T,) array_like of bool
+        True for retained volumes.
+    """
+    for start, stop in _censored_runs(sample_mask):
+        ax.axvspan(start - 0.5, stop - 0.5, color="0.8", linewidth=0, zorder=0)
+
+
+def plot_external_regressors(*, external_regressors, out_file, tr, sample_mask=None):
+    """Plot each external regressor's time series, shading censored volumes.
+
+    Parameters
+    ----------
+    external_regressors : (T x R) :obj:`pandas.DataFrame`
+        External regressors, one row per post-dummy volume.
+    out_file : :obj:`str`
+        The output file name.
+    tr : :obj:`float`
+        Repetition time, in seconds.
+    sample_mask : (T,) array_like of bool or None, optional
+        True for retained volumes. Censored volumes are shaded gray; their regressor
+        values were not used in any fit. Default is None (nothing censored).
+    """
+    names = list(external_regressors.columns)
+    n_vols = external_regressors.shape[0]
+    fig, axes = plt.subplots(
+        len(names),
+        1,
+        sharex=True,
+        figsize=(12, 0.8 * len(names) + 1.5),
+        squeeze=False,
+    )
+    axes = axes[:, 0]
+    for ax, name in zip(axes, names):
+        ax.plot(np.arange(n_vols), external_regressors[name].to_numpy(), color="C0", linewidth=1)
+        if sample_mask is not None:
+            _shade_censored_volumes(ax, sample_mask)
+
+        ax.set_ylabel(name, rotation=0, ha="right", va="center", fontsize=9)
+        ax.tick_params(axis="y", labelsize=7)
+        ax.margins(x=0)
+        ax.spines[["top", "right"]].set_visible(False)
+
+    axes[-1].set_xlabel("Volume")
+    ax_seconds = axes[0].secondary_xaxis("top", functions=(lambda x: x * tr, lambda s: s / tr))
+    ax_seconds.set_xlabel("Time (s)")
+    title = "External regressors"
+    if sample_mask is not None:
+        n_censored = int((~np.asarray(sample_mask, dtype=bool)).sum())
+        title += f" (gray: {n_censored} of {n_vols} volumes censored)"
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(out_file)
+    plt.close(fig)
+
+
+def _mark_censored_volumes(fig, sample_mask):
+    """Mark censored volumes with a strip of red bars just above a nilearn carpet plot.
+
+    The bars sit outside the carpet, so they do not hide any data.
+
+    Parameters
+    ----------
+    fig : :obj:`matplotlib.figure.Figure`
+        Figure containing a carpet plot from :func:`nilearn.plotting.plot_carpet`.
+    sample_mask : (T,) array_like of bool or None
+        Temporal sample mask, True for retained volumes. Nothing is drawn if None.
+    """
+    if sample_mask is None:
+        return
+
+    sample_mask = np.asarray(sample_mask, dtype=bool)
+    # The carpet is the last axes with an image (nilearn may replace the axes it is given)
+    ax = [axis for axis in fig.axes if axis.images][-1]
+    n_columns = ax.images[-1].get_array().shape[1]
+    # nilearn downsamples long runs in time by a power of two; recover the factor
+    factor = 2 ** int(np.round(np.log2(sample_mask.size / n_columns)))
+    trans = ax.get_xaxis_transform()
+    for start, stop in _censored_runs(sample_mask):
+        ax.add_patch(
+            plt.Rectangle(
+                (start / factor - 0.5, 1.01),
+                (stop - start) / factor,
+                0.03,
+                transform=trans,
+                facecolor="tab:red",
+                edgecolor="none",
+                clip_on=False,
+            )
+        )
+
+    n_censored = int((~sample_mask).sum())
+    ax.set_title(
+        f"{ax.get_title()}\n(red: {n_censored} of {sample_mask.size} volumes censored)",
+        pad=22,
+    )
+
+
 def _trim_edge_zeros(arr):
     """
     Trims away the zero-filled slices that surround many 3/4D arrays.
@@ -68,7 +199,12 @@ def carpet_plot(
         If any gscontrol methods were applied, then additional carpet plots will be generated for
         pertinent outputs from those steps.
         Default is None.
+
+    Notes
+    -----
+    If the run was censored, a strip of red bars above each carpet marks the censored volumes.
     """
+    sample_mask = _get_sample_mask(io_generator)
     optcom_img = masking.unmask(optcom_ts.T, io_generator.mask)
     dn_img = masking.unmask(denoised_ts.T, io_generator.mask)
     hik_img = masking.unmask(hikts.T, io_generator.mask)
@@ -84,6 +220,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Optimally Combined Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
@@ -99,6 +236,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Denoised Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
@@ -114,6 +252,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="High-Kappa Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
@@ -129,6 +268,7 @@ def carpet_plot(
         standardize="zscore_sample",
         title="Low-Kappa Data",
     )
+    _mark_censored_volumes(fig, sample_mask)
     fig.tight_layout()
     fig.savefig(
         os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")
@@ -211,6 +351,7 @@ def plot_component(
     title,
     out_file,
     classification_linestyle="solid",
+    sample_mask=None,
 ):
     """Create a figure with a component's spatial map, time series, and power spectrum.
 
@@ -237,6 +378,10 @@ def plot_component(
     classification_linestyle : str, optional
         Matplotlib line style for the time series and power spectrum, providing a
         redundant (non-color) cue for the classification. Default is "solid".
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). If given, censored volumes are
+        shaded in the time series panel and the spectrum panel is labeled as a
+        Lomb-Scargle periodogram. Default is None.
     """
     import matplotlib.image as mpimg
     from matplotlib import gridspec
@@ -296,6 +441,9 @@ def plot_component(
     )
     ax_ts.set_xlim(0, len(component_timeseries) - 1)
     ax_ts.set_yticks([])
+    if sample_mask is not None:
+        # Shade censored volumes; their values are projections, not fitted ICA values
+        _shade_censored_volumes(ax_ts, sample_mask)
 
     max_xticks = 10
     xloc = plt.MaxNLocator(max_xticks)
@@ -325,7 +473,9 @@ def plot_component(
     ax_fft.plot(
         frequencies, power_spectrum, color=classification_color, linestyle=classification_linestyle
     )
-    ax_fft.set_title("One-Sided FFT")
+    ax_fft.set_title(
+        "One-Sided FFT" if sample_mask is None else "Lomb-Scargle periodogram (retained volumes)"
+    )
     ax_fft.set_xlabel("Frequency (Hz)")
     ax_fft.set_xlim(0, frequencies.max())
     ax_fft.set_yticks([])
@@ -351,6 +501,7 @@ def _generate_single_component_figure(
     png_cmap,
     out_dir,
     prefix,
+    sample_mask=None,
 ):
     """Generate a figure for a single component.
 
@@ -372,6 +523,8 @@ def _generate_single_component_figure(
         Output directory path.
     prefix : str
         Prefix for the output file name.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal censoring mask (True = retained). Default is None.
     """
     classification = component_table.loc[compnum, "classification"]
     classification_tags = str(component_table.loc[compnum, "classification_tags"])
@@ -394,7 +547,8 @@ def _generate_single_component_figure(
 
     # Get fft and freqs for this component
     # adapted from @dangom
-    spectrum, freqs = utils.get_spectrum(component_timeseries, tr)
+    # (Lomb-Scargle over retained volumes when censored)
+    spectrum, freqs = utils.get_spectrum(component_timeseries, tr, sample_mask=sample_mask)
 
     plot_name = f"{prefix}comp_{str(compnum).zfill(3)}.png"
     compplot_name = os.path.join(out_dir, "figures", plot_name)
@@ -410,6 +564,7 @@ def _generate_single_component_figure(
         title=plt_title,
         out_file=compplot_name,
         classification_linestyle=line_style,
+        sample_mask=sample_mask,
     )
 
 
@@ -437,7 +592,8 @@ def comp_figures(component_table, mixing, io_generator, png_cmap):
     component_betas_arr = np.asanyarray(component_betas_img.dataobj)
 
     # Get repetition time from reference image
-    tr = io_generator.reference_img.header.get_zooms()[-1]
+    tr = _get_tr(io_generator)
+    sample_mask = _get_sample_mask(io_generator)
 
     for compnum in component_table.index.values:
         component_img = nb.Nifti1Image(
@@ -454,6 +610,7 @@ def comp_figures(component_table, mixing, io_generator, png_cmap):
             png_cmap=png_cmap,
             out_dir=io_generator.out_dir,
             prefix=io_generator.prefix,
+            sample_mask=sample_mask,
         )
 
 
@@ -740,7 +897,7 @@ def plot_rmse(
     mask_img = image.binarize_img(mask_img, threshold=1.5, two_sided=False, copy_header=True)
 
     # Get repetition time from reference image
-    tr = io_generator.reference_img.header.get_zooms()[-1]
+    tr = _get_tr(io_generator)
 
     # Load the confounds file
     confounds_df = pd.read_table(confounds_file)
@@ -919,7 +1076,7 @@ def plot_gscontrol(
         confounds_df = pd.read_table(confounds_file)
 
         # Get repetition time from reference image
-        tr = io_generator.reference_img.header.get_zooms()[-1]
+        tr = _get_tr(io_generator)
 
     if "gsr" in gscontrol:
         gsr_img = nb.load(io_generator.get_name("gs img"))

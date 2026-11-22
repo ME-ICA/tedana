@@ -246,6 +246,7 @@ def fit_regressors(
     external_regressor_config: List[Dict],
     mixing: npt.NDArray,
     seed: int = 0,
+    sample_mask: Optional[npt.NDArray] = None,
 ) -> pd.DataFrame:
     """Fit regressors to the mixing matrix.
 
@@ -263,11 +264,19 @@ def fit_regressors(
     external_regressor_config : :obj:`list[dict]`
         Information describing the external regressors and
         method to use for fitting and statistical tests
-    mixing : (T x C) array_like
+    mixing : (T x C) or (T_retained x C) array_like
         Mixing matrix for converting input data to component space,
-        where `C` is components and `T` is the same as in `data_cat`
+        where `C` is components and `T` is the same as in `data_cat`.
+        If ``sample_mask`` is given, it holds only the retained volumes.
     seed : :obj:`int`, optional
         Random seed for external metrics that use random sampling. Default is 0.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal sample mask, True for retained volumes.
+        If given, every fit uses only the retained volumes.
+        The Legendre detrending basis is built on the full time grid and then subset,
+        so it is evaluated at the retained volumes' real positions in time,
+        and ``max_rp_corr`` computes regressor derivatives and shifts on the full grid
+        before subsetting. Default is None (all volumes retained).
 
     Returns
     -------
@@ -275,7 +284,24 @@ def fit_regressors(
         Component metric table.
         Same as inputted, with added columns for metrics related to the external regressor fits
     """
-    n_vols = mixing.shape[0]
+    if sample_mask is None:
+        n_vols = mixing.shape[0]
+    else:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        n_vols = sample_mask.size
+        if len(external_regressors) != n_vols:
+            raise ValueError(
+                f"External regressors have {len(external_regressors)} rows, but the sample "
+                f"mask has {n_vols} volumes."
+            )
+
+        if mixing.shape[0] != sample_mask.sum():
+            raise ValueError(
+                f"Mixing matrix has {mixing.shape[0]} rows, but the sample mask retains "
+                f"{sample_mask.sum()} volumes."
+            )
+
+        retained = np.flatnonzero(sample_mask)
 
     # For every model (i.e. nuisance and task) in external_regressor_config
     # setup and run fit_mixing_to_regressors to add columns to component_table
@@ -325,15 +351,27 @@ def fit_regressors(
                 f"{statistic}, "
                 "which is not valid."
             )
+        handler_params = inspect.signature(handler).parameters
         handler_kwargs = {}
-        if "seed" in inspect.signature(handler).parameters:
+        if "seed" in handler_params:
             handler_kwargs["seed"] = seed
+
+        handler_regressors = external_regressors
+        handler_detrend = detrend_regressors
+        if sample_mask is not None:
+            if "sample_mask" in handler_params:
+                # The handler needs the full time grid (e.g., for derivatives)
+                handler_kwargs["sample_mask"] = sample_mask
+            else:
+                handler_regressors = external_regressors.iloc[retained].reset_index(drop=True)
+                handler_detrend = detrend_regressors.iloc[retained].reset_index(drop=True)
+
         component_table = handler(
             component_table,
-            external_regressors,
+            handler_regressors,
             external_regressor_config[config_idx],
             mixing,
-            detrend_regressors,
+            handler_detrend,
             **handler_kwargs,
         )
 
@@ -677,7 +715,11 @@ def compute_external_regressor_correlations(
 
 
 def calculate_max_rp_corr(
-    *, mixing: np.ndarray, regressors: np.ndarray, seed: Optional[int] = 0
+    *,
+    mixing: np.ndarray,
+    regressors: np.ndarray,
+    seed: Optional[int] = 0,
+    sample_mask: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """Calculate the maximum regressor-correlation (max_rp_corr) for each component.
 
@@ -690,13 +732,18 @@ def calculate_max_rp_corr(
 
     Parameters
     ----------
-    mixing : (T x C) array_like
+    mixing : (T x C) or (T_retained x C) array_like
         ICA mixing matrix where T is time points and C is components.
+        If ``sample_mask`` is given, it holds only the retained volumes.
     regressors : (T x N) array_like
         Regressor time series with T timepoints and N columns.
     seed : int or None, optional
         Seed for the random subsampling. The default is 0 for reproducible
         results. Set to None or -1 for stochastic sampling.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal sample mask, True for retained volumes. If given, the derivatives and
+        time shifts of ``regressors`` are computed on the full time grid, and only the
+        retained volumes are then correlated and subsampled. Default is None.
 
     Returns
     -------
@@ -729,11 +776,25 @@ def calculate_max_rp_corr(
     if rp.ndim != 2:
         raise ValueError(f"regressors must be a 2-D array, got shape {rp.shape}")
 
-    if rp.shape[0] != mixing.shape[0]:
-        raise ValueError(
-            f"Number of rows in mixing ({mixing.shape[0]}) does not match "
-            f"number of rows in regressors ({rp.shape[0]})."
-        )
+    if sample_mask is None:
+        if rp.shape[0] != mixing.shape[0]:
+            raise ValueError(
+                f"Number of rows in mixing ({mixing.shape[0]}) does not match "
+                f"number of rows in regressors ({rp.shape[0]})."
+            )
+    else:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        if rp.shape[0] != sample_mask.size:
+            raise ValueError(
+                f"Number of rows in regressors ({rp.shape[0]}) does not match "
+                f"the number of volumes in the sample mask ({sample_mask.size})."
+            )
+
+        if mixing.shape[0] != sample_mask.sum():
+            raise ValueError(
+                f"Number of rows in mixing ({mixing.shape[0]}) does not match "
+                f"the number of retained volumes ({sample_mask.sum()})."
+            )
 
     _, n_params = rp.shape
 
@@ -745,6 +806,9 @@ def calculate_max_rp_corr(
     rp2_1fw = np.vstack((np.zeros(2 * n_params), rp2[:-1]))
     rp2_1bw = np.vstack((rp2[1:], np.zeros(2 * n_params)))
     rp_model = np.hstack((rp2, rp2_1fw, rp2_1bw))  # (T, 6 * n_params)
+    if sample_mask is not None:
+        # Derivatives and shifts come from the full grid; correlations use retained volumes
+        rp_model = rp_model[sample_mask]
 
     n_volumes, n_components = mixing.shape
     n_rows_to_choose = int(round(0.9 * n_volumes))
@@ -774,6 +838,7 @@ def fit_max_rp_corr_to_regressors(
     mixing: npt.NDArray,
     detrend_regressors: pd.DataFrame,
     seed: int = 0,
+    sample_mask: Optional[npt.NDArray] = None,
 ) -> pd.DataFrame:
     """Calculate max_rp_corr from specified external regressor columns.
 
@@ -787,12 +852,17 @@ def fit_max_rp_corr_to_regressors(
     external_regressor_config : :obj:`dict`
         Single external regressor config entry. Required keys:
         ``regress_ID``, ``regressors``, ``detrend``, ``statistic``.
-    mixing : (T x C) array_like
-        ICA mixing matrix.
+    mixing : (T x C) or (T_retained x C) array_like
+        ICA mixing matrix. If ``sample_mask`` is given, it holds only the retained volumes.
     detrend_regressors : (T x P) :obj:`pandas.DataFrame`
         Legendre polynomial basis for optional detrending.
     seed : :obj:`int`, optional
         Random seed for the max_rp_corr subsampling. Default is 0.
+    sample_mask : (T,) array_like of bool or None, optional
+        Temporal sample mask, True for retained volumes. If given, ``external_regressors``
+        and ``detrend_regressors`` cover all T volumes. Detrending coefficients are fit on
+        the retained volumes only, and the detrended regressors are evaluated on the full
+        grid so that their derivatives and shifts are correct. Default is None.
 
     Returns
     -------
@@ -813,14 +883,30 @@ def fit_max_rp_corr_to_regressors(
             raise ValueError(
                 "detrend_regressors has no columns; cannot detrend mixing and regressors."
             )
-        mixing_use = (
-            mixing
-            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, mixing, rcond=None)[0]
-        )
-        rp_use = (
-            rp_arr
-            - detrended_regressors @ np.linalg.lstsq(detrended_regressors, rp_arr, rcond=None)[0]
-        )
+        if sample_mask is None:
+            mixing_use = (
+                mixing
+                - detrended_regressors
+                @ np.linalg.lstsq(detrended_regressors, mixing, rcond=None)[0]
+            )
+            rp_use = (
+                rp_arr
+                - detrended_regressors
+                @ np.linalg.lstsq(detrended_regressors, rp_arr, rcond=None)[0]
+            )
+        else:
+            sample_mask = np.asarray(sample_mask, dtype=bool)
+            detrend_retained = detrended_regressors[sample_mask]
+            mixing_use = (
+                mixing
+                - detrend_retained @ np.linalg.lstsq(detrend_retained, mixing, rcond=None)[0]
+            )
+            # Fit on retained volumes, evaluate on the full grid
+            rp_use = (
+                rp_arr
+                - detrended_regressors
+                @ np.linalg.lstsq(detrend_retained, rp_arr[sample_mask], rcond=None)[0]
+            )
         LGR.info(
             f"max_rp_corr for {regress_id} detrended with "
             f"{detrended_regressors.shape[1]} Legendre Polynomial regressors."
@@ -829,7 +915,12 @@ def fit_max_rp_corr_to_regressors(
         mixing_use = mixing
         rp_use = rp_arr
 
-    max_rp_corr = calculate_max_rp_corr(mixing=mixing_use, regressors=rp_use, seed=seed)
+    max_rp_corr = calculate_max_rp_corr(
+        mixing=mixing_use,
+        regressors=rp_use,
+        seed=seed,
+        sample_mask=sample_mask,
+    )
     component_table[f"max_rp_corr {regress_id} model"] = max_rp_corr
     return component_table
 

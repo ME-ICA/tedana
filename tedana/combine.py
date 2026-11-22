@@ -60,7 +60,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
     return combined
 
 
-def _combine_paid(data, tes, report=True):
+def _combine_paid(data, tes, report=True, sample_mask=None):
     """Combine data across echoes using the PAID combination method.
 
     This method uses SNR/signal and TE via the parallel-acquired inhomogeneity desensitized (PAID)
@@ -74,6 +74,10 @@ def _combine_paid(data, tes, report=True):
         Echo times in seconds.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
+    sample_mask : (T,) array_like of bool or None, optional
+        Volumes used to estimate the SNR weights (True = retained).
+        The weights are applied to every volume. If None, all volumes are used.
+        Default is None.
 
     Returns
     -------
@@ -92,17 +96,34 @@ def _combine_paid(data, tes, report=True):
         )
 
     n_vols = data.shape[-1]
-    mean_signal = data.mean(axis=-1)
-    signal_std = data.std(axis=-1)
+    weight_data = data if sample_mask is None else data[..., sample_mask]
+    mean_signal = weight_data.mean(axis=-1)
+    signal_std = weight_data.std(axis=-1)
     snr = np.zeros_like(mean_signal, dtype=float)
     np.divide(mean_signal, signal_std, out=snr, where=signal_std != 0)
     alpha = snr * tes
+
+    # Voxels that are constant over time (e.g., with few retained volumes) have zero SNR
+    # weights in every echo, which np.average cannot normalize. Weight those voxels by TE
+    # alone, which is equivalent to assuming equal SNR across echoes.
+    zero_weight_voxels = np.all(alpha == 0, axis=1)
+    if zero_weight_voxels.any():
+        LGR.warning(
+            f"{zero_weight_voxels.sum()} voxels have zero PAID weights in every echo "
+            "(no signal variance over the volumes used for weighting), so they are "
+            "weighted by echo time alone."
+        )
+        alpha[zero_weight_voxels, :] = np.broadcast_to(
+            tes,
+            (zero_weight_voxels.sum(), alpha.shape[1]),
+        )
+
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     combined = np.average(data, axis=1, weights=alpha)
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
+def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", sample_mask=None):
     r"""Optimally combine BOLD data across TEs.
 
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
@@ -127,6 +148,11 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
     combmode : {'t2s', 'paid'}, optional
         How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
         is not required. Default is 't2s'.
+    sample_mask : (T,) array_like of bool or None, optional
+        Volumes to use when estimating combination weights (True = retained).
+        Only used by the ``'paid'`` method, whose weights are estimated from the data;
+        the weights are then applied to every volume. If None, all volumes are used.
+        Default is None.
 
     Returns
     -------
@@ -172,6 +198,17 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
             "Mask and data do not have same number of "
             f"voxels/samples: {adaptive_mask.shape[0]} != {data.shape[0]}"
         )
+
+    if sample_mask is not None:
+        sample_mask = np.asarray(sample_mask, dtype=bool)
+        if sample_mask.shape != (data.shape[2],):
+            raise ValueError(
+                f"sample_mask must have one value per volume ({data.shape[2]}), "
+                f"not shape {sample_mask.shape}"
+            )
+
+        if not sample_mask.any():
+            raise ValueError("sample_mask must retain at least one volume.")
 
     if combmode not in ["t2s", "paid"]:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
@@ -220,7 +257,9 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
 
         if combmode == "paid":
             combined[voxel_idx, :] = _combine_paid(
-                data[voxel_idx, :echo_num, :], tes[:, :echo_num]
+                data[voxel_idx, :echo_num, :],
+                tes[:, :echo_num],
+                sample_mask=sample_mask,
             )
         else:
             t2s_ = t2s[..., np.newaxis]  # add singleton

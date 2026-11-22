@@ -10,3 +10,5 @@ t2smap_call.sh
 desc-confounds_timeseries.tsv
 desc-decay_metrics.json
 desc-rmse_statmap.nii.gz
+desc-censoring_timeseries.json
+desc-censoring_timeseries.tsv
