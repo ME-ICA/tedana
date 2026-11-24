@@ -348,6 +348,10 @@ of this uniquely explained variance and the variance that is not explained by th
 This is equivalent to the variance explained by each component after regressing the other
 components out of the data *and* the component itself. It is a conditional effect size.
 
+It is computed from the voxel-averaged semi-partial R-squared and the voxel-averaged
+R-squared of the full model, as semi-partial R-squared / (semi-partial R-squared +
+(100 - full-model R-squared)).
+
 
 semi-partial R-squared
 ======================
