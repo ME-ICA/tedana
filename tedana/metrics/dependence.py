@@ -538,8 +538,16 @@ def calculate_semipartial_r2(
     Semi-partial R^2 is the incremental variance explained by adding a
     regressor to a model that already contains all other regressors.
 
+    For each voxel, this is the R-squared of the full model (all components) minus the
+    R-squared of the reduced model (all components except the target component).
+
     We simplify the math by (1) orthogonalizing each component w.r.t. the other components
-    then (2) calculating the R-squared for each component against the data.
+    then (2) calculating the squared Pearson correlation between each orthogonalized
+    component and the data.
+    Because the data are z-scored, this squared correlation equals
+    ``cov(orthogonalized component, data) ** 2 / var(orthogonalized component)``.
+    The division by the orthogonalized component's variance matters when components are
+    correlated with one another, because orthogonalization then shrinks that variance below 1.
 
     Parameters
     ----------
@@ -566,15 +574,29 @@ def calculate_semipartial_r2(
     mixing = stats.zscore(mixing, axis=0)
     data_optcom = stats.zscore(data_optcom, axis=1)
 
-    # Orthogonalize each component with respect to the other components
+    # Orthogonalize each component with respect to the other components.
+    # The z-scored columns have zero mean, so the residualized columns do too.
     mixing = _orthogonalize_by_others(arr=mixing)
 
-    # S x C correlation matrix of each component with the data
-    # correlation = (1/T) * dat_z @ mix_z
+    # Variance left in each residualized component (1 - R-squared of the component
+    # on the other components).
     # NOTE: We use population scaling here to match the output of np.corrcoef.
-    correlations = data_optcom @ mixing / n_vols
-    correlations = correlations**2
-    return 100 * correlations.mean(axis=0)
+    residual_var = (mixing**2).sum(axis=0) / n_vols
+
+    # S x C squared covariance of each residualized component with the z-scored data,
+    # divided by the residualized component's variance.
+    # This is the squared correlation between the residualized component and the data,
+    # which is the semi-partial R-squared.
+    # A component that is fully explained by the others has no unique variance, so its
+    # semi-partial R-squared is 0.
+    squared_cov = (data_optcom @ mixing / n_vols) ** 2
+    semipartial_r2 = np.divide(
+        squared_cov,
+        residual_var,
+        out=np.zeros_like(squared_cov, dtype=float),
+        where=residual_var > np.finfo(float).eps,
+    )
+    return 100 * semipartial_r2.mean(axis=0)
 
 
 def calculate_partial_r2(
@@ -589,6 +611,11 @@ def calculate_partial_r2(
 
     We simplify the math by calculating partial R-squared as semi-partial R-squared /
     (semi-partial R-squared + (100 - total R-squared)).
+    For a single voxel, this equals the squared correlation between the component and the
+    data after both have been residualized on the other components.
+    Because the inputs are voxel-wise averages, the output is this ratio computed from the
+    averaged semi-partial and total R-squared values, not the average of voxel-wise
+    partial R-squared values.
 
     Parameters
     ----------

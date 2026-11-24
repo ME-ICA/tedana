@@ -84,6 +84,113 @@ def test_calculate_partial_r2_smoke():
     assert partial_r2.shape == (n_components,)
 
 
+def _simulate_correlated_components(seed=0, n_vols=200, n_comps=5, n_vox=300):
+    """Simulate data from a mixing matrix whose first two columns are correlated (r ~ 0.8)."""
+    rng = np.random.default_rng(seed)
+    base = rng.standard_normal((n_vols, n_comps))
+    mixing = base.copy()
+    mixing[:, 1] = 0.8 * base[:, 0] + 0.6 * base[:, 1]
+    mixing = stats.zscore(mixing, axis=0)
+    weights = rng.standard_normal((n_comps, n_vox))
+    data_optcom = (mixing @ weights + rng.standard_normal((n_vols, n_vox))).T
+    return data_optcom, mixing
+
+
+def _voxelwise_r2(regressors, data):
+    """Voxel-wise R-squared of z-scored (T x V) data regressed on (T x K) regressors."""
+    beta = np.linalg.lstsq(regressors, data, rcond=None)[0]
+    pred = regressors @ beta
+    return (pred**2).sum(axis=0) / (data**2).sum(axis=0)
+
+
+def _direct_semipartial_and_full_r2(data_optcom, mixing):
+    """Voxel-wise semi-partial R-squared (C x S) and full-model R-squared (S), by regression."""
+    data_z = stats.zscore(data_optcom, axis=1).T
+    mixing_z = stats.zscore(mixing, axis=0)
+    full_r2 = _voxelwise_r2(mixing_z, data_z)
+    semipartial = np.vstack(
+        [
+            full_r2 - _voxelwise_r2(np.delete(mixing_z, j_comp, axis=1), data_z)
+            for j_comp in range(mixing.shape[1])
+        ]
+    )
+    return semipartial, full_r2
+
+
+def test_calculate_semipartial_r2_correctness():
+    """Compare semi-partial R-squared to a direct full-vs-reduced model regression."""
+    data_optcom, mixing = _simulate_correlated_components()
+    semipartial_direct, _ = _direct_semipartial_and_full_r2(data_optcom, mixing)
+
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert np.allclose(semipartial_r2, 100 * semipartial_direct.mean(axis=1))
+
+    # The correlated components must not be scaled down by their shared variance
+    orth = dependence._orthogonalize_by_others(arr=mixing)
+    assert orth[:, :2].var(axis=0).max() < 0.5
+
+    # Voxel-wise values match too
+    for i_vox in range(0, data_optcom.shape[0], 50):
+        voxel_r2 = dependence.calculate_semipartial_r2(
+            data_optcom=data_optcom[i_vox : i_vox + 1],
+            mixing=mixing,
+        )
+        assert np.allclose(voxel_r2, 100 * semipartial_direct[:, i_vox])
+
+
+def test_calculate_semipartial_r2_collinear():
+    """A component that is a linear combination of the others has no unique variance."""
+    data_optcom, mixing = _simulate_correlated_components()
+    mixing = np.hstack([mixing, mixing[:, :2].sum(axis=1, keepdims=True)])
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    assert np.all(np.isfinite(semipartial_r2))
+    assert np.isclose(semipartial_r2[-1], 0)
+
+
+def test_calculate_partial_r2_correctness():
+    """Compare partial R-squared to a direct regression, per voxel and averaged."""
+    data_optcom, mixing = _simulate_correlated_components()
+    semipartial_direct, full_r2 = _direct_semipartial_and_full_r2(data_optcom, mixing)
+    data_z = stats.zscore(data_optcom, axis=1).T
+    mixing_z = stats.zscore(mixing, axis=0)
+
+    # Per voxel: partial R-squared is the squared correlation between the component and the
+    # data after both are residualized on the other components.
+    for i_vox in range(0, data_optcom.shape[0], 50):
+        semipartial_r2 = dependence.calculate_semipartial_r2(
+            data_optcom=data_optcom[i_vox : i_vox + 1],
+            mixing=mixing,
+        )
+        total_r2 = dependence.calculate_total_r2(
+            data_optcom=data_optcom[i_vox : i_vox + 1],
+            mixing=mixing,
+        )
+        partial_r2 = dependence.calculate_partial_r2(
+            semipartial_r2=semipartial_r2,
+            total_r2=total_r2,
+        )
+        expected = np.empty(mixing.shape[1])
+        for j_comp in range(mixing.shape[1]):
+            others = np.delete(mixing_z, j_comp, axis=1)
+            targets = np.column_stack([mixing_z[:, j_comp], data_z[:, i_vox]])
+            resids = targets - others @ np.linalg.lstsq(others, targets, rcond=None)[0]
+            expected[j_comp] = 100 * np.corrcoef(resids.T)[0, 1] ** 2
+
+        assert np.allclose(partial_r2, expected)
+
+    # Averaged: the ratio is formed from voxel-averaged semi-partial and total R-squared
+    semipartial_r2 = dependence.calculate_semipartial_r2(data_optcom=data_optcom, mixing=mixing)
+    total_r2 = dependence.calculate_total_r2(data_optcom=data_optcom, mixing=mixing)
+    assert np.isclose(total_r2, 100 * full_r2.mean())
+    partial_r2 = dependence.calculate_partial_r2(
+        semipartial_r2=semipartial_r2,
+        total_r2=total_r2,
+    )
+    mean_semipartial = semipartial_direct.mean(axis=1)
+    expected = 100 * mean_semipartial / (mean_semipartial + 1 - full_r2.mean())
+    assert np.allclose(partial_r2, expected)
+
+
 def test_calculate_total_r2_smoke():
     """Test smoke test of calculate_total_r2."""
     n_voxels, n_components, n_volumes = 1000, 10, 100
