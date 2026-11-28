@@ -405,3 +405,38 @@ def test_smoke_calculate_dependence_metrics():
         z_maps=z_maps,
     )
     assert kappas.shape == rhos.shape == (n_components,)
+
+
+def test_generate_metrics_frequency_metrics(testdata1):
+    """generate_metrics computes HFC and PHF from the mixing matrix when tr is given."""
+    from tedana.metrics.frequency import calculate_hfc, calculate_phf
+
+    mask_clf = testdata1["adaptive_mask"].copy()
+    mask_clf[mask_clf < 3] = 0
+    mask_clf = mask_clf.astype(bool)
+    kwargs = {
+        "data_cat": testdata1["data_cat"][mask_clf, ...],
+        "data_optcom": testdata1["data_optcom"][mask_clf, :],
+        "mixing": testdata1["mixing"],
+        "adaptive_mask": testdata1["adaptive_mask"][mask_clf],
+        "mask_img": unmask(mask_clf, testdata1["generator"].mask),
+        "tes": testdata1["tes"],
+        "io_generator": testdata1["generator"],
+        "label": "ICA",
+        "metrics": ["kappa", "HFC", "PHF"],
+    }
+    tr = 0.5
+    component_table, new_mixing = collect.generate_metrics(tr=tr, **kwargs)
+    assert {"HFC", "PHF"}.issubset(component_table.columns)
+    np.testing.assert_allclose(
+        component_table["PHF"].to_numpy(),
+        calculate_phf(mixing=new_mixing, tr=tr),
+    )
+    np.testing.assert_allclose(
+        component_table["HFC"].to_numpy(),
+        calculate_hfc(mixing=new_mixing, tr=tr),
+    )
+
+    kwargs["metrics"] = ["PHF"]
+    with pytest.raises(ValueError, match="tr must be provided to compute the PHF metric"):
+        collect.generate_metrics(**kwargs)

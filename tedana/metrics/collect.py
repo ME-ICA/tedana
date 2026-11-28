@@ -16,7 +16,7 @@ from tedana.metrics._utils import (
     determine_signs,
     flip_components,
 )
-from tedana.metrics.frequency import calculate_hfc
+from tedana.metrics.frequency import calculate_hfc, calculate_phf
 from tedana.stats import getfbounds, voxelwise_univariate_zstats
 
 LGR = logging.getLogger("GENERAL")
@@ -68,7 +68,7 @@ def generate_metrics(
         The label for this metric generation type
     tr : float, optional
         Repetition time of the fMRI data in seconds.  Required when ``metrics``
-        includes ``"HFC"``.  Default is None.
+        includes ``"HFC"`` or ``"PHF"``.  Default is None.
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise)
         to correlate with ICA components.
@@ -430,6 +430,13 @@ def generate_metrics(
         LGR.info("Calculating high-frequency content (HFC)")
         component_table["HFC"] = calculate_hfc(mixing=mixing, tr=tr)
 
+    # TR-robust frequency metric: fraction of power above a fixed frequency in Hz
+    if "PHF" in required_metrics:
+        if tr is None:
+            raise ValueError("tr must be provided to compute the PHF metric.")
+        LGR.info("Calculating high-frequency power fraction (PHF)")
+        component_table["PHF"] = calculate_phf(mixing=mixing, tr=tr)
+
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
@@ -511,6 +518,7 @@ def generate_metrics(
         "varex kappa ratio",
         "d_table_score_scrub",
         "HFC",
+        "PHF",
         "max_rp_corr",
         "external fit",
         "classification",
@@ -796,6 +804,18 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 "spectrum of the component reaches 50 % of its total power above 0.01 Hz. "
                 "Values near 1 indicate a component dominated by high-frequency content "
                 "(likely noise); values near 0 indicate a low-frequency, BOLD-like component."
+            ),
+            "Units": "arbitrary",
+        }
+    if "PHF" in component_table:
+        metric_metadata["PHF"] = {
+            "LongName": "High-frequency power fraction",
+            "Description": (
+                "The fraction of the component's power above 0.01 Hz that lies above 0.1 Hz. "
+                "Values near 1 indicate a component dominated by high-frequency content "
+                "(likely noise); values near 0 indicate a low-frequency, BOLD-like component. "
+                "Unlike HFC, the cutoff is a fixed frequency in Hz, so a given threshold has "
+                "the same meaning at every repetition time."
             ),
             "Units": "arbitrary",
         }

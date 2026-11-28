@@ -179,6 +179,55 @@ It has not yet been validated as a tedana ME-fMRI component classification thres
 though there is no reason to believe that ME-fMRI components would have different
 frequency characteristics than single-echo components.
 
+Because HFC is scaled relative to the Nyquist frequency, a fixed threshold means a
+different frequency in Hz at each repetition time (TR).
+ICA-AROMA's resting-state data were acquired with a TR of 1.96 s, where ``HFC = 0.35``
+corresponds to about 0.096 Hz.
+The same threshold corresponds to about 0.36 Hz at a TR of 0.5 s
+(above typical breathing rates) and about 0.065 Hz at a TR of 3 s (inside the BOLD band).
+For a threshold that has the same meaning at every TR, see `PHF`_.
+
+
+PHF
+===
+:func:`tedana.metrics.frequency.calculate_phf`
+
+The high-frequency power fraction (PHF) is the fraction of a component's power above
+0.01 Hz that lies above 0.1 Hz.
+It is calculated from the same one-sided power spectrum as HFC.
+Values are bounded between 0 and 1.
+Values near 0 indicate that the power is concentrated in the low-frequency range where
+most BOLD fluctuations lie, while values near 1 indicate that the component is dominated
+by faster fluctuations, such as respiratory, cardiac, or thermal noise.
+
+Unlike HFC, PHF uses a cutoff that is fixed in Hz, so a given threshold has the same
+meaning at every TR.
+``PHF > 0.5`` means that the component's median frequency is above 0.1 Hz.
+At a TR of 1.96 s, this is close to ``HFC > 0.35``.
+PHF is the complement of the fractional amplitude of low-frequency fluctuations
+:footcite:p:`zou2008improved` (with a different band edge), and it matches a
+hand-classification criterion from :footcite:t:`kelly2010visual`.
+FIX also uses spectral features defined in Hz :footcite:p:`salimi2014automatic`.
+
+PHF is not used in any of the included decision trees, and no threshold has been
+validated for tedana.
+
+PHF has two main limitations.
+
+1. Cardiac and respiratory signals are sampled without anti-aliasing, so they can alias
+   to any frequency below the Nyquist frequency.
+   When they alias below 0.1 Hz, no spectral metric can separate them from BOLD
+   fluctuations.
+   This is common when the Nyquist frequency is close to the cutoff
+   (for example, TR > 2.5 s), so tedana logs a warning when the Nyquist frequency is
+   less than twice the cutoff, and PHF is undefined (NaN) when the Nyquist frequency
+   is at or below the cutoff.
+   Physiological recordings, used as external regressors, are the more direct way to
+   identify physiological noise.
+2. Event-related task designs with fast, regular trials can produce real BOLD power
+   above 0.1 Hz, and at short TRs, components with a large share of thermal noise can
+   have high PHF values.
+
 
 max_rp_corr
 ===========
